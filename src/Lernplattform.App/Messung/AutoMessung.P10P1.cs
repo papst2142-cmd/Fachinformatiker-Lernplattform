@@ -72,6 +72,8 @@ public static partial class AutoMessung
                     // in der Gesamtansicht beginnen (alles im Bild: getauscht wird nur am Kartenrand, der Uebergang
                     // laeuft also sichtbar lange); beide Saetze in ihren Zeichenaufrufen, die Grenzen gelten
                     var abstand = kamera.Abstand;
+                    // Welle A 0.80.0: die Gesamtansicht liegt ausserhalb des Rest-Zooms 7 bis 9, fuer die Messung frei
+                    using var messFrei = kamera.MessungFrei();
                     kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
                     kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
                     await flaeche.NaechstesBildAsync();

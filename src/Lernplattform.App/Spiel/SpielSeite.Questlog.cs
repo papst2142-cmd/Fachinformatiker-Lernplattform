@@ -78,7 +78,17 @@ public sealed partial class SpielSeite
     }
 
     /// <summary>Das Questlog oeffnen (Knopf, Taste); <paramref name="erledigt"/> = gleich den Reiter „Erledigt“ zeigen.</summary>
-    public async Task QuestlogZeigenAsync(bool erledigt = false)
+    public Task QuestlogZeigenAsync(bool erledigt = false) => HandyZeigenAsync(erledigt ? HandyReiter.Erledigt : HandyReiter.Offen);
+
+    /// <summary>Welle A 0.80.0: Reiter des Spiel-Handys (Auftraege offen, erledigt, Karte).</summary>
+    public enum HandyReiter { Offen, Erledigt, Karte }
+
+    /// <summary>
+    /// Das Spiel-Handy oeffnen. Welle A 0.80.0 (Weisung P12-268, Nico Antwort 5, P12-258): dritter Reiter „Karte“ mit der Karte
+    /// der Stadt und der Liste der Orte (das fruehere Ortsmenue). Antippen eines Orts schliesst das Handy, die Figur geht sofort los
+    /// (ohne 3D: kommt sofort an); „Mit dem Bus“ steht beim Ort, wenn der Bus schneller ist.
+    /// </summary>
+    public async Task HandyZeigenAsync(HandyReiter start)
     {
         if (Spiel is not { } spiel || Dialog.Offen is not null)
         {
@@ -89,16 +99,30 @@ public sealed partial class SpielSeite
         var liste = new StackPanel { Spacing = 10 };
         var reiterOffen = Schrift.Knopf(string.Format(CultureInfo.InvariantCulture, QuestlogTexte.Offen, offen.Count));
         var reiterErledigt = Schrift.Knopf(string.Format(CultureInfo.InvariantCulture, QuestlogTexte.Erledigt, fertig.Count));
+        var reiterKarte = Schrift.Knopf(KarteTexte.Karte);
         string? ziel = null;
-        void Fuellen(bool zeigeErledigt)
+        string? busZiel = null;
+        void Fuellen(HandyReiter reiter)
         {
-            QuestlogErledigt = zeigeErledigt;
+            HandyReiterGerade = reiter;
+            ReiterSetzen(reiterOffen, reiter == HandyReiter.Offen);
+            ReiterSetzen(reiterErledigt, reiter == HandyReiter.Erledigt);
+            ReiterSetzen(reiterKarte, reiter == HandyReiter.Karte);
             liste.Children.Clear();
+            if (reiter == HandyReiter.Karte)
+            {
+                QuestlogEintraege = [];
+                QuestlogHingehen = [];
+                QuestlogErledigt = false;
+                KarteFuellen(spiel, liste, offen, id => { ziel = id; Dialog.AlleSchliessen(); }, id => { busZiel = id; Dialog.AlleSchliessen(); });
+                return;
+            }
+            KarteGezeigt = null;
+            var zeigeErledigt = reiter == HandyReiter.Erledigt;
+            QuestlogErledigt = zeigeErledigt;
             var eintraege = zeigeErledigt ? fertig : offen;
             QuestlogEintraege = eintraege;
             var knoepfe = new List<Button>();
-            ReiterSetzen(reiterOffen, !zeigeErledigt);
-            ReiterSetzen(reiterErledigt, zeigeErledigt);
             if (eintraege.Count == 0)
             {
                 liste.Children.Add(Schrift.Text(Questlog.LeerText(spiel, zeigeErledigt)));
@@ -150,13 +174,14 @@ public sealed partial class SpielSeite
             }
             QuestlogHingehen = knoepfe;
         }
-        reiterOffen.Click += (_, _) => Fuellen(false);
-        reiterErledigt.Click += (_, _) => Fuellen(true);
-        Fuellen(erledigt);
+        reiterOffen.Click += (_, _) => Fuellen(HandyReiter.Offen);
+        reiterErledigt.Click += (_, _) => Fuellen(HandyReiter.Erledigt);
+        reiterKarte.Click += (_, _) => Fuellen(HandyReiter.Karte);
+        Fuellen(start);
         // Aussehen eines Handys: dicker runder Rahmen, oben ein Lautsprecher-Schlitz
         var schlitz = new Border { Width = 56, Height = 6, CornerRadius = new CornerRadius(3), HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 8) };
         schlitz.Farbe(Border.BackgroundProperty, "Pinsel.border_hi");
-        var handy = new Border
+        var geraet = new Border
         {
             CornerRadius = new CornerRadius(28),
             BorderThickness = new Thickness(6),
@@ -166,22 +191,43 @@ public sealed partial class SpielSeite
             Child = new StackPanel
             {
                 Spacing = 8,
-                Children = { schlitz, new WrapPanel { Children = { reiterOffen, reiterErledigt } }, liste },
+                Children = { schlitz, new WrapPanel { Children = { reiterOffen, reiterErledigt, reiterKarte } }, liste },
             },
         };
-        handy.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border_hi");
-        await Dialog.Zeigen(QuestlogTexte.Titel, handy, QuestlogTexte.Schliessen);
-        QuestlogEintraege = [];
-        QuestlogHingehen = [];
-        if (ziel is { } hinZu && Spiel is { } jetzt)
+        geraet.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border_hi");
+        HandyOffen = true;
+        try
+        {
+            await Dialog.Zeigen(KarteTexte.HandyTitel, geraet, QuestlogTexte.Schliessen);
+        }
+        finally
+        {
+            HandyOffen = false;
+            KarteGezeigt = null;
+            QuestlogEintraege = [];
+            QuestlogHingehen = [];
+        }
+        if (Spiel is not { } jetzt)
+        {
+            return;
+        }
+        if (busZiel is { } mitBus)
+        {
+            jetzt.MitBusZu(mitBus);
+        }
+        else if (ziel is { } hinZu)
         {
             jetzt.GeheZu(hinZu);
-            if (_ersatz.IsVisible)
-            {
-                jetzt.SofortAnkommen();
-            }
-            Flaeche.AnfordernBild();
         }
+        else
+        {
+            return;
+        }
+        if (_ersatz.IsVisible)
+        {
+            jetzt.SofortAnkommen();
+        }
+        Flaeche.AnfordernBild();
     }
 
     private Grid? _klappZeile;

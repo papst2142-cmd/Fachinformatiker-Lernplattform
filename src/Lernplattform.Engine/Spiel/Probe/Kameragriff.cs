@@ -3,7 +3,8 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// <summary>
 /// Phase 8 W8 (Sammelliste 132 und 135, E2 P8-16 Punkt 4): Maus in Stadt und Innenraum. Linke Taste:
 /// Tippen (ohne Bewegung) oder Ziehen (Ansicht verschieben) wie heute; rechte Taste gedrueckt halten und
-/// waagrecht bewegen dreht die Kamera um <see cref="GradJePunkt"/> je Bildpunkt (nur Drehen, kein Neigen).
+/// waagrecht bewegen dreht die Kamera um <see cref="GradJePunkt"/> je Bildpunkt; die senkrechte Bewegung steht ab Welle
+/// A 0.80.0 in <see cref="Schritt.Dy"/> (die feste Spielkamera draussen neigt damit, Innenraeume nicht).
 /// Die rechte Taste loest nie Tippen und damit nie Gehen aus, auch ohne Bewegung; waren beide Tasten
 /// gedrueckt, gibt es kein Tippen. Finger gehen weiter ueber die Gesten der Flaeche.
 /// </summary>
@@ -60,7 +61,8 @@ public sealed class Kameragriff(double ziehenAb)
         _y = y;
         if (_rechts)
         {
-            return dx == 0 ? new Schritt(Art.Nichts) : new Schritt(Art.Drehen, Grad: (float)dx * GradJePunkt);
+            // Welle A 0.80.0: die senkrechte Bewegung kommt mit (Dy); nur die feste Spielkamera draussen neigt damit
+            return dx == 0 && dy == 0 ? new Schritt(Art.Nichts) : new Schritt(Art.Drehen, Dy: dy, Grad: (float)dx * GradJePunkt);
         }
         if (!_links)
         {

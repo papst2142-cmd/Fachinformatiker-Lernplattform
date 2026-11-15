@@ -765,15 +765,32 @@ public static class FestDeko
         return null;
     }
 
-    /// <summary>Die Innen-Deko eines Plans zeichnen; Konfetti nur auf freiem Boden (<paramref name="frei"/>).</summary>
-    public static void InnenZeichnen(InnenPlan plan, PyObjekt muster, List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? g, PyMenge frei)
+    /// <summary>
+    /// Die Innen-Deko eines Plans zeichnen; Konfetti nur auf freiem Boden (<paramref name="frei"/>). Sammelliste 347: ein
+    /// Feuerwerk bleibt im Raum; <paramref name="halbmesser"/> nennt den groessten Halbmesser an einer Stelle (Abstand zur
+    /// naechsten Wand), groessere Funkenkugeln werden so weit verkleinert (null = wie bis A 0.79.0).
+    /// </summary>
+    public static void InnenZeichnen(InnenPlan plan, PyObjekt muster, List<Teil> teile, List<ModellStueck> stuecke, GrafikBibliothek? g, PyMenge frei,
+        Func<float, float, float>? halbmesser = null)
     {
         bool Boden(float x, float z) => frei.Contains(Wege.Zelle(x, z));
         foreach (var (platz, x, z) in plan.Plaetze)
         {
             foreach (var e in InnenEintraege(muster, platz))
             {
-                Zeichnen(e, x + Zahl(e, "dx"), z + Zahl(e, "dz"), Innenraum.Meter, 0f, Vector2.UnitY, 0, teile, stuecke, g, Boden);
+                var (ex, ez) = (x + Zahl(e, "dx"), z + Zahl(e, "dz"));
+                var eintrag = e;
+                if (halbmesser is not null && Py.Gleich(Get(e, "art"), "feuerwerk") && halbmesser(ex, ez) is var grenze && grenze < Zahl(e, "r"))
+                {
+                    // passt die Kugel nicht an ihre Stelle, steht sie ueber dem Platz selbst (dort ist sicher Raum), sonst kleiner
+                    if (halbmesser(x, z) > grenze)
+                    {
+                        (ex, ez, grenze) = (x, z, halbmesser(x, z));
+                    }
+                    eintrag = (PyObjekt)Py.Kopie(e)!;
+                    Py.Setzen(eintrag, "r", (double)Math.Max(0.05f, MathF.Min(grenze, Zahl(e, "r"))));
+                }
+                Zeichnen(eintrag, ex, ez, Innenraum.Meter, 0f, Vector2.UnitY, 0, teile, stuecke, g, Boden);
             }
         }
     }

@@ -9,20 +9,25 @@ namespace Lernplattform.Core.Texte;
 public static class SpielProbeTexte
 {
     public const string Titel = "Spiel (Probe 3D)";
-    /// <summary>Hinweis mit der Standardbelegung (Phase 8 W8: rechte Maustaste dreht, Text von Chat angenommen, P8-16 E2 Punkt 5).</summary>
-    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. Am PC: Mausrad zoomt, Pfeiltasten verschieben, rechte Maustaste oder Q und E drehen.";
+    /// <summary>
+    /// Hinweis draussen mit der Standardbelegung. Welle A 0.80.0 (Weisung P12-268): feste Kamera, kein Verschieben mehr;
+    /// zwei Finger bzw. rechte Maustaste drehen und neigen, Rest-Zoom 7 bis 9, Ueberblick in der Karte im Handy (bis A 0.79.0:
+    /// „Ziehen verschiebt die Ansicht … Pfeiltasten verschieben …“).
+    /// </summary>
+    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Die ganze Stadt zeigt die Karte im Handy.";
 
     /// <summary>Hinweis mit den gewaehlten Tasten (Tastenbelegung); mit Standard genau <see cref="Hinweis"/>.</summary>
     public static string HinweisFuer(Tasten tasten)
     {
         string T(string aufgabe) => tasten.AnzeigeFuer(aufgabe);
-        var pfeile = tasten.Eigen.Keys.Any(a => a is Tasten.Links or Tasten.Rechts
-            or Tasten.Hoch or Tasten.Runter)
-            ? $"{T(Tasten.Links)}, {T(Tasten.Rechts)}, {T(Tasten.Hoch)} und {T(Tasten.Runter)}"
-            : "Pfeiltasten";
-        return "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen. "
-            + $"Am PC: Mausrad zoomt, {pfeile} verschieben, rechte Maustaste oder {T(Tasten.DrehLinks)} und {T(Tasten.DrehRechts)} drehen.";
+        return "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. "
+            + $"Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, {T(Tasten.DrehLinks)} und {T(Tasten.DrehRechts)} drehen"
+            // ohne Taste fuers Neigen (Zusammenstoss mit einer eigenen Wahl aus frueherer Fassung) nennt der Hinweis keine
+            + (tasten.Tasten(Tasten.Steiler).Contains(Tasten.OhneTaste) || tasten.Tasten(Tasten.Flacher).Contains(Tasten.OhneTaste)
+                ? "" : $", {T(Tasten.Steiler)} und {T(Tasten.Flacher)} neigen")
+            + ". Die ganze Stadt zeigt die Karte im Handy.";
     }
+
     public const string Orte = "Orte";
 
     /// <summary>Weisung P8-52 (Text von Chat angenommen): Knopf der Leistungsprobe, nur in der Probe-APK.</summary>

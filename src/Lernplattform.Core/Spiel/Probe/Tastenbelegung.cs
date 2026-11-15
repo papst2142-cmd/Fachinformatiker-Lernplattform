@@ -28,13 +28,31 @@ public sealed class Tastenbelegung
     /// <summary>Welle A 0.67.0 (Sammelliste 301): Questlog oeffnen (Q dreht schon, darum L wie „Liste“).</summary>
     public const string Auftraege = "auftraege";
 
+    /// <summary>
+    /// Welle A 0.80.0 (Weisung P12-268, Nico Antwort 2): Kamera draussen neigen (R steiler, F flacher, neben Q/E). Am Ende der
+    /// Liste, damit eine eigene Belegung von R oder F aus einer frueheren Fassung Vorrang behaelt (<see cref="AufgabeFuer"/>).
+    /// </summary>
+    public const string Steiler = "steiler";
+
+    public const string Flacher = "flacher";
+
+    /// <summary>
+    /// Aufgaben, die nach A 0.79.0 dazukamen. Hatte jemand ihre Standardtaste (R, F) schon fuer eine andere Aufgabe gewaehlt,
+    /// behaelt diese eigene Wahl beim Lesen Vorrang (nie still verloren); die neue Aufgabe hat dann keine Taste, bis man ihr in
+    /// den Optionen eine gibt (<see cref="OhneTaste"/>).
+    /// </summary>
+    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher };
+
+    /// <summary>Gespeicherter Wert „keine Taste“ (nur fuer die Aufgaben aus <see cref="NeuAb080"/> nach einem Zusammenstoss).</summary>
+    public const string OhneTaste = "";
+
     /// <summary>Alle Aufgaben in der Reihenfolge der Karte, mit Text und Standardtasten (Zoomen auch Ziffernblock).</summary>
     public static readonly IReadOnlyList<(string Id, string Text, string[] Standard)> Aufgaben =
     [
-        (Links, "Ansicht nach links schieben", ["Left"]),
-        (Rechts, "Ansicht nach rechts schieben", ["Right"]),
-        (Hoch, "Ansicht nach oben schieben", ["Up"]),
-        (Runter, "Ansicht nach unten schieben", ["Down"]),
+        (Links, "Drinnen: Ansicht nach links schieben", ["Left"]),
+        (Rechts, "Drinnen: Ansicht nach rechts schieben", ["Right"]),
+        (Hoch, "Drinnen: Ansicht nach oben schieben", ["Up"]),
+        (Runter, "Drinnen: Ansicht nach unten schieben", ["Down"]),
         (DrehLinks, "Nach links drehen", ["Q"]),
         (DrehRechts, "Nach rechts drehen", ["E"]),
         (Naeher, "Näher heran", ["OemPlus", "Add"]),
@@ -42,6 +60,8 @@ public sealed class Tastenbelegung
         (Hinein, "Hineingehen", ["Enter"]),
         (Vollbild, "Vollbild ein und aus", ["F11"]),
         (Auftraege, "Aufträge öffnen", ["L"]),
+        (Steiler, "Draußen: Kamera steiler", ["R"]),
+        (Flacher, "Draußen: Kamera flacher", ["F"]),
     ];
 
     /// <summary>Bleiben dem Programm (Esc bricht ab, die anderen braucht die Bedienung).</summary>
@@ -127,10 +147,13 @@ public sealed class Tastenbelegung
             if (Aufgaben.Any(a => a.Id == aufgabe) && wert is JsonValue v && v.TryGetValue<string>(out var taste)
                 && taste.Length > 0 && !Gesperrt.Contains(taste))
             {
-                // eine Taste, die schon eine andere Aufgabe hat, gilt nicht (Standard dieser Aufgabe)
-                if (belegung.Setzen(aufgabe, taste, out _) != Ergebnis.Ok)
+                // eine Taste, die schon eine andere Aufgabe hat, gilt nicht (Standard dieser Aufgabe); Welle A 0.80.0: ausser es ist
+                // nur die Standardtaste einer neuen Aufgabe (R, F), dann gewinnt die eigene Wahl aus der frueheren Fassung
+                if (belegung.Setzen(aufgabe, taste, out var andere) == Ergebnis.Doppelt && andere is not null
+                    && NeuAb080.Contains(andere) && !belegung._eigen.ContainsKey(andere))
                 {
-                    continue;
+                    belegung._eigen[andere] = OhneTaste;
+                    belegung.Setzen(aufgabe, taste, out _);
                 }
             }
         }
@@ -166,6 +189,7 @@ public sealed class Tastenbelegung
     /// <summary>Name einer Taste in der Karte und im Hinweistext.</summary>
     public static string Anzeige(string taste) => taste switch
     {
+        OhneTaste => "keine Taste",
         "Left" => "Pfeil links",
         "Right" => "Pfeil rechts",
         "Up" => "Pfeil hoch",

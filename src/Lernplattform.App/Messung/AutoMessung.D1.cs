@@ -1,4 +1,5 @@
 using System.Globalization;
+using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Spiel;
 
@@ -17,8 +18,15 @@ public static partial class AutoMessung
     /// <summary>Welle Grafik G1: teuerstes Nahbild je gemessener Stufe (Dreiecke, Aufrufe) fuer den Vergleich der Stufen.</summary>
     private static readonly Dictionary<Grafikstufe, (long Dreiecke, int Aufrufe)> NahTeuerstes = [];
 
-    /// <summary>Kameraabstaende der Nahansicht (normale Spielkamera, Plan P12-79 Teil D).</summary>
-    public static readonly float[] NahAbstaende = [4f, 6f, 10f, 16f];
+    /// <summary>
+    /// Kameraabstaende der Nahansicht (normale Spielkamera, Plan P12-79 Teil D). Welle A 0.80.0 (Weisung P12-268): dazu 8 und 9
+    /// (fester Abstand und weitester Rest-Zoom); 4, 6, 10 und 16 bleiben als strengere Proben (frei gemessen).
+    /// </summary>
+    public static readonly float[] NahAbstaende = [4f, 6f, SpielKamera.Abstand, SpielKamera.AbstandMax, 10f, 16f];
+
+    /// <summary>Welle A 0.80.0: Neigungen je Abstand; 8 und 9 zusaetzlich flachster und steilster Blick (35 und 70 Grad).</summary>
+    private static float[] NahNeigungen(float ab) =>
+        ab is SpielKamera.Abstand or SpielKamera.AbstandMax ? [SpielKamera.NeigungStart, SpielKamera.NeigungMin, SpielKamera.NeigungMax] : [SpielKamera.NeigungStart];
 
     /// <remarks>
     /// Welle Grafik G1 (Weisung P12-182): <paramref name="stufe"/> = gemessene Grafikstufe mit ihrer Grenze (Niedrig
@@ -37,15 +45,18 @@ public static partial class AutoMessung
             return 1;
         }
         var funde = 0;
-        var (abstand, drehung, zx, zz) = (kamera.Abstand, kamera.Drehung, kamera.ZielX, kamera.ZielZ);
+        var (abstand, drehung, zx, zz, neigung) = (kamera.Abstand, kamera.Drehung, kamera.ZielX, kamera.ZielZ, kamera.Neigung);
+        // Welle A 0.80.0: die Abstaende 4, 6, 10, 16 und die Gesamtansicht liegen ausserhalb des Rest-Zooms, fuer die Messung frei
+        using var messFrei = kamera.MessungFrei();
         var szene = spiel.Szene;
         // Welle D2 (Weisung P12-157): die Zaehlung ohne Grafikkarte muss jedes gezeichnete Bild genau treffen
         var zaehlung = new Core.Stadtbau.StadtbauGrenzen.Draussen(szene, szene.Vorbereiten());
         var abweichungen = new List<string>();
         var verglichen = 0;
-        async Task<(long Dreiecke, int Aufrufe)> BildAsync(float ab, float dreh, float x, float z)
+        async Task<(long Dreiecke, int Aufrufe)> BildAsync(float ab, float dreh, float x, float z, float neig = SpielKamera.NeigungStart)
         {
             kamera.Drehung = dreh;
+            kamera.Neigung = neig;
             kamera.Zoomen(kamera.Abstand / ab);
             kamera.Setzen(x, z);
             await flaeche.NaechstesBildAsync();
@@ -58,17 +69,17 @@ public static partial class AutoMessung
                 if (fest != (flaeche.LetzteStadtDreiecke, flaeche.LetzteStadtAufrufe)
                     || (fest.Dreiecke + bewegt.Dreiecke, fest.Aufrufe + bewegt.Aufrufe) != (flaeche.LetzteDreiecke, flaeche.LetzteZeichenaufrufe))
                 {
-                    abweichungen.Add(string.Create(inv, $"Abstand {ab:F0}, Drehung {dreh:F0}, bei {x:F1}/{z:F1}: gezeichnet {flaeche.LetzteStadtDreiecke}/{flaeche.LetzteStadtAufrufe} (ganz {flaeche.LetzteDreiecke}/{flaeche.LetzteZeichenaufrufe}), gezaehlt {fest.Dreiecke}/{fest.Aufrufe} (ganz {fest.Dreiecke + bewegt.Dreiecke}/{fest.Aufrufe + bewegt.Aufrufe})"));
+                    abweichungen.Add(string.Create(inv, $"Abstand {ab:F0}, Neigung {neig:F0}, Drehung {dreh:F0}, bei {x:F1}/{z:F1}: gezeichnet {flaeche.LetzteStadtDreiecke}/{flaeche.LetzteStadtAufrufe} (ganz {flaeche.LetzteDreiecke}/{flaeche.LetzteZeichenaufrufe}), gezaehlt {fest.Dreiecke}/{fest.Aufrufe} (ganz {fest.Dreiecke + bewegt.Dreiecke}/{fest.Aufrufe + bewegt.Aufrufe})"));
                 }
             }
             return (flaeche.LetzteDreiecke, flaeche.LetzteZeichenaufrufe);
         }
         var werte = new List<string>();
-        (long Dreiecke, int Aufrufe, float Ab, float Dreh, float X, float Z) teuerstes = (-1, 0, 0, 0, 0, 0);
+        (long Dreiecke, int Aufrufe, float Ab, float Dreh, float X, float Z, float Neig) teuerstes = (-1, 0, 0, 0, 0, 0, SpielKamera.NeigungStart);
         var aufrufeMax = 0;
         try
         {
-            foreach (var ab in NahAbstaende)
+            foreach (var (ab, neig) in NahAbstaende.SelectMany(a => NahNeigungen(a).Select(n => (a, n))))
             {
                 foreach (var dreh in new[] { 0f, 180f })
                 {
@@ -78,16 +89,16 @@ public static partial class AutoMessung
                         for (var j = 1; j <= 3; j++)
                         {
                             var (x, z) = (szene.Breite * i / 4f, szene.Tiefe * j / 4f);
-                            var (d, a) = await BildAsync(ab, dreh, x, z);
+                            var (d, a) = await BildAsync(ab, dreh, x, z, neig);
                             zeile.Add(string.Create(inv, $"{d}/{a}"));
                             aufrufeMax = Math.Max(aufrufeMax, a);
                             if (d > teuerstes.Dreiecke)
                             {
-                                teuerstes = (d, a, ab, dreh, x, z);
+                                teuerstes = (d, a, ab, dreh, x, z, neig);
                             }
                         }
                     }
-                    werte.Add(string.Create(inv, $"Abstand {ab:F0}, Drehung {dreh:F0}: {string.Join(" ", zeile)}"));
+                    werte.Add(string.Create(inv, $"Abstand {ab:F0}, Neigung {neig:F0}, Drehung {dreh:F0}: {string.Join(" ", zeile)}"));
                 }
             }
             foreach (var w in werte)
@@ -95,7 +106,7 @@ public static partial class AutoMessung
                 Messwerte.Notiere(name + " Einzelwerte (Dreiecke/Aufrufe): " + w);
             }
             Messwerte.Notiere(string.Create(inv,
-                $"{name} teuerstes Bild (Abstand {teuerstes.Ab:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1}): {teuerstes.Dreiecke} Dreiecke, hoechstens {aufrufeMax} Zeichenaufrufe (Grenzen {grenzeDreiecke} Dreiecke, {grenzeAufrufe} Aufrufe)"));
+                $"{name} teuerstes Bild (Abstand {teuerstes.Ab:F0}, Neigung {teuerstes.Neig:F0}, Drehung {teuerstes.Dreh:F0}, bei {teuerstes.X:F1}/{teuerstes.Z:F1}): {teuerstes.Dreiecke} Dreiecke, hoechstens {aufrufeMax} Zeichenaufrufe (Grenzen {grenzeDreiecke} Dreiecke, {grenzeAufrufe} Aufrufe)"));
             if (teuerstes.Dreiecke > grenzeDreiecke || aufrufeMax > grenzeAufrufe || teuerstes.Dreiecke <= 0)
             {
                 Messwerte.Notiere(string.Create(inv,
@@ -107,7 +118,7 @@ public static partial class AutoMessung
             {
                 // Welle 327 (Weisung P12-244): Gegenprobe des teuersten Bilds ohne Zellen des Paket-Netzes (Stand A 0.73.0,
                 // gezaehlt ohne Grafikkarte); die befristete Ausnahme fuer Stadt 1 in Niedrig ist weg, die Grenze gilt streng
-                await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z);
+                await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z, teuerstes.Neig);
                 var mitZellen = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, werte: werteStufe);
                 Netz.OhneZellenFuerTests = true;
                 var ohneZellen = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, werte: werteStufe);
@@ -132,10 +143,10 @@ public static partial class AutoMessung
                 return funde + (abweichungen.Count > 0 ? 1 : 0);
             }
             // Gegenprobe: dasselbe Bild ohne Sparen (alle Haeuser, keine Fernform) und die Gesamtansicht ohne Fernformen
-            var (nahMit, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z);
+            var (nahMit, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z, teuerstes.Neig);
             var (fernMit, _) = await BildAsync(Kamera.AbstandMax, 0f, szene.Breite / 2, szene.Tiefe / 2);
             StadtFlaeche.OhneSparenFuerTests = true;
-            var (nahOhne, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z);
+            var (nahOhne, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z, teuerstes.Neig);
             var (fernOhne, _) = await BildAsync(Kamera.AbstandMax, 0f, szene.Breite / 2, szene.Tiefe / 2);
             StadtFlaeche.OhneSparenFuerTests = false;
             var text = string.Create(inv, $"Nahansicht {nahMit} mit Sparen, {nahOhne} ohne; Gesamtansicht {fernMit} mit Sparen, {fernOhne} ohne");
@@ -146,7 +157,7 @@ public static partial class AutoMessung
             else
             {
                 // Gegenprobe der Zaehlung: ohne Sichtkegel gezaehlt trifft sie das teuerste Nahbild nicht
-                var (nahWieder, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z);
+                var (nahWieder, _) = await BildAsync(teuerstes.Ab, teuerstes.Dreh, teuerstes.X, teuerstes.Z, teuerstes.Neig);
                 var gegen = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand, ohneSparen: true);
                 var gezaehlt = zaehlung.Bild(flaeche.LetzteSichtProj, flaeche.LetzterAbstand);
                 Messwerte.Notiere(string.Create(inv,
@@ -174,6 +185,7 @@ public static partial class AutoMessung
             StadtFlaeche.OhneSparenFuerTests = false;
             Netz.OhneZellenFuerTests = false;
             kamera.Drehung = drehung;
+            kamera.Neigung = neigung;
             kamera.Zoomen(kamera.Abstand / abstand);
             kamera.Setzen(zx, zz);
         }

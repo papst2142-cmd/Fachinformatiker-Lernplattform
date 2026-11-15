@@ -62,6 +62,8 @@ public static class Leistungsprobe
             Zeile("Leistungsprobe: je Stufe "
                 + sekunden.ToString("0", CultureInfo.InvariantCulture) + " s, Grafik " + flaeche.GlKurz);
             Zeile(await VorladenAsync(flaeche, spiel, bilder));
+            // Welle A 0.80.0: die Gesamtansicht liegt ausserhalb des Rest-Zooms 7 bis 9, fuer die Messung frei
+            using var messFrei = kamera.MessungFrei();
             kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
             kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
             foreach (var (name, mehrfach, aufrufe) in Stufen)

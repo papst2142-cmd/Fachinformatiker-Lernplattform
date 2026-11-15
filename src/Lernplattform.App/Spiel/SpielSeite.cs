@@ -104,7 +104,7 @@ public sealed partial class SpielSeite : Grid
     private SpielSeite(Action verlassen)
     {
         _verlassen = verlassen;
-        Flaeche = new StadtFlaeche();
+        Flaeche = new StadtFlaeche { FesteKamera = true };
         Focusable = true;
         // Phase 11 W2 (Antwort 2a): die Seite traegt den Fokus fuer die Tasten der Stadt; die 3D-Stadt selbst liest der
         // Screenreader nicht vor
@@ -157,7 +157,7 @@ public sealed partial class SpielSeite : Grid
         _uebersicht = Schrift.Knopf(StadtTexte.Uebersicht);
         _uebersicht.IsVisible = false;
         _uebersicht.Click += (_, _) => Tafel?.UebersichtOeffnen();
-        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf } };
+        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf, KarteKnopfBauen() } };
         if (Leistungsprobe.An)
         {
             // Weisung P8-52: nur in der Probe-APK; waehrend der Probe nicht antippbar
@@ -747,7 +747,8 @@ public sealed partial class SpielSeite : Grid
 
     public void OrtslisteZeigen(bool sichtbar)
     {
-        _ortsliste.IsVisible = sichtbar || _ersatz.IsVisible;
+        // Welle A 0.80.0 (P12-258): mit 3D ist das Ortsmenue in die Karte im Handy gezogen; die Liste gibt es nur noch ohne 3D
+        _ortsliste.IsVisible = (sichtbar && OrtslisteAltFuerTests) || _ersatz.IsVisible;
         BusZeitenSetzen();
     }
 
@@ -1071,7 +1072,7 @@ public sealed partial class SpielSeite : Grid
         // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss
         _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten && spiel.Etage == 0;
         _warten.IsVisible = spiel.KannWarten;
-        _orteKnopf.IsVisible = !spiel.ImInnenraum;
+        OrteKnoepfeSetzen(spiel);
         if (spiel.ImInnenraum && _ortsliste.IsVisible && !_ersatz.IsVisible && !OrtslisteAltFuerTests)
         {
             // Patch A 0.75.1 (Sammelliste 343): drinnen gibt es den Knopf „Orte“ nicht; eine offene Ortsliste blieb sonst

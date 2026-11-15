@@ -23,7 +23,8 @@ namespace Lernplattform.Spiel;
 /// Buero aus <see cref="StadtSpiel"/>, die Figur und die Zielmarke.
 /// Bedienung (Weisung P7-9 Punkt 3a): Tippen/Klick auf ein Haus geht hin (im Buero: zum Bodenpunkt),
 /// Ziehen verschiebt die Ansicht, zwei Finger zoomen und drehen, Mausrad zoomt, Pfeiltasten
-/// verschieben, Q/E drehen, +/- zoomen, Eingabe geht hinein. Die Flaeche faengt jeden Zeiger selbst
+/// verschieben, Q/E drehen, +/- zoomen, Eingabe geht hinein. Welle A 0.80.0 (Weisung P12-268): im Spiel draussen
+/// (<see cref="FesteKamera"/>) feste Kamera nach <see cref="SpielKamera"/>, Regeln in <see cref="Kamerabedienung"/>. Die Flaeche faengt jeden Zeiger selbst
 /// (Capture) und liegt nie in einer ScrollView, sonst nimmt die Seite die Geste (Fehler S24, W1).
 /// Treffer zaehlt die ganze Flaeche (<see cref="ICustomHitTest"/>): das GL-Bild selbst ist fuer
 /// Avalonia kein gezeichneter Inhalt, sonst ginge ein Finger an der Flaeche vorbei an den Rahmen.
@@ -169,6 +170,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private bool _gezogen;
     private double _abstandZwei;
     private double _winkelZwei;
+    private double _mitteZwei;
     private double _folgenAb;
     private double _weiterBis;   // Nachtrag 1 zu P7-12: nach einer Bedienung im Takt des Bildschirms weiterzeichnen
     private int _aufrufe;
@@ -231,10 +233,14 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 // Nachtrag 1 zu P7-13 (Wunsch 2): naeher an der Figur (vorher Abstand 10, die Figur war am S24
                 // rund 45 Bildpunkte hoch); die Figur steht ueber den Versatz in der Mitte des freien Bereichs
-                _kameras[ProbeWelt.Stadt] = new Kamera(value.FigurX, value.FigurZ, StartAbstand)
-                {
-                    Grenzen = (0, 0, value.Szene.Breite, value.Szene.Tiefe),
-                };
+                // Welle A 0.80.0 (Weisung P12-268): im Spiel die feste Kamera (Abstand 8, Rest-Zoom 7 bis 9, Neigung 35 bis 70);
+                // das Stadtbau-Werkzeug behaelt die freie Kamera
+                _kameras[ProbeWelt.Stadt] = FesteKamera
+                    ? SpielKamera.Draussen(value.FigurX, value.FigurZ, value.Szene.Breite, value.Szene.Tiefe)
+                    : new Kamera(value.FigurX, value.FigurZ, StartAbstand)
+                    {
+                        Grenzen = (0, 0, value.Szene.Breite, value.Szene.Tiefe),
+                    };
                 value.Geaendert += SpielGeaendert;
                 value.SzeneGeaendert += SzeneNeu;
                 value.InnenGeaendert += InnenNeu;
@@ -287,8 +293,17 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         AnfordernBild();
     }
 
-    /// <summary>Abstand der Stadt-Kamera beim Start (Nachtrag 1 zu P7-13, Wunsch 2).</summary>
+    /// <summary>Abstand der Stadt-Kamera beim Start (Nachtrag 1 zu P7-13, Wunsch 2); im Spiel ab A 0.80.0 <see cref="SpielKamera.Abstand"/>.</summary>
     public const float StartAbstand = 6f;
+
+    /// <summary>
+    /// Welle A 0.80.0 (Weisung P12-268): die Flaeche zeigt das Spiel (nicht das Stadtbau-Werkzeug). Dann gilt draussen die feste
+    /// Kamera (<see cref="SpielKamera"/>, <see cref="Kamerabedienung"/>); Innenraeume bleiben wie bis A 0.79.0.
+    /// </summary>
+    public bool FesteKamera { get; init; }
+
+    /// <summary>Gilt gerade die feste Kamera (Spiel, draussen)?</summary>
+    public bool KameraFest => FesteKamera && _spiel is { ImInnenraum: false };
 
     /// <summary>
     /// Nachtrag 1 zu P7-13 (Wunsch 2): von Kopfzeile (oben) und Textkarte (unten) verdeckte Hoehe in Punkten;
@@ -2130,6 +2145,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             _abstandZwei = Abstand();
             _winkelZwei = Winkel();
+            _mitteZwei = MitteY();
             _gezogen = true;
         }
         e.Pointer.Capture(this);
@@ -2161,19 +2177,23 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         if (_zeiger.Count >= 2)
         {
-            // zwei Finger: Abstand = Zoom, Winkel = Drehen um die Hochachse
+            // zwei Finger: Abstand = Zoom, Winkel = Drehen um die Hochachse; Welle A 0.80.0: draussen neigt die Mitte der
+            // Finger (gemeinsam hoch oder runter), der Zoom bleibt im Bereich 7 bis 9 (Kamerabedienung)
             var neu = Abstand();
-            if (_abstandZwei > 1 && neu > 1)
-            {
-                kamera.Zoomen((float)(neu / _abstandZwei));
-            }
+            var faktor = _abstandZwei > 1 && neu > 1 ? neu / _abstandZwei : 0;
             _abstandZwei = neu;
             var winkel = Winkel();
             var dreh = winkel - _winkelZwei;
             dreh = dreh > 180 ? dreh - 360 : dreh < -180 ? dreh + 360 : dreh;
-            kamera.Drehen((float)dreh);
             _winkelZwei = winkel;
-            _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+            var mitte = MitteY();
+            var fest = KameraFest;
+            Kamerabedienung.ZweiFinger(kamera, fest, faktor, dreh, mitte - _mitteZwei);
+            _mitteZwei = mitte;
+            if (!fest)
+            {
+                _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+            }
             AnfordernBild();
             return;
         }
@@ -2181,9 +2201,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             _gezogen = true;
         }
-        if (_gezogen)
+        if (_gezogen && Kamerabedienung.Ziehen(kamera, KameraFest, p.X - vorher.X, p.Y - vorher.Y, Bounds.Height))
         {
-            kamera.Verschieben((float)(p.X - vorher.X), (float)(p.Y - vorher.Y), (float)Bounds.Height);
+            // Welle A 0.80.0: draussen verschiebt ein Finger nichts mehr (Nico Antwort 3), drinnen wie bisher
             _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
             AnfordernBild();
         }
@@ -2233,13 +2253,16 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        AktuelleKamera?.Zoomen(MathF.Pow(1.12f, (float)e.Delta.Y));
+        if (AktuelleKamera is { } kamera)
+        {
+            Kamerabedienung.Mausrad(kamera, e.Delta.Y);
+        }
         AnfordernBild();
         e.Handled = true;
     }
 
     /// <summary>Weite eines Pfeiltasten-Schritts in Bildpunkten (wie Ziehen).</summary>
-    public const float TastenSchritt = 48f;
+    public const float TastenSchritt = Kamerabedienung.TastenSchritt;
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
@@ -2257,45 +2280,22 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             return false;
         }
-        // Phase 8 W8 (Sammelliste 133): Tasten nach der Tastenbelegung (Standard wie bisher)
+        // Phase 8 W8 (Sammelliste 133): Tasten nach der Tastenbelegung (Standard wie bisher); Welle A 0.80.0: Regeln in
+        // Kamerabedienung (draussen keine Pfeiltasten, R/F neigen)
         var aufgabe = Tastenbelegung.Aktuell.AufgabeFuer(taste.ToString());
-        var (dx, dy) = aufgabe switch
-        {
-            Tastenbelegung.Links => (TastenSchritt, 0f),
-            Tastenbelegung.Rechts => (-TastenSchritt, 0f),
-            Tastenbelegung.Hoch => (0f, TastenSchritt),
-            Tastenbelegung.Runter => (0f, -TastenSchritt),
-            _ => (0f, 0f),
-        };
-        if (dx != 0 || dy != 0)
-        {
-            kamera.Verschieben(dx, dy, (float)Math.Max(1, Bounds.Height));
-        }
-        else if (aufgabe == Tastenbelegung.DrehLinks)
-        {
-            kamera.Drehen(-15f);
-        }
-        else if (aufgabe == Tastenbelegung.DrehRechts)
-        {
-            kamera.Drehen(15f);
-        }
-        else if (aufgabe == Tastenbelegung.Naeher)
-        {
-            kamera.Zoomen(1.15f);
-        }
-        else if (aufgabe == Tastenbelegung.Weiter)
-        {
-            kamera.Zoomen(1 / 1.15f);
-        }
-        else if (aufgabe == Tastenbelegung.Hinein)
+        if (aufgabe == Tastenbelegung.Hinein)
         {
             return spiel.Betreten();
         }
-        else
+        var fest = KameraFest;
+        if (!Kamerabedienung.Taste(kamera, fest, aufgabe, Bounds.Height))
         {
             return false;
         }
-        _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+        if (!fest)
+        {
+            _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+        }
         AnfordernBild();
         return true;
     }
@@ -2303,30 +2303,37 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <summary>Ein Schritt der Maus anwenden (auch fuer den Start-Test): Ziehen verschiebt, rechte Taste dreht.</summary>
     public void MausSchritt(Kamera kamera, Kameragriff.Schritt schritt)
     {
-        switch (schritt.Art)
+        var fest = KameraFest;
+        var bewegt = schritt.Art switch
         {
-            case Kameragriff.Art.Ziehen:
-                kamera.Verschieben((float)schritt.Dx, (float)schritt.Dy, (float)Bounds.Height);
-                break;
-            case Kameragriff.Art.Drehen:
-                kamera.Drehen(schritt.Grad);
-                break;
-            default:
-                return;
+            Kameragriff.Art.Ziehen => Kamerabedienung.Ziehen(kamera, fest, schritt.Dx, schritt.Dy, Bounds.Height),
+            Kameragriff.Art.Drehen => Kamerabedienung.RechteMaus(kamera, fest, schritt),
+            _ => false,
+        };
+        if (!bewegt)
+        {
+            return;
         }
-        _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+        if (!fest)
+        {
+            _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
+        }
         AnfordernBild();
     }
 
     /// <summary>Start-Test: Maus mit rechter Taste von x1 nach x2 ziehen (wie echte Ereignisse ueber den Griff).</summary>
-    public bool ProbeRechtsZiehen(double x1, double x2, double y)
+    public bool ProbeRechtsZiehen(double x1, double x2, double y) => ProbeRechtsZiehen(x1, y, x2, y);
+
+    /// <summary>Welle A 0.80.0 (Start-Test): rechte Taste von (x1, y1) nach (x2, y2) ziehen: drehen und draussen neigen.</summary>
+    public bool ProbeRechtsZiehen(double x1, double y1, double x2, double y2)
     {
         if (AktuelleKamera is not { } kamera)
         {
             return false;
         }
-        _griff.Druecken(true, x1, y);
-        MausSchritt(kamera, _griff.Bewegen(x2, y));
+        var y = y2;
+        _griff.Druecken(true, x1, y1);
+        MausSchritt(kamera, _griff.Bewegen(x2, y2));
         var tippen = _griff.Loslassen(true);
         if (tippen)
         {
@@ -2339,6 +2346,13 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     {
         var p = _zeiger.Values.Take(2).ToArray();
         return p.Length < 2 ? 0 : Math.Sqrt(Math.Pow(p[0].X - p[1].X, 2) + Math.Pow(p[0].Y - p[1].Y, 2));
+    }
+
+    /// <summary>Welle A 0.80.0: Hoehe der Mitte zwischen den zwei Fingern (gemeinsam hoch/runter = neigen).</summary>
+    private double MitteY()
+    {
+        var p = _zeiger.Values.Take(2).ToArray();
+        return p.Length < 2 ? 0 : (p[0].Y + p[1].Y) / 2;
     }
 
     /// <summary>Winkel der Linie zwischen den zwei Fingern in Grad.</summary>

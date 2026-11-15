@@ -192,10 +192,14 @@ public static partial class AutoMessung
             var abstand = kamera.Abstand;
             flaeche.Taste(Key.W);
             var wirkt = kamera.Abstand > abstand;
+            // Welle A 0.80.0: nach W steht die Kamera am weitesten Rest-Zoom (9), dort aenderte auch eine noch belegte − nichts
+            // (falsches Gruen); darum vorher ganz nah (7)
+            kamera.Zoomen(kamera.Abstand / SpielKamera.AbstandMin);
             abstand = kamera.Abstand;
             flaeche.Taste(Key.Subtract);
             var plusFrei = kamera.Abstand == abstand;
             Tastenbelegung.Aktuell = tastenVorher;
+            kamera.Zoomen(kamera.Abstand / SpielKamera.Abstand);
             Pruefe("Neue Taste wirkt im Spiel", wirkt && plusFrei, wirkt ? (plusFrei ? "W zoomt, − nicht mehr" : "− zoomt noch") : "W zoomt nicht");
 
             // 6. Sinuston als eigenes Lied, je Wahl "Eigene Lieder spielen" gezaehlt je Ort

@@ -17,6 +17,12 @@ public sealed record InnenWand(int Von, int Bis, Vector3 Min, Vector3 Max, Vecto
 /// <summary>Weisung P12-6: gezeichnete Teile eines Einrichtungsstuecks (Pruefung auf Ueberschneidung und Verdecken).</summary>
 public sealed record DekoUmriss(PyObjekt Deko, IReadOnlyList<Teil> Teile)
 {
+    /// <summary>Sammelliste 347 (nur fuer Pruefungen): die eigenen Quader des Stuecks (ohne Modelle).</summary>
+    public IReadOnlyList<Teil> Kaesten { get; init; } = [];
+
+    /// <summary>Sammelliste 347 (nur fuer Pruefungen): die Modelle des Stuecks mit ihrer Lage (echte Ecken).</summary>
+    public IReadOnlyList<ModellStueck> Modelle { get; init; } = [];
+
     /// <summary>Grundflaeche aller Teile (x1, z1, x2, z2) und die groesste Hoehe.</summary>
     public (float X1, float Z1, float X2, float Z2, float Oben) Flaeche => Teile.Count == 0
         ? (0, 0, 0, 0, 0)
@@ -136,6 +142,12 @@ public sealed partial class Innenraum
     /// (Modelle mit ihrer Lage umgerechnet, Ersatz-Quader ohne Grafik). Aendert nichts an der Darstellung.
     /// </summary>
     public IReadOnlyList<DekoUmriss> DekoUmrisse => _dekoUmrisse;
+
+    /// <summary>Sammelliste 347 (nur fuer Pruefungen): Quader und Modelle der Fest-Deko innen (leer ohne Fest).</summary>
+    public IReadOnlyList<Teil> FestKaesten { get; private set; } = [];
+
+    /// <inheritdoc cref="FestKaesten"/>
+    public IReadOnlyList<ModellStueck> FestModelle { get; private set; } = [];
 
     private readonly List<DekoUmriss> _dekoUmrisse = [];
 
@@ -895,12 +907,19 @@ public sealed partial class Innenraum
         {
             var (teileVorher, stueckeVorher) = (_teile.Count, _stuecke.Count);
             Deko(d);
-            _dekoUmrisse.Add(new DekoUmriss(d, _teile.Skip(teileVorher).Concat(StueckeAlsTeile(_stuecke.Skip(stueckeVorher))).ToList()));
+            _dekoUmrisse.Add(new DekoUmriss(d, _teile.Skip(teileVorher).Concat(StueckeAlsTeile(_stuecke.Skip(stueckeVorher))).ToList())
+            {
+                Kaesten = [.. _teile.Skip(teileVorher)],
+                Modelle = [.. _stuecke.Skip(stueckeVorher)],
+            });
             signatur.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{d["typ"]}@{Py.F(d["x"])},{Py.F(d["y"])},{Py.Int(Get(d, "dreh", 0L))}"));
         }
         if (_festPlan is not null && _festMuster is not null)
         {
-            FestDeko.InnenZeichnen(_festPlan, _festMuster, _teile, _stuecke, Grafik, Lauf.Basis);
+            var (festTeile, festStuecke) = (_teile.Count, _stuecke.Count);
+            FestDeko.InnenZeichnen(_festPlan, _festMuster, _teile, _stuecke, Grafik, Lauf.Basis, WandAltFuerTests.Value ? null : FeuerwerkHalbmesser);
+            FestKaesten = [.. _teile.Skip(festTeile)];
+            FestModelle = [.. _stuecke.Skip(festStuecke)];
         }
         if (Fest is not null)
         {
@@ -1109,6 +1128,33 @@ public sealed partial class Innenraum
     /// <summary>Gegenprobe (Weisung P12-74): Treppe wie in Welle W5 zuerst gebaut (Pfosten in der Stufe, oben wie unten).</summary>
     internal static readonly AsyncLocal<bool> TreppeAltFuerTests = new();
 
+    /// <summary>
+    /// Sammelliste 347: groesster Halbmesser eines Feuerwerks an (x, z), damit keine Funken durch eine Wand ragen
+    /// (9/10 des waagerechten Abstands zum naechsten Wandquader; die Funken selbst sind kleine Wuerfel).
+    /// </summary>
+    private float FeuerwerkHalbmesser(float x, float z)
+    {
+        if (x <= 0 || z <= 0 || x >= Breite || z >= Tiefe)
+        {
+            return 0f;
+        }
+        var naechster = MathF.Min(MathF.Min(x, Breite - x), MathF.Min(z, Tiefe - z));
+        foreach (var w in _waende)
+        {
+            for (var i = w.Von; i < w.Bis; i++)
+            {
+                var t = _teile[i];
+                var dx = MathF.Max(MathF.Max(MathF.Min(t.X1, t.X2) - x, 0), x - MathF.Max(t.X1, t.X2));
+                var dz = MathF.Max(MathF.Max(MathF.Min(t.Z1, t.Z2) - z, 0), z - MathF.Max(t.Z1, t.Z2));
+                naechster = MathF.Min(naechster, MathF.Sqrt((dx * dx) + (dz * dz)));
+            }
+        }
+        return naechster * 0.9f;
+    }
+
+    /// <summary>Sammelliste 347, Gegenprobe: wie bis A 0.79.0 (Stuehle am Ess- und Besprechungstisch immer auf beiden Seiten, Bauzaun und Absperrband hochkant quer, Feuerwerk innen in voller Groesse).</summary>
+    internal static readonly AsyncLocal<bool> WandAltFuerTests = new();
+
     /// <summary>Abstand von Gelaender und Pfosten zum Rand der Treppe; die Stufen beginnen <see cref="TreppeSeite"/> innen.</summary>
     internal const float TreppeSeite = 0.1f;
 
@@ -1198,6 +1244,27 @@ public sealed partial class Innenraum
         "werkbank", "leitstand", "bank", "glaswand", "kleiderregal", "spiegel", "schliessfaecher", "tresor", "geldautomat", "wartemarken", "wappen", "gemaelde",
     ];
 
+    /// <summary>Sammelliste 347: beruehrt das Rechteck (x, z, w, t) im Grundriss einen Wandquader oder liegt es ausserhalb des Hauses?</summary>
+    private bool InWand((float X, float Z, float W, float T) f)
+    {
+        if (f.X < 0 || f.Z < 0 || f.X + f.W > Breite || f.Z + f.T > Tiefe)
+        {
+            return true;
+        }
+        foreach (var w in _waende)
+        {
+            for (var i = w.Von; i < w.Bis; i++)
+            {
+                var t = _teile[i];
+                if (f.X < MathF.Max(t.X1, t.X2) && MathF.Min(t.X1, t.X2) < f.X + f.W && f.Z < MathF.Max(t.Z1, t.Z2) && MathF.Min(t.Z1, t.Z2) < f.Z + f.T)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private int AutoDrehung(float x, float z, float w, float t)
     {
         var cx = x + (w / 2);
@@ -1243,6 +1310,16 @@ public sealed partial class Innenraum
             dreh = AnDerWand.Contains(typ) ? AutoDrehung(x, z, w, t) : 0;
         }
         var r = new Rahmen(x, z, w, t, dreh);
+        var ohneStuhl = false;
+        if (typ == "schreibtisch" && !WandAltFuerTests.Value && InWand(r.Rechteck((r.B0 / 2) - 0.38f, r.T0, 0.76f, 0.76f)))
+        {
+            // Sammelliste 347: zeigt die Vorderseite eines Schreibtischs zur Wand, stuende der Stuhl in der Wand; der Tisch wird
+            // dann umgekehrt gezeichnet (Stuhl auf der freien Seite), ist auch dort kein Platz, ohne Stuhl. Rechteck und
+            // Laufraster bleiben gleich.
+            var gedreht = new Rahmen(x, z, w, t, (dreh + 2) % 4);
+            ohneStuhl = InWand(gedreht.Rechteck((gedreht.B0 / 2) - 0.38f, gedreht.T0, 0.76f, 0.76f));
+            r = ohneStuhl ? r : gedreht;
+        }
         float b = r.B0, tt = r.T0;
         const float M = Meter;
         switch (typ)
@@ -1252,8 +1329,11 @@ public sealed partial class Innenraum
                 Modell(r, "computerScreen", (b / 2) - 0.55f, 0.08f, 1.1f, 0.25f, 0.45f * M, 0.75f * M, Farben.Geraet);
                 // Stuhl vor dem Tisch, mit dem Gesicht zum Tisch (Python: 0,3 vor der Kante); Phase 9 W1 (Weisung P9-3):
                 // direkt an der Tischkante statt 0,05 darunter, damit die Knie der sitzenden Figur die Schublade nicht beruehren
-                Modell(r, "chairDesk", (b / 2) - 0.38f, tt, 0.76f, 0.76f, 1.0f * M, 0, Farben.Polster, 2);
-                StuhlMerken(r.Rechteck((b / 2) - 0.38f, tt, 0.76f, 0.76f), (x + (w / 2), z + (t / 2)));
+                if (!ohneStuhl)
+                {
+                    Modell(r, "chairDesk", (b / 2) - 0.38f, tt, 0.76f, 0.76f, 1.0f * M, 0, Farben.Polster, 2);
+                    StuhlMerken(r.Rechteck((b / 2) - 0.38f, tt, 0.76f, 0.76f), (x + (w / 2), z + (t / 2)));
+                }
                 break;
             case "leitstand":
                 Modell(r, "desk", 0, 0, b, tt, 0.75f * M, 0, Farben.Holz);
@@ -1275,11 +1355,23 @@ public sealed partial class Innenraum
             {
                 Modell(r, "table", 0, 0, b, tt, 0.75f * M, 0, Farben.Holz);
                 var plaetze = typ == "esstisch" ? Math.Max(1, (int)PythonRunden.Runde(b / 1.2)) : 3;
+                float Mitte(int i) => typ == "esstisch" ? b * (i + 0.5f) / plaetze : b * (i + 1) / 4f;
+                // Sammelliste 347: die Stuehle stehen ausserhalb der Tischflaeche; steht der Tisch an einer Wand, bleibt die
+                // Stuhlreihe auf dieser Seite weg (sonst ragen die Stuehle durch die Wand). Ganze Reihe, nie einzelne Stuehle.
+                bool ReiheFrei(float lz) => WandAltFuerTests.Value
+                    || Enumerable.Range(0, plaetze).All(i => !InWand(r.Rechteck(Mitte(i) - 0.32f, lz, 0.64f, 0.64f)));
+                var (vorn, hinten) = (ReiheFrei(-0.7f), ReiheFrei(tt + 0.06f));
                 for (var i = 0; i < plaetze; i++)
                 {
-                    var cx = typ == "esstisch" ? b * (i + 0.5f) / plaetze : b * (i + 1) / 4f;
-                    Modell(r, "chair", cx - 0.32f, -0.7f, 0.64f, 0.64f, 0.9f * M, 0, Farben.Holz, 0);
-                    Modell(r, "chair", cx - 0.32f, tt + 0.06f, 0.64f, 0.64f, 0.9f * M, 0, Farben.Holz, 2);
+                    var cx = Mitte(i);
+                    if (vorn)
+                    {
+                        Modell(r, "chair", cx - 0.32f, -0.7f, 0.64f, 0.64f, 0.9f * M, 0, Farben.Holz, 0);
+                    }
+                    if (hinten)
+                    {
+                        Modell(r, "chair", cx - 0.32f, tt + 0.06f, 0.64f, 0.64f, 0.9f * M, 0, Farben.Holz, 2);
+                    }
                 }
                 break;
             }
@@ -1898,7 +1990,16 @@ public sealed partial class Innenraum
             {
                 var laengs = b >= t;
                 var farbe = typ == "absperrband" ? Farben.Rot : Farben.Metall;
-                Kasten(r, 0, 0, laengs ? b : t, laengs ? Math.Min(t, 0.08f) : 0.08f, 0.85f * M, 0.95f * M, farbe);
+                // Sammelliste 347: hochkant (laenger als breit) laeuft das Band laengs der Tiefe wie im Grundriss; bis A 0.79.0 lag
+                // es quer (Breite = Tiefe des Rechtecks) und ragte in Talheim-Nord durch die Wand
+                if (laengs || WandAltFuerTests.Value)
+                {
+                    Kasten(r, 0, 0, laengs ? b : t, laengs ? Math.Min(t, 0.08f) : 0.08f, 0.85f * M, 0.95f * M, farbe);
+                }
+                else
+                {
+                    Kasten(r, 0, 0, Math.Min(b, 0.08f), t, 0.85f * M, 0.95f * M, farbe);
+                }
                 Kasten(r, 0, 0, 0.08f, 0.08f, 0, 1.0f * M, Farben.Geraet);
                 Kasten(r, b - 0.08f, t - 0.08f, 0.08f, 0.08f, 0, 1.0f * M, Farben.Geraet);
                 break;

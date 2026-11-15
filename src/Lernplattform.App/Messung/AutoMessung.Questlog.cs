@@ -64,6 +64,14 @@ public static partial class AutoMessung
         return Dialog.Offen is null ? null : offen;
     }
 
+    /// <summary>Welle A 0.80.0: das Spiel-Handy auf dem Reiter Karte oeffnen (null = nicht aufgegangen).</summary>
+    private static async Task<Task?> KarteOeffnenAsync(MainView ansicht, SpielSeite seite)
+    {
+        var offen = seite.HandyZeigenAsync(SpielSeite.HandyReiter.Karte);
+        await ansicht.BildFertigAsync();
+        return Dialog.Offen is null ? null : offen;
+    }
+
     private static async Task QuestlogSchliessenAsync(MainView ansicht, Task? offen)
     {
         Dialog.AlleSchliessen();
@@ -147,27 +155,44 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             Pruefe("Bus Linie", bus.Linie is { NichtErreicht.Count: 0 } l && l.Halte.Count == BusHalte.Length,
                 $"{bus.Szene.Haltestellen.Count} Haltestellen");
+            // Welle A 0.80.0 (P12-258): mit 3D steht „Mit dem Bus“ in der Karte im Handy (Messpunkt „Karte oeffnen mit Buszeiten“),
+            // ohne 3D weiter in der Ortsliste
+            Task? karte = null;
             async Task<double?> Liste()
             {
                 var u = Stopwatch.StartNew();
-                seite.OrtslisteZeigen(true);
-                await ansicht.BildFertigAsync();
+                if (gl)
+                {
+                    karte = await KarteOeffnenAsync(ansicht, seite);
+                }
+                else
+                {
+                    seite.OrtslisteZeigen(true);
+                    await ansicht.BildFertigAsync();
+                }
                 return u.Elapsed.TotalMilliseconds;
             }
             async Task ListeZu()
             {
+                if (gl)
+                {
+                    await QuestlogSchliessenAsync(ansicht, karte);
+                    karte = null;
+                }
                 seite.OrtslisteZeigen(false);
                 // anderer Schluessel, damit die Zeiten beim naechsten Oeffnen neu gerechnet werden
                 seite.BusZeitenVergessen();
                 await ansicht.BildFertigAsync();
             }
+            bool BusKnopf(string id) => gl ? Dialog.Offen is not null && seite.KarteMitBus.TryGetValue(id, out var k) && k.IsVisible && k.IsEnabled : seite.BusKnopfSichtbar(id);
             await ListeZu();
             var erste = await Liste();
             var lohnt = bus.BusLohnt("amt");
-            Pruefe("Bus lohnt zum Amt", lohnt is { } z && z.Bus < z.ZuFuss && seite.BusKnopfSichtbar("amt"),
+            Pruefe("Bus lohnt zum Amt", lohnt is { } z && z.Bus < z.ZuFuss && BusKnopf("amt"),
                 lohnt is { } w ? string.Create(inv, $"zu Fuss {w.ZuFuss}, Bus {w.Bus}") : "kein Bus");
-            funde += Ergebnis("Spiel: Ortsliste mit Buszeiten (bis zum Bild)",
+            funde += Ergebnis(gl ? "Spiel: Karte oeffnen mit Buszeiten (bis zum Bild)" : "Spiel: Ortsliste mit Buszeiten (bis zum Bild)",
                 await Messwiederholung.MessenAsync(erste, Geraetegrenze, Liste, ListeZu, Task.Delay));
+            await ListeZu();
             var zeilen = bus.Ablauf.Stand.Verlauf.Count;
             var uhr = bus.Jetzt.Uhr;
             Pruefe("Bus Fahrt", bus.MitBusZu("amt") == StadtGrund.Ok && bus.Ablauf.Stand.Verlauf.Count == zeilen + 1
@@ -198,10 +223,9 @@ public static partial class AutoMessung
             // Gegenprobe: Stadt ohne Haltestellen (die alte Stadt, Fassung 0), kein Bus-Knopf
             seite.SpielSetzen(vorher);
             var ohne = Fassung0(seite);
-            seite.OrtslisteZeigen(true);
-            await ansicht.BildFertigAsync();
-            Pruefe("Bus Gegenprobe ohne Haltestellen", ohne.Linie is null && !seite.BusKnopfSichtbar("amt"), "kein Knopf");
-            seite.OrtslisteZeigen(false);
+            await Liste();
+            Pruefe("Bus Gegenprobe ohne Haltestellen", ohne.Linie is null && (gl ? Dialog.Offen is not null && seite.KarteGezeigt is not null : seite.OrtslisteSichtbar) && !BusKnopf("amt"), "kein Knopf");
+            await ListeZu();
             if (FassungVon(vorher) != 0)
             {
                 // W4b: Nicos Stadt 1 hat eigene Haltestellen; der Bus haelt an jeder (der Rundweg darf an einer zweimal halten)
@@ -246,11 +270,21 @@ public static partial class AutoMessung
         yield return "spiel/questlog-erledigt";
         await QuestlogSchliessenAsync(ansicht, t);
         var bus = MitBus(seite);
-        seite.OrtslisteZeigen(true);
-        await ansicht.BildFertigAsync();
-        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/ortsliste-bus"));
-        yield return "spiel/ortsliste-bus";
-        seite.OrtslisteZeigen(false);
+        if (seite.ErsatzSichtbar)
+        {
+            seite.OrtslisteZeigen(true);
+            await ansicht.BildFertigAsync();
+            P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/ortsliste-bus"));
+            yield return "spiel/ortsliste-bus";
+            seite.OrtslisteZeigen(false);
+        }
+        else
+        {
+            // Welle A 0.80.0 (P12-258): mit 3D die Karte im Handy mit „Mit dem Bus“
+            var kt = await KarteOeffnenAsync(ansicht, seite);
+            yield return "spiel/karte-bus";
+            await QuestlogSchliessenAsync(ansicht, kt);
+        }
         if (bus.MitBusZu("amt") == StadtGrund.Ok && !seite.ErsatzSichtbar)
         {
             var u = Stopwatch.StartNew();
