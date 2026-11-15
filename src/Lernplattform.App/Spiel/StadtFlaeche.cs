@@ -1021,9 +1021,25 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             var aussehen = _spiel.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
             // Sammelliste 125: Bild der Schrittbewegung nach dem zurueckgelegten Weg (nie nach der Uhr)
             var bild = ProbeBild >= 0 ? ProbeBild : _spiel.SchrittBild;
-            var spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild);
-            var figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
-                * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? FigurHoehe(_spiel) : 0f, _spiel.FigurZ);
+            var haltung = _spiel.Haltung;
+            GlNetz spieler;
+            Matrix4x4 figurLage;
+            if (haltung is { } h)
+            {
+                // Welle A 0.81.0 (Sammelliste 349): sitzend (Haltung der Personen am Schreibtisch) oder liegend (stehende Figur
+                // auf dem Ruecken, Kopf gegen den Blick, ohne Kopfbedeckung) auf dem Platz
+                spieler = h.Liegt
+                    ? FigurNetz(gl, "#spieler-liegt", aussehen, OhneKopf(_spiel.Kleidung), null, -1)
+                    : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, Figur.Sitzen, 0);
+                figurLage = Matrix4x4.CreateScale(groesse) * (h.Liegt ? Matrix4x4.CreateRotationX(-MathF.PI / 2) : Matrix4x4.Identity)
+                    * Matrix4x4.CreateRotationY(h.Blick) * Matrix4x4.CreateTranslation(h.Ort + new Vector3(0, innen is null ? FigurHoehe(_spiel) : 0f, 0));
+            }
+            else
+            {
+                spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild);
+                figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
+                    * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? FigurHoehe(_spiel) : 0f, _spiel.FigurZ);
+            }
             if (!_busMitFigur)
             {
                 // Welle A 0.67.0 (Sammelliste 302): im Bus sitzt die Figur im Bus der Linie (siehe Autos), sie selbst nicht
@@ -1096,7 +1112,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 if (!_busMitFigur)
                 {
                     gl.Disable(GL_DEPTH_TEST);
-                    Zeichnen(gl, Ring(gl, aussehen), Matrix4x4.CreateTranslation(_spiel.FigurX, FigurHoehe(_spiel) + 0.01f, _spiel.FigurZ), sichtProj);
+                    var ring = haltung is { } hr ? new Vector2(hr.Ort.X, hr.Ort.Z) : new Vector2(_spiel.FigurX, _spiel.FigurZ);
+                    Zeichnen(gl, Ring(gl, aussehen), Matrix4x4.CreateTranslation(ring.X, FigurHoehe(_spiel) + 0.01f, ring.Y), sichtProj);
                     gl.Enable(GL_DEPTH_TEST);
                     gl.Clear(GL_DEPTH_BUFFER_BIT);
                     Zeichnen(gl, spieler, figurLage, sichtProj);
@@ -1608,6 +1625,19 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         + (bild >= 0 && bewegung is not null ? "|" + Figur.BildName(bewegung, bild) : "");
 
     /// <summary>Figur (Hoehe 1) mit Aussehen (die Spielfigur mit Kleidung aus dem Kaufhaus), je Person einmal geladen.</summary>
+    private (IReadOnlyList<Figur.Stueck> Von, IReadOnlyList<Figur.Stueck> Ohne)? _ohneKopf;
+
+    /// <summary>Welle A 0.81.0: die Kleidung ohne Kopfbedeckung (im Bett), dieselbe Liste, solange sich die Kleidung nicht aendert.</summary>
+    private IReadOnlyList<Figur.Stueck> OhneKopf(IReadOnlyList<Figur.Stueck> kleidung)
+    {
+        if (_ohneKopf is not { } k || !ReferenceEquals(k.Von, kleidung))
+        {
+            k = (kleidung, [.. kleidung.Where(s => s.Slot != "kopf")]);
+            _ohneKopf = k;
+        }
+        return k.Ohne;
+    }
+
     private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung = null, string? bewegung = null, int bild = -1)
     {
         if (bild >= 0 && bewegung is not null)

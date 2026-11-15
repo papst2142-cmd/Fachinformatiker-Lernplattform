@@ -1,11 +1,17 @@
 # Änderungen
 
 ## A 0.81.0
-Das Spiel-Handy hat oben rechts ein X zum Schließen.
+Das Spiel-Handy hat oben rechts ein X zum Schließen, und deine Figur kann sich hinsetzen und hinlegen.
 
 - Das X steht im Kopf des Handys neben dem Titel und bleibt immer zu sehen, auch wenn du in den Aufträgen oder in der Karte weit nach unten gescrollt hast und auch bei großer Schrift.
 - Ein Tipp oder Klick auf das X schließt das Handy, die Escape-Taste geht weiter wie bisher. Den Knopf „Schließen“ ganz unten gibt es nicht mehr.
 - Ein Screenreader liest das X als „Handy schließen“ vor.
+- Tippe am Schreibtisch auf den Stuhl: Deine Figur geht hin und setzt sich. Erst im Sitzen erscheinen „Lernen“, „PC benutzen“ und „Firma öffnen“.
+- Tippe auf dein Bett: Deine Figur legt sich hin. Liegend erscheint „Schlafen“.
+- Vor einem freien Sofa, Sessel oder einer Bank steht der Knopf „Hinsetzen“, vor dem Bett „Hinlegen“. An der Bushaltestelle setzt du dich nur mit „Hinsetzen“ auf die Bank, zum Einsteigen steht deine Figur von selbst auf.
+- Zum Aufstehen tippst du auf „Aufstehen“ oder einfach woanders hin. Sitzen und Liegen kosten keine Spielzeit.
+- Ohne 3D-Ansicht bleibt alles wie bisher.
+- In den Läden, am PC zu Hause, in der Firma, an den Schaltern von Bank und Amt und am Kleiderschrank bleibt der Knopf „Zurück“ oben stehen, auch wenn du weit nach unten scrollst.
 
 ## A 0.80.0
 Im Spiel ist die Kamera draußen jetzt näher an deiner Figur, und das Spiel-Handy hat eine Karte der Stadt.

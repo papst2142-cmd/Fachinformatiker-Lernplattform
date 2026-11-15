@@ -36,6 +36,9 @@ public sealed partial class SpielTafel : Grid
     private readonly ScrollViewer _rolle;
     private readonly TextBlock _krumen;
     private readonly Button _zurueck;
+    private readonly Control _kopf;
+    private readonly StackPanel _kopfFest;
+    private readonly StackPanel _spalte;
     private readonly List<Seite> _stapel = [];
     private readonly PyObjekt _entwurf = [];
     private bool _waehlen;
@@ -50,17 +53,23 @@ public sealed partial class SpielTafel : Grid
         _wege = wege;
         _krumen = T("", 11, "muted", true);
         _zurueck = Knopf(KartenTexte.Zurueck, () => Zurueck(), "ghost", 38);
-        var kopf = Zeile(_krumen, _zurueck);
-        kopf.Margin = new Thickness(0, 0, 0, 4);
-        var spalte = new StackPanel { Spacing = 14, MaxWidth = Breite, Margin = new Thickness(16, 12, 16, 24) };
-        spalte.Children.Add(kopf);
-        spalte.Children.Add(_inhalt);
+        // Welle A 0.81.0 (Weisung P12-273, Nico 5a): die Kopfzeile mit „Zurueck“ steht fest ueber dem Bildlauf (rollt nicht
+        // mehr mit dem Inhalt weg); Abstaende wie bisher (Kopf 12 oben, 4 + 14 zum Inhalt)
+        _kopf = Zeile(_krumen, _zurueck);
+        _kopf.Margin = new Thickness(0, 0, 0, 4);
+        _kopfFest = new StackPanel { MaxWidth = Breite, Margin = new Thickness(16, 12, 16, 0), Children = { _kopf } };
+        _spalte = new StackPanel { Spacing = 14, MaxWidth = Breite, Margin = new Thickness(16, 14, 16, 24) };
+        _spalte.Children.Add(_inhalt);
         _rolle = new ScrollViewer
         {
-            Content = spalte,
+            Content = _spalte,
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
-        var hinten = new Border { Child = _rolle }.Farbe(Border.BackgroundProperty, "Pinsel.bg");
+        var raster = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
+        raster.Children.Add(_kopfFest);
+        Grid.SetRow(_rolle, 1);
+        raster.Children.Add(_rolle);
+        var hinten = new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg");
         Children.Add(hinten);
         Schrift.BeiStufe(this, Zeichnen);
     }

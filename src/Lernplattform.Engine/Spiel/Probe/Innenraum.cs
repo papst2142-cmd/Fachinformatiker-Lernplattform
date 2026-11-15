@@ -906,7 +906,11 @@ public sealed partial class Innenraum
         foreach (var d in deko)
         {
             var (teileVorher, stueckeVorher) = (_teile.Count, _stuecke.Count);
+            _dekoJetzt = d;
             Deko(d);
+            // Welle A 0.81.0 (Sammelliste 349): Plaetze zum Sitzen und Liegen dieses Stuecks
+            SitzeMerken(stueckeVorher);
+            _dekoJetzt = null;
             _dekoUmrisse.Add(new DekoUmriss(d, _teile.Skip(teileVorher).Concat(StueckeAlsTeile(_stuecke.Skip(stueckeVorher))).ToList())
             {
                 Kaesten = [.. _teile.Skip(teileVorher)],
@@ -921,6 +925,8 @@ public sealed partial class Innenraum
             FestKaesten = [.. _teile.Skip(festTeile)];
             FestModelle = [.. _stuecke.Skip(festStuecke)];
         }
+        // Welle A 0.81.0 (Sammelliste 349): Plaetze, an denen die Figur ein anderes Stueck beruehrte, gibt es nicht
+        SitzePruefen();
         if (Fest is not null)
         {
             // Phase 8 W6: nur angehaengt, damit ein Wechsel der Festzeit neu laedt
@@ -1333,6 +1339,7 @@ public sealed partial class Innenraum
                 {
                     Modell(r, "chairDesk", (b / 2) - 0.38f, tt, 0.76f, 0.76f, 1.0f * M, 0, Farben.Polster, 2);
                     StuhlMerken(r.Rechteck((b / 2) - 0.38f, tt, 0.76f, 0.76f), (x + (w / 2), z + (t / 2)));
+                    PcStuhlMerken(_stuehle[^1], r.Rechteck((b / 2) - 0.38f, tt, 0.76f, 0.76f));
                 }
                 break;
             case "leitstand":

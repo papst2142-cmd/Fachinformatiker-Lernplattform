@@ -144,7 +144,9 @@ public sealed partial class StadtSpiel
     /// <summary>Knoepfe der Fahrt (Aktion, Name); leer, wenn keine Fahrt und kein Bus zum Einsteigen.</summary>
     private List<(string Aktion, string Name)> MitfahrtKnoepfe() => Mitfahrt switch
     {
-        MitfahrtStufe.Keine when BusZumEinsteigen is not null => [(AktionEinsteigen, SpielProbeTexte.Einsteigen)],
+        // Welle A 0.81.0 (Nico 4b): an der Haltestelle dazu „Hinsetzen“ bzw. „Aufstehen“ (Bank im Haeuschen)
+        MitfahrtStufe.Keine when BusZumEinsteigen is not null => [(AktionEinsteigen, SpielProbeTexte.Einsteigen), .. BankKnoepfe()],
+        MitfahrtStufe.Keine => BankKnoepfe(),
         MitfahrtStufe.ImBus when AussteigenGewuenscht => [(AktionHaeltGleich, SpielProbeTexte.HaeltGleich)],
         MitfahrtStufe.ImBus => [(AktionAussteigen, SpielProbeTexte.Aussteigen)],
         _ => [],
@@ -175,6 +177,8 @@ public sealed partial class StadtSpiel
         {
             return false;
         }
+        // Welle A 0.81.0 (Nico 4b): sitzt die Figur auf der Bank, steht sie vor dem Einsteigen auf
+        Aufstehen();
         _mitBus = bus;
         _einHalt = nr;
         _letzterHalt = nr;
@@ -303,6 +307,9 @@ public sealed partial class StadtSpiel
                     _mitBus = 0;
                     ImFreien = true;
                     HaltestellePruefen(verkehr);
+                    // Welle A 0.81.0 (Nico 4b): an der Haltestelle gleich „Hinsetzen“ (ohne 3D wie bisher keine Knoepfe)
+                    Knoepfe = MitfahrtKnoepfe();
+                    Geaendert?.Invoke();
                 }
                 return;
         }
@@ -345,7 +352,7 @@ public sealed partial class StadtSpiel
         BusZumEinsteigen = bus;
         if (an is null)
         {
-            if (vorher is not null && Knoepfe.Any(k => k.Aktion == AktionEinsteigen))
+            if (vorher is not null && Knoepfe.Any(k => k.Aktion is AktionEinsteigen or AktionHinsetzen or AktionAufstehen))
             {
                 // weggegangen: der Knopf faellt weg (E1: sonst nichts)
                 Knoepfe = [];

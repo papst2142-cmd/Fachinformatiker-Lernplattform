@@ -106,6 +106,36 @@ public static class Figur
     /// <summary>Phase 9 W1 (Weisung P9-3): sitzend am Schreibtisch, ein Bild (Name plus "00"), Personen auf einem Stuhl.</summary>
     public const string Sitzen = "figur-sitzen";
 
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 349), gemessen an <see cref="Sitzen"/> (Figur der Hoehe 1): Unterseite des Gesaesses ueber
+    /// dem Boden der Figur.
+    /// </summary>
+    public const float SitzUnten = 0.282f;
+
+    /// <summary>Welle A 0.81.0: Spalt zwischen Gesaess und Sitzflaeche (Anteil der Figurhoehe).</summary>
+    public const float SitzSpalt = 0.004f;
+
+    /// <summary>
+    /// Welle A 0.81.0: so weit (Anteil der Figurhoehe) liegt die Stelle der sitzenden Figur hinter der Vorderkante des Sitzes;
+    /// die Unterschenkel (hinten ab 0,055) bleiben davor frei.
+    /// </summary>
+    public const float SitzVor = 0.045f;
+
+    /// <summary>Welle A 0.81.0: Ruecken der liegenden Figur unter ihrer Mitte (stehend: hinterste Stelle 0,139 hinter der Mitte).</summary>
+    public const float LiegenRuecken = 0.139f;
+
+    /// <summary>Welle A 0.81.0: so weit liegt die Figur ueber der Liegeflaeche (das Kissen ist hoeher als die Matratze).</summary>
+    public const float LiegenUeber = 0.025f;
+
+    /// <summary>Welle A 0.81.0: Kopf so weit (Anteil der Laenge) vom Kopfende, hoechstens bis die Fuesse <see cref="LiegenRand"/> vor dem Fussende liegen.</summary>
+    public const float LiegenKopf = 0.12f;
+
+    /// <summary>Welle A 0.81.0: das Kopfteil der Betten (bedSingle, bedDouble) reicht so weit (Anteil der Tiefe) nach vorn.</summary>
+    public const float LiegenKopfteil = 0.1f;
+
+    /// <summary>Welle A 0.81.0: Abstand der Fuesse vom Fussende und des Kopfs vom Kopfteil.</summary>
+    public const float LiegenRand = 0.03f;
+
     /// <summary>Bilder je Bewegung (ein Doppelschritt), je Bild ein Modell Name plus zwei Ziffern in modelle.bin.</summary>
     public const int Bilder = 16;
 

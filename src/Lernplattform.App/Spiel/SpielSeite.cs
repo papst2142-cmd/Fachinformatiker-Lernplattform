@@ -63,6 +63,11 @@ public sealed partial class SpielSeite : Grid
     private readonly Button _einrichten;
     private readonly Button _uebersicht;
     private readonly WrapPanel _ortKnoepfe = new();
+
+    /// <summary>Knoepfe des Ortes je Aktion (Start-Test, Welle A 0.81.0: Hinsetzen, Hinlegen, Aufstehen).</summary>
+    public IReadOnlyDictionary<string, Button> OrtKnoepfe => _ortKnoepfeJeAktion;
+
+    private readonly Dictionary<string, Button> _ortKnoepfeJeAktion = new(StringComparer.Ordinal);
     // Phase 12 Welle 2: ohne 3D die Knoepfe der Moebel am Ort oben in der Ortsliste (sie rollt; unten in der Karte
     // passten sie bei grosser Schrift am Handy nicht mehr ins Bild)
     private readonly WrapPanel _ortAktionen = new() { IsVisible = false, Margin = new Thickness(0, 0, 0, 8) };
@@ -1065,6 +1070,8 @@ public sealed partial class SpielSeite : Grid
             _betreten.IsVisible = _zurStadt.IsVisible = _warten.IsVisible = false;
             return;
         }
+        // Welle A 0.81.0: Sitzen und Liegen nur mit 3D (ohne 3D Knoepfe wie bis A 0.80.0)
+        spiel.OhneDreiDSetzen(_ersatz.IsVisible);
         _kopfzeile.Text = spiel.Kopfzeile;
         _zeile.Text = spiel.Zeile;
         HinweisfeldZeigen(spiel);
@@ -1151,11 +1158,13 @@ public sealed partial class SpielSeite : Grid
         }
         _tafelSchluessel = schluessel;
         _ortKnoepfe.Children.Clear();
+        _ortKnoepfeJeAktion.Clear();
         foreach (var (aktion, name) in spiel.Knoepfe)
         {
             var knopf = Schrift.Knopf(name, true);
             knopf.Click += (_, _) => spiel.Knopf(aktion);
             _ortKnoepfe.Children.Add(knopf);
+            _ortKnoepfeJeAktion[aktion] = knopf;
         }
         _ortAktionen.Children.Clear();
         if (_ersatz.IsVisible && !spiel.Einrichten && spiel.ImInnenraum)

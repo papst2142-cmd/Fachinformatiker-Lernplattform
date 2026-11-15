@@ -192,6 +192,26 @@ public static class Haltestellen
         return s;
     });
 
+    /// <summary>Welle A 0.81.0 (Sammelliste 349, nur fuer Pruefungen): das Wartehaeuschen im eigenen Raum (Lage <see cref="Lage"/>).</summary>
+    public static Netz HaeuschenNetz => HaeuschenMuster.Value;
+
+    /// <summary>Welle A 0.81.0: Sitzplatz der Spielfigur laengs zur Mitte des Haeuschens (neben der wartenden Person bei -0,08).</summary>
+    public const float BankPlatz = 0.14f;
+
+    /// <summary>
+    /// Welle A 0.81.0 (Weisung P12-272, Nico 4b): Stelle (x, Hoehe ueber dem Boden, z) und Blick der Spielfigur
+    /// (<see cref="Figur.StadtHoehe"/>) auf der Bank im Haeuschen, Blick zur Strasse. Wie <see cref="Innenraum.Platz"/>:
+    /// Gesaess auf der Bank, die Unterschenkel knapp vor ihrer Vorderkante.
+    /// </summary>
+    public static (Vector3 Ort, float Blick) BankSitz(Haltestelle h)
+    {
+        const float t = HaeuschenTief / 2, vorn = t - 0.10f, oben = 0.12f;
+        var f = -h.Aussen;
+        // 0,01 weiter vorn als im Raum: ein Spitzhut (nach hinten geneigt) bleibt so vor der Glasrueckwand
+        var stelle = h.Haeuschen + (h.Fahrt * BankPlatz) + (h.Aussen * vorn) - (f * ((Figur.SitzVor * Figur.StadtHoehe) - 0.01f));
+        return (new Vector3(stelle.X, oben - ((Figur.SitzUnten - Figur.SitzSpalt) * Figur.StadtHoehe), stelle.Y), MathF.Atan2(f.X, f.Y));
+    }
+
     /// <summary>Haeuschen und Mast aller Haltestellen in ein Netz der Stadt (Paket-Netz, nah und fern gleich).</summary>
     public static void Hinzu(Netz ziel, IEnumerable<Haltestelle> haltestellen)
     {

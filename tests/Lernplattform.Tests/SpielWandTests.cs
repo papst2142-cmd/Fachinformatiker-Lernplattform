@@ -188,7 +188,7 @@ public sealed class SpielWandTests
     /// <summary>Ein gezeichneter Quader eines Wandstuecks; <see cref="Aussen"/> zeigt bei einer Aussenwand nach draussen, sonst 0.</summary>
     internal readonly record struct WandTeil(Teil Q, Vector2 Aussen);
 
-    private static IEnumerable<WandTeil> WandQuader(Innenraum innen) =>
+    internal static IEnumerable<WandTeil> WandQuader(Innenraum innen) =>
         innen.Waende.SelectMany(w => innen.Teile.Skip(w.Von).Take(w.Bis - w.Von).Where(t => t.Art == TeilArt.Quader).Select(t => new WandTeil(t, w.Aussen)));
 
     /// <summary>
