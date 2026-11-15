@@ -21,7 +21,8 @@ public class EchtFormatTests
 {
     private static readonly string Datei = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen", EchtSaetze.Datei);
 
-    private static byte[] Roh => File.ReadAllBytes(Datei);
+    /// <summary>Seit A 0.79.0 nur die Probesaetze (die 15 Saetze der W3 prueft <see cref="EchtInhalteW3Tests"/>).</summary>
+    private static byte[] Roh => EchtInhalteW3Tests.NurProbesaetze();
 
     private static EchtBestand Bestand => EchtSaetze.Laden(Roh);
 
