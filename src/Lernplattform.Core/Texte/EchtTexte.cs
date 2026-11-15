@@ -74,12 +74,71 @@ public static class EchtTexte
     public const string BildZeigen = "Text ausblenden";
     public const string BildName = "%s, Bild. Den Inhalt zeigt der Knopf „Als Text zeigen“ als Text.";
     public const string Leitungen = "Beschriftung der Leitungen";
-    public const string ZeichnenHinweis = "Zeichne auf Papier. Nach dem Abgeben vergleichst du deine Zeichnung mit dem Musterbild "
-        + "und hakst ab, was stimmt.";
+    public const string ZeichnenHinweis = "Zeichne auf Papier oder im Baukasten. Nach dem Abgeben vergleichst du deine Zeichnung "
+        + "mit dem Musterbild und hakst ab, was stimmt.";
     public const string Vorgabe = "Vorgegebener Anfang";
     public const string Gezeichnet = "Auf Papier gezeichnet";
     public const string NichtGezeichnet = "Nicht als gezeichnet markiert";
     public const string Musterbild = "MUSTERBILD";
+
+    // -- A 0.78.0: Zeichen-Baukasten -----------------------------------------------------------------
+    public const string BaukastenOeffnen = "Im Programm zeichnen";
+    public const string BaukastenSchliessen = "Baukasten ausblenden";
+    public const string Baukasten = "BAUKASTEN";
+    public const string BaukastenAnleitung = "Wähle einen Baustein: er erscheint an der nächsten freien Stelle. Tippe auf einen "
+        + "Baustein, um ihn zu wählen, und auf ein freies Feld, um ihn dorthin zu setzen. Ohne Maus geht alles über die Liste "
+        + "„Deine Zeichnung“ und die Knöpfe beim gewählten Baustein.";
+    public const string BausteinSetzen = "%s setzen";
+    public const string Zeichenflaeche = "Zeichenfläche";
+    public const string Gewaehlt = "Gewählt: %s";
+    public const string NichtsGewaehlt = "Kein Baustein gewählt. Tippe auf einen Baustein oder wähle ihn in der Liste.";
+    public const string Stelle = "Spalte %d, Zeile %d";
+    public const string Fest = "Vorgegeben, bleibt stehen.";
+    public const string BausteinText = "Text des Bausteins";
+    public const string SchluesselAttribut = "Schlüsselattribut (unterstrichen)";
+    public const string NachLinks = "Nach links";
+    public const string NachRechts = "Nach rechts";
+    public const string NachOben = "Nach oben";
+    public const string NachUnten = "Nach unten";
+    public const string VerbindenTippen = "Verbinden durch Antippen";
+    public const string VerbindenHinweis = "Tippe auf den Baustein, mit dem %s verbunden werden soll.";
+    public const string VerbindenAbbrechen = "Verbinden abbrechen";
+    public const string VerbindenMit = "Verbinden mit";
+    public const string Verbinden = "Verbinden";
+    public const string Verbindungen = "Verbindungen";
+    public const string PfeilZu = "Pfeil zu %s";
+    public const string PfeilVon = "Pfeil von %s";
+    public const string LinieZu = "Linie zu %s";
+    public const string Bedingung = "Bedingung am Pfeil zu %s, z. B. [ja]";
+    public const string Kardinalitaet = "Kardinalität an %s";
+    public const string OhneKardinalitaet = "–";
+    public const string VerbindungEntfernen = "Verbindung zu %s entfernen";
+    public const string BausteinEntfernen = "Baustein entfernen";
+    public const string DeineZeichnung = "DEINE ZEICHNUNG ALS LISTE";
+    public const string ZeichnungLeer = "Noch kein Baustein gesetzt.";
+    public const string KommtVon = "kommt von";
+    public const string OhneVerbindung = "noch ohne Verbindung";
+    public const string RasterVoll = "Kein freies Feld mehr.";
+    public const string FeldBelegt = "Das Feld ist schon belegt.";
+    public const string NichtMitSich = "Ein Baustein wird nicht mit sich selbst verbunden.";
+    public const string SchonVerbunden = "Die beiden Bausteine sind schon verbunden.";
+    public const string NichtStartEnde = "Ein Pfeil führt nie in den Start und nie aus dem Ende.";
+    public const string ErNichtErlaubt = "Erlaubt sind Attribut zu Entität oder Beziehung und Beziehung zu Entität.";
+    public const string AttributBelegt = "Ein Attribut hängt an genau einer Entität oder Beziehung.";
+    public const string ZeichnungUnlesbar = "Deine gespeicherte Zeichnung ließ sich nicht lesen. Der Baukasten beginnt wieder mit der Vorgabe.";
+    public const string ImBaukasten = "Im Baukasten gezeichnet";
+    public const string EigeneZeichnung = "Deine Zeichnung";
+    public const string EigeneZeichnungTitel = "DEINE ZEICHNUNG";
+    public const string ProgrammZaehlt = "VOM PROGRAMM GEZÄHLT";
+    public const string ZaehlHinweis = "Das Programm zählt nur. Ob Texte und Ablauf stimmen, entscheidest du mit den Häkchen.";
+    public const string ZaehlAnzahl = "%s: %d, im Musterbild %d";
+    public const string ZaehlVerbindungen = "Verbindungen: %d, im Musterbild %d";
+    public const string ZaehlKard = "Beziehungen %s: %d, im Musterbild %d";
+    public const string ZaehlSchluessel = "Schlüsselattribute: %d, im Musterbild %d";
+    public const string ZaehlRegelnOk = "Regeln des Diagramms eingehalten";
+    public const string ZaehlRegel = "Regel verletzt: %s";
+    public const string ZaehlWeitere = "und %d weitere Regelverstöße";
+    public const string ZaehlOhneText = "Ohne Text: %s";
 
     public const string ErgebnisAufgaben = "Nach Aufgaben";
     public const string ErgebnisAufgabenUntertitel = "Unter 50 Prozent rot";

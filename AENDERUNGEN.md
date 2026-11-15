@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.78.0
+Zeichenaufgaben kannst du jetzt auch im Programm lösen: mit dem Zeichen-Baukasten.
+
+- Unter jeder Zeichenaufgabe öffnet der Knopf „Im Programm zeichnen“ den Baukasten. Er kann UML-Aktivitätsdiagramme (Start, Aktion, Verzweigung, Zusammenführung, Ende) und ER-Modelle in Chen-Notation (Entität, Beziehung, Attribut).
+- Du wählst einen Baustein, und er erscheint an der nächsten freien Stelle. Mit Maus oder Finger tippst du auf einen Baustein, um ihn zu wählen, und auf ein freies Feld, um ihn dorthin zu setzen. Verbindungen ziehst du mit „Verbinden durch Antippen“. Bedingungen an Pfeilen, Kardinalitäten (1, n, m) und Schlüsselattribute stellst du beim gewählten Baustein ein.
+- Ein vorgegebener Anfang steht fest in der Zeichenfläche und lässt sich nicht verschieben oder löschen.
+- Alles geht auch ohne Maus: Die Liste „Deine Zeichnung“ nennt jeden Baustein mit Stelle und „verbunden mit …“. Beim gewählten Baustein gibt es Knöpfe wie „Nach rechts“ oder „Verbinden mit“. So kann man auch mit Tastatur und Screenreader zeichnen.
+- Nach dem Abgeben siehst du deine Zeichnung neben dem Musterbild. Das Programm zählt, was sich zählen lässt: Bausteine je Art, Verbindungen, Kardinalitäten, Schlüsselattribute und die Regeln des Diagramms. Es zeigt das grün oder rot. Die Punkte vergibst du weiter selbst mit Häkchen.
+- Deine Zeichnung wird wie jede Antwort gespeichert und bleibt auch erhalten, wenn das Programm unerwartet endet. Zeichnen auf Papier geht weiter wie bisher.
+
 ## A 0.77.0
 Die Prüfung im echten Format zeigt jetzt Netzpläne, Monitor-Bilder und Zeichenaufgaben.
 

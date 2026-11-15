@@ -493,19 +493,82 @@ public sealed class MonitorBild(EchtMonitor monitor) : EchtBild
 /// </summary>
 public sealed class DiagrammBild : EchtBild
 {
-    private readonly EchtDiagramm _d;
-    private readonly int _spalten;
-    private readonly int _zeilen;
+    private EchtDiagramm _d;
+    private int _spalten;
+    private int _zeilen;
     private double _zelle;
     private double _links;
+    private double[] _oben = [];
+    private double[] _hoehe = [];
+    private readonly bool _raster;
+    private string? _gewaehlt;
     private readonly Dictionary<string, (Point Mitte, Size Form, FormattedText? Text)> _orte = new(StringComparer.Ordinal);
 
-    public DiagrammBild(EchtDiagramm diagramm)
+    /// <param name="raster">
+    /// A 0.78.0 Zeichenflaeche des Baukastens: Felder des Rasters sichtbar, eine Spalte und eine Zeile Platz rechts und unten
+    /// (hoechstens <see cref="EchtZeichnung.RasterBreite"/> x <see cref="EchtZeichnung.RasterHoehe"/>), gewaehlter Baustein markiert.
+    /// </param>
+    public DiagrammBild(EchtDiagramm diagramm, bool raster = false)
     {
+        _raster = raster;
         _d = diagramm;
-        _spalten = diagramm.Elemente.Max(e => e.X) + 1;
-        _zeilen = diagramm.Elemente.Max(e => e.Y) + 1;
+        Groessen();
     }
+
+    /// <summary>Neue Zeichnung (Baukasten): gleiche Flaeche, neu planen und zeichnen.</summary>
+    public EchtDiagramm Daten
+    {
+        get => _d;
+        set
+        {
+            _d = value;
+            Groessen();
+            InvalidateMeasure();
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>Markierter Baustein (Baukasten), null = keiner.</summary>
+    public string? Gewaehlt
+    {
+        get => _gewaehlt;
+        set
+        {
+            _gewaehlt = value;
+            InvalidateVisual();
+        }
+    }
+
+    private void Groessen()
+    {
+        var x = _d.Elemente.Select(e => e.X).DefaultIfEmpty(-1).Max() + 1;
+        var y = _d.Elemente.Select(e => e.Y).DefaultIfEmpty(-1).Max() + 1;
+        (_spalten, _zeilen) = _raster
+            ? (Math.Clamp(x + 1, 4, EchtZeichnung.RasterBreite), Math.Clamp(y + 1, 5, EchtZeichnung.RasterHoehe))
+            : (Math.Max(1, x), Math.Max(1, y));
+    }
+
+    /// <summary>Feld des Rasters an einer Stelle des Bilds (Baukasten: Antippen), null = daneben.</summary>
+    public (int X, int Y)? Feld(Point p)
+    {
+        if (_zelle <= 0 || p.X < _links || p.X >= _links + _spalten * _zelle)
+        {
+            return null;
+        }
+        var x = (int)((p.X - _links) / _zelle);
+        for (var r = 0; r < _oben.Length; r++)
+        {
+            if (p.Y >= _oben[r] - Luecke / 2 && p.Y < _oben[r] + _hoehe[r] + Luecke / 2)
+            {
+                return (x, r);
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Mitte eines Felds im Bild (Bedienprobe im Start-Test), null = ausserhalb der Flaeche.</summary>
+    public Point? FeldMitte(int x, int y) => x < 0 || x >= _spalten || y < 0 || y >= _oben.Length ? null
+        : new Point(_links + (x + 0.5) * _zelle, _oben[y] + _hoehe[y] / 2);
 
     private double Luecke => 2.4 * F;
 
@@ -514,14 +577,14 @@ public sealed class DiagrammBild : EchtBild
         && _orte.TryGetValue(s.Id, out var o) ? o.Mitte.X : null;
 
     /// <summary>Kleinste Zelle: 7,5 Schriftgroessen, aber jedes Wort passt in seine Form (Rechnung wie in <see cref="Form"/>).</summary>
-    private double ZelleMin => Math.Max(7.5 * F, _d.Elemente.Max(e => e.Typ switch
+    private double ZelleMin => Math.Max(7.5 * F, _d.Elemente.Select(e => e.Typ switch
     {
         "beziehung" => (WortBreite(e.Text, 1, fett: true) + 0.2 * F) / (0.92 * 0.55),
         "attribut" => (WortBreite(e.Text, 0.95) + 0.2 * F) / (0.9 * 0.74),
         "aktion" => (WortBreite(e.Text) + 1.2 * F) / 0.86,
         "entitaet" => (WortBreite(e.Text, 1, fett: true) + 1.2 * F) / 0.8,
         _ => 0,
-    }));
+    }).DefaultIfEmpty(0).Max());
 
     protected override (double Mindest, double Bequem) Breiten() => (_spalten * ZelleMin, _spalten * Math.Max(11.5 * F, ZelleMin));
 
@@ -564,16 +627,23 @@ public sealed class DiagrammBild : EchtBild
             hoehen[e.Y] = Math.Max(hoehen[e.Y], formen[e.Id].Form.Height);
         }
         var oben = new double[_zeilen];
-        var y = 0.5 * F;
+        var hoehe = new double[_zeilen];
+        var y = _raster ? 0.5 * F + Luecke / 2 : 0.5 * F;
         for (var r = 0; r < _zeilen; r++)
         {
             oben[r] = y;
-            y += Math.Max(hoehen[r], 1.4 * F) + Luecke;
+            hoehe[r] = Math.Max(hoehen[r], _raster ? 2.8 * F : 1.4 * F);
+            y += hoehe[r] + Luecke;
         }
+        (_oben, _hoehe) = (oben, hoehe);
         foreach (var e in _d.Elemente)
         {
-            var mitte = new Point(_links + (e.X + 0.5) * _zelle, oben[e.Y] + Math.Max(hoehen[e.Y], 1.4 * F) / 2);
+            var mitte = new Point(_links + (e.X + 0.5) * _zelle, oben[e.Y] + hoehe[e.Y] / 2);
             _orte[e.Id] = (mitte, formen[e.Id].Form, formen[e.Id].Text);
+        }
+        if (_raster)
+        {
+            y += Luecke / 2;
         }
         return new Size(Math.Max(breite, _zelle * _spalten), y - Luecke + 0.5 * F);
     }
@@ -601,6 +671,19 @@ public sealed class DiagrammBild : EchtBild
 
     public override void Render(DrawingContext dc)
     {
+        if (_raster)
+        {
+            // Felder des Rasters: feine Rahmen, damit man sieht, wohin ein Baustein kommt
+            var feld = new Pen(Raster, 1);
+            for (var r = 0; r < _oben.Length; r++)
+            {
+                for (var c = 0; c < _spalten; c++)
+                {
+                    dc.DrawRectangle(Grund, feld, new Rect(_links + c * _zelle + 2, _oben[r] - Luecke / 2 + 2, _zelle - 4, _hoehe[r] + Luecke - 4),
+                        0.4 * F, 0.4 * F);
+                }
+            }
+        }
         foreach (var v in _d.Verbindungen)
         {
             if (_d.Art == EchtZeichnung.Er)
@@ -651,6 +734,13 @@ public sealed class DiagrammBild : EchtBild
                     dc.DrawLine(Stift(1.1), new Point(m.X - halb, unten), new Point(m.X + halb, unten));
                 }
             }
+        }
+        if (_gewaehlt is not null && _orte.TryGetValue(_gewaehlt, out var g))
+        {
+            var rand = 0.45 * F;
+            dc.DrawRectangle(null, new Pen(Akzent, Math.Max(2, 0.22 * F)) { DashStyle = DashStyle.Dash },
+                new Rect(g.Mitte.X - g.Form.Width / 2 - rand, g.Mitte.Y - g.Form.Height / 2 - rand, g.Form.Width + 2 * rand, g.Form.Height + 2 * rand),
+                0.5 * F, 0.5 * F);
         }
     }
 

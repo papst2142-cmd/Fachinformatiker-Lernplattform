@@ -43,6 +43,10 @@ public sealed class EchtFormatTeil
     private readonly DispatcherTimer _takt = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly DispatcherTimer _speichern = new() { Interval = TimeSpan.FromMilliseconds(1200) };
     private readonly Dictionary<string, TextBox> _felder = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, EchtBaukastenTeil> _baukaesten = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _bauOffen = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string?> _bauGewaehlt = new(StringComparer.Ordinal);
+    private JsonObject? _bauZustand;
     private EchtBestand? _probeBestand;
     private string _reiter = Ausgang;
     private bool _anlagen;
@@ -96,6 +100,7 @@ public sealed class EchtFormatTeil
         _takt.Stop();
         _speichern.Stop();
         _felder.Clear();
+        _baukaesten.Clear();
         _uhr = _fortschritt = _summe = null;
         _inhalt = null;
         _reiterPillen = _umschalter = null;
@@ -334,6 +339,7 @@ public sealed class EchtFormatTeil
         var zustand = _a.Zustand!;
         _inhalt!.Children.Clear();
         _felder.Clear();
+        _baukaesten.Clear();
         _zweiSpalten = ZweiSpalten;
         var aufgabeReiter = _reiter is not (Ausgang or Zeit);
         var mitAnlagen = aufgabeReiter && satz.Aufgaben[int.Parse(_reiter, CultureInfo.InvariantCulture) - 1].Teile.Any(t => t.Anlagen.Count > 0);
@@ -566,9 +572,65 @@ public sealed class EchtFormatTeil
                     _a.Festhalten([(schluessel, an ? TrainerTexte.Ja : "")]);
                     FortschrittZeigen();
                 }, radio: false));
+                if (_a.ImLauf)
+                {
+                    feld.Children.Add(Baukasten(n, teil, zustand));
+                }
                 break;
         }
         return feld;
+    }
+
+    /// <summary>
+    /// A 0.78.0: Knopf "Im Programm zeichnen" und der Baukasten der Zeichenaufgabe (offen, wenn schon etwas gezeichnet
+    /// ist). Die Zeichnung steht in der Antwort <c>&lt;aufgabe&gt;.&lt;nr&gt;/bau</c>, gespeichert wie jedes Feld.
+    /// </summary>
+    private StackPanel Baukasten(int n, EchtTeil teil, JsonObject zustand)
+    {
+        if (!ReferenceEquals(_bauZustand, zustand))
+        {
+            // andere Pruefung: offene Baukaesten und Wahl gelten nur fuer die Pruefung, in der sie entstanden
+            _bauZustand = zustand;
+            _bauOffen.Clear();
+            _bauGewaehlt.Clear();
+        }
+        var a = teil.Antwort;
+        var schluessel = EchtBewertung.Feld(n, teil.Nr, EchtBaukasten.Feld);
+        var bau = EchtBaukasten.Laden(a.Diagramm, a.Vorgabe, EchtBewertung.Antwort(zustand, schluessel));
+        var teilBau = new EchtBaukastenTeil(bau, sofort =>
+        {
+            if (sofort)
+            {
+                Festhalten();
+            }
+            else
+            {
+                _speichern.Stop();
+                _speichern.Start();
+            }
+        }, _bauGewaehlt.GetValueOrDefault(schluessel), id => _bauGewaehlt[schluessel] = id);
+        _baukaesten[schluessel] = teilBau;
+        var offen = bau.Eigenes || bau.Unlesbar || _bauOffen.Contains(schluessel);
+        teilBau.IsVisible = offen;
+        var knopf = LernTeile.Knopf(offen ? EchtTexte.BaukastenSchliessen : EchtTexte.BaukastenOeffnen);
+        Avalonia.Automation.AutomationProperties.SetName(knopf, offen ? EchtTexte.BaukastenSchliessen : EchtTexte.BaukastenOeffnen);
+        knopf.HorizontalAlignment = HorizontalAlignment.Left;
+        knopf.Click += (_, _) =>
+        {
+            teilBau.IsVisible = !teilBau.IsVisible;
+            if (teilBau.IsVisible)
+            {
+                _bauOffen.Add(schluessel);
+            }
+            else
+            {
+                _bauOffen.Remove(schluessel);
+            }
+            var name = teilBau.IsVisible ? EchtTexte.BaukastenSchliessen : EchtTexte.BaukastenOeffnen;
+            ((TextBlock)knopf.Content!).Text = name;
+            Avalonia.Automation.AutomationProperties.SetName(knopf, name);
+        };
+        return new StackPanel { Spacing = 8, Margin = new Thickness(0, 6, 0, 0), Children = { knopf, teilBau } };
     }
 
     private static string ErgebnisName(EchtAntwort a) => a.Einheit.Length > 0 ? EchtTexte.ErgebnisFeld + " (" + a.Einheit + ")" : EchtTexte.ErgebnisFeld;
@@ -654,7 +716,7 @@ public sealed class EchtFormatTeil
     private void Festhalten()
     {
         _speichern.Stop();
-        if (_a.Festhalten(_felder.Select(f => (f.Key, f.Value.Text))))
+        if (_a.Festhalten(_felder.Select(f => (f.Key, f.Value.Text)).Concat(_baukaesten.Select(b => (b.Key, (string?)b.Value.Json)))))
         {
             FortschrittZeigen();
         }
@@ -759,6 +821,14 @@ public sealed class EchtFormatTeil
             }
             if (teil.Antwort.Muster is { } muster)
             {
+                var bau = EchtBaukasten.Laden(muster.Art, teil.Antwort.Vorgabe,
+                    EchtBewertung.Antwort(zustand, EchtBewertung.Feld(n, teil.Nr, EchtBaukasten.Feld)));
+                if (bau.Eigenes)
+                {
+                    inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.EigeneZeichnungTitel), 8));
+                    inhalt.Children.Add(EchtBilder.Diagramm(bau.Diagramm, EchtTexte.EigeneZeichnung + ": " + EchtZeichnung.Name(muster.Art), _alsText));
+                    inhalt.Children.Add(Abstand(Zaehlung(EchtBaukasten.Zaehlen(bau.Diagramm, muster)), 8));
+                }
                 inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.Musterbild), 8));
                 inhalt.Children.Add(EchtBilder.Diagramm(muster, EchtTexte.Musterbild + ": " + EchtZeichnung.Name(muster.Art), _alsText));
             }
@@ -799,6 +869,25 @@ public sealed class EchtFormatTeil
     }
 
     /// <summary>Eigene Antwort; was das Programm bewertet, gruen oder rot mit dem erwarteten Wert.</summary>
+    /// <summary>A 0.78.0: was das Programm an der eigenen Zeichnung gezaehlt hat (gruen/rot, mit Zeichen fuer Farbenblinde).</summary>
+    private static Border Zaehlung(IReadOnlyList<EchtZaehlung> zeilen)
+    {
+        var liste = new StackPanel { Spacing = 4 };
+        liste.Children.Add(LernTeile.Label(EchtTexte.ProgrammZaehlt));
+        foreach (var z in zeilen)
+        {
+            liste.Children.Add(new LernText((z.Ok ? "✓ " : "✗ ") + z.Text, "Klein", FontWeight.Bold, z.Ok ? "Pinsel.green" : "Pinsel.red"));
+        }
+        liste.Children.Add(new LernText(EchtTexte.ZaehlHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        return new Border
+        {
+            Child = liste,
+            Padding = new Thickness(12, 10),
+            CornerRadius = new CornerRadius(12),
+            BorderThickness = new Thickness(1),
+        }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border");
+    }
+
     private static Control EigeneAntwort(int n, EchtTeil teil, JsonObject zustand, EchtTeilwertung wertung)
     {
         var a = teil.Antwort;
@@ -856,6 +945,10 @@ public sealed class EchtFormatTeil
                 break;
             case EchtSaetze.FormZeichnen:
                 Text(Wert(Papier).Length > 0 ? EchtTexte.Gezeichnet : EchtTexte.NichtGezeichnet);
+                if (Wert(EchtBaukasten.Feld).Length > 0)
+                {
+                    Text(EchtTexte.ImBaukasten);
+                }
                 break;
             case EchtSaetze.FormAuswahl:
                 var gewaehlt = EchtBewertung.Gewaehlt(zustand, n, teil.Nr);
@@ -953,10 +1046,15 @@ public sealed class EchtFormatTeil
         // A 0.77.0 (Welle 2): Probesatz AP2 Konzeption mit Netzplan, Monitor-Bild und Zeichenaufgabe
         "pruefung/echt-b1-lauf-aufgabe2", "pruefung/echt-b1-anlagen2", "pruefung/echt-b1-anlagen1", "pruefung/echt-b1-lauf-aufgabe3",
         "pruefung/echt-b1-bewertung-aufgabe3", "pruefung/echt-b1-anlagen2-text", "pruefung/echt-diagramm-uml",
+        // A 0.78.0: Zeichen-Baukasten (ER im Probesatz, UML ohne Satz, Bewertung mit Zaehlung)
+        "pruefung/echt-b1-baukasten-er", "pruefung/echt-baukasten-uml", "pruefung/echt-b1-bewertung-baukasten",
     ];
 
     /// <summary>Erste Nummer der Ansichten der Welle 2 in <see cref="ProbeNamen"/>.</summary>
     internal const int Welle2Ab = 10;
+
+    /// <summary>Erste Nummer der Ansichten des Baukastens (A 0.78.0) in <see cref="ProbeNamen"/>.</summary>
+    internal const int BaukastenAb = 17;
 
     /// <summary>
     /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung SI), 754 s gelaufen,
@@ -1076,6 +1174,28 @@ public sealed class EchtFormatTeil
             case Welle2Ab + 6:
                 UmlZeigen();
                 break;
+            case BaukastenAb:
+            case BaukastenAb + 2:
+                var probe = ProbeZustand(bewertet: art == BaukastenAb + 2, EchtSaetze.B1);
+                var satzB1 = _a.Bestand.Satz(Json.Text(probe["satz"]))!;
+                var erTeil = satzB1.Aufgaben[2].Teile.First(t => t.Antwort.Form == EchtSaetze.FormZeichnen);
+                ((JsonObject)probe["antworten"]!)[EchtBewertung.Feld(3, erTeil.Nr, EchtBaukasten.Feld)] = ProbeEr(erTeil).Json();
+                _a.ProbeSetzen(probe);
+                (_reiter, _anlagen) = ("3", false);
+                if (art == BaukastenAb)
+                {
+                    LaufZeigen();
+                    var er = _baukaesten.Values.FirstOrDefault();
+                    er?.ProbeWaehlen(er.ProbeBau.Diagramm.Elemente.FirstOrDefault(e => e.Text == "besucht")?.Id);
+                }
+                else
+                {
+                    BewertungZeigen();
+                }
+                break;
+            case BaukastenAb + 1:
+                UmlBaukastenZeigen();
+                break;
             default:
                 _a.ProbeSetzen(ProbeZustand(bewertet: false, EchtSaetze.B1));
                 _alsText = art == Welle2Ab + 5;
@@ -1105,6 +1225,73 @@ public sealed class EchtFormatTeil
         _inhalt = new StackPanel { Spacing = 14 };
         _koerper.Children.Add(_inhalt);
         _inhalt.Children.Add(Schrift.KopfKarte(EchtTexte.Musterbild, EchtTexte.UmlName, EchtBilder.Diagramm(diagramm, EchtTexte.UmlName)));
+    }
+
+    /// <summary>
+    /// Nur Start ohne Bedienung (A 0.78.0): Baukasten fuer ein UML-Aktivitaetsdiagramm ohne Satz; Vorgabe = Start und erste
+    /// Aktion aus <see cref="ProbeUml"/>, dazu eine Verzweigung mit zwei Aktionen, eine davon noch ohne Bedingung. Gewaehlt ist
+    /// die Verzweigung (Karte mit Bedingungen). Aenderungen werden nirgends gespeichert.
+    /// </summary>
+    private void UmlBaukastenZeigen()
+    {
+        _leeren();
+        Aktiv = true;
+        var muster = EchtZeichnung.Diagramm(JsonNode.Parse(ProbeUml), EchtZeichnung.Uml, vollstaendig: true, "Probe");
+        var vorgabe = muster with
+        {
+            Elemente = muster.Elemente.Where(e => e.Id is "s" or "a1").ToList(),
+            Verbindungen = muster.Verbindungen.Where(v => v.Von == "s").ToList(),
+        };
+        var bau = EchtBaukasten.Neu(EchtZeichnung.Uml, vorgabe);
+        var v = bau.Setzen("verzweigung", "a1")!;
+        bau.Verbinden("a1", v);
+        var a2 = bau.Setzen("aktion", v)!;
+        bau.Beschriften(a2, "Bereitschaft anrufen");
+        var a3 = bau.Setzen("aktion", v)!;
+        bau.Beschriften(a3, "Ticket anlegen");
+        bau.Verbinden(v, a2);
+        bau.Verbinden(v, a3);
+        bau.Bedingung(v, a2, "[dringend]");
+        var teil = new EchtBaukastenTeil(bau, _ => { });
+        _inhalt = new StackPanel { Spacing = 14 };
+        _koerper.Children.Add(_inhalt);
+        _inhalt.Children.Add(Schrift.KopfKarte(EchtTexte.Zeichenflaeche, EchtTexte.UmlName, teil));
+        teil.ProbeWaehlen(v);
+        ProbeUmlBaukasten = teil;
+    }
+
+    /// <summary>Probe: der Baukasten der Ansicht "echt-baukasten-uml" (Bedienprobe).</summary>
+    internal EchtBaukastenTeil? ProbeUmlBaukasten { get; private set; }
+
+    /// <summary>Probe: der Baukasten im Lauf (erste Zeichenaufgabe des Reiters).</summary>
+    internal EchtBaukastenTeil? ProbeBaukasten => _baukaesten.Values.FirstOrDefault();
+
+    /// <summary>
+    /// Probe-Zeichnung zur ER-Aufgabe des Probesatzes: Patient und „besucht“ an der Stelle des Musterbilds, Kardinalitaeten
+    /// 1:n und n:m, Schluessel Patientennummer; es fehlen Qualifikation, Datum, Startzeit, geplante Uhrzeit, Name, Adresse
+    /// (die Zaehlung zeigt dann Gruenes und Rotes).
+    /// </summary>
+    internal static EchtBaukasten ProbeEr(EchtTeil teil)
+    {
+        var bau = EchtBaukasten.Neu(EchtZeichnung.Er, teil.Antwort.Vorgabe);
+        var besucht = bau.Setzen("beziehung", "tour")!;
+        bau.Verschieben(besucht, 5, 2);
+        bau.Beschriften(besucht, "besucht");
+        var pat = bau.Setzen("entitaet", besucht)!;
+        bau.Verschieben(pat, 5, 3);
+        bau.Beschriften(pat, "Patient");
+        var nr = bau.Setzen("attribut", pat)!;
+        bau.Verschieben(nr, 4, 4);
+        bau.Beschriften(nr, "Patientennummer");
+        bau.Schluessel(nr, true);
+        bau.Verbinden(nr, pat);
+        bau.Verbinden(besucht, "tour");
+        bau.Verbinden(besucht, pat);
+        bau.Kardinalitaet(besucht, "tour", "n");
+        bau.Kardinalitaet(besucht, pat, "m");
+        bau.Kardinalitaet("faehrt", "pk", "1");
+        bau.Kardinalitaet("faehrt", "tour", "n");
+        return bau;
     }
 
     /// <summary>Kleines erfundenes UML-Aktivitaetsdiagramm (Stoerungsannahme) nur fuer den Start ohne Bedienung.</summary>
