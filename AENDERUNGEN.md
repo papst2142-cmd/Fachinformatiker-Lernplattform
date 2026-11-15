@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.79.0
+Die Prüfung im echten Format hat jetzt 15 neue Prüfungssätze.
+
+- Für die AP1 gibt es fünf neue Sätze. Sie gelten wie bisher für alle Fachrichtungen.
+- Für die AP2 Systemintegration gibt es je fünf neue Sätze in den Bereichen „Konzeption und Administration von IT-Systemen“ und „Analyse und Entwicklung von Netzwerken“.
+- Jeder Satz spielt in einer eigenen erfundenen Firma, von der Zahnarztpraxis über die Bootswerft bis zum Abwasserbetrieb. Die vier Aufgaben eines Satzes gehören zu dieser Firma.
+- Viele Sätze haben Netzpläne, Monitor-Bilder, Tabellen und Konfigurationen als Anlagen. In mehreren Sätzen zeichnest du ein UML-Aktivitätsdiagramm oder ein ER-Modell, auf Papier oder mit dem Zeichen-Baukasten.
+- Beim Start nimmt das Programm den nächsten Satz, den du noch nicht bearbeitet hast. Hast du alle bearbeitet, kommt der, den du am längsten nicht mehr hattest.
+- Die bisherige Prüfung, dein Lernstand und das Spiel bleiben, wie sie sind.
+
 ## A 0.78.0
 Zeichenaufgaben kannst du jetzt auch im Programm lösen: mit dem Zeichen-Baukasten.
 

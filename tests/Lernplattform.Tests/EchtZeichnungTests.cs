@@ -15,7 +15,8 @@ public class EchtZeichnungTests
 
     private static readonly string Format1 = Path.Combine(Pfade.Wurzel, "tests", "Lerninhalte", "echt", "pruefungssaetze_format1.json");
 
-    private static JsonObject Wurzel() => JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
+    /// <summary>Seit A 0.79.0 nur die Probesaetze (die 15 Saetze der W3 prueft <see cref="EchtInhalteW3Tests"/>).</summary>
+    private static JsonObject Wurzel() => JsonNode.Parse(EchtInhalteW3Tests.NurProbesaetze())!.AsObject();
 
     private static EchtBestand Laden(JsonObject wurzel) => EchtSaetze.Laden(Encoding.UTF8.GetBytes(wurzel.ToJsonString()));
 
@@ -51,7 +52,7 @@ public class EchtZeichnungTests
     [Fact]
     public void W2_ProbesatzKonzeption_LaedtMitNetzplanMonitorUndErZeichnung()
     {
-        var bestand = EchtSaetze.Laden(File.ReadAllBytes(Datei));
+        var bestand = EchtSaetze.Laden(EchtInhalteW3Tests.NurProbesaetze());
         Assert.Empty(bestand.Fehler);
         var satz = B1;
         Assert.Equal(("si", "b1"), (satz.Fachrichtung, satz.Bereich));

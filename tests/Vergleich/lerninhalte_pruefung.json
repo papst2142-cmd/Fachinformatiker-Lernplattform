@@ -258,5 +258,852 @@
    "si": 18,
    "gemeinsam": 42
   }
+ },
+ "pruefungssaetze": {
+  "format": 2,
+  "fehler": [],
+  "saetze": {
+   "alle_ap1_01": {
+    "fachrichtung": "alle",
+    "bereich": "ap1",
+    "firma": "Velowerk Tannau GmbH",
+    "punkte": [
+     25,
+     26,
+     24,
+     25
+    ],
+    "teile": [
+     8,
+     8,
+     7,
+     9
+    ],
+    "anlagen": [
+     "tabelle",
+     "text",
+     "code",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 11,
+     "auswahl": 3,
+     "luecke": 2,
+     "rechnen": 6,
+     "tabelle": 3,
+     "zeilen": 7
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 5,
+     "beschreiben": 3,
+     "ergaenzen": 3,
+     "erlaeutern": 4,
+     "ermitteln": 5,
+     "korrigieren": 1,
+     "nennen": 6,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 63,
+    "punkte_programm": 37
+   },
+   "si_b1_01": {
+    "fachrichtung": "si",
+    "bereich": "b1",
+    "firma": "Lindgrün Pflegedienst GmbH",
+    "punkte": [
+     25,
+     25,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     5,
+     7
+    ],
+    "anlagen": [
+     "monitor",
+     "netzplan",
+     "code",
+     "text",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 2,
+     "luecke": 2,
+     "rechnen": 4,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 4,
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 3,
+     "ermitteln": 3,
+     "erstellen": 1,
+     "korrigieren": 1,
+     "nennen": 4,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 69,
+    "punkte_programm": 31
+   },
+   "alle_ap1_02": {
+    "fachrichtung": "alle",
+    "bereich": "ap1",
+    "firma": "Zahnzentrum Kornmole MVZ GmbH",
+    "punkte": [
+     24,
+     26,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     8,
+     6,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "tabelle",
+     "netzplan",
+     "code",
+     "text",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 3,
+     "luecke": 1,
+     "rechnen": 3,
+     "tabelle": 4,
+     "zeichnen": 1,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 3,
+     "beschreiben": 3,
+     "ergaenzen": 4,
+     "erlaeutern": 3,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "nennen": 5,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 63,
+    "punkte_programm": 37
+   },
+   "alle_ap1_03": {
+    "fachrichtung": "alle",
+    "bereich": "ap1",
+    "firma": "Bootswerft Elbkrümmung GmbH",
+    "punkte": [
+     24,
+     26,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "englisch",
+     "tabelle",
+     "text",
+     "tabelle",
+     "code"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 3,
+     "luecke": 1,
+     "rechnen": 6,
+     "tabelle": 3,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 6,
+     "beschreiben": 3,
+     "ergaenzen": 3,
+     "erlaeutern": 3,
+     "ermitteln": 4,
+     "nennen": 4,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 60,
+    "punkte_programm": 40
+   },
+   "alle_ap1_04": {
+    "fachrichtung": "alle",
+    "bereich": "ap1",
+    "firma": "Bücherhalle Ulmenau gGmbH",
+    "punkte": [
+     26,
+     24,
+     25,
+     25
+    ],
+    "teile": [
+     8,
+     8,
+     7,
+     6
+    ],
+    "anlagen": [
+     "tabelle",
+     "netzplan",
+     "text",
+     "code",
+     "text",
+     "text",
+     "englisch",
+     "text"
+    ],
+    "formen": {
+     "angaben": 9,
+     "auswahl": 3,
+     "luecke": 2,
+     "rechnen": 4,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 4,
+     "beschreiben": 3,
+     "ergaenzen": 2,
+     "erlaeutern": 4,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "korrigieren": 1,
+     "nennen": 6,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 72,
+    "punkte_programm": 28
+   },
+   "alle_ap1_05": {
+    "fachrichtung": "alle",
+    "bereich": "ap1",
+    "firma": "Backstube Mehlschwalbe GmbH",
+    "punkte": [
+     25,
+     26,
+     24,
+     25
+    ],
+    "teile": [
+     8,
+     8,
+     7,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "netzplan",
+     "tabelle",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 8,
+     "auswahl": 4,
+     "luecke": 2,
+     "rechnen": 6,
+     "tabelle": 3,
+     "zeilen": 7
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 5,
+     "beschreiben": 2,
+     "ergaenzen": 4,
+     "erlaeutern": 4,
+     "ermitteln": 6,
+     "nennen": 5,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 57,
+    "punkte_programm": 43
+   },
+   "alle_ap1_06": {
+    "fachrichtung": "alle",
+    "bereich": "ap1",
+    "firma": "Brombeerweg Steuerberater PartG mbB",
+    "punkte": [
+     25,
+     26,
+     24,
+     25
+    ],
+    "teile": [
+     7,
+     8,
+     8,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "netzplan",
+     "tabelle",
+     "monitor",
+     "text",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 8,
+     "auswahl": 4,
+     "luecke": 2,
+     "rechnen": 6,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 6,
+     "beschreiben": 2,
+     "ergaenzen": 1,
+     "erlaeutern": 4,
+     "ermitteln": 6,
+     "erstellen": 1,
+     "nennen": 5,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 69,
+    "punkte_programm": 31
+   },
+   "si_b1_02": {
+    "fachrichtung": "si",
+    "bereich": "b1",
+    "firma": "Ferienpark Kiefernbucht GmbH",
+    "punkte": [
+     25,
+     25,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     6,
+     5,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "tabelle",
+     "netzplan",
+     "text",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 2,
+     "rechnen": 7,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 7,
+     "beschreiben": 2,
+     "ergaenzen": 1,
+     "erlaeutern": 3,
+     "ermitteln": 2,
+     "erstellen": 1,
+     "nennen": 4,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 74,
+    "punkte_programm": 26
+   },
+   "si_b1_03": {
+    "fachrichtung": "si",
+    "bereich": "b1",
+    "firma": "Krählinger Tragwerksplanung GmbH",
+    "punkte": [
+     25,
+     25,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     8
+    ],
+    "anlagen": [
+     "monitor",
+     "tabelle",
+     "netzplan",
+     "tabelle",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 3,
+     "luecke": 2,
+     "rechnen": 5,
+     "tabelle": 1,
+     "zeilen": 12
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 3,
+     "beschreiben": 3,
+     "ergaenzen": 1,
+     "erlaeutern": 6,
+     "ermitteln": 6,
+     "korrigieren": 1,
+     "nennen": 3,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 71,
+    "punkte_programm": 29
+   },
+   "si_b1_04": {
+    "fachrichtung": "si",
+    "bereich": "b1",
+    "firma": "Bergsporthandel Firnkamm GmbH",
+    "punkte": [
+     25,
+     25,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     6,
+     6,
+     8
+    ],
+    "anlagen": [
+     "monitor",
+     "tabelle",
+     "text",
+     "tabelle",
+     "englisch",
+     "code"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 2,
+     "luecke": 1,
+     "rechnen": 5,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 5,
+     "beschreiben": 5,
+     "ergaenzen": 2,
+     "erlaeutern": 5,
+     "ermitteln": 3,
+     "erstellen": 1,
+     "nennen": 3,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 71,
+    "punkte_programm": 29
+   },
+   "si_b1_05": {
+    "fachrichtung": "si",
+    "bereich": "b1",
+    "firma": "Tierklinik Otterwiese GmbH",
+    "punkte": [
+     25,
+     25,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     6,
+     7
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "text",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 3,
+     "luecke": 1,
+     "rechnen": 5,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 5,
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 4,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 67,
+    "punkte_programm": 33
+   },
+   "si_b1_06": {
+    "fachrichtung": "si",
+    "bereich": "b1",
+    "firma": "Lichtgestöber Veranstaltungstechnik GmbH",
+    "punkte": [
+     25,
+     25,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "monitor",
+     "netzplan",
+     "tabelle",
+     "code",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 2,
+     "luecke": 3,
+     "rechnen": 6,
+     "tabelle": 1,
+     "zeilen": 10
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 6,
+     "beschreiben": 2,
+     "ergaenzen": 1,
+     "erlaeutern": 3,
+     "ermitteln": 5,
+     "nennen": 4,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 67,
+    "punkte_programm": 33
+   },
+   "si_b2_01": {
+    "fachrichtung": "si",
+    "bereich": "b2",
+    "firma": "Messezentrum Sandhafen GmbH",
+    "punkte": [
+     26,
+     25,
+     25,
+     24
+    ],
+    "teile": [
+     7,
+     8,
+     7,
+     8
+    ],
+    "anlagen": [
+     "netzplan",
+     "tabelle",
+     "tabelle",
+     "text",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 3,
+     "luecke": 2,
+     "rechnen": 4,
+     "tabelle": 2,
+     "zeilen": 12
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 4,
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 6,
+     "ermitteln": 5,
+     "nennen": 4,
+     "vergleichen": 4
+    },
+    "punkte_selbst": 66,
+    "punkte_programm": 34
+   },
+   "si_b2_02": {
+    "fachrichtung": "si",
+    "bereich": "b2",
+    "firma": "Reederei Inselsund GmbH",
+    "punkte": [
+     26,
+     24,
+     25,
+     25
+    ],
+    "teile": [
+     8,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "text",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 8,
+     "auswahl": 2,
+     "luecke": 3,
+     "rechnen": 5,
+     "tabelle": 2,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 5,
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 5,
+     "ermitteln": 5,
+     "nennen": 5,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 63,
+    "punkte_programm": 37
+   },
+   "si_b2_03": {
+    "fachrichtung": "si",
+    "bereich": "b2",
+    "firma": "Institut für Bodenkunde Lehmgrube e. V.",
+    "punkte": [
+     25,
+     26,
+     24,
+     25
+    ],
+    "teile": [
+     8,
+     7,
+     8,
+     8
+    ],
+    "anlagen": [
+     "text",
+     "netzplan",
+     "tabelle",
+     "code",
+     "monitor",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 2,
+     "luecke": 3,
+     "rechnen": 4,
+     "tabelle": 2,
+     "zeilen": 14
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 4,
+     "beschreiben": 4,
+     "ergaenzen": 3,
+     "erlaeutern": 5,
+     "ermitteln": 4,
+     "nennen": 5,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 66,
+    "punkte_programm": 34
+   },
+   "si_b2_04": {
+    "fachrichtung": "si",
+    "bereich": "b2",
+    "firma": "Filmtheater Leinwandglanz GmbH",
+    "punkte": [
+     25,
+     25,
+     24,
+     26
+    ],
+    "teile": [
+     8,
+     7,
+     7,
+     8
+    ],
+    "anlagen": [
+     "netzplan",
+     "text",
+     "code",
+     "code",
+     "tabelle",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 3,
+     "luecke": 4,
+     "rechnen": 5,
+     "tabelle": 2,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 5,
+     "beschreiben": 3,
+     "ergaenzen": 2,
+     "erlaeutern": 4,
+     "ermitteln": 7,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 58,
+    "punkte_programm": 42
+   },
+   "si_b2_05": {
+    "fachrichtung": "si",
+    "bereich": "b2",
+    "firma": "Zweckverband Abwasser Mittleres Lautertal",
+    "punkte": [
+     24,
+     24,
+     26,
+     26
+    ],
+    "teile": [
+     7,
+     7,
+     8,
+     8
+    ],
+    "anlagen": [
+     "netzplan",
+     "code",
+     "text",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 2,
+     "luecke": 7,
+     "rechnen": 4,
+     "tabelle": 1,
+     "zeilen": 10
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 4,
+     "beschreiben": 3,
+     "ergaenzen": 1,
+     "erlaeutern": 5,
+     "ermitteln": 8,
+     "korrigieren": 1,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 56,
+    "punkte_programm": 44
+   }
+  },
+  "sichten": {
+   "si": {
+    "ap1": [
+     "alle_ap1_01",
+     "alle_ap1_02",
+     "alle_ap1_03",
+     "alle_ap1_04",
+     "alle_ap1_05",
+     "alle_ap1_06"
+    ],
+    "b1": [
+     "si_b1_01",
+     "si_b1_02",
+     "si_b1_03",
+     "si_b1_04",
+     "si_b1_05",
+     "si_b1_06"
+    ],
+    "b2": [
+     "si_b2_01",
+     "si_b2_02",
+     "si_b2_03",
+     "si_b2_04",
+     "si_b2_05"
+    ]
+   },
+   "ae": {
+    "ap1": [
+     "alle_ap1_01",
+     "alle_ap1_02",
+     "alle_ap1_03",
+     "alle_ap1_04",
+     "alle_ap1_05",
+     "alle_ap1_06"
+    ],
+    "b1": [],
+    "b2": []
+   },
+   "dpa": {
+    "ap1": [
+     "alle_ap1_01",
+     "alle_ap1_02",
+     "alle_ap1_03",
+     "alle_ap1_04",
+     "alle_ap1_05",
+     "alle_ap1_06"
+    ],
+    "b1": [],
+    "b2": []
+   },
+   "dv": {
+    "ap1": [
+     "alle_ap1_01",
+     "alle_ap1_02",
+     "alle_ap1_03",
+     "alle_ap1_04",
+     "alle_ap1_05",
+     "alle_ap1_06"
+    ],
+    "b1": [],
+    "b2": []
+   }
+  }
  }
 }

@@ -20,6 +20,11 @@ Inhalt:
   faelle  - je Fehlerfall aus tests/Lerninhalte/faelle.json die Meldungen
   sichten - je Fachrichtung die Zahl der sichtbaren Inhalte (echt und Probe)
   einteilung - Zahl der Eintraege je Art und Wert in einteilung_bisher.json
+  pruefungssaetze - seit Sollwert-Aenderung Nr. 18 (Welle W3 A 0.79.0, Weisung P12-267): die Saetze der
+            Pruefung im echten Format (inhalte_csharp/lernen/pruefungssaetze.json), unabhaengig vom C#-Lader
+            gelesen: Kennungen, die die Grundregeln verletzen (fehler), je gueltigem Satz Kopfdaten und
+            Zaehlwerte (saetze) und je Fachrichtung die sichtbaren Saetze je Bereich (sichten; AP1 gilt fuer
+            alle Fachrichtungen, AP2 nur fuer die eigene)
 
 Aufruf (Python 3.12, nur Standardbibliothek):
   python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py <repo> <ziel.json>
@@ -297,6 +302,100 @@ def setzen(daten, pfad, art, wert):
         raise SystemExit("unbekannte Art " + art)
 
 
+# Operatoren mit erlaubten Punkten (Strukturblatt P12-260 Abschnitt 3, Plan P12-152 Abschnitt 2)
+ECHT_OPERATOREN = {
+    "nennen": lambda p, n: n in (2, 3) and p == n,
+    "beschreiben": lambda p, n: n in (1, 2) and 2 * n <= p <= 3 * n,
+    "erlaeutern": lambda p, n: n in (1, 2) and 2 * n <= p <= 3 * n,
+    "begruenden": lambda p, n: p == 3,
+    "ermitteln": lambda p, n: 2 <= p <= 4,
+    "berechnen": lambda p, n: 2 <= p <= 4,
+    "ergaenzen": lambda p, n: 4 <= p <= 6,
+    "erstellen": lambda p, n: p in (8, 9),
+    "zeichnen": lambda p, n: p in (8, 9),
+    "korrigieren": lambda p, n: 2 <= p <= 6,
+    "vergleichen": lambda p, n: 4 <= p <= 6,
+}
+
+
+def echt_grundregeln(s):
+    """True, wenn ein Satz die Grundregeln aus Plan P12-152 Abschnitt 2 erfuellt (ohne Zeichnungen im Einzelnen)."""
+    kennung = s.get("kennung", "")
+    teile = kennung.split("_")
+    if len(teile) != 3 or teile[0] not in ["alle"] + FACHRICHTUNGEN or teile[1] not in ("ap1", "b1", "b2"):
+        return False
+    if s.get("fachrichtung") != teile[0] or s.get("bereich") != teile[1] or (teile[1] == "ap1") != (teile[0] == "alle"):
+        return False
+    if s.get("minuten") != 90 or not s.get("firma"):
+        return False
+    aufgaben = s.get("aufgaben") or []
+    if len(aufgaben) != 4 or sum(a.get("punkte", 0) for a in aufgaben) != 100:
+        return False
+    anlagen = {a.get("nr"): a.get("art") for a in s.get("anlagen") or []}
+    benutzt = set()
+    englisch_teil = False
+    for a in aufgaben:
+        tl = a.get("teile") or []
+        if not 24 <= a.get("punkte", 0) <= 26 or not 5 <= len(tl) <= 10 or sum(t.get("punkte", 0) for t in tl) != a["punkte"]:
+            return False
+        for t in tl:
+            p, n = t.get("punkte", 0), t.get("angaben", 1)
+            regel = ECHT_OPERATOREN.get(t.get("operator"))
+            if not 2 <= p <= 9 or regel is None or not regel(p, n) or not t.get("loesung"):
+                return False
+            if any(v not in anlagen for v in t.get("anlagen", [])):
+                return False
+            benutzt.update(t.get("anlagen", []))
+            englisch_teil = englisch_teil or bool(t.get("englisch"))
+    if set(anlagen) - benutzt or list(anlagen.values()).count("englisch") != 1 or not englisch_teil:
+        return False
+    return bool(s.get("zeitfrage"))
+
+
+def echt_selbst(t):
+    """Punkte, die man selbst mit Haekchen vergibt (Rest bewertet das Programm), wie Plan P12-152 Abschnitt 4."""
+    form = t["antwort"]["form"]
+    if form in ("zeilen", "angaben", "zeichnen"):
+        return t["punkte"]
+    if form == "rechnen":
+        return t["punkte"] - t["antwort"]["punkte_ergebnis"]
+    return 0
+
+
+def pruefungssaetze(repo):
+    pfad = os.path.join(repo, "inhalte_csharp", "lernen", "pruefungssaetze.json")
+    daten = lesen(pfad)
+    fehler, saetze, gesehen = [], {}, set()
+    for s in daten["saetze"]:
+        kennung = s.get("kennung", "")
+        if kennung in gesehen or not echt_grundregeln(s):
+            fehler.append(kennung)
+            continue
+        gesehen.add(kennung)
+        alle_teile = [t for a in s["aufgaben"] for t in a["teile"]]
+        formen, operatoren = {}, {}
+        for t in alle_teile:
+            formen[t["antwort"]["form"]] = formen.get(t["antwort"]["form"], 0) + 1
+            operatoren[t["operator"]] = operatoren.get(t["operator"], 0) + 1
+        selbst = sum(echt_selbst(t) for t in alle_teile)
+        saetze[kennung] = {
+            "fachrichtung": s["fachrichtung"],
+            "bereich": s["bereich"],
+            "firma": s["firma"],
+            "punkte": [a["punkte"] for a in s["aufgaben"]],
+            "teile": [len(a["teile"]) for a in s["aufgaben"]],
+            "anlagen": [a["art"] for a in s["anlagen"]],
+            "formen": dict(sorted(formen.items())),
+            "operatoren": dict(sorted(operatoren.items())),
+            "punkte_selbst": selbst,
+            "punkte_programm": 100 - selbst,
+        }
+    sichten = {fr: {b: [k for k, x in saetze.items() if x["bereich"] == b
+                        and (x["fachrichtung"] == "alle" if b == "ap1" else x["fachrichtung"] == fr)]
+                    for b in ("ap1", "b1", "b2")} for fr in FACHRICHTUNGEN}
+    return {"format": daten["format"], "fehler": fehler, "saetze": saetze, "sichten": sichten}
+
+
 def main():
     if len(sys.argv) != 3:
         print(__doc__)
@@ -337,6 +436,7 @@ def main():
         "faelle": faelle,
         "sichten": {"echt": sichten(bisher, quiz_alle, echt), "probe": sichten(bisher, quiz_alle, probe)},
         "einteilung": einteilung,
+        "pruefungssaetze": pruefungssaetze(repo),
     }
     with open(ziel, "w", encoding="utf-8", newline="\n") as datei:
         json.dump(ergebnis, datei, ensure_ascii=False, indent=1)
