@@ -357,11 +357,15 @@ public sealed class RundgangEbene
         }
         foreach (var termin in new[] { _ap1, _ap2 })
         {
-            termin?.ClearValue(TextBox.BorderBrushProperty);
+            if (termin is not null)
+            {
+                // Sammelliste 341: ClearValue beendet die Bindung nicht (nach hell/dunkel kam der rote Rahmen zurueck)
+                Markierung.Loesen(termin, TextBox.BorderBrushProperty);
+            }
         }
         if (_ablauf.FehlerFeld is { } feld && _elemente.TryGetValue(feld, out var control) && control is TextBox box)
         {
-            box.Farbe(TextBox.BorderBrushProperty, "Pinsel.red");
+            box.FarbeNeu(TextBox.BorderBrushProperty, "Pinsel.red");
         }
     }
 
