@@ -92,8 +92,8 @@ public static partial class AutoMessung
                         await ansicht.BildFertigAsync();
                         if (groesse == "pc")
                         {
-                            Pruefe("pc nach schmal", !seite.VerlassenUnten && !seite.KnoepfeUnterHandy,
-                                (seite.VerlassenUnten ? "Spiel verlassen UNTEN" : "Spiel verlassen neben dem Pfeil") + (seite.KnoepfeUnterHandy ? ", Knoepfe UNTER dem Handy" : ", Knoepfe in der Zeile"));
+                            Pruefe("pc nach schmal", !seite.VerlassenUnten && !seite.KnoepfeUnten,
+                                (seite.VerlassenUnten ? "Spiel verlassen UNTEN" : "Spiel verlassen neben dem Pfeil") + (seite.KnoepfeUnten ? ", Knoepfe UNTER dem Handy" : ", Knoepfe in der Zeile"));
                         }
                     }
                 }

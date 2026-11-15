@@ -268,7 +268,7 @@ public sealed partial class SpielSeite
     private Grid? _klappZeile;
 
     /// <summary>Start-Test: stehen die Knoepfe des Orts unter dem Handy-Knopf (schmale Karte, grosse Schrift)?</summary>
-    public bool KnoepfeUnterHandy => _knoepfeRolle is { } r && Grid.GetRow(r) == 1;
+    public bool KnoepfeUnten => _knoepfeRolle is { } r && Grid.GetRow(r) == 1;
 
     /// <summary>Start-Test, Fotos (Sammelliste 350): steht „Spiel verlassen“ in einer eigenen Zeile unten (zu wenig Platz neben dem Pfeil)?</summary>
     public bool VerlassenUnten => Grid.GetRow(VerlassenKnopf) == 2;
