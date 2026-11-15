@@ -48,6 +48,8 @@ public static partial class AutoMessung
             return 1;
         }
         var vorher = seite.Spiel;
+        // ohne 3D (z. B. Mac mit Metal) gibt es kein Bild der Flaeche: dann nur die Gegenseite „wie bis A 0.80.0“ pruefen
+        var gl = await GlAbwartenAsync(seite);
         try
         {
             var spiel = HaltungWohnung(seite);
@@ -57,6 +59,21 @@ public static partial class AutoMessung
                 return funde;
             }
             await ansicht.BildFertigAsync();
+            if (!gl)
+            {
+                var stuhl = innen.Sitzgelegenheiten.FirstOrDefault(p => p.Art == SitzArt.PcStuhl);
+                if (stuhl is not null)
+                {
+                    spiel.GeheZu(stuhl.Mitte.X, stuhl.Mitte.Y);
+                    spiel.SofortAnkommen();
+                    await ansicht.BildFertigAsync();
+                }
+                var wieBisher = stuhl is not null && spiel.MeinPlatz is null && spiel.Haltung is null
+                    && !spiel.Knoepfe.Any(k => k.Aktion is StadtSpiel.AktionHinsetzen or StadtSpiel.AktionHinlegen);
+                Pruefe("ohne 3D wie bisher", wieBisher, wieBisher ? "steht, kein „Hinsetzen“ (Bedienung ohne 3D unveraendert)"
+                    : "Knoepfe " + string.Join(",", spiel.Knoepfe.Select(k => k.Aktion)) + ", Platz " + spiel.MeinPlatz?.Art);
+                return funde;
+            }
             var fl = seite.Flaeche;
             await fl.NaechstesBildAsync();
             var pc = innen.Sitzgelegenheiten.FirstOrDefault(p => p.Art == SitzArt.PcStuhl);
