@@ -175,42 +175,46 @@ public static class EchtZeichnung
         }
         Paare(verbindungen.Select(v => (v.Von, v.Nach)), wo);
         var diagramm = new EchtDiagramm(art, elemente, verbindungen);
-        if (art == Uml)
+        if (Verstoesse(diagramm, vollstaendig).FirstOrDefault() is { } fehler)
         {
-            UmlPruefen(diagramm, vollstaendig, wo);
-        }
-        else
-        {
-            ErPruefen(diagramm, vollstaendig, wo);
+            throw new EchtLadefehler(wo + ": " + fehler);
         }
         return diagramm;
     }
 
-    private static void UmlPruefen(EchtDiagramm d, bool vollstaendig, string wo)
+    /// <summary>
+    /// Alle Regelverstoesse eines Diagramms in fester Reihenfolge (der erste ist die Meldung der Ladepruefung);
+    /// <paramref name="vollstaendig"/> = Regeln eines fertigen Diagramms (Musterbild, Pruefung im Baukasten, A 0.78.0);
+    /// <paramref name="name"/> benennt Bausteine in den Meldungen (ohne: Kennung bzw. Text wie in der Ladepruefung).
+    /// </summary>
+    public static IEnumerable<string> Verstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string>? name = null) =>
+        d.Art == Uml ? UmlVerstoesse(d, vollstaendig, name ?? (e => Baustein(e.Typ) + " " + e.Id)) : ErVerstoesse(d, vollstaendig, name);
+
+    private static IEnumerable<string> UmlVerstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string> name)
     {
         foreach (var v in d.Verbindungen)
         {
             var von = d.Element(v.Von);
             if (d.Element(v.Nach).Typ == "start" || von.Typ == "ende")
             {
-                throw new EchtLadefehler(wo + ": kein Pfeil führt in den Start oder aus dem Ende");
+                yield return "kein Pfeil führt in den Start oder aus dem Ende";
             }
             if (v.Kard.Length > 0)
             {
-                throw new EchtLadefehler(wo + ": Kardinalitäten gibt es nur im ER-Modell");
+                yield return "Kardinalitäten gibt es nur im ER-Modell";
             }
             if (v.Text.Length > 0 && von.Typ != "verzweigung")
             {
-                throw new EchtLadefehler(wo + ": eine Bedingung steht nur an Pfeilen aus einer Verzweigung");
+                yield return "eine Bedingung steht nur an Pfeilen aus einer Verzweigung";
             }
         }
         if (!vollstaendig)
         {
-            return;
+            yield break;
         }
         if (d.Elemente.Count(e => e.Typ == "start") != 1 || !d.Elemente.Any(e => e.Typ == "ende"))
         {
-            throw new EchtLadefehler(wo + ": genau ein Start und mindestens ein Ende");
+            yield return "genau ein Start und mindestens ein Ende";
         }
         foreach (var e in d.Elemente)
         {
@@ -227,13 +231,15 @@ public static class EchtZeichnung
             };
             if (!ok)
             {
-                throw new EchtLadefehler(wo + ": " + Baustein(e.Typ) + " " + e.Id + ": " + regel);
+                yield return name(e) + ": " + regel;
             }
         }
     }
 
-    private static void ErPruefen(EchtDiagramm d, bool vollstaendig, string wo)
+    private static IEnumerable<string> ErVerstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string>? name)
     {
+        // ohne Namensfunktion wie die Ladepruefung: "Attribut Name", "Linie a–b"; mit ihr: "Attribut „Name“"
+        string N(EchtElement e, bool text) => name is not null ? name(e) : text ? Baustein(e.Typ) + " " + e.Text : e.Id;
         foreach (var v in d.Verbindungen)
         {
             var typen = new[] { d.Element(v.Von).Typ, d.Element(v.Nach).Typ }.Order(StringComparer.Ordinal).ToArray();
@@ -245,40 +251,40 @@ public static class EchtZeichnung
             };
             if (!ok)
             {
-                throw new EchtLadefehler(wo + ": Linie " + v.Von + "–" + v.Nach
-                    + ": erlaubt sind Attribut zu Entität oder Beziehung und Beziehung zu Entität (Kardinalität 1, n oder m nur dort)");
+                yield return "Linie " + N(d.Element(v.Von), false) + "–" + N(d.Element(v.Nach), false)
+                    + ": erlaubt sind Attribut zu Entität oder Beziehung und Beziehung zu Entität (Kardinalität 1, n oder m nur dort)";
             }
             if (v.Text.Length > 0)
             {
-                throw new EchtLadefehler(wo + ": Linien im ER-Modell tragen keinen Text, nur eine Kardinalität");
+                yield return "Linien im ER-Modell tragen keinen Text, nur eine Kardinalität";
             }
         }
         foreach (var attribut in d.Elemente.Where(e => e.Typ == "attribut"))
         {
             if (d.Verbindungen.Count(v => v.Von == attribut.Id || v.Nach == attribut.Id) != 1)
             {
-                throw new EchtLadefehler(wo + ": Attribut " + attribut.Text + " hängt an genau einer Entität oder Beziehung");
+                yield return N(attribut, true) + " hängt an genau einer Entität oder Beziehung";
             }
         }
         if (!vollstaendig)
         {
-            return;
+            yield break;
         }
         foreach (var e in d.Elemente)
         {
             var nachbarn = d.Verbindungen.Where(v => v.Von == e.Id || v.Nach == e.Id).Select(v => d.Element(v.Von == e.Id ? v.Nach : v.Von)).ToList();
             if (e.Typ == "entitaet" && nachbarn.Count(n => n.Typ == "attribut" && n.Schluessel) != 1)
             {
-                throw new EchtLadefehler(wo + ": Entität " + e.Text + " braucht genau ein Schlüsselattribut");
+                yield return N(e, true) + " braucht genau ein Schlüsselattribut";
             }
             if (e.Typ == "beziehung" && nachbarn.Count(n => n.Typ == "entitaet") < 2)
             {
-                throw new EchtLadefehler(wo + ": Beziehung " + e.Text + " verbindet mindestens zwei Entitäten");
+                yield return N(e, true) + " verbindet mindestens zwei Entitäten";
             }
         }
         if (d.Verbindungen.FirstOrDefault(v => v.Kard.Length == 0 && d.Element(v.Von).Typ != "attribut" && d.Element(v.Nach).Typ != "attribut") is { } ohne)
         {
-            throw new EchtLadefehler(wo + ": Linie " + ohne.Von + "–" + ohne.Nach + " ohne Kardinalität");
+            yield return "Linie " + N(d.Element(ohne.Von), false) + "–" + N(d.Element(ohne.Nach), false) + " ohne Kardinalität";
         }
     }
 

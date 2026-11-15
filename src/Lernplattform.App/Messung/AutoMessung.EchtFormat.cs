@@ -91,6 +91,7 @@ public static partial class AutoMessung
             Messwerte.Notiere("Pruefung im echten Format Bedienprobe " + name + ": Reiter, Anlagen, Haekchen (" + vorher + " -> " + e.ProbeStand.Summe + ")");
         }
         funde += await EchtWelle2Async(ansicht, k, e, MesspunktW2);
+        funde += await EchtBaukastenAsync(ansicht, k, e, MesspunktW2);
         k.Probe(-1);
         trainer.ArtWaehlen(TrainerTexte.Uebung);
         await ansicht.BildFertigAsync();
@@ -120,11 +121,14 @@ public static partial class AutoMessung
         await messpunkt("Pruefung im echten Format UML-Musterbild (bis zum Bild)", () => k.Probe(ab + 6), null, true);
 
         // Bildkaesten: jedes Bild passt in seinen Platz oder ist seitlich wischbar (mit Hinweis); jedes Bild hat einen Namen
-        foreach (var art in new[] { ab + 1, ab + 2, ab + 3, ab + 4, ab + 6 })
+        // A 0.78.0: dazu die Zeichenflaeche des Baukastens (ER im Lauf, UML) und Bild und Zaehlung in der Bewertung
+        var bau = KlausurTeil.EchtAb + 1 + EchtFormatTeil.BaukastenAb;
+        foreach (var art in new[] { ab + 1, ab + 2, ab + 3, ab + 4, ab + 6, bau, bau + 1, bau + 2 })
         {
             k.Probe(art);
             await ansicht.BildFertigAsync();
-            var kaesten = e.ProbeInhalt?.GetVisualDescendants().OfType<Bildkasten>().ToList() ?? [];
+            // nur sichtbare Bildkaesten (A 0.78.0: der zugeklappte Baukasten einer Zeichenaufgabe hat keine Groesse)
+            var kaesten = e.ProbeInhalt?.GetVisualDescendants().OfType<Bildkasten>().Where(x => x.IsEffectivelyVisible).ToList() ?? [];
             if (kaesten.Count == 0)
             {
                 Fund(KlausurTeil.ProbeNamen[art] + ": kein gezeichnetes Bild");
