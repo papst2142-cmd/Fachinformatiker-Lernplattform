@@ -56,7 +56,8 @@ public static class Dialog
     /// Welle A 0.81.0 (Weisung P12-271, Sammelliste 348, Nico: „Handy schließen über ein X oben rechts, dass man nicht erst
     /// nach unten scrollen muss“): wie <see cref="Zeigen(string, Control, string[])"/>, aber Titel und ein X oben rechts
     /// stehen fest UEBER dem Bereich mit Bildlauf (immer zu sehen, bei jeder Schriftstufe und Groesse). Das X schliesst wie
-    /// Escape (Rueckgabe -1); der Knopf unten bleibt. <paramref name="kreuzName"/> ist der Name fuer den Screenreader.
+    /// Escape (Rueckgabe -1). <paramref name="kreuzName"/> ist der Name fuer den Screenreader. Ohne <paramref name="knoepfe"/>
+    /// (Spiel-Handy, Weisung P12-272: Nico „unten der Schließen-Button kann entfernt werden“) schliesst nur das X (und Escape).
     /// </summary>
     public static Task<int> ZeigenMitKreuz(string titel, string kreuzName, Control inhalt, params string[] knoepfe) =>
         Zeigen(titel, inhalt, null, -1, knoepfe, null, kreuzName);
@@ -108,7 +109,10 @@ public static class Dialog
             koerper.Children.Add(titelText);
         }
         koerper.Children.Add(inhalt);
-        koerper.Children.Add(reihe);
+        if (knoepfe.Length > 0)
+        {
+            koerper.Children.Add(reihe);
+        }
         // FW6 (Sammelliste 61/62): rechts Platz fuer die Scrollleiste, sonst liegt sie ueber dem Text
         koerper.Margin = new Thickness(0, 0, RandFuerLeiste, 0);
         var rollen = new ScrollViewer { Content = koerper };
@@ -163,8 +167,9 @@ public static class Dialog
         Ansage.Sagen(Vorlesetext(titel, inhalt));
         // Fokus auf den ersten Knopf (Eingabe/Leertaste bestaetigt), W4: den ersten freigegebenen, Phase 5: die Vorgabe;
         // FW6 (Sammelliste 62): das Fenster beginnt trotzdem oben beim Titel
+        // Welle A 0.81.0 (P12-272): ein Fenster nur mit X (ohne Knoepfe unten) gibt dem X den Fokus
         FokusOhneRollen(rollen, () =>
-            vorgabe >= 0 && vorgabe < reihe.Children.Count ? reihe.Children[vorgabe] : reihe.Children.FirstOrDefault(k => k.IsEnabled));
+            vorgabe >= 0 && vorgabe < reihe.Children.Count ? reihe.Children[vorgabe] : reihe.Children.FirstOrDefault(k => k.IsEnabled) ?? kreuz);
         return fertig.Task;
     }
 
@@ -307,7 +312,8 @@ public static class Dialog
         {
             foreach (var fenster in ebene.Children.OfType<Border>().ToList())
             {
-                if (Reihen.TryGetValue(fenster, out var reihe) && reihe.Children.LastOrDefault() is Button knopf)
+                // Welle A 0.81.0 (P12-272): ohne Knoepfe unten (Spiel-Handy) schliesst das X
+                if (((Reihen.TryGetValue(fenster, out var reihe) ? reihe.Children.LastOrDefault() as Button : null) ?? KreuzVon(fenster)) is { } knopf)
                 {
                     knopf.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
                 }

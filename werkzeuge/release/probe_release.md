@@ -1,7 +1,7 @@
 Das Spiel-Handy hat oben rechts ein X zum Schließen.
 
 - Das X steht im Kopf des Handys neben dem Titel und bleibt immer zu sehen, auch wenn du in den Aufträgen oder in der Karte weit nach unten gescrollt hast und auch bei großer Schrift.
-- Ein Tipp oder Klick auf das X schließt das Handy. Der Knopf „Schließen“ ganz unten und die Escape-Taste gehen weiter wie bisher.
+- Ein Tipp oder Klick auf das X schließt das Handy, die Escape-Taste geht weiter wie bisher. Den Knopf „Schließen“ ganz unten gibt es nicht mehr.
 - Ein Screenreader liest das X als „Handy schließen“ vor.
 
 ### Herunterladen

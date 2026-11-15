@@ -261,7 +261,7 @@ public static partial class AutoMessung
         var t = await QuestlogOeffnenAsync(ansicht, seite);
         yield return "spiel/questlog-offen";
         // Welle A 0.81.0 (Sammelliste 348): X oben rechts bei jeder Schriftstufe und Groesse (nach der Layoutpruefung, rollt ganz nach unten)
-        if (Dialog.KreuzFund(Dialog.Offen, KarteTexte.HandySchliessen) is { } kreuzOffen)
+        if (HandyFund(Dialog.Offen) is { } kreuzOffen)
         {
             P7W1AnsichtFehler.Add("spiel/questlog-offen: " + kreuzOffen);
         }
@@ -274,7 +274,7 @@ public static partial class AutoMessung
         t = await QuestlogOeffnenAsync(ansicht, seite, erledigt: true);
         yield return "spiel/questlog-erledigt";
         // Welle A 0.81.0 (Sammelliste 348): X oben rechts bei jeder Schriftstufe und Groesse (nach der Layoutpruefung, rollt ganz nach unten)
-        if (Dialog.KreuzFund(Dialog.Offen, KarteTexte.HandySchliessen) is { } kreuzErledigt)
+        if (HandyFund(Dialog.Offen) is { } kreuzErledigt)
         {
             P7W1AnsichtFehler.Add("spiel/questlog-erledigt: " + kreuzErledigt);
         }
@@ -294,7 +294,7 @@ public static partial class AutoMessung
             var kt = await KarteOeffnenAsync(ansicht, seite);
             yield return "spiel/karte-bus";
             // Welle A 0.81.0 (Sammelliste 348): X oben rechts bei jeder Schriftstufe und Groesse (nach der Layoutpruefung, rollt ganz nach unten)
-            if (Dialog.KreuzFund(Dialog.Offen, KarteTexte.HandySchliessen) is { } kreuzKarte)
+            if (HandyFund(Dialog.Offen) is { } kreuzKarte)
             {
                 P7W1AnsichtFehler.Add("spiel/karte-bus: " + kreuzKarte);
             }
