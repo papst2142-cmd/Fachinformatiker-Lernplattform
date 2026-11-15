@@ -198,7 +198,8 @@ public sealed partial class SpielSeite
         HandyOffen = true;
         try
         {
-            await Dialog.Zeigen(KarteTexte.HandyTitel, geraet, QuestlogTexte.Schliessen);
+            // Welle A 0.81.0 (Sammelliste 348): X oben rechts, immer zu sehen; der Knopf unten bleibt
+            await Dialog.ZeigenMitKreuz(KarteTexte.HandyTitel, KarteTexte.HandySchliessen, geraet, QuestlogTexte.Schliessen);
         }
         finally
         {

@@ -8,6 +8,9 @@ public static class KarteTexte
     /// <summary>Titel des Handy-Fensters (Auftraege und Karte).</summary>
     public const string HandyTitel = "Handy";
 
+    /// <summary>Welle A 0.81.0 (Sammelliste 348): Name des X oben rechts im Spiel-Handy (Screenreader, Tipp).</summary>
+    public const string HandySchliessen = "Handy schließen";
+
     /// <summary>Reiter im Handy und Knopf draussen (ersetzt mit 3D den Knopf „Orte“).</summary>
     public const string Karte = "Karte";
 

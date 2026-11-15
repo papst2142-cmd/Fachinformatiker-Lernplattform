@@ -52,8 +52,25 @@ public static class Dialog
     public static Task<int> Rueckfrage(string titel, string text, int vorgabe, params string[] knoepfe) =>
         Zeigen(titel, Schrift.Text(text), null, vorgabe, knoepfe);
 
+    /// <summary>
+    /// Welle A 0.81.0 (Weisung P12-271, Sammelliste 348, Nico: „Handy schließen über ein X oben rechts, dass man nicht erst
+    /// nach unten scrollen muss“): wie <see cref="Zeigen(string, Control, string[])"/>, aber Titel und ein X oben rechts
+    /// stehen fest UEBER dem Bereich mit Bildlauf (immer zu sehen, bei jeder Schriftstufe und Groesse). Das X schliesst wie
+    /// Escape (Rueckgabe -1); der Knopf unten bleibt. <paramref name="kreuzName"/> ist der Name fuer den Screenreader.
+    /// </summary>
+    public static Task<int> ZeigenMitKreuz(string titel, string kreuzName, Control inhalt, params string[] knoepfe) =>
+        Zeigen(titel, inhalt, null, -1, knoepfe, null, kreuzName);
+
+    /// <summary>Welle A 0.81.0: X und Knopfreihe je offenem Fenster (fuer <see cref="KreuzVon"/> und <see cref="AlleSchliessen"/>).</summary>
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Control, Button> Kreuze = new();
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Control, WrapPanel> Reihen = new();
+
+    /// <summary>Start-Test: das X oben rechts eines offenen Fensters (null = Fenster ohne X).</summary>
+    internal static Button? KreuzVon(Control? fenster) => fenster is not null && Kreuze.TryGetValue(fenster, out var k) ? k : null;
+
     private static Task<int> Zeigen(string titel, Control inhalt, Action<IReadOnlyList<Button>>? vorbereiten, int vorgabe, string[] knoepfe,
-        Func<int, bool>? bleibtOffen = null)
+        Func<int, bool>? bleibtOffen = null, string? kreuzName = null)
     {
         var fertig = new TaskCompletionSource<int>();
         if (_ebene is not { } ebene)
@@ -84,21 +101,47 @@ public static class Dialog
             reihe.Children.Add(knopf);
         }
         vorbereiten?.Invoke([.. reihe.Children.OfType<Button>()]);
-        var koerper = new StackPanel
+        var titelText = Schrift.Text(titel, "Gross", FontWeight.Bold);
+        var koerper = new StackPanel { Spacing = 10 };
+        if (kreuzName is null)
         {
-            Spacing = 10,
-            Children = { Schrift.Text(titel, "Gross", FontWeight.Bold), inhalt, reihe },
-        };
+            koerper.Children.Add(titelText);
+        }
+        koerper.Children.Add(inhalt);
+        koerper.Children.Add(reihe);
         // FW6 (Sammelliste 61/62): rechts Platz fuer die Scrollleiste, sonst liegt sie ueber dem Text
         koerper.Margin = new Thickness(0, 0, RandFuerLeiste, 0);
         var rollen = new ScrollViewer { Content = koerper };
-        var karte = Schrift.Karte(rollen);
+        Control innen = rollen;
+        Button? kreuz = null;
+        if (kreuzName is not null)
+        {
+            // Welle A 0.81.0 (Sammelliste 348): Kopf mit Titel und X fest ueber dem Bildlauf
+            kreuz = KreuzKnopf(kreuzName);
+            kreuz.Click += (_, _) => Schliessen(-1);
+            titelText.VerticalAlignment = VerticalAlignment.Center;
+            var kopf = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 0, 0, 10) };
+            kopf.Children.Add(titelText);
+            Grid.SetColumn(kreuz, 1);
+            kopf.Children.Add(kreuz);
+            var gitter = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
+            gitter.Children.Add(kopf);
+            Grid.SetRow(rollen, 1);
+            gitter.Children.Add(rollen);
+            innen = gitter;
+        }
+        var karte = Schrift.Karte(innen);
         karte.MaxWidth = 560;
         karte.Margin = new Thickness(16);
         karte.HorizontalAlignment = HorizontalAlignment.Stretch;
         karte.VerticalAlignment = VerticalAlignment.Center;
         Avalonia.Automation.AutomationProperties.SetName(karte, titel);
         fenster.Child = karte;
+        Reihen.AddOrUpdate(fenster, reihe);
+        if (kreuz is not null)
+        {
+            Kreuze.AddOrUpdate(fenster, kreuz);
+        }
         fenster.Background = new SolidColorBrush(Color.FromArgb(0x99, 0, 0, 0));
         fenster.KeyDown += (_, e) =>
         {
@@ -123,6 +166,69 @@ public static class Dialog
         FokusOhneRollen(rollen, () =>
             vorgabe >= 0 && vorgabe < reihe.Children.Count ? reihe.Children[vorgabe] : reihe.Children.FirstOrDefault(k => k.IsEnabled));
         return fertig.Task;
+    }
+
+    /// <summary>
+    /// Welle A 0.81.0: X oben rechts im Kopf eines Fensters, gleich dem X oben rechts am Handy (A 0.37.0, MainView
+    /// <c>Symbolknopf</c>): 48 x 48, Symbol 24 in <c>text_dim</c>, ohne Hintergrund; Name fuer Screenreader und Tipp.
+    /// </summary>
+    private static Button KreuzKnopf(string name)
+    {
+        var knopf = new Button
+        {
+            Content = Symbole.Block("CLOSE_ROUNDED", 24, "Pinsel.text_dim"),
+            Padding = new Thickness(12),
+            Background = Brushes.Transparent,
+            CornerRadius = new CornerRadius(999),
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(8, 0, 0, 0),
+        };
+        ToolTip.SetTip(knopf, name);
+        Avalonia.Automation.AutomationProperties.SetName(knopf, name);
+        return knopf;
+    }
+
+    /// <summary>
+    /// Start-Test (Welle A 0.81.0, Sammelliste 348): ist das X oben rechts im offenen Fenster da und ohne Rollen zu sehen?
+    /// Prueft Name, Lage im Fenster und in der Karte (rechts oben, nicht im Bildlauf) und rollt den Inhalt dafuer ganz
+    /// nach unten. null = in Ordnung, sonst der Fund. Ein Fenster ohne X liefert „kein X“ (Gegenprobe).
+    /// </summary>
+    internal static string? KreuzFund(Control? fenster, string name)
+    {
+        if (fenster is not Border { Child: Border karte } || KreuzVon(fenster) is not { } kreuz)
+        {
+            return "kein X oben rechts";
+        }
+        if (Avalonia.Automation.AutomationProperties.GetName(kreuz) != name)
+        {
+            return "X ohne Namen \"" + name + "\"";
+        }
+        if (kreuz.FindLogicalAncestorOfType<ScrollViewer>() is { } r && karte.IsLogicalAncestorOf(r))
+        {
+            return "X liegt im Bildlauf (rollt weg)";
+        }
+        foreach (var rollen in karte.GetLogicalDescendants().OfType<ScrollViewer>().Take(1))
+        {
+            rollen.Offset = new Vector(0, Math.Max(0, rollen.Extent.Height - rollen.Viewport.Height));
+        }
+        if (!kreuz.IsEffectivelyVisible || kreuz.Bounds.Width < 1 || kreuz.TranslatePoint(default, fenster) is not { } p
+            || karte.TranslatePoint(default, fenster) is not { } k)
+        {
+            return "X nicht zu sehen";
+        }
+        var x = new Rect(p, kreuz.Bounds.Size);
+        var kr = new Rect(k, karte.Bounds.Size);
+        if (x.X < -0.5 || x.Y < -0.5 || x.Right > fenster.Bounds.Width + 0.5 || x.Bottom > fenster.Bounds.Height + 0.5)
+        {
+            return string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"X ragt aus dem Fenster ({x.X:0.#},{x.Y:0.#} {x.Width:0.#}x{x.Height:0.#} von {fenster.Bounds.Width:0.#}x{fenster.Bounds.Height:0.#})");
+        }
+        if (!kr.Contains(x) || x.Y - kr.Y > kr.Height / 3 || kr.Right - x.Right > 40)
+        {
+            return string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"X nicht oben rechts in der Karte (X {x.X:0.#},{x.Y:0.#}, Karte {kr.X:0.#},{kr.Y:0.#} {kr.Width:0.#}x{kr.Height:0.#})");
+        }
+        return null;
     }
 
     /// <summary>Phase 11 W2: Titel und alle Texte des Inhalts (ohne Knoepfe und Felder) zum Vorlesen beim Oeffnen.</summary>
@@ -201,8 +307,7 @@ public static class Dialog
         {
             foreach (var fenster in ebene.Children.OfType<Border>().ToList())
             {
-                if (fenster.Child is Border karte && karte.Child is ScrollViewer { Content: StackPanel { Children: [.., WrapPanel reihe] } }
-                    && reihe.Children.LastOrDefault() is Button knopf)
+                if (Reihen.TryGetValue(fenster, out var reihe) && reihe.Children.LastOrDefault() is Button knopf)
                 {
                     knopf.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
                 }

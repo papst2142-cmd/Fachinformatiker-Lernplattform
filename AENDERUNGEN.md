@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.81.0
+Das Spiel-Handy hat oben rechts ein X zum Schließen.
+
+- Das X steht im Kopf des Handys neben dem Titel und bleibt immer zu sehen, auch wenn du in den Aufträgen oder in der Karte weit nach unten gescrollt hast und auch bei großer Schrift.
+- Ein Tipp oder Klick auf das X schließt das Handy. Der Knopf „Schließen“ ganz unten und die Escape-Taste gehen weiter wie bisher.
+- Ein Screenreader liest das X als „Handy schließen“ vor.
+
 ## A 0.80.0
 Im Spiel ist die Kamera draußen jetzt näher an deiner Figur, und das Spiel-Handy hat eine Karte der Stadt.
 
