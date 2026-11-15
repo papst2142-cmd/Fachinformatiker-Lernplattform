@@ -231,6 +231,9 @@ public sealed partial class SpielTafel
         return Spielwelt.Aufgestellt(a.Stand, Spielwelt.PcTyp) && Spielwelt.Bestellungen(a.Stand).Count > 0;
     }
 
+    /// <summary>Teile der gerade gezeigten Seite (Start-Test 350: Vergleich mit dem Reiter „Übersicht“ im Handy).</summary>
+    internal IReadOnlyList<Control> InhaltTeile => [.. _inhalt.Children];
+
     internal void ProbeUebersicht()
     {
         _waehlen = false;

@@ -58,7 +58,22 @@ public sealed partial class SpielTafel
         Oeffnen(Krumen("PRAXIS", "SPIEL"), () => Uebersicht(Stand));
     }
 
-    private IEnumerable<Control?> Uebersicht(Spielstand stand)
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 350, Weisung P12-274, Nico „Der Menüpunkt Übersicht soll auch ins Handy“): dieselbe Uebersicht
+    /// (gleiche Teile, gleiche Werte) fuer den Reiter „Übersicht“ im Spiel-Handy. <paramref name="neu"/> baut den Reiter neu (nach
+    /// einer Entscheidung, „Alle Tickets zeigen“); <paramref name="danach"/> schliesst das Handy und fuehrt dann einen Schritt der
+    /// Tafel aus (Ticket oeffnen, Platz wechseln), damit nie Handy und Tafel uebereinander liegen. Ohne Figur leer.
+    /// </summary>
+    public IReadOnlyList<Control> UebersichtAlsReiter(Action neu, Action<Action> danach) =>
+        Stand.Profil is null ? [] : [.. Uebersicht(Stand, new ReiterWege(neu, danach)).OfType<Control>()];
+
+    /// <summary>Hat der Spielstand eine Figur (sonst gibt es keine Uebersicht)?</summary>
+    public bool HatFigur => _s.PlatzGewaehlt && Stand.Profil is not null;
+
+    /// <summary>Wege aus der Uebersicht im Spiel-Handy (null = Seite der Tafel wie bisher).</summary>
+    private sealed record ReiterWege(Action Neu, Action<Action> Danach);
+
+    private IEnumerable<Control?> Uebersicht(Spielstand stand, ReiterWege? handy = null)
     {
         if (stand.Profil is null)
         {
@@ -67,8 +82,10 @@ public sealed partial class SpielTafel
         var stufen = _s.Fachwissen();
         var ziel = Objekt(Objekt(I["balancing"])["gruendung"]);
         var firma = stand.Firma as PyObjekt;
+        // Welle A 0.81.0 (Sammelliste 350): im Handy bei grosser Schrift Name und Wert untereinander (weniger Platz als die Tafel)
+        var schmal = handy is not null && Schrift.Gross;
         var gruendung = Balken("Weg zum eigenen Unternehmen", "green", "accent", stand.GruendungsFortschritt() * 100,
-            "Ziel " + Euro(ziel["startkapital"]));
+            "Ziel " + Euro(ziel["startkapital"]), schmal);
         gruendung.IsVisible = firma is null || !Py.Wahr(firma);
         var mitFirma = Py.Wahr(stand.Firma);
         var stelle = mitFirma ? PyFormat.Prozent("Geschäftsführung · %s", firma!["name"])
@@ -91,16 +108,16 @@ public sealed partial class SpielTafel
         ]);
         var figur = new Avatar(stand.Profil["aussehen"] as PyObjekt, 84);
         Control kopf = Schrift.Gross ? Stapel(8, [figur, zeilen]) : Zeile(zeilen, null, 14, figur);
-        yield return PlatzLeiste();
+        yield return PlatzLeiste(handy is null ? null : () => handy.Danach(PlatzWechseln), schmal);
         yield return Karte("Spielfigur", [kopf, gruendung], "accent2", PyFormat.Prozent("Arbeitstag %d", stand.Tag));
-        yield return TicketKarte(stand);
+        yield return TicketKarte(stand, handy);
 
         var balken = new List<Control?>();
         foreach (var (achse, name) in Betrieb.AchsenName)
         {
             var (a, b) = AchsenVerlauf(achse);
             var wert = stand.Reputation[achse];
-            balken.Add(Balken(name, a, b, Py.F(wert), PyFormat.Prozent("%d / 100", wert)));
+            balken.Add(Balken(name, a, b, Py.F(wert), PyFormat.Prozent("%d / 100", wert), schmal));
         }
         yield return Karte("Reputation", balken, "purple",
             PyFormat.Prozent("Ansehen %d %%", Core.Mathe.PythonRunden.Runde(stand.MittlereReputation)));
@@ -110,14 +127,14 @@ public sealed partial class SpielTafel
         {
             var farbe = FachFarbe(kurz);
             var wert = Get(stufen, kurz, 0L);
-            wissen.Add(Balken(FachKurz(kurz), farbe, Hell(farbe, 0.35), Py.F(wert), PyFormat.Prozent("%d %%", wert)));
+            wissen.Add(Balken(FachKurz(kurz), farbe, Hell(farbe, 0.35), Py.F(wert), PyFormat.Prozent("%d %%", wert), schmal));
         }
         wissen.Add(T("Aus deinem Lernfortschritt: Wer lernt, schafft schwierigere Tickets.", 11, "muted"));
         yield return Karte("Wissensstand", wissen, "green");
     }
 
     /// <summary>_ticket_card</summary>
-    private Control TicketKarte(Spielstand stand)
+    private Control TicketKarte(Spielstand stand, ReiterWege? handy = null)
     {
         List<(PyObjekt Auftrag, string Status)> tickets;
         var teile = new List<Control?>();
@@ -137,7 +154,7 @@ public sealed partial class SpielTafel
                 teile.Add(Stapel(2, [T(PyFormat.Prozent("%s · %s", person["name"], person["rolle"]), 14, "text", true),
                     T(Py.Str(person["macke"]), 12, "muted")]));
             }
-            teile.Add(Reihe(Knopf("Alle Tickets zeigen", () => { Raum = null; Neu(); }, "ghost", 38)));
+            teile.Add(Reihe(Knopf("Alle Tickets zeigen", () => { Raum = null; (handy?.Neu ?? Neu)(); }, "ghost", 38)));
             (titel, akzent, unter) = (Py.Str(raum["name"]), FachFarbe(raum["cat"]), "Tickets hier");
         }
         else
@@ -151,7 +168,7 @@ public sealed partial class SpielTafel
             {
                 foreach (var entscheidung in stand.OffeneEntscheidungen())
                 {
-                    teile.Add(EntscheidungKasten(entscheidung, EntscheidenHier));
+                    teile.Add(EntscheidungKasten(entscheidung, handy is null ? EntscheidenHier : (e, w) => { EntscheidenHier(e, w); handy.Neu(); }));
                 }
             }
             (titel, akzent) = ("Tickets heute", "accent2");
@@ -185,7 +202,7 @@ public sealed partial class SpielTafel
         }
         foreach (var (auftrag, status) in tickets)
         {
-            teile.Add(TicketZeile(auftrag, status));
+            teile.Add(TicketZeile(auftrag, status, handy));
         }
         if (Raum is null)
         {
@@ -225,7 +242,7 @@ public sealed partial class SpielTafel
     }
 
     /// <summary>_ticket_row</summary>
-    private Control TicketZeile(PyObjekt auftrag, string status)
+    private Control TicketZeile(PyObjekt auftrag, string status, ReiterWege? handy = null)
     {
         var person = Person(auftrag["auftraggeber"], I);
         var (text, farbe) = StatusText[status];
@@ -249,7 +266,7 @@ public sealed partial class SpielTafel
         var id = Py.Str(auftrag["id"]);
         return Flaeche(Zeile(Stapel(2, zeilen), T(text, 12, farbe, true), 12,
                 Strich(PrioritaetFarbe.GetValueOrDefault(Py.Str(auftrag["prioritaet"]), "cyan"))),
-            klick: status == Ereignisse.Offen ? () => TicketOeffnen(id) : null, innen: new Avalonia.Thickness(12, 10));
+            klick: status == Ereignisse.Offen ? (handy is null ? () => TicketOeffnen(id) : () => handy.Danach(() => TicketOeffnen(id))) : null, innen: new Avalonia.Thickness(12, 10));
     }
 
     /// <summary>decision_box: Entscheidung zum Personal, je Moeglichkeit ein Knopf mit der Folge darunter.</summary>

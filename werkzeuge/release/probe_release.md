@@ -1,4 +1,4 @@
-Das Spiel-Handy hat oben rechts ein X zum Schließen, und deine Figur kann sich hinsetzen und hinlegen.
+Das Spiel-Handy hat oben rechts ein X zum Schließen und zeigt jetzt auch die Übersicht, die Leiste unten ist schlanker, und deine Figur kann sich hinsetzen und hinlegen.
 
 - Das X steht im Kopf des Handys neben dem Titel und bleibt immer zu sehen, auch wenn du in den Aufträgen oder in der Karte weit nach unten gescrollt hast und auch bei großer Schrift.
 - Ein Tipp oder Klick auf das X schließt das Handy, die Escape-Taste geht weiter wie bisher. Den Knopf „Schließen“ ganz unten gibt es nicht mehr.
@@ -9,6 +9,9 @@ Das Spiel-Handy hat oben rechts ein X zum Schließen, und deine Figur kann sich 
 - Zum Aufstehen tippst du auf „Aufstehen“ oder einfach woanders hin. Sitzen und Liegen kosten keine Spielzeit.
 - Ohne 3D-Ansicht bleibt alles wie bisher.
 - In den Läden, am PC zu Hause, in der Firma, an den Schaltern von Bank und Amt und am Kleiderschrank bleibt der Knopf „Zurück“ oben stehen, auch wenn du weit nach unten scrollst.
+- Die Übersicht (Spielfigur, Tickets, Ansehen, Wissensstand) ist jetzt ein Reiter im Spiel-Handy, neben Aufträgen, Erledigt und Karte.
+- Die Leiste unten zeigt nur noch das Handy, was du am Ort tun kannst (zum Beispiel „Hineingehen“) und „Spiel verlassen“. Die Knöpfe „Übersicht“ und „Karte“ gibt es dort nicht mehr, beides findest du im Handy. Ohne 3D-Ansicht bleibt der Knopf „Orte“.
+- „Spiel verlassen“ steht jetzt unten in der Leiste statt oben rechts und bleibt auch beim zugeklappten Hinweis zu sehen.
 
 ### Herunterladen
 

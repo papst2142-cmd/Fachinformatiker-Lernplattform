@@ -398,7 +398,7 @@ public sealed partial class SpielTafel : Grid
     // -- Kopf der Spielseiten -----------------------------------------------
 
     /// <summary>slot_bar: kleine Platzanzeige mit "Platz wechseln".</summary>
-    private Control? PlatzLeiste()
+    private Control? PlatzLeiste(Action? wechseln = null, bool untereinander = false)
     {
         var text = _s.Verwaltung.AktivAnzeige();
         if (text.Length == 0)
@@ -406,7 +406,14 @@ public sealed partial class SpielTafel : Grid
             return null;
         }
         // das Symbol SAVE_OUTLINED fehlt in der Teilschrift fisi_symbole.otf (nur Text)
-        return Zeile(T(text, 12, "muted"), Knopf("Platz wechseln", PlatzWechseln, "ghost", 30), 6);
+        var knopf = Knopf("Platz wechseln", wechseln ?? PlatzWechseln, "ghost", 30);
+        if (untereinander)
+        {
+            // Welle A 0.81.0 (Sammelliste 350): im schmalen Spiel-Handy bei grosser Schrift untereinander
+            knopf.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+            return Stapel(6, [T(text, 12, "muted"), knopf]);
+        }
+        return Zeile(T(text, 12, "muted"), knopf, 6);
     }
 
     /// <summary>open_picker</summary>

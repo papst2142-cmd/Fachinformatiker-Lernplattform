@@ -76,14 +76,14 @@ public static partial class AutoMessung
                         continue;
                     }
                     orte.Add(ort);
-                    if (seite.OrtslisteSichtbar || seite.OrteKnopfSichtbar || seite.KarteKnopfSichtbar)
+                    if (seite.OrtslisteSichtbar || seite.OrteKnopfSichtbar || seite.LeisteKnoepfe.Contains(Core.Texte.KarteTexte.Karte))
                     {
                         schlecht.Add(ort);
                     }
                     spiel.Verlassen();
                     await ansicht.BildFertigAsync();
-                    // Welle A 0.80.0: draussen der Knopf „Karte“ (nie „Orte“), die Ortsliste bleibt mit 3D zu
-                    var knopf = seite.KarteKnopfSichtbar && !seite.OrteKnopfSichtbar;
+                    // Welle A 0.80.0: draussen nie „Orte“, die Ortsliste bleibt mit 3D zu; A 0.81.0 (350): die Karte nur im Handy
+                    var knopf = !seite.LeisteKnoepfe.Contains(Core.Texte.KarteTexte.Karte) && !seite.OrteKnopfSichtbar;
                     seite.OrtslisteZeigen(true);
                     await ansicht.BildFertigAsync();
                     if (!knopf || seite.OrtslisteSichtbar)
@@ -107,7 +107,7 @@ public static partial class AutoMessung
                 var (orte, schlecht, nichtWieder) = await Durchgang();
                 Pruefe(groesse + " schliesst beim Betreten", orte.Count >= 3 && schlecht.Count == 0,
                     orte.Count + " Orte betreten (" + string.Join(", ", orte) + "), offen geblieben: " + (schlecht.Count == 0 ? "keiner" : string.Join(", ", schlecht)));
-                Pruefe(groesse + " draussen Knopf Karte", nichtWieder.Count == 0, nichtWieder.Count == 0 ? "Knopf Karte da, Ortsliste mit 3D zu" : "Knopf Karte fehlt oder Ortsliste geht mit 3D auf: " + string.Join(", ", nichtWieder));
+                Pruefe(groesse + " draussen ohne Orte", nichtWieder.Count == 0, nichtWieder.Count == 0 ? "kein Knopf Orte oder Karte, Ortsliste mit 3D zu" : "Knopf Orte oder Karte in der Leiste oder Ortsliste geht mit 3D auf: " + string.Join(", ", nichtWieder));
                 seite.OrtslisteAltFuerTests = true;
                 try
                 {
