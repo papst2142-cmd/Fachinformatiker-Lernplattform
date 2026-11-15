@@ -80,8 +80,14 @@ public sealed partial class SpielSeite
     /// <summary>Das Questlog oeffnen (Knopf, Taste); <paramref name="erledigt"/> = gleich den Reiter „Erledigt“ zeigen.</summary>
     public Task QuestlogZeigenAsync(bool erledigt = false) => HandyZeigenAsync(erledigt ? HandyReiter.Erledigt : HandyReiter.Offen);
 
-    /// <summary>Welle A 0.80.0: Reiter des Spiel-Handys (Auftraege offen, erledigt, Karte).</summary>
-    public enum HandyReiter { Offen, Erledigt, Karte }
+    /// <summary>Welle A 0.80.0: Reiter des Spiel-Handys (Auftraege offen, erledigt, Karte); A 0.81.0 (Sammelliste 350): Uebersicht.</summary>
+    public enum HandyReiter { Offen, Erledigt, Karte, Uebersicht }
+
+    /// <summary>Gibt es den Reiter „Übersicht“ (nur mit Spielstand und Figur, nicht in der reinen Stadt-Probe)?</summary>
+    public bool UebersichtReiterMoeglich => _tafelAn && Tafel is { HatFigur: true };
+
+    /// <summary>Inhalt des Reiters „Übersicht“, solange er gezeigt wird (Start-Test, Fotos); sonst leer.</summary>
+    public IReadOnlyList<Control> UebersichtGezeigt { get; private set; } = [];
 
     /// <summary>
     /// Das Spiel-Handy oeffnen. Welle A 0.80.0 (Weisung P12-268, Nico Antwort 5, P12-258): dritter Reiter „Karte“ mit der Karte
@@ -100,15 +106,36 @@ public sealed partial class SpielSeite
         var reiterOffen = Schrift.Knopf(string.Format(CultureInfo.InvariantCulture, QuestlogTexte.Offen, offen.Count));
         var reiterErledigt = Schrift.Knopf(string.Format(CultureInfo.InvariantCulture, QuestlogTexte.Erledigt, fertig.Count));
         var reiterKarte = Schrift.Knopf(KarteTexte.Karte);
+        // Welle A 0.81.0 (Sammelliste 350, Weisung P12-274): dieselbe Uebersicht wie bisher die Seite der Spiel-Tafel
+        var reiterUebersicht = Schrift.Knopf(StadtTexte.Uebersicht);
+        reiterUebersicht.IsVisible = UebersichtReiterMoeglich;
         string? ziel = null;
         string? busZiel = null;
+        Action? danach = null;
         void Fuellen(HandyReiter reiter)
         {
             HandyReiterGerade = reiter;
             ReiterSetzen(reiterOffen, reiter == HandyReiter.Offen);
             ReiterSetzen(reiterErledigt, reiter == HandyReiter.Erledigt);
             ReiterSetzen(reiterKarte, reiter == HandyReiter.Karte);
+            ReiterSetzen(reiterUebersicht, reiter == HandyReiter.Uebersicht);
             liste.Children.Clear();
+            UebersichtGezeigt = [];
+            if (reiter == HandyReiter.Uebersicht && Tafel is { } tafel)
+            {
+                QuestlogEintraege = [];
+                QuestlogHingehen = [];
+                QuestlogErledigt = false;
+                KarteGezeigt = null;
+                // Knoepfe, die eine Seite der Tafel oeffnen (Ticket, Platz wechseln), schliessen zuerst das Handy
+                var teile = tafel.UebersichtAlsReiter(() => Fuellen(HandyReiter.Uebersicht), aktion => { danach = aktion; Dialog.AlleSchliessen(); });
+                foreach (var teil in teile)
+                {
+                    liste.Children.Add(teil);
+                }
+                UebersichtGezeigt = teile;
+                return;
+            }
             if (reiter == HandyReiter.Karte)
             {
                 QuestlogEintraege = [];
@@ -177,7 +204,8 @@ public sealed partial class SpielSeite
         reiterOffen.Click += (_, _) => Fuellen(HandyReiter.Offen);
         reiterErledigt.Click += (_, _) => Fuellen(HandyReiter.Erledigt);
         reiterKarte.Click += (_, _) => Fuellen(HandyReiter.Karte);
-        Fuellen(start);
+        reiterUebersicht.Click += (_, _) => Fuellen(HandyReiter.Uebersicht);
+        Fuellen(start == HandyReiter.Uebersicht && !reiterUebersicht.IsVisible ? HandyReiter.Offen : start);
         // Aussehen eines Handys: dicker runder Rahmen, oben ein Lautsprecher-Schlitz
         var schlitz = new Border { Width = 56, Height = 6, CornerRadius = new CornerRadius(3), HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 8) };
         schlitz.Farbe(Border.BackgroundProperty, "Pinsel.border_hi");
@@ -191,21 +219,28 @@ public sealed partial class SpielSeite
             Child = new StackPanel
             {
                 Spacing = 8,
-                Children = { schlitz, new WrapPanel { Children = { reiterOffen, reiterErledigt, reiterKarte } }, liste },
+                Children = { schlitz, new WrapPanel { Children = { reiterOffen, reiterErledigt, reiterKarte, reiterUebersicht } }, liste },
             },
         };
         geraet.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border_hi");
         HandyOffen = true;
         try
         {
-            await Dialog.Zeigen(KarteTexte.HandyTitel, geraet, QuestlogTexte.Schliessen);
+            // Welle A 0.81.0 (Sammelliste 348): X oben rechts, immer zu sehen; Weisung P12-272 (Nico): kein Knopf „Schließen“ unten mehr
+            await Dialog.ZeigenMitKreuz(KarteTexte.HandyTitel, KarteTexte.HandySchliessen, geraet);
         }
         finally
         {
             HandyOffen = false;
             KarteGezeigt = null;
+            UebersichtGezeigt = [];
             QuestlogEintraege = [];
             QuestlogHingehen = [];
+        }
+        if (danach is { } tafelSchritt)
+        {
+            tafelSchritt();
+            return;
         }
         if (Spiel is not { } jetzt)
         {
@@ -233,7 +268,10 @@ public sealed partial class SpielSeite
     private Grid? _klappZeile;
 
     /// <summary>Start-Test: stehen die Knoepfe des Orts unter dem Handy-Knopf (schmale Karte, grosse Schrift)?</summary>
-    public bool KnoepfeUnterHandy => _knoepfeRolle is { } r && Grid.GetRow(r) == 1;
+    public bool KnoepfeUnten => _knoepfeRolle is { } r && Grid.GetRow(r) == 1;
+
+    /// <summary>Start-Test, Fotos (Sammelliste 350): steht „Spiel verlassen“ in einer eigenen Zeile unten (zu wenig Platz neben dem Pfeil)?</summary>
+    public bool VerlassenUnten => Grid.GetRow(VerlassenKnopf) == 2;
 
     /// <summary>
     /// Zwischen Handy-Knopf und Klapp-Pfeil bleibt weniger Platz als vorher neben dem Pfeil allein. Passt dort das laengste
@@ -248,16 +286,34 @@ public sealed partial class SpielSeite
         }
         var frei = zeile.Bounds.Width - (_questKnopf.IsVisible ? _questKnopf.DesiredSize.Width + _questKnopf.Margin.Left + _questKnopf.Margin.Right : 0)
             - (_klapp.IsVisible ? _klapp.DesiredSize.Width + _klapp.Margin.Left + _klapp.Margin.Right : 0);
+        // Welle A 0.81.0 (Sammelliste 350): „Spiel verlassen“ steht vor dem Pfeil; passt er dort nicht (schmales Handy, grosse
+        // Schrift), steht er in einer eigenen Zeile ganz unten (sonst ragte der Pfeil ueber den Rand, Layoutpruefung)
+        // Breite ohne den eigenen Rand (der wechselt mit der Lage) auf Bildpunkte gerundet, plus Rand in der Zeile (4)
+        var skala = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+        var verlassenBreite = (Math.Ceiling((VerlassenKnopf.DesiredSize.Width - VerlassenKnopf.Margin.Left - VerlassenKnopf.Margin.Right) * skala) / skala) + 4;
+        // gemessen am groessten Platz der Leiste (ihre Breite haengt vom Inhalt ab: sonst bliebe der Knopf nach einem schmalen
+        // Fenster unten und die Leiste schmal)
+        var hoechstens = Math.Min(_unten.MaxWidth, Ebene.Bounds.Width) - _unten.Padding.Left - _unten.Padding.Right
+            - _unten.BorderThickness.Left - _unten.BorderThickness.Right - zeile.Margin.Left - zeile.Margin.Right;
+        var nebenan = zeile.Bounds.Width - frei;   // Handy-Knopf und Pfeil
+        var verlassenUnten = verlassenBreite > hoechstens - nebenan;
+        Grid.SetRow(VerlassenKnopf, verlassenUnten ? 2 : 0);
+        Grid.SetColumn(VerlassenKnopf, verlassenUnten ? 0 : 2);
+        Grid.SetColumnSpan(VerlassenKnopf, verlassenUnten ? 4 : 1);
+        VerlassenKnopf.HorizontalAlignment = HorizontalAlignment.Left;
+        VerlassenKnopf.Margin = verlassenUnten ? new Thickness(0, 6, 0, 6) : new Thickness(0, 0, 4, 6);
+        // Platz zwischen Handy-Knopf und Pfeil ebenso am groessten Platz der Leiste gemessen
+        frei = hoechstens - nebenan - (verlassenUnten ? 0 : verlassenBreite);
         var unten = LaengsterKnopf() > frei;
         Grid.SetRow(_knoepfeRolle, unten ? 1 : 0);
         Grid.SetColumn(_knoepfeRolle, unten ? 0 : 1);
-        Grid.SetColumnSpan(_knoepfeRolle, unten ? 3 : 1);
+        Grid.SetColumnSpan(_knoepfeRolle, unten ? 4 : 1);
         _knoepfeRolle.Margin = new Thickness(0, unten ? 6 : 0, 0, 0);
         // der Kurztext (zugeklappt) ebenso, wenn sein laengstes Wort nicht dazwischen passt
         var kurzUnten = _kurz.IsVisible && LaengstesWort(_kurz) + _kurz.Margin.Left + _kurz.Margin.Right > frei;
         Grid.SetRow(_kurz, kurzUnten ? 1 : 0);
         Grid.SetColumn(_kurz, kurzUnten ? 0 : 1);
-        Grid.SetColumnSpan(_kurz, kurzUnten ? 3 : 1);
+        Grid.SetColumnSpan(_kurz, kurzUnten ? 4 : 1);
     }
 
     private double LaengstesWort(TextBlock t)

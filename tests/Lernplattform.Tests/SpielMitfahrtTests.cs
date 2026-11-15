@@ -302,6 +302,11 @@ public sealed class SpielMitfahrtBelastungTests
             SpielMitfahrtTests.Hingehen(s, v, h);
             return s.WartetAn == h.Nr ? null : $"wartet an {s.WartetAn}";
         }),
+        // Welle A 0.81.0 (Nico 4b): auf der Bank sitzend warten, „Einsteigen“ steht vorher auf
+        ("Hinsetzen", (s, v, h) =>
+            !s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionHinsetzen) ? "kein Knopf Hinsetzen"
+            : !s.Knopf(StadtSpiel.AktionHinsetzen) || s.AufDerBank != h.Nr || s.Haltung is null ? $"sitzt nicht (Bank {s.AufDerBank})"
+            : s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionAufstehen) ? null : "kein Knopf Aufstehen"),
         ("Warten", (s, v, h) => SpielMitfahrtTests.Bis(s, v, () => s.BusZumEinsteigen is not null, SpielMitfahrtTests.Runde(v))
             && s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionEinsteigen) ? null : "kein Bus, kein Knopf Einsteigen"),
         ("Einsteigen", (s, v, h) =>
@@ -320,7 +325,8 @@ public sealed class SpielMitfahrtBelastungTests
                     return "Bus faehrt beim Einsteigen ab";
                 }
             }
-            return s.SitztImBus && s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionAussteigen) ? null : $"nicht im Bus ({s.Mitfahrt})";
+            return s.SitztImBus && s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionAussteigen) && s.AufDerBank is null && s.Haltung is null
+                ? null : $"nicht im Bus ({s.Mitfahrt}) oder noch auf der Bank ({s.AufDerBank})";
         }),
         ("Antippen im Bus", (s, v, h) =>
         {
@@ -350,6 +356,8 @@ public sealed class SpielMitfahrtBelastungTests
             var aus = s.Szene.Haltestellen.Single(x => x.Nr == s.LetzteMitfahrt!.Value.Aus);
             return Vector2.Distance(new Vector2(s.FigurX, s.FigurZ), StadtSpiel.Wartplatz(aus)) < 0.01f && s.ImFreien ? null : "steht nicht neben der Haltestelle";
         }),
+        ("Wieder hinsetzen", (s, v, h) =>
+            s.Knopf(StadtSpiel.AktionHinsetzen) && s.AufDerBank == s.WartetAn && s.AufDerBank is not null ? null : $"sitzt nicht (Bank {s.AufDerBank}, wartet an {s.WartetAn}, {s.Mitfahrt}, Knoepfe {string.Join(",", s.Knoepfe.Select(k => k.Aktion))})"),
         ("Weggehen", (s, v, h) =>
         {
             var w = new Vector2(s.FigurX, s.FigurZ);
@@ -358,7 +366,8 @@ public sealed class SpielMitfahrtBelastungTests
             s.GeheZu(weg.X, weg.Y);
             SpielMitfahrtTests.Bis(s, v, () => !s.Geht, 30);
             SpielMitfahrtTests.Bild(s, v);
-            return s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionEinsteigen) ? "Knopf Einsteigen nach dem Weggehen" : null;
+            return s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionEinsteigen) ? "Knopf Einsteigen nach dem Weggehen"
+                : s.AufDerBank is not null || s.Haltung is not null ? "sitzt nach dem Weggehen noch auf der Bank" : null;
         }),
     ];
 
@@ -367,7 +376,9 @@ public sealed class SpielMitfahrtBelastungTests
         var funde = new List<string>();
         foreach (var tag in tage)
         {
-            var spiel = SpielMitfahrtTests.Stadt1();
+            // mit Grafik, damit „Hinsetzen“ an der Haltestelle da ist (A 0.81.0; die Grafik wirkt im Spiel-Kern nur darauf)
+            var ohne = SpielMitfahrtTests.Stadt1();
+            var spiel = new StadtSpiel(ohne.Stadt, ohne.Ablauf, SpielGrafikTests.Bibliothek.Value, SpielInnenraumTests.Innenraeume.Value);
             foreach (var h in spiel.Szene.Haltestellen)
             {
                 var v = Verkehr.FuerSpieltag(spiel.Szene, tag);
@@ -397,6 +408,7 @@ public sealed class SpielMitfahrtBelastungTests
     {
         Assert.Contains(Aktionen, a => a.Name == "Einsteigen");
         Assert.Contains(Aktionen, a => a.Name == "Aussteigen");
+        Assert.Contains(Aktionen, a => a.Name == "Hinsetzen");
         var funde = Probe([1, 2, 3]);
         Assert.True(funde.Count == 0, string.Join("\n", funde));
     }

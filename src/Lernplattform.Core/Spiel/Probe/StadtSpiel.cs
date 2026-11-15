@@ -199,6 +199,8 @@ public sealed partial class StadtSpiel
             Geaendert?.Invoke();
             return StadtGrund.KeinWeg;
         }
+        // Welle A 0.81.0: wer zu einem Ort geht, steht vorher auf
+        Aufstehen();
         if (ImInnenraum)
         {
             Verlassen();
@@ -297,6 +299,8 @@ public sealed partial class StadtSpiel
             BusUeberspringen();
             return true;
         }
+        // Welle A 0.81.0: woanders hin getippt = aufstehen und dorthin gehen
+        Aufstehen();
         if (Innen is not { } innen)
         {
             return InDerStadtGehen(x, z);
@@ -304,6 +308,12 @@ public sealed partial class StadtSpiel
         if (Einrichten)
         {
             return EinrichtenTippen(x, z);
+        }
+        if (ZumPlatzTippen(innen, x, z, out var zumPlatz))
+        {
+            // Welle A 0.81.0 (Nico 1b, 3a): Stuhl am Schreibtisch oder Bett angetippt: hingehen, dann setzen bzw. hinlegen
+            _zielInnen = innen;
+            return zumPlatz;
         }
         // auf eine Person getippt: bis auf Reichweite heran (walk_path mit REACH), sonst zum Punkt
         var person = innen.PersonBei(x, z);
@@ -650,7 +660,11 @@ public sealed partial class StadtSpiel
     {
         if (ImInnenraum)
         {
-            InnenText();
+            // Welle A 0.81.0: war ein Stuhl oder Bett das Ziel, setzt bzw. legt sich die Figur
+            if (!AmPlatzAngekommen())
+            {
+                InnenText();
+            }
         }
         else if (_zielOrt is { } ort)
         {
@@ -921,7 +935,9 @@ public sealed partial class StadtSpiel
         {
             return;
         }
-        var (titel, text, knoepfe) = innen.Nachricht(FigurX, FigurZ, Ablauf.Stand);
+        // Welle A 0.81.0: sitzend oder liegend gilt der Platz (am PC-Stuhl: direkt am Tisch)
+        var (fx, fz) = MeinPlatz is { } platz && ReferenceEquals(innen, _platzInnen) ? (platz.Ort.X, platz.Ort.Z) : (FigurX, FigurZ);
+        var (titel, text, knoepfe) = innen.Nachricht(fx, fz, Ablauf.Stand);
         Zeile = text.Length > 0 ? titel + "\n" + text : titel;
         if (_notiz is { } notiz)
         {
@@ -930,7 +946,7 @@ public sealed partial class StadtSpiel
             _notiz = null;
         }
         // Phase 12 Welle 1 (Nico 3b): am aufgestellten Kleiderschrank Text und Knopf (Name und Aussehen aendern)
-        if (Ort == SpielDaten.OrtZuhause && Charakter.SchrankNahe(Ablauf.Stand, FigurX, FigurZ) is not null)
+        if (Ort == SpielDaten.OrtZuhause && Charakter.SchrankNahe(Ablauf.Stand, fx, fz) is not null)
         {
             if (knoepfe.Count == 0)
             {
@@ -938,7 +954,7 @@ public sealed partial class StadtSpiel
             }
             knoepfe = [.. knoepfe, (Charakter.Aktion, Charakter.KnopfOeffnen)];
         }
-        Knoepfe = [.. EtagenKnoepfe(SpielweltKnoepfe(innen, knoepfe))];
+        Knoepfe = [.. EtagenKnoepfe(HaltungKnoepfe(innen, SpielweltKnoepfe(innen, knoepfe, fx, fz)))];
     }
 
     /// <summary>
@@ -946,16 +962,16 @@ public sealed partial class StadtSpiel
     /// „PC benutzen“ (neben „Lernen“), am Buecherregal „Meine Reise“, an der Wohnungstuer mit angekommenen Paketen
     /// „Paket mitnehmen“; im eigenen Buero (und in der Filiale) an einem freien Schreibtisch „Firma öffnen“.
     /// </summary>
-    private List<(string Aktion, string Name)> SpielweltKnoepfe(Innenraum innen, List<(string Aktion, string Name)> knoepfe)
+    private List<(string Aktion, string Name)> SpielweltKnoepfe(Innenraum innen, List<(string Aktion, string Name)> knoepfe, float fx, float fz)
     {
         var stand = Ablauf.Stand;
         if (Ort == SpielDaten.OrtZuhause)
         {
-            if (Spielwelt.Nahe(stand, Spielwelt.PcTyp, FigurX, FigurZ) is not null)
+            if (Spielwelt.Nahe(stand, Spielwelt.PcTyp, fx, fz) is not null)
             {
                 knoepfe = [.. knoepfe, (Spielwelt.AktionComputer, Spielwelt.KnopfComputer)];
             }
-            if (Spielwelt.Nahe(stand, Spielwelt.RegalTyp, FigurX, FigurZ) is not null)
+            if (Spielwelt.Nahe(stand, Spielwelt.RegalTyp, fx, fz) is not null)
             {
                 if (knoepfe.Count == 0)
                 {
@@ -971,7 +987,7 @@ public sealed partial class StadtSpiel
             }
         }
         else if ((Ort == SpielDaten.OrtBuero || Ort == SpielDaten.OrtFiliale) && Py.Wahr(stand.Firma) && knoepfe.Count == 0
-            && innen.DekoNahe(Spielwelt.BueroTischTyp, FigurX, FigurZ) is not null)
+            && innen.DekoNahe(Spielwelt.BueroTischTyp, fx, fz) is not null)
         {
             Zeile = Spielwelt.BueroTischTitel + "\n" + Spielwelt.AmBueroTischText;
             knoepfe = [(Spielwelt.AktionFirma, Spielwelt.KnopfFirma)];
@@ -1048,6 +1064,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     public void Anhalten(string hinweis)
     {
+        Aufstehen();
         WegLeeren();
         _danachZu = null;
         _danach = null;
@@ -1071,6 +1088,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     public void Neubeginn()
     {
+        Aufstehen();
         WegLeeren();
         _danachZu = null;
         _danach = null;
@@ -1104,10 +1122,20 @@ public sealed partial class StadtSpiel
         {
             return false;
         }
+        if (HaltungAktion(aktion))
+        {
+            // Welle A 0.81.0: Hinsetzen, Hinlegen, Aufstehen
+            return true;
+        }
         if (MitfahrtAktion(aktion))
         {
             // Welle A 0.73.0: Einsteigen, Aussteigen
             return true;
+        }
+        if (aktion.StartsWith(Etagen.AktionEtage, StringComparison.Ordinal) || aktion.StartsWith(Etagen.AktionFahrstuhl, StringComparison.Ordinal))
+        {
+            // Welle A 0.81.0: Treppe und Fahrstuhl nur stehend
+            Aufstehen();
         }
         if (EtagenAktion(aktion))
         {
@@ -1155,6 +1183,7 @@ public sealed partial class StadtSpiel
             Geaendert?.Invoke();
             return;
         }
+        Aufstehen();
         AufenthaltDraussen();
         WegLeeren();
         Innen = null;
@@ -1276,6 +1305,8 @@ public sealed partial class StadtSpiel
         }
         else if (KannEinrichten)
         {
+            // Welle A 0.81.0: zum Einrichten steht die Figur auf
+            Aufstehen();
             Einrichten = true;
             Zeile = Wohnung.Bleibe(Ablauf.Stand.Wohnung, Ablauf.Stand.Inhalt)?["name"] as string ?? "";
             Knoepfe = [];

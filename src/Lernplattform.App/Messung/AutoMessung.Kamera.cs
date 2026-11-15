@@ -364,24 +364,17 @@ public static partial class AutoMessung
             spiel.Verlassen();
         }
         await ansicht.BildFertigAsync();
-        pruefe("Karte Knopf draussen", gl ? seite.KarteKnopfSichtbar && !seite.OrteKnopfSichtbar : !seite.KarteKnopfSichtbar,
-            gl ? (seite.KarteKnopfSichtbar ? "Karte da" : "Karte fehlt") + (seite.OrteKnopfSichtbar ? ", Orte noch da" : ", Orte weg") : "ohne 3D Ortsliste");
+        // Welle A 0.81.0 (Sammelliste 350): die Karte gibt es nur noch im Handy, ohne 3D bleibt der Knopf „Orte“
+        var karteUnten = seite.LeisteKnoepfe.Contains(Core.Texte.KarteTexte.Karte);
+        pruefe("Karte nur im Handy", !karteUnten && (gl ? !seite.OrteKnopfSichtbar : seite.OrteKnopfSichtbar),
+            (karteUnten ? "Knopf Karte noch in der Leiste" : "kein Knopf Karte") + (seite.OrteKnopfSichtbar ? ", Orte da" : ", Orte weg") + (gl ? "" : " (ohne 3D)"));
 
-        // Messpunkt: Karte oeffnen bis zum Bild (ueber den Knopf wie der Spieler, ohne 3D ueber das Handy)
+        // Messpunkt: Karte oeffnen bis zum Bild (seit A 0.81.0 immer ueber das Handy)
         Task? offen = null;
         async Task<double?> Oeffnen()
         {
             var u = Stopwatch.StartNew();
-            if (gl && seite.KarteKnopf is { } knopf)
-            {
-                knopf.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-                await ansicht.BildFertigAsync();
-                offen = Dialog.Offen is null ? null : Task.CompletedTask;
-            }
-            else
-            {
-                offen = await KarteOeffnenAsync(ansicht, seite);
-            }
+            offen = await KarteOeffnenAsync(ansicht, seite);
             return u.Elapsed.TotalMilliseconds;
         }
         async Task Zu()

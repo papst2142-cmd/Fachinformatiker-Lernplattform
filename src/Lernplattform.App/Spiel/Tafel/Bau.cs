@@ -146,12 +146,19 @@ public static class Bau
     }
 
     /// <summary>ui.GradientBar: Name links (13 text_dim), Wert rechts (12 muted), Balken 8 mit Verlauf.</summary>
-    public static Control Balken(string name, string a, string b, double prozent, string wert = "")
+    public static Control Balken(string name, string a, string b, double prozent, string wert = "", bool untereinander = false)
     {
         var anteil = (int)Math.Round(Math.Max(0, Math.Min(100, prozent)) * 10, MidpointRounding.ToEven);
-        var kopf = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
+        // Welle A 0.81.0 (Sammelliste 350): im schmalen Spiel-Handy stehen Name und Wert bei grosser Schrift untereinander
+        var kopf = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions(untereinander ? "*" : "*,Auto"),
+            RowDefinitions = new RowDefinitions(untereinander ? "Auto,Auto" : "Auto"),
+            ColumnSpacing = 8,
+        };
         var wertText = T(wert, 12, "muted");
-        Grid.SetColumn(wertText, 1);
+        Grid.SetColumn(wertText, untereinander ? 0 : 1);
+        Grid.SetRow(wertText, untereinander ? 1 : 0);
         kopf.Children.Add(T(name, 13, "text_dim"));
         kopf.Children.Add(wertText);
         var spur = new Grid { Height = 8, ColumnDefinitions = new ColumnDefinitions($"{anteil}*,{1000 - anteil}*") };

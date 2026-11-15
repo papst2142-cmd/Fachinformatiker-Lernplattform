@@ -1,4 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
+using Lernplattform.Core.Texte;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using static Lernplattform.Core.Spiel.SpielDaten;
@@ -14,8 +17,76 @@ public sealed partial class SpielTafel
 {
     internal SpielSitzung Sitzung => _s;
 
-    /// <summary>Spalte mit Kopf und Inhalt (Fotos der ganzen Seite).</summary>
+    /// <summary>Spalte mit dem Inhalt unter dem festen Kopf (Fotos der ganzen Seite).</summary>
     internal StackPanel ProbeSpalte => (StackPanel)_rolle.Content!;
+
+    /// <summary>Knopf „Zurueck“ oben in der Kopfzeile (Start-Test, Welle A 0.81.0).</summary>
+    internal Button ZurueckKnopf => _zurueck;
+
+    /// <summary>Bildlauf der Tafel (Start-Test).</summary>
+    internal ScrollViewer Rolle => _rolle;
+
+    /// <summary>
+    /// Gegenprobe (Welle A 0.81.0, Weisung P12-273): <paramref name="imBildlauf"/> = true legt die Kopfzeile wie bis A 0.80.0
+    /// in den Bildlauf (rollt mit dem Inhalt weg), false wieder fest darueber.
+    /// </summary>
+    internal void KopfImBildlaufFuerTests(bool imBildlauf)
+    {
+        var drin = _spalte.Children.Contains(_kopf);
+        if (imBildlauf == drin)
+        {
+            return;
+        }
+        if (imBildlauf)
+        {
+            _kopfFest.Children.Remove(_kopf);
+            _spalte.Children.Insert(0, _kopf);
+            _kopfFest.IsVisible = false;
+        }
+        else
+        {
+            _spalte.Children.Remove(_kopf);
+            _kopfFest.Children.Add(_kopf);
+            _kopfFest.IsVisible = true;
+        }
+    }
+
+    /// <summary>
+    /// Layoutpruefung und Start-Test (Welle A 0.81.0, Weisung P12-273, Nico 5a): steht „Zurueck“ fest oben, auch ganz nach
+    /// unten gerollt? Prueft Beschriftung, nicht im Bildlauf, im Bereich der Tafel und im oberen Drittel. Rollt dafuer ganz
+    /// nach unten und danach wieder zurueck. null = in Ordnung, sonst der Fund.
+    /// </summary>
+    internal string? ZurueckFund()
+    {
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        if (_zurueck.Content is not TextBlock { Text: KartenTexte.Zurueck })
+        {
+            return "Knopf „Zurück“ fehlt";
+        }
+        if (_rolle.IsVisualAncestorOf(_zurueck))
+        {
+            return "„Zurück“ liegt im Bildlauf (rollt weg)";
+        }
+        var vorher = _rolle.Offset;
+        try
+        {
+            _rolle.Offset = new Avalonia.Vector(0, Math.Max(0, _rolle.Extent.Height - _rolle.Viewport.Height));
+            if (!_zurueck.IsEffectivelyVisible || _zurueck.Bounds.Width < 1 || _zurueck.TranslatePoint(default, this) is not { } p)
+            {
+                return "„Zurück“ nicht zu sehen";
+            }
+            var z = new Avalonia.Rect(p, _zurueck.Bounds.Size);
+            if (z.X < -0.5 || z.Y < -0.5 || z.Right > Bounds.Width + 0.5 || z.Bottom > Bounds.Height + 0.5 || z.Y > Bounds.Height / 3)
+            {
+                return string.Create(inv, $"„Zurück“ nicht oben in der Tafel ({z.X:0.#},{z.Y:0.#} {z.Width:0.#}x{z.Height:0.#} von {Bounds.Width:0.#}x{Bounds.Height:0.#})");
+            }
+            return null;
+        }
+        finally
+        {
+            _rolle.Offset = vorher;
+        }
+    }
 
     /// <summary>Start-Test: neue Abzeichen nur abholen, kein Hinweisfenster (es haelt die Layoutpruefung an).</summary>
     internal bool OhneFenster { get; set; }
@@ -159,6 +230,9 @@ public sealed partial class SpielTafel
         _s.Abgleichen();
         return Spielwelt.Aufgestellt(a.Stand, Spielwelt.PcTyp) && Spielwelt.Bestellungen(a.Stand).Count > 0;
     }
+
+    /// <summary>Teile der gerade gezeigten Seite (Start-Test 350: Vergleich mit dem Reiter „Übersicht“ im Handy).</summary>
+    internal IReadOnlyList<Control> InhaltTeile => [.. _inhalt.Children];
 
     internal void ProbeUebersicht()
     {

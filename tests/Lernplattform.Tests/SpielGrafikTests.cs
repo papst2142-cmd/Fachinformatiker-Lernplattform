@@ -161,6 +161,8 @@ public class SpielGrafikTests
             .Concat(FestDeko.Modelle(FestDekoTests.Daten.Value).Select(FestDeko.Kuerbis))
             // seit Phase 9 W1 (Weisung P9-3) das Sitzbild der Figur (Personen am Schreibtisch)
             .Append(Figur.BildName(Figur.Sitzen, 0))
+            // seit A 0.81.0 (Sammelliste 351) das Sitzbild ohne Tisch (Haende auf den Knien)
+            .Append(Figur.BildName(Figur.SitzenFrei, 0))
             // seit A 0.61.0 (Weisung P12-171) der Linienbus
             .Append(Buslinie.Modell)
             // seit A 0.62.0 (Weisung P12-174) die gesparten Autos (die alten bleiben in der Datei, Namen der Strecken)

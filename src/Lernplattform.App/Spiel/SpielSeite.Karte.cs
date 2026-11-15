@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
@@ -15,13 +16,11 @@ namespace Lernplattform.Spiel;
 /// Welle A 0.80.0 (Weisung P12-268, Nico Antwort 5 „Ort antippen = Figur laeuft sofort los“, P12-258 „Das Orts Menue wandert
 /// zur Karte im Handy“): Reiter „Karte“ im Spiel-Handy. Oben die gezeichnete Karte (<see cref="StadtKarteBild"/>), darunter eine
 /// Legende und die Liste aller Orte mit derselben Nummer wie auf der Karte; ein Knopf je Ort geht sofort hin, „Mit dem Bus“ steht
-/// dabei, wenn der Bus schneller ist (wie bisher in der Ortsliste). Mit 3D ersetzt der Knopf „Karte“ draussen den Knopf „Orte“;
-/// ohne 3D bleibt die Ortsliste die Bedienung (bestehende Regel), die Karte gibt es dort trotzdem im Handy.
+/// dabei, wenn der Bus schneller ist (wie bisher in der Ortsliste). Seit A 0.81.0 (Sammelliste 350, Weisung P12-274) gibt es die
+/// Karte nur noch im Handy (kein Knopf „Karte“ in der Leiste); ohne 3D bleibt die Ortsliste mit dem Knopf „Orte“ die Bedienung.
 /// </summary>
 public sealed partial class SpielSeite
 {
-    private Button? _karteKnopf;
-
     /// <summary>Welcher Reiter des Handys gerade gezeigt wird (Start-Test, Fotos).</summary>
     public HandyReiter HandyReiterGerade { get; private set; }
 
@@ -37,31 +36,24 @@ public sealed partial class SpielSeite
     /// <summary>Knoepfe „Mit dem Bus“ unter der Karte je Ort, nur wo der Bus schneller ist (Start-Test).</summary>
     public IReadOnlyDictionary<string, Button> KarteMitBus { get; private set; } = new Dictionary<string, Button>();
 
-    /// <summary>Der Knopf „Karte“ draussen (Start-Test, Fotos).</summary>
-    public Button? KarteKnopf => _karteKnopf;
+    /// <summary>
+    /// Start-Test (Sammelliste 350): Beschriftungen aller sichtbaren Knoepfe der unteren Leiste (Knoepfe des Orts und „Spiel
+    /// verlassen“; ohne Handy-Knopf und Klapp-Pfeil, die keinen Text tragen).
+    /// </summary>
+    public IReadOnlyList<string> LeisteKnoepfe =>
+        [.. _knoepfe.GetLogicalDescendants().OfType<Button>().Append(VerlassenKnopf).Where(k => k.IsEffectivelyVisible).Select(KnopfText).Where(t => t.Length > 0)];
 
-    /// <summary>Ist der Knopf „Karte“ zu sehen (Start-Test 343)?</summary>
-    public bool KarteKnopfSichtbar => _karteKnopf?.IsVisible == true;
-
-    /// <summary>Knopf „Karte“ (draussen mit 3D statt „Orte“): oeffnet das Handy auf dem Reiter Karte.</summary>
-    private Button KarteKnopfBauen()
+    private static string KnopfText(Button knopf) => knopf.Content switch
     {
-        var knopf = Schrift.Knopf(KarteTexte.Karte);
-        knopf.Click += (_, _) => _ = HandyZeigenAsync(HandyReiter.Karte);
-        knopf.IsVisible = false;
-        _karteKnopf = knopf;
-        return knopf;
-    }
+        string text => text,
+        TextBlock block => block.Text ?? "",
+        _ => string.Join(" ", knopf.GetLogicalDescendants().OfType<TextBlock>().Select(t => t.Text).Where(t => !string.IsNullOrEmpty(t))),
+    };
 
-    /// <summary>Knoepfe „Orte“ (ohne 3D) und „Karte“ (mit 3D) nach dem Stand setzen; drinnen keiner von beiden (wie bisher).</summary>
+    /// <summary>Knopf „Orte“ (nur ohne 3D und draussen); die Karte gibt es seit A 0.81.0 nur im Spiel-Handy (Sammelliste 350).</summary>
     private void OrteKnoepfeSetzen(StadtSpiel spiel)
     {
-        var draussen = !spiel.ImInnenraum;
-        _orteKnopf.IsVisible = draussen && _ersatz.IsVisible;
-        if (_karteKnopf is { } karte)
-        {
-            karte.IsVisible = draussen && !_ersatz.IsVisible && !spiel.Einrichten;
-        }
+        _orteKnopf.IsVisible = !spiel.ImInnenraum && _ersatz.IsVisible;
     }
 
     /// <summary>Inhalt des Reiters Karte in <paramref name="liste"/> bauen.</summary>

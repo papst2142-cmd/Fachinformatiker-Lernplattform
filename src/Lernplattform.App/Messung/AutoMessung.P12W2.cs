@@ -40,6 +40,22 @@ public static partial class AutoMessung
         await ansicht.BildFertigAsync();
         yield return "spiel/uebersicht-orte";
         tafel.AllesSchliessen();
+        // Welle A 0.81.0 (Sammelliste 350): dieselbe Uebersicht als Reiter im Spiel-Handy (X oben rechts wie 348)
+        await ansicht.BildFertigAsync();
+        var handy = seite.HandyZeigenAsync(SpielSeite.HandyReiter.Uebersicht);
+        await ansicht.BildFertigAsync();
+        if (seite.HandyReiterGerade != SpielSeite.HandyReiter.Uebersicht || seite.UebersichtGezeigt.Count == 0)
+        {
+            P7W1AnsichtFehler.Add("spiel/uebersicht-handy: Reiter Übersicht nicht gezeigt");
+        }
+        yield return "spiel/uebersicht-handy";
+        if (HandyFund(Dialog.Offen) is { } kreuzUebersicht)
+        {
+            P7W1AnsichtFehler.Add("spiel/uebersicht-handy: " + kreuzUebersicht);
+        }
+        Dialog.AlleSchliessen();
+        await Task.WhenAny(handy, Task.Delay(3000));
+        await ansicht.BildFertigAsync();
 
         // Stadt: PC und zwei angekommene Pakete (frischer Probe-Ablauf, nur im Speicher)
         var spiel = Frisch(seite);

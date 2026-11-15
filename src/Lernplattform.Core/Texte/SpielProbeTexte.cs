@@ -54,6 +54,29 @@ public static class SpielProbeTexte
     /// <summary>Name des Knopfs fuer den Screenreader: {0} Ort, {1} Minuten mit dem Bus.</summary>
     public const string MitDemBusName = "Mit dem Bus zu {0}, {1} Minuten";
 
+    // ---- Welle A 0.81.0 (Weisung P12-272, Sammelliste 349): hinsetzen und hinlegen ----
+
+    /// <summary>Knopf vor einem freien Sitzmoebel (auch am PC-Stuhl und an der Haltestelle).</summary>
+    public const string KnopfHinsetzen = "Hinsetzen";
+
+    /// <summary>Knopf vor einem freien Bett.</summary>
+    public const string KnopfHinlegen = "Hinlegen";
+
+    /// <summary>Knopf im Sitzen und im Liegen.</summary>
+    public const string KnopfAufstehen = "Aufstehen";
+
+    /// <summary>Erste Zeile im Sitzen.</summary>
+    public const string DuSitzt = "Du sitzt. Zum Aufstehen tippe woanders hin oder auf „Aufstehen“.";
+
+    /// <summary>Erste Zeile im Liegen.</summary>
+    public const string DuLiegst = "Du liegst im Bett. Zum Aufstehen tippe woanders hin oder auf „Aufstehen“.";
+
+    /// <summary>Am Schreibtisch, solange die Figur steht (die PC-Knoepfe gibt es erst im Sitzen).</summary>
+    public const string ErstHinsetzen = "Setz dich auf den Stuhl (antippen oder „Hinsetzen“), dann geht der PC an.";
+
+    /// <summary>Am Bett, solange die Figur steht („Schlafen“ gibt es erst im Liegen).</summary>
+    public const string ErstHinlegen = "Leg dich ins Bett (antippen oder „Hinlegen“), dann kannst du schlafen.";
+
     // ---- Welle A 0.73.0 (Weisung P12-239, Sammelliste 335): selbst mit dem Bus fahren ----
 
     /// <summary>Knopf unten, wenn der Bus an der Haltestelle der Figur haelt.</summary>

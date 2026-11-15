@@ -23,6 +23,7 @@ namespace Lernplattform.Messung;
 /// seiner Karte (Sammelliste 194).
 /// Phase 11 W2 (Weisung P11-20): (11) jedes bedienbare Element hat einen Namen fuer den Screenreader
 /// (<see cref="Namenspruefung"/>).
+/// Welle A 0.81.0 (Weisung P12-273): (13) „Zurück“ jeder offenen Spiel-Tafel steht fest oben (<c>SpielTafel.ZurueckFund</c>).
 /// </summary>
 public static class Layoutpruefung
 {
@@ -67,6 +68,15 @@ public static class Layoutpruefung
         }
         // Phase 11 W2 (Weisung P11-20): (11) jedes bedienbare Element hat einen Namen fuer den Screenreader
         Namenspruefung.Pruefe(wurzel, funde);
+        // Welle A 0.81.0 (Weisung P12-273, Nico 5a): (13) in jeder offenen Spiel-Tafel steht „Zurueck“ fest oben, auch ganz
+        // nach unten gerollt
+        foreach (var tafel in wurzel.GetVisualDescendants().OfType<Spiel.Tafel.SpielTafel>().Where(t => t.IsEffectivelyVisible && t.Bounds.Width > 0))
+        {
+            if (tafel.ZurueckFund() is { } fund)
+            {
+                funde.Add("Spiel-Tafel: " + fund);
+            }
+        }
         if (Views.Dialog.Offen is { IsEffectivelyVisible: true } fenster && fenster.GetVisualAncestors().Contains(wurzel)
             && fenster.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault() is { } rollen && rollen.Offset.Y > Toleranz)
         {

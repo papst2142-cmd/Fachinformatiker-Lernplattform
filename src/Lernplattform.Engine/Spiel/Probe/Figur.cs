@@ -106,6 +106,74 @@ public static class Figur
     /// <summary>Phase 9 W1 (Weisung P9-3): sitzend am Schreibtisch, ein Bild (Name plus "00"), Personen auf einem Stuhl.</summary>
     public const string Sitzen = "figur-sitzen";
 
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 351, Weisung P12-276, Nico: „Haende auf den Beinen ablegen“): sitzend ohne Tisch (Sofa,
+    /// Sessel, Bank), ein Bild (Name plus "00"); Sitzhoehe wie <see cref="Sitzen"/>, Oberschenkel waagrecht (die Figur kann
+    /// bis an die Lehne rutschen), die Haende liegen auf den Knien.
+    /// </summary>
+    public const string SitzenFrei = "figur-sitzen-frei";
+
+    private static readonly AsyncLocal<bool> SitzenAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Sitzen ohne Tisch wie bis P12-276 (Schreibtisch-Haltung, Figur an der Bank zu hoch).</summary>
+    public static void SitzenAltFuerTests(bool an) => SitzenAlt.Value = an;
+
+    /// <summary>Welle A 0.81.0 (Sammelliste 351): die Gegenprobe <see cref="SitzenAltFuerTests"/> ist an.</summary>
+    public static bool SitzenWieBisher => SitzenAlt.Value;
+
+    /// <summary>Welle A 0.81.0 (Sammelliste 351): Bewegung des Sitzbilds der Spielfigur je Platz (am PC die Schreibtisch-Haltung).</summary>
+    public static string SitzBild(SitzArt art) => art == SitzArt.Sitzen && !SitzenAlt.Value ? SitzenFrei : Sitzen;
+
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 351): so weit (Anteil der Figurhoehe) reicht der Kopf der sitzenden Figur ohne Tisch samt
+    /// Haar und Kopfbedeckung hinter ihre Stelle (hinterste Ecke oberhalb von 0,68). Bestimmt, wie weit sie auf der Bank im
+    /// Haeuschen bis an die Glasrueckwand rutscht (<see cref="Haltestellen.BankSitz(Haltestelle, float?)"/>).
+    /// </summary>
+    public static float KopfHinten(GrafikBibliothek? grafik, PyObjekt? aussehen, IReadOnlyList<Stueck>? kleidung)
+    {
+        var netz = Netz(grafik, aussehen, 1f, kleidung, SitzenFrei, 0);
+        var ecken = netz.Ecken;
+        var hinten = 0f;
+        for (var i = 0; i < ecken.Count; i += Probe.Netz.Zahlen)
+        {
+            if (ecken[i + 1] > 0.68f)
+            {
+                hinten = MathF.Max(hinten, -ecken[i + 2]);
+            }
+        }
+        return hinten;
+    }
+
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 349), gemessen an <see cref="Sitzen"/> (Figur der Hoehe 1): Unterseite des Gesaesses ueber
+    /// dem Boden der Figur.
+    /// </summary>
+    public const float SitzUnten = 0.282f;
+
+    /// <summary>Welle A 0.81.0: Spalt zwischen Gesaess und Sitzflaeche (Anteil der Figurhoehe).</summary>
+    public const float SitzSpalt = 0.004f;
+
+    /// <summary>
+    /// Welle A 0.81.0: so weit (Anteil der Figurhoehe) liegt die Stelle der sitzenden Figur hinter der Vorderkante des Sitzes;
+    /// die Unterschenkel (hinten ab 0,055) bleiben davor frei.
+    /// </summary>
+    public const float SitzVor = 0.045f;
+
+    /// <summary>Welle A 0.81.0: Ruecken der liegenden Figur unter ihrer Mitte (stehend: hinterste Stelle 0,139 hinter der Mitte).</summary>
+    public const float LiegenRuecken = 0.139f;
+
+    /// <summary>Welle A 0.81.0: so weit liegt die Figur ueber der Liegeflaeche (das Kissen ist hoeher als die Matratze).</summary>
+    public const float LiegenUeber = 0.025f;
+
+    /// <summary>Welle A 0.81.0: Kopf so weit (Anteil der Laenge) vom Kopfende, hoechstens bis die Fuesse <see cref="LiegenRand"/> vor dem Fussende liegen.</summary>
+    public const float LiegenKopf = 0.12f;
+
+    /// <summary>Welle A 0.81.0: das Kopfteil der Betten (bedSingle, bedDouble) reicht so weit (Anteil der Tiefe) nach vorn.</summary>
+    public const float LiegenKopfteil = 0.1f;
+
+    /// <summary>Welle A 0.81.0: Abstand der Fuesse vom Fussende und des Kopfs vom Kopfteil.</summary>
+    public const float LiegenRand = 0.03f;
+
     /// <summary>Bilder je Bewegung (ein Doppelschritt), je Bild ein Modell Name plus zwei Ziffern in modelle.bin.</summary>
     public const int Bilder = 16;
 

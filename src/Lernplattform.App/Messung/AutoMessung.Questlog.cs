@@ -260,6 +260,11 @@ public static partial class AutoMessung
         Frisch(seite);
         var t = await QuestlogOeffnenAsync(ansicht, seite);
         yield return "spiel/questlog-offen";
+        // Welle A 0.81.0 (Sammelliste 348): X oben rechts bei jeder Schriftstufe und Groesse (nach der Layoutpruefung, rollt ganz nach unten)
+        if (HandyFund(Dialog.Offen) is { } kreuzOffen)
+        {
+            P7W1AnsichtFehler.Add("spiel/questlog-offen: " + kreuzOffen);
+        }
         await QuestlogSchliessenAsync(ansicht, t);
         var spiel = seite.Spiel!;
         if (spiel.Ablauf.Stand.OffeneTickets().FirstOrDefault() is { } auftrag)
@@ -268,6 +273,11 @@ public static partial class AutoMessung
         }
         t = await QuestlogOeffnenAsync(ansicht, seite, erledigt: true);
         yield return "spiel/questlog-erledigt";
+        // Welle A 0.81.0 (Sammelliste 348): X oben rechts bei jeder Schriftstufe und Groesse (nach der Layoutpruefung, rollt ganz nach unten)
+        if (HandyFund(Dialog.Offen) is { } kreuzErledigt)
+        {
+            P7W1AnsichtFehler.Add("spiel/questlog-erledigt: " + kreuzErledigt);
+        }
         await QuestlogSchliessenAsync(ansicht, t);
         var bus = MitBus(seite);
         if (seite.ErsatzSichtbar)
@@ -283,6 +293,11 @@ public static partial class AutoMessung
             // Welle A 0.80.0 (P12-258): mit 3D die Karte im Handy mit „Mit dem Bus“
             var kt = await KarteOeffnenAsync(ansicht, seite);
             yield return "spiel/karte-bus";
+            // Welle A 0.81.0 (Sammelliste 348): X oben rechts bei jeder Schriftstufe und Groesse (nach der Layoutpruefung, rollt ganz nach unten)
+            if (HandyFund(Dialog.Offen) is { } kreuzKarte)
+            {
+                P7W1AnsichtFehler.Add("spiel/karte-bus: " + kreuzKarte);
+            }
             await QuestlogSchliessenAsync(ansicht, kt);
         }
         if (bus.MitBusZu("amt") == StadtGrund.Ok && !seite.ErsatzSichtbar)

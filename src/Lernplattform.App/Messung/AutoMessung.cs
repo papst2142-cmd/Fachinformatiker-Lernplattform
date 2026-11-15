@@ -219,6 +219,14 @@ public static partial class AutoMessung
             funde += await OrtslisteInnenAsync(ansicht);       // Patch A 0.75.1: offene Ortsliste schliesst beim Betreten (Handy und PC)
             Zeitplan("KameraKarteAsync");
             funde += await KameraKarteAsync(ansicht);          // Welle A 0.80.0: feste Kamera draussen, Karte im Spiel-Handy
+            Zeitplan("HandyKreuzAsync");
+            funde += await HandyKreuzAsync(ansicht);           // Welle A 0.81.0: X oben rechts im Spiel-Handy (Sammelliste 348)
+            Zeitplan("HaltungAsync");
+            funde += await HaltungAsync(ansicht);              // Welle A 0.81.0: Hinsetzen und Hinlegen (Sammelliste 349)
+            Zeitplan("TafelZurueckAsync");
+            funde += await TafelZurueckAsync(ansicht);         // Welle A 0.81.0: Zurueck in der Spiel-Tafel fest oben (Nico 5a)
+            Zeitplan("LeisteUebersichtAsync");
+            funde += await LeisteUebersichtAsync(ansicht);     // Welle A 0.81.0: Uebersicht im Handy, Leiste schlank (Sammelliste 350)
         }
         if (MitLernen)
         {

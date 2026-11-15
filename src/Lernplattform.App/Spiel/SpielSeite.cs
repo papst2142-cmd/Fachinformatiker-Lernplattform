@@ -61,8 +61,12 @@ public sealed partial class SpielSeite : Grid
     private readonly Button _warten;
     private readonly Button _orteKnopf;
     private readonly Button _einrichten;
-    private readonly Button _uebersicht;
     private readonly WrapPanel _ortKnoepfe = new();
+
+    /// <summary>Knoepfe des Ortes je Aktion (Start-Test, Welle A 0.81.0: Hinsetzen, Hinlegen, Aufstehen).</summary>
+    public IReadOnlyDictionary<string, Button> OrtKnoepfe => _ortKnoepfeJeAktion;
+
+    private readonly Dictionary<string, Button> _ortKnoepfeJeAktion = new(StringComparer.Ordinal);
     // Phase 12 Welle 2: ohne 3D die Knoepfe der Moebel am Ort oben in der Ortsliste (sie rollt; unten in der Karte
     // passten sie bei grosser Schrift am Handy nicht mehr ins Bild)
     private readonly WrapPanel _ortAktionen = new() { IsVisible = false, Margin = new Thickness(0, 0, 0, 8) };
@@ -137,8 +141,10 @@ public sealed partial class SpielSeite : Grid
         kopf.Padding = new Thickness(14, 8);
         kopf.HorizontalAlignment = HorizontalAlignment.Left;
         _kopf = kopf;
+        // Welle A 0.81.0 (Sammelliste 350, Weisung P12-274, Nico „Spiel verlassen in die Leiste“): der Knopf steht nicht mehr
+        // oben rechts, sondern in der unteren Leiste vor dem Klapp-Pfeil, immer zu sehen (auch zugeklappt); gleiches Verhalten
         var verlassenKnopf = Schrift.Knopf(StadtTexte.Verlassen, true);
-        verlassenKnopf.Margin = new Thickness(0);
+        verlassenKnopf.Margin = new Thickness(0, 0, 4, 6);
         verlassenKnopf.VerticalAlignment = VerticalAlignment.Top;
         verlassenKnopf.Click += (_, _) => _verlassen();
         VerlassenKnopf = verlassenKnopf;
@@ -154,10 +160,9 @@ public sealed partial class SpielSeite : Grid
         _orteKnopf.Click += (_, _) => OrtslisteZeigen(!_ortsliste!.IsVisible);
         _einrichten = Schrift.Knopf(SpielProbeTexte.Einrichten);
         _einrichten.Click += (_, _) => Spiel?.EinrichtenUmschalten();
-        _uebersicht = Schrift.Knopf(StadtTexte.Uebersicht);
-        _uebersicht.IsVisible = false;
-        _uebersicht.Click += (_, _) => Tafel?.UebersichtOeffnen();
-        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _uebersicht, _orteKnopf, KarteKnopfBauen() } };
+        // Welle A 0.81.0 (Sammelliste 350, Weisung P12-274): „Übersicht“ und „Karte“ gibt es nur noch als Reiter im Spiel-Handy;
+        // ohne 3D bleibt „Orte“ (die Ortsliste ist dort die Bedienung)
+        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf } };
         if (Leistungsprobe.An)
         {
             // Weisung P8-52: nur in der Probe-APK; waehrend der Probe nicht antippbar
@@ -195,11 +200,13 @@ public sealed partial class SpielSeite : Grid
         _kurz.Margin = new Thickness(4, 0, 8, 6);
         _kurz.IsVisible = false;
         // Welle A 0.67.0 (Sammelliste 301): links der Handy-Knopf (Questlog), der Klapp-Pfeil rueckt an den rechten Rand
-        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), RowDefinitions = new RowDefinitions("Auto,Auto") };
+        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto") };
         _klappZeile = klappZeile;
         klappZeile.SizeChanged += (_, _) => QuestZeileSetzen();
         klappZeile.Children.Add(QuestKnopfBauen());
-        Grid.SetColumn(_klapp, 2);
+        Grid.SetColumn(verlassenKnopf, 2);
+        klappZeile.Children.Add(verlassenKnopf);
+        Grid.SetColumn(_klapp, 3);
         klappZeile.Children.Add(_klapp);
         Grid.SetColumn(_kurz, 1);
         klappZeile.Children.Add(_kurz);
@@ -251,8 +258,6 @@ public sealed partial class SpielSeite : Grid
             Margin = new Thickness(Rand),
         };
         ebene.Children.Add(kopf);
-        Grid.SetColumn(verlassenKnopf, 1);
-        ebene.Children.Add(verlassenKnopf);
         // Ersatz und Ortsliste ueber beide Spalten, der Ersatz-Hinweis ueber der Liste: sonst macht die
         // Ortsliste die rechte Spalte breit und drueckt am schmalen Handy die Kopfzeile zusammen; ist die
         // Seite schmaler als die Liste, wird die Liste schmaler
@@ -264,7 +269,13 @@ public sealed partial class SpielSeite : Grid
         Grid.SetColumnSpan(mitte, 2);
         ebene.Children.Add(mitte);
         _mitte = mitte;
-        ebene.SizeChanged += (_, _) => Anordnen();
+        // Welle A 0.81.0 (Sammelliste 350): die Leiste misst am groessten Platz (Breite der Ebene); die steht erst nach dem Anordnen
+        // der Kinder fest, darum hier noch einmal setzen
+        ebene.SizeChanged += (_, _) =>
+        {
+            Anordnen();
+            QuestZeileSetzen();
+        };
         _ortsliste.PropertyChanged += (_, e) =>
         {
             if (e.Property == IsVisibleProperty)
@@ -517,7 +528,6 @@ public sealed partial class SpielSeite : Grid
             tafel.IsVisible = false;
         }
         Einsetzen(spiel);
-        _uebersicht.IsVisible = false;
     }
 
     /// <summary>
@@ -556,7 +566,6 @@ public sealed partial class SpielSeite : Grid
             {
                 spiel.Aktion += tafel.AktionAusfuehren;
             }
-            _uebersicht.IsVisible = _tafelAn;
         }
         if (Spiel is { } alt)
         {
@@ -1065,6 +1074,8 @@ public sealed partial class SpielSeite : Grid
             _betreten.IsVisible = _zurStadt.IsVisible = _warten.IsVisible = false;
             return;
         }
+        // Welle A 0.81.0: Sitzen und Liegen nur mit 3D (ohne 3D Knoepfe wie bis A 0.80.0)
+        spiel.OhneDreiDSetzen(_ersatz.IsVisible);
         _kopfzeile.Text = spiel.Kopfzeile;
         _zeile.Text = spiel.Zeile;
         HinweisfeldZeigen(spiel);
@@ -1151,11 +1162,13 @@ public sealed partial class SpielSeite : Grid
         }
         _tafelSchluessel = schluessel;
         _ortKnoepfe.Children.Clear();
+        _ortKnoepfeJeAktion.Clear();
         foreach (var (aktion, name) in spiel.Knoepfe)
         {
             var knopf = Schrift.Knopf(name, true);
             knopf.Click += (_, _) => spiel.Knopf(aktion);
             _ortKnoepfe.Children.Add(knopf);
+            _ortKnoepfeJeAktion[aktion] = knopf;
         }
         _ortAktionen.Children.Clear();
         if (_ersatz.IsVisible && !spiel.Einrichten && spiel.ImInnenraum)
