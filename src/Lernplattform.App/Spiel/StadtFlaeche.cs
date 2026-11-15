@@ -1028,11 +1028,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 // Welle A 0.81.0 (Sammelliste 349): sitzend (Haltung der Personen am Schreibtisch) oder liegend (stehende Figur
                 // auf dem Ruecken, Kopf gegen den Blick, ohne Kopfbedeckung) auf dem Platz
+                // Sammelliste 351 (Weisung P12-276): ohne Tisch die Haltung mit den Haenden auf den Knien, Lage aus StadtSpiel.HaltungLage
                 spieler = h.Liegt
                     ? FigurNetz(gl, "#spieler-liegt", aussehen, OhneKopf(_spiel.Kleidung), null, -1)
-                    : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, Figur.Sitzen, 0);
-                figurLage = Matrix4x4.CreateScale(groesse) * (h.Liegt ? Matrix4x4.CreateRotationX(-MathF.PI / 2) : Matrix4x4.Identity)
-                    * Matrix4x4.CreateRotationY(h.Blick) * Matrix4x4.CreateTranslation(h.Ort + new Vector3(0, innen is null ? FigurHoehe(_spiel) : 0f, 0));
+                    : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, Figur.SitzBild(_spiel.HaltungArt ?? SitzArt.Sitzen), 0);
+                figurLage = StadtSpiel.HaltungLage(h, groesse, innen is null ? FigurHoehe(_spiel) : 0f);
             }
             else
             {

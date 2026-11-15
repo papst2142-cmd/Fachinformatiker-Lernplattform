@@ -806,6 +806,16 @@
    "paket": "car_kit",
    "datei": "Models/OBJ format/garbage-truck.obj",
    "sparen": "raeder12"
+  },
+  {
+   "name": "figur-sitzen-frei",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "sitzen_frei",
+   "sitz": 0.9
   }
  ]
 }

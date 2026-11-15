@@ -10,6 +10,8 @@ Das Spiel-Handy hat oben rechts ein X zum Schließen und zeigt jetzt auch die Ü
 - Tippe auf dein Bett: Deine Figur legt sich hin. Liegend erscheint „Schlafen“.
 - Vor einem freien Sofa, Sessel oder einer Bank steht der Knopf „Hinsetzen“, vor dem Bett „Hinlegen“. An der Bushaltestelle setzt du dich nur mit „Hinsetzen“ auf die Bank, zum Einsteigen steht deine Figur von selbst auf.
 - Zum Aufstehen tippst du auf „Aufstehen“ oder einfach woanders hin. Sitzen und Liegen kosten keine Spielzeit.
+- Auf Sofa, Sessel und Bänken sitzt deine Figur richtig auf der Sitzfläche und rutscht bis an die Lehne. Die Hände liegen dabei auf den Knien. Am Schreibtisch bleibt die Haltung mit den Händen an der Tastatur.
+- An der Bushaltestelle sitzt deine Figur auf der Bank statt darüber und lehnt hinten an der Glaswand.
 - Ohne 3D-Ansicht bleibt alles wie bisher.
 - In den Läden, am PC zu Hause, in der Firma, an den Schaltern von Bank und Amt und am Kleiderschrank bleibt der Knopf „Zurück“ oben stehen, auch wenn du weit nach unten scrollst.
 - Die Übersicht (Spielfigur, Tickets, Ansehen, Wissensstand) ist jetzt ein Reiter im Spiel-Handy, neben Aufträgen, Erledigt und Karte.

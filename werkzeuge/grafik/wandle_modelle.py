@@ -513,6 +513,30 @@ def sitzen_haltung(sk, arme):
     return G
 
 
+def sitzen_frei_haltung(sk, arme):
+    """Welle A 0.81.0 (Sammelliste 351, Weisung P12-276, Nico: „Haende auf den Beinen ablegen“): sitzend ohne Tisch (Sofa,
+    Sessel, Bank). Oberschenkel waagrecht (92 Grad, die Kniekehle liegt nicht tiefer als das Gesaess, so kann die Figur bis
+    an die Lehne rutschen), Unterschenkel schraeg nach vorn unten (70 Grad zurueck), Oberarme fast senkrecht am Koerper, Unterarme schraeg nach
+    vorn unten und etwas nach innen, die Haende liegen auf den Knien (Werte nach Bildern gewaehlt; keine Durchdringung mit
+    Sitz und Lehne, Test SpielHaltungTests)."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, -5)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -5)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -50)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -50)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 1, -8)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 1, 8)
+    welt_drehen(G, sk.eltern, 'LeftHand', 0, 20)
+    welt_drehen(G, sk.eltern, 'RightHand', 0, 20)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -92)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, -92)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 70)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 70)
+    return G
+
+
 def auf_sitz(dreiecke, G, sitz):
     """Sitzende Figur senken: die Unterseite der Oberschenkel (Ecken zwischen Huefte und Knie) liegt auf
     Hoehe <sitz> (Einheiten des Modells, die Figur steht 3,77 hoch)."""
@@ -574,13 +598,13 @@ def fbx_figur_haltung(z, pfad, haut_png, G):
 
 
 def bewegung_bilder(z, eintrag):
-    """Bilder einer Bewegung: "lauf" aus Animations/run.fbx (Paket), "gehen" (eigene Gelenk-Bewegung) oder "sitzen"
-    (ein Bild, Phase 9 W1)."""
+    """Bilder einer Bewegung: "lauf" aus Animations/run.fbx (Paket), "gehen" (eigene Gelenk-Bewegung), "sitzen"
+    (ein Bild, Phase 9 W1) oder "sitzen_frei" (ein Bild, Sammelliste 351)."""
     bilder = eintrag["bilder"]
     modell = Skelett(fbx_lesen(z.read(eintrag["datei"])))
     erg = []
-    if eintrag["bewegung"] == "sitzen":
-        G = sitzen_haltung(modell, eintrag.get("arme", 72))
+    if eintrag["bewegung"] in ("sitzen", "sitzen_frei"):
+        G = (sitzen_haltung if eintrag["bewegung"] == "sitzen" else sitzen_frei_haltung)(modell, eintrag.get("arme", 72))
         return [auf_sitz(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), G, eintrag["sitz"])]
     if eintrag["bewegung"] == "gehen":
         for b in range(bilder):

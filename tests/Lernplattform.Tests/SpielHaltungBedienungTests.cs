@@ -213,8 +213,11 @@ public class SpielHaltungBedienungTests
         var zeilen = s.Ablauf.Stand.Verlauf.Count;
         Assert.True(s.Knopf(StadtSpiel.AktionHinsetzen));
         Assert.Equal(h.Nr, s.AufDerBank);
-        var bank = Haltestellen.BankSitz(h);
+        // Sammelliste 351: so weit nach hinten, wie der Kopf (Aussehen und Kleidung der Figur) vor der Glasrueckwand Platz hat
+        var aussehen = s.Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
+        var bank = Haltestellen.BankSitz(h, Figur.KopfHinten(s.Grafik, aussehen, s.Kleidung));
         Assert.Equal((bank.Ort, bank.Blick, false), s.Haltung);
+        Assert.NotEqual(Haltestellen.BankSitz(h).Ort, bank.Ort);
         Assert.True(Hat(s, StadtSpiel.AktionAufstehen) && !Hat(s, StadtSpiel.AktionHinsetzen), string.Join(",", s.Knoepfe));
         Assert.Equal(stand, (s.FigurX, s.FigurZ));
         // der Bus haelt auch fuer die sitzende Figur; „Einsteigen“ steht vorher auf

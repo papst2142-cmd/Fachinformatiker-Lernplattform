@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "26dad00a25cdd12707b58fdd85dc4d811b20184c65b413289e2eb49ddf8d9d29",
- "bytes": 10062895,
+ "sha256": "f284c217c5094f25755308edce5417133e62ba2a9710b0de8e8b9004dac91060",
+ "bytes": 10146328,
  "modelle": [
   {
    "name": "building-e",
@@ -2682,6 +2682,23 @@
     0.8,
     1.6,
     1.75
+   ]
+  },
+  {
+   "name": "figur-sitzen-frei00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.4547,
+    0.4267,
+    -0.5339
+   ],
+   "max": [
+    0.4552,
+    3.697,
+    1.0876
    ]
   }
  ]

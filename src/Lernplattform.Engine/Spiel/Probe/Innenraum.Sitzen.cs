@@ -56,6 +56,28 @@ public sealed partial class Innenraum
             ["bedDouble"] = (0.667f, 0f, SitzArt.Liegen),
         };
 
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 351, Weisung P12-276, Nico: „zu weit vorne“): so weit (Anteil der Figurhoehe) sitzt die Figur
+    /// in der Haltung ohne Tisch (<see cref="Figur.SitzenFrei"/>) weiter hinten als an der Vorderkante: bis an die Lehne oder so
+    /// weit, wie die Unterschenkel vor der Kante frei bleiben (gemessen, je Modell der kleinste Wert ueber alle Groessen, 0,01
+    /// Reserve fuer die Pruefung mit Verschiebung 0,02;
+    /// <c>SpielSitzenOhneTischTests</c> prueft: keine Durchdringung, und 0,05 weiter hinten stiesse die Figur an).
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, (float Wert, float Bezug)> SitzTiefe = new Dictionary<string, (float, float)>(StringComparer.Ordinal)
+    {
+        // die Bank gibt es verschieden tief (0,5 und 0,6): je 0,1 tiefer 0,8 davon weiter nach hinten
+        ["bench"] = (0.045f, 0.5f),
+        ["loungeSofa"] = (0.055f, 0f),
+        ["loungeChair"] = (0.045f, 0f),
+        ["loungeChairRelax"] = (0.085f, 0f),
+        ["kkChairA"] = (0f, 0f), // dahinter haengt die Anzeigetafel (Amt): der Kopf stiesse an
+        ["kkArmchair"] = (0.055f, 0f),
+    };
+
+    /// <summary>Welle A 0.81.0 (Sammelliste 351): Weg nach hinten (Welt) auf einem Modell der Tiefe <paramref name="tiefe"/> (Welt) fuer die Figur der Hoehe <paramref name="figur"/>.</summary>
+    public static float Zurueck(string name, float tiefe, float figur) =>
+        Figur.SitzenWieBisher || !SitzTiefe.TryGetValue(name, out var t) ? 0f : (t.Wert * figur) + (t.Bezug > 0 ? 0.8f * MathF.Max(0f, tiefe - t.Bezug) : 0f);
+
     private readonly List<Sitzgelegenheit> _sitzgelegenheiten = [];
 
     private PyObjekt? _dekoJetzt;
@@ -97,7 +119,10 @@ public sealed partial class Innenraum
     /// </summary>
     public static IReadOnlyList<(float Halb, float Y1, float Y2, float Z1, float Z2)> FigurQuader(SitzArt art) => art == SitzArt.Liegen
         ? [(0.19f, -0.15f, 0.16f, -1.01f, 0.01f)]
-        : [(0.14f, 0.27f, 0.90f, -0.145f, 0.16f), (0.19f, 0.86f, 1.08f, -0.215f, 0.22f), (0.12f, 0.27f, 0.43f, -0.06f, 0.18f), (0.12f, 0.09f, 0.30f, 0.04f, 0.22f), (0.19f, 0.44f, 0.65f, -0.06f, 0.35f)];
+        : art == SitzArt.Sitzen && !Figur.SitzenWieBisher
+            // Sammelliste 351: ohne Tisch (Figur.SitzenFrei) reichen Knie und Fuesse weiter nach vorn
+            ? [(0.14f, 0.27f, 0.90f, -0.145f, 0.16f), (0.19f, 0.86f, 1.08f, -0.215f, 0.22f), (0.12f, 0.27f, 0.43f, -0.06f, 0.24f), (0.12f, 0.09f, 0.30f, 0.04f, 0.30f), (0.19f, 0.44f, 0.65f, -0.06f, 0.35f)]
+            : [(0.14f, 0.27f, 0.90f, -0.145f, 0.16f), (0.19f, 0.86f, 1.08f, -0.215f, 0.22f), (0.12f, 0.27f, 0.43f, -0.06f, 0.18f), (0.12f, 0.09f, 0.30f, 0.04f, 0.22f), (0.19f, 0.44f, 0.65f, -0.06f, 0.35f)];
 
     /// <summary>
     /// Welle A 0.81.0: am Ende des Aufbaus die Plaetze streichen, an denen die Figur (ihre Quader, 0,02 Spiel) ein anderes Stueck
@@ -189,6 +214,9 @@ public sealed partial class Innenraum
         return null;
     }
 
+    /// <summary>Welle A 0.81.0 (Sammelliste 351, nur fuer Pruefungen): die Grundflaeche der Figur auf dem Platz reicht ueber die Mitte einer Wand.</summary>
+    internal bool UeberDieWand(Sitzgelegenheit s) => UeberWand(new Vector2(s.Ort.X, s.Ort.Z), new Vector2(MathF.Sin(s.Blick), MathF.Cos(s.Blick)), Grundflaeche(s.Art), FigurHoehe, s.Mitte);
+
     private bool UeberWand(Vector2 ort, Vector2 f, (float Hinten, float Vorn, float Halb) g, float hoehe, Vector2 anker)
     {
         const float spiel = 0.02f;
@@ -279,7 +307,8 @@ public sealed partial class Innenraum
             return new Sitzgelegenheit(SitzArt.Liegen, new Vector3(fuss.X, fussende.Y + ((Figur.LiegenRuecken + Figur.LiegenUeber) * figur), fuss.Y),
                 MathF.Atan2(richtung.X, richtung.Y), rechteck, deko, name);
         }
-        var stelle = new Vector2(vorn.X, vorn.Z) - (f * (Figur.SitzVor * figur));
+        // Sammelliste 351: ohne Tisch weiter nach hinten an die Lehne (Zurueck), mit der Gegenprobe wie bis P12-276
+        var stelle = new Vector2(vorn.X, vorn.Z) - (f * ((Figur.SitzVor * figur) + Zurueck(name, Vector3.Distance(L(0.5f, m.Sitz, 0f), vorn), figur)));
         return new Sitzgelegenheit(SitzArt.Sitzen, new Vector3(stelle.X, vorn.Y - ((Figur.SitzUnten - Figur.SitzSpalt) * figur), stelle.Y), blick, rechteck, deko, name);
     }
 }

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Lernplattform.Core.Daten;
 using Lernplattform.Core.Texte;
 
 namespace Lernplattform.Core.Spiel.Probe;
@@ -72,12 +73,40 @@ public sealed partial class StadtSpiel
             }
             if (AufDerBank is { } nr && !ImInnenraum && Szene.Haltestellen.FirstOrDefault(h => h.Nr == nr) is { } halt)
             {
-                var (ort, blick) = Haltestellen.BankSitz(halt);
+                var (ort, blick) = Haltestellen.BankSitz(halt, KopfHinten());
                 return (ort, blick, false);
             }
             return null;
         }
     }
+
+    private (PyObjekt? Aussehen, IReadOnlyList<Figur.Stueck>? Kleidung, float Wert)? _kopfHinten;
+
+    /// <summary>Welle A 0.81.0 (Sammelliste 351): wie weit der Kopf der sitzenden Figur (Aussehen und Kleidung) hinter ihre Stelle reicht, gemerkt bis zur naechsten Aenderung.</summary>
+    private float KopfHinten()
+    {
+        var aussehen = Ablauf.Stand.Profil is { } profil ? SpielDaten.Get(profil, "aussehen") as PyObjekt : null;
+        var kleidung = Kleidung;
+        if (_kopfHinten is not { } k || !ReferenceEquals(k.Aussehen, aussehen) || !ReferenceEquals(k.Kleidung, kleidung))
+        {
+            k = (aussehen, kleidung, Figur.KopfHinten(Grafik, aussehen, kleidung));
+            _kopfHinten = k;
+        }
+        return k.Wert;
+    }
+
+    /// <summary>Welle A 0.81.0 (Sammelliste 351): Art des Platzes, auf dem die Figur sitzt oder liegt (Bank = Sitzen; null = sie steht).</summary>
+    public SitzArt? HaltungArt => Haltung is null ? null : MeinPlatz?.Art ?? SitzArt.Sitzen;
+
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 351, Weisung P12-276): Lage der sitzenden oder liegenden Figur (Hoehe <paramref name="groesse"/>)
+    /// zum Zeichnen. Die Stelle ist drinnen die Hoehe ueber dem Boden des Raums und draussen (Bank) die Hoehe ueber dem Boden der
+    /// Stadt, auf dem das Haeuschen steht. Bis P12-276 kam draussen die Hoehe unter der stehenden Figur dazu
+    /// (<paramref name="bodenDraussen"/>, Strasse 0,058): die Figur schwebte ueber der Bank (Gegenprobe <see cref="Figur.SitzenAltFuerTests"/>).
+    /// </summary>
+    public static Matrix4x4 HaltungLage((Vector3 Ort, float Blick, bool Liegt) haltung, float groesse, float bodenDraussen) =>
+        Matrix4x4.CreateScale(groesse) * (haltung.Liegt ? Matrix4x4.CreateRotationX(-MathF.PI / 2) : Matrix4x4.Identity)
+        * Matrix4x4.CreateRotationY(haltung.Blick) * Matrix4x4.CreateTranslation(haltung.Ort + new Vector3(0, Figur.SitzenWieBisher ? bodenDraussen : 0f, 0));
 
     /// <summary>Die Oberflaeche meldet, ob sie 3D zeigt. Ohne 3D steht die Figur auf, Knoepfe wie bis A 0.80.0.</summary>
     public void OhneDreiDSetzen(bool ohne)

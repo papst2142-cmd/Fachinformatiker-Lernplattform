@@ -203,14 +203,34 @@ public static class Haltestellen
     /// (<see cref="Figur.StadtHoehe"/>) auf der Bank im Haeuschen, Blick zur Strasse. Wie <see cref="Innenraum.Platz"/>:
     /// Gesaess auf der Bank, die Unterschenkel knapp vor ihrer Vorderkante.
     /// </summary>
-    public static (Vector3 Ort, float Blick) BankSitz(Haltestelle h)
+    public static (Vector3 Ort, float Blick) BankSitz(Haltestelle h) => BankSitz(h, null);
+
+    /// <summary>Welle A 0.81.0 (Sammelliste 351): Abstand zwischen Kopf (samt Haar und Kopfbedeckung) und Glasrueckwand (0,01 der Figurhoehe).</summary>
+    public const float BankKopfSpalt = 0.0036f;
+
+    /// <summary>
+    /// Welle A 0.81.0 (Sammelliste 351, Weisung P12-276, Nico: „zu weit vorne“): ohne Tisch rutscht die Figur auf der Bank nach
+    /// hinten, bis der Kopf (reicht <paramref name="kopfHinten"/> Anteile der Figurhoehe hinter ihre Stelle, <see cref="Figur.KopfHinten"/>)
+    /// <see cref="BankKopfSpalt"/> vor der Glasrueckwand steht, hoechstens <see cref="BankTiefe"/> (dann haengen die Unterschenkel
+    /// noch frei vor der Bank). Null = Stelle wie bis P12-276 (Schreibtisch-Haltung, Gegenprobe <see cref="Figur.SitzenAltFuerTests"/>).
+    /// </summary>
+    public static (Vector3 Ort, float Blick) BankSitz(Haltestelle h, float? kopfHinten)
     {
-        const float t = HaeuschenTief / 2, vorn = t - 0.10f, oben = 0.12f;
+        const float t = HaeuschenTief / 2, vorn = t - 0.10f, oben = 0.12f, glas = t - 0.012f;
         var f = -h.Aussen;
         // 0,01 weiter vorn als im Raum: ein Spitzhut (nach hinten geneigt) bleibt so vor der Glasrueckwand
-        var stelle = h.Haeuschen + (h.Fahrt * BankPlatz) + (h.Aussen * vorn) - (f * ((Figur.SitzVor * Figur.StadtHoehe) - 0.01f));
+        var zurueck = (Figur.SitzVor * Figur.StadtHoehe) - 0.01f;
+        if (kopfHinten is { } k && !Figur.SitzenWieBisher)
+        {
+            var ort = vorn + zurueck;
+            zurueck += Math.Clamp(glas - BankKopfSpalt - (k * Figur.StadtHoehe) - ort, 0f, BankTiefe * Figur.StadtHoehe);
+        }
+        var stelle = h.Haeuschen + (h.Fahrt * BankPlatz) + (h.Aussen * vorn) - (f * zurueck);
         return (new Vector3(stelle.X, oben - ((Figur.SitzUnten - Figur.SitzSpalt) * Figur.StadtHoehe), stelle.Y), MathF.Atan2(f.X, f.Y));
     }
+
+    /// <summary>Welle A 0.81.0 (Sammelliste 351): so weit (Anteil der Figurhoehe) rutscht die Figur auf der Bank hoechstens nach hinten.</summary>
+    public const float BankTiefe = 0.11f;
 
     /// <summary>Haeuschen und Mast aller Haltestellen in ein Netz der Stadt (Paket-Netz, nah und fern gleich).</summary>
     public static void Hinzu(Netz ziel, IEnumerable<Haltestelle> haltestellen)

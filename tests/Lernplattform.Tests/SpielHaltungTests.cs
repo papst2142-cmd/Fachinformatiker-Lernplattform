@@ -16,21 +16,21 @@ public class SpielHaltungTests
 {
     private const float Schub = 0.02f;
 
-    private static readonly IReadOnlyList<IReadOnlyList<Figur.Stueck>?> Kleider =
+    internal static readonly IReadOnlyList<IReadOnlyList<Figur.Stueck>?> Kleider =
         [null, [new Figur.Stueck("kopf", "muetze", "#DC2626")], [new Figur.Stueck("kopf", "spitzhut", "#111827")]];
 
     private static readonly Dictionary<(string, int), List<SpielSitzenTests.Dreieck>> FigurVorrat = [];
 
-    /// <summary>Die Figur (Hoehe 1) sitzend oder liegend, je Kleidung.</summary>
-    private static List<SpielSitzenTests.Dreieck> FigurDreiecke(SitzArt art, int kleid)
+    /// <summary>Die Figur (Hoehe 1) sitzend (Sitzbild wie gezeichnet, <see cref="Figur.SitzBild"/>) oder liegend, je Kleidung.</summary>
+    internal static List<SpielSitzenTests.Dreieck> FigurDreiecke(SitzArt art, int kleid)
     {
         lock (FigurVorrat)
         {
-            var key = (art == SitzArt.Liegen ? "liegen" : "sitzen", kleid);
+            var key = (art == SitzArt.Liegen ? "liegen" : Figur.SitzBild(art), kleid);
             if (!FigurVorrat.TryGetValue(key, out var d))
             {
                 var g = SpielGrafikTests.Bibliothek.Value;
-                var netz = art == SitzArt.Liegen ? Figur.Netz(g, null, 1f, Kleider[kleid]) : Figur.Netz(g, null, 1f, Kleider[kleid], Figur.Sitzen, 0);
+                var netz = art == SitzArt.Liegen ? Figur.Netz(g, null, 1f, Kleider[kleid]) : Figur.Netz(g, null, 1f, Kleider[kleid], Figur.SitzBild(art), 0);
                 d = SpielSitzenTests.Dreiecke(netz, art == SitzArt.Liegen ? Matrix4x4.CreateRotationX(-MathF.PI / 2) : Matrix4x4.Identity);
                 FigurVorrat[key] = d;
             }
@@ -73,7 +73,7 @@ public class SpielHaltungTests
     }
 
     /// <summary>Alle Hindernisse eines Raums: Modelle, eigene Quader der Einrichtung, Fest-Deko und Personen (sitzend oder stehend).</summary>
-    private static List<(string Name, List<SpielSitzenTests.Dreieck> D)> Hindernisse(Innenraum innen)
+    internal static List<(string Name, List<SpielSitzenTests.Dreieck> D)> Hindernisse(Innenraum innen)
     {
         var g = SpielGrafikTests.Bibliothek.Value;
         var liste = new List<(string, List<SpielSitzenTests.Dreieck>)>();
@@ -246,10 +246,11 @@ public class SpielHaltungTests
         var lage = Haltestellen.Lage(h.Haeuschen, h.Fahrt, h.Aussen);
         var haeuschen = SpielSitzenTests.Dreiecke(Haltestellen.HaeuschenNetz, lage);
         var wartend = SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f), Lage(new Vector3(h.Wartend.X, 0, h.Wartend.Y), MathF.Atan2(-h.Aussen.X, -h.Aussen.Y), Figur.StadtHoehe, Vector2.Zero));
-        var (ort, blick) = Haltestellen.BankSitz(h);
         var funde = new List<string>();
         for (var kleid = 0; kleid < Kleider.Count; kleid++)
         {
+            // Sammelliste 351: die Stelle haengt vom Kopf ab (bis an die Glasrueckwand)
+            var (ort, blick) = Haltestellen.BankSitz(h, Figur.KopfHinten(g, null, Kleider[kleid]));
             foreach (var schub in Schuebe.Select(s => s * (Figur.StadtHoehe / Innenraum.FigurHoehe)))
             {
                 var figur = FigurDreiecke(SitzArt.Sitzen, kleid).Select(d => new SpielSitzenTests.Dreieck(
@@ -271,7 +272,7 @@ public class SpielHaltungTests
     [Fact]
     public void FigurQuader_UmfassenDieFigur()
     {
-        foreach (var art in new[] { SitzArt.Sitzen, SitzArt.Liegen })
+        foreach (var art in new[] { SitzArt.Sitzen, SitzArt.PcStuhl, SitzArt.Liegen })
         {
             for (var kleid = 0; kleid < (art == SitzArt.Liegen ? 1 : Kleider.Count); kleid++)
             {
