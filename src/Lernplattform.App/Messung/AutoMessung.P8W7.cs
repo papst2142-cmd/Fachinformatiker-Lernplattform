@@ -145,6 +145,8 @@ public static partial class AutoMessung
                 await flaeche.NaechstesBildAsync();
                 var kamera = flaeche.AktuelleKamera!;
                 var abstand = kamera.Abstand;
+                // Welle A 0.80.0: die Gesamtansicht liegt ausserhalb des Rest-Zooms 7 bis 9, fuer die Messung frei
+                using var messFrei = kamera.MessungFrei();
                 kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
                 kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
                 await flaeche.NaechstesBildAsync();
@@ -152,7 +154,7 @@ public static partial class AutoMessung
                 var (gAufrufe, gDreiecke) = (flaeche.LetzteZeichenaufrufe, flaeche.LetzteDreiecke);
                 Pruefe("W7 Gesamtansicht (" + name + ")", gAufrufe <= GesamtAufrufeGrenze && gDreiecke <= GesamtDreieckeGrenze && gAufrufe > 0,
                     string.Create(inv, $"{gAufrufe} Zeichenaufrufe, {gDreiecke} Dreiecke (Grenzen {GesamtAufrufeGrenze}, {GesamtDreieckeGrenze})"));
-                kamera.Zoomen(kamera.Abstand / 6f);
+                kamera.Zoomen(kamera.Abstand / SpielKamera.Abstand);    // Welle A 0.80.0: fester Spielabstand 8 (bis A 0.79.0 Start 6)
                 kamera.Setzen(spiel.FigurX, spiel.FigurZ);
                 await flaeche.NaechstesBildAsync();
                 await flaeche.NaechstesBildAsync();

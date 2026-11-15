@@ -199,8 +199,9 @@ public class PruefungTests
     {
         var soll = new Dictionary<string, (long, int)>
         {
-            // A 0.68.0 (Weisung P12-206): der begehbare Schrank in der Auslage ist jetzt Entwurf B (vorher 10160)
-            ["moebelhaus"] = (10184, 12),
+            // A 0.68.0 (Weisung P12-206): der begehbare Schrank in der Auslage ist jetzt Entwurf B (vorher 10160); A 0.80.0
+            // (Sammelliste 347): am Esstisch an der Aussenwand entfaellt die Stuhlreihe in der Wand (2 Stuehle, vorher 10184)
+            ["moebelhaus"] = (9882, 12),
             ["elektromarkt"] = (15282, 12),
             ["bank"] = (7468, 12),
             // A 0.68.0: Frisuren an der 3D-Figur; im Amt langes Haar (3 Quader, vorher 9259), im Kaufhaus Locken (29 Quader mit den

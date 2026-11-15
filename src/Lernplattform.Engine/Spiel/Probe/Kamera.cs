@@ -21,6 +21,63 @@ public sealed class Kamera
         Abstand = Math.Clamp(abstand, AbstandMin, AbstandMax);
     }
 
+    /// <summary>
+    /// Welle A 0.80.0 (Weisung P12-268, Nico Antworten 1 und 3): erlaubter Bereich des Abstands. Ohne Angabe wie bisher
+    /// <see cref="AbstandMin"/> bis <see cref="AbstandMax"/> (Werkzeug, Innenraeume); die Spielkamera draussen nimmt
+    /// <c>SpielKamera.AbstandMin</c> bis <c>SpielKamera.AbstandMax</c> (Lernplattform.Core). Setzen holt den Abstand in den Bereich.
+    /// </summary>
+    public (float Min, float Max) Bereich
+    {
+        get => _bereich;
+        set
+        {
+            var min = Math.Clamp(value.Min, AbstandMin, AbstandMax);
+            _bereich = (min, Math.Clamp(value.Max, min, AbstandMax));
+            Abstand = Math.Clamp(Abstand, _bereich.Min, _bereich.Max);
+        }
+    }
+
+    private (float Min, float Max) _bereich = (AbstandMin, AbstandMax);
+
+    /// <summary>
+    /// Welle A 0.80.0 (Nico Antwort 2): erlaubter Bereich der Neigung in Grad. Ohne Angabe 0 bis 90 (Werkzeug, Innenraeume:
+    /// dort setzt nur der Code die Neigung, keine Grenze greift); die Spielkamera draussen nimmt 35 bis 70.
+    /// </summary>
+    public (float Min, float Max) NeigungBereich
+    {
+        get => _neigungBereich;
+        set
+        {
+            _neigungBereich = (value.Min, Math.Max(value.Min, value.Max));
+            _neigung = Math.Clamp(_neigung, _neigungBereich.Min, _neigungBereich.Max);
+        }
+    }
+
+    private (float Min, float Max) _neigungBereich = (0f, 90f);
+
+    /// <summary>
+    /// Nur fuer Messungen (Start-Test, Leistungsprobe): Abstand voruebergehend frei von <see cref="AbstandMin"/> bis
+    /// <see cref="AbstandMax"/> (Gesamtansicht, feste Messabstaende); beim Ende kommt der vorige Bereich zurueck (der Abstand
+    /// wird dabei in ihn geholt). Sonst wuerden Messungen der Gesamtansicht still bei 9 messen.
+    /// </summary>
+    public IDisposable MessungFrei()
+    {
+        var vorher = Bereich;
+        Bereich = (AbstandMin, AbstandMax);
+        return new Zurueck(() => Bereich = vorher);
+    }
+
+    private sealed class Zurueck(Action ende) : IDisposable
+    {
+        private Action? _ende = ende;
+
+        public void Dispose()
+        {
+            _ende?.Invoke();
+            _ende = null;
+        }
+    }
+
     public float ZielX { get; private set; }
 
     public float ZielZ { get; private set; }
@@ -31,7 +88,16 @@ public sealed class Kamera
     /// Neigung ueber dem Boden in Grad. S 0.7.0 (Weisung P12-45, Plan P12-26b Abschnitt 9): setzbar, damit das
     /// Stadtbau-Werkzeug die Kamera kippen kann; das Spiel setzt sie nur beim Anlegen (unveraendert).
     /// </summary>
-    public float Neigung { get; set; } = 52f;
+    public float Neigung
+    {
+        get => _neigung;
+        set => _neigung = Math.Clamp(value, _neigungBereich.Min, _neigungBereich.Max);
+    }
+
+    private float _neigung = 52f;
+
+    /// <summary>Welle A 0.80.0: um <paramref name="grad"/> neigen (positiv = steiler), immer im <see cref="NeigungBereich"/>.</summary>
+    public void Neigen(float grad) => Neigung += grad;
 
     /// <summary>Drehung um die Hochachse in Grad (0 = Blick nach -Z), W4: per zwei Finger oder Tasten Q/E.</summary>
     public float Drehung { get; set; } = 0f;
@@ -107,7 +173,7 @@ public sealed class Kamera
     {
         if (faktor > 0)
         {
-            Abstand = Math.Clamp(Abstand / faktor, AbstandMin, AbstandMax);
+            Abstand = Math.Clamp(Abstand / faktor, _bereich.Min, _bereich.Max);
         }
     }
 

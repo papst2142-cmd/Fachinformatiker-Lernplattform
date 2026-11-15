@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.80.0
+Im Spiel ist die Kamera draußen jetzt näher an deiner Figur, und das Spiel-Handy hat eine Karte der Stadt.
+
+- Draußen folgt die Kamera deiner Figur aus festem, nahem Abstand. Mit dem Mausrad, mit + und − oder mit zwei Fingern kannst du noch ein wenig näher heran oder weiter weg, aber nicht mehr über die ganze Stadt.
+- Mit der rechten Maustaste drehst du die Kamera (zur Seite ziehen) und neigst sie (nach oben oder unten ziehen). Am Handy drehst und neigst du mit zwei Fingern. Am PC drehen auch Q und E, R und F neigen. Die Neigung bleibt zwischen flach und steil, so dass du immer gut siehst.
+- Die Ansicht lässt sich draußen nicht mehr verschieben: Sie bleibt bei deiner Figur.
+- In Gebäuden bleibt alles wie bisher: Du siehst den ganzen Raum.
+- Den Überblick über die Stadt gibt jetzt die Karte im Spiel-Handy. Der Knopf „Karte“ öffnet sie. Jeder Ort hat eine Nummer, darunter steht die Liste aller Orte mit derselben Nummer. Tippst du auf einen Ort, auf der Karte oder in der Liste, geht deine Figur sofort los. Ist der Bus schneller, steht dort auch „Mit dem Bus“.
+- Die Karte zeigt Straßen, Gleise, Wasser, Parks, Häuser, Haltestellen, wo du gerade bist und wo eine Aufgabe auf dich wartet.
+- In Innenräumen ragt nichts mehr durch die Wände: Steht ein Esstisch an der Wand, fehlen dort die Stühle. Ein Schreibtisch, dessen Vorderseite zur Wand zeigt, wird umgekehrt aufgestellt. Ein Bauzaun steht richtig herum, und das Silvester-Feuerwerk bleibt im Raum.
+
 ## A 0.79.0
 Die Prüfung im echten Format hat jetzt 15 neue Prüfungssätze.
 

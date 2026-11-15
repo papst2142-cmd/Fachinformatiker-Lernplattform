@@ -56,6 +56,8 @@ public static partial class AutoMessung
             var kamera = flaeche.AktuelleKamera!;
             var abstand = kamera.Abstand;
             mitschnitt.Clear();
+            // Welle A 0.80.0: die Gesamtansicht liegt ausserhalb des Rest-Zooms 7 bis 9, fuer die Messung frei
+            using var messFrei = kamera.MessungFrei();
             kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
             kamera.Setzen(seite.Spiel.Szene.Breite / 2, seite.Spiel.Szene.Tiefe / 2);
             await Bilder(flaeche, 10);

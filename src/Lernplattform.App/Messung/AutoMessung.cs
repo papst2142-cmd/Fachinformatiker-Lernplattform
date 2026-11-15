@@ -217,6 +217,8 @@ public static partial class AutoMessung
             funde += await GenauigkeitAsync(ansicht);          // Patch A 0.75.1: Ecken-Shader unter ES highp, Zeile Tiefe im Problembericht
             Zeitplan("OrtslisteInnenAsync");
             funde += await OrtslisteInnenAsync(ansicht);       // Patch A 0.75.1: offene Ortsliste schliesst beim Betreten (Handy und PC)
+            Zeitplan("KameraKarteAsync");
+            funde += await KameraKarteAsync(ansicht);          // Welle A 0.80.0: feste Kamera draussen, Karte im Spiel-Handy
         }
         if (MitLernen)
         {

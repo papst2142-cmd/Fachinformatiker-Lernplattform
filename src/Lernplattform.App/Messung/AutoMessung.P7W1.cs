@@ -434,6 +434,8 @@ public static partial class AutoMessung
             return 1;
         }
         var abstand = kamera.Abstand;
+        // Welle A 0.80.0: die Gesamtansicht liegt ausserhalb des Rest-Zooms 7 bis 9, fuer die Messung frei
+        using var messFrei = kamera.MessungFrei();
         kamera.Zoomen(kamera.Abstand / Kamera.AbstandMax);
         kamera.Setzen(spiel.Szene.Breite / 2, spiel.Szene.Tiefe / 2);
         await flaeche.NaechstesBildAsync();
@@ -507,11 +509,21 @@ public static partial class AutoMessung
         await ansicht.BildFertigAsync();
         P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/stadt"));
         yield return "spiel/stadt";
-        seite.OrtslisteZeigen(true);
-        await ansicht.BildFertigAsync();
-        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/orte"));
-        yield return "spiel/orte";
-        seite.OrtslisteZeigen(false);
+        if (seite.ErsatzSichtbar)
+        {
+            seite.OrtslisteZeigen(true);
+            await ansicht.BildFertigAsync();
+            P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/orte"));
+            yield return "spiel/orte";
+            seite.OrtslisteZeigen(false);
+        }
+        else
+        {
+            // Welle A 0.80.0 (P12-258): mit 3D ist das Ortsmenue die Karte im Handy
+            var karte = await KarteOeffnenAsync(ansicht, seite);
+            yield return "spiel/karte";
+            await QuestlogSchliessenAsync(ansicht, karte);
+        }
         // Haus mit Oeffnungszeit, das bei der Ankunft noch zu hat (Moebelhaus oeffnet um 10:00): Hinweis und "Warten"
         spiel.GeheZu("moebelhaus");
         spiel.SofortAnkommen();
@@ -636,12 +648,16 @@ public static partial class AutoMessung
         // Kamera zurueck zur Bitweiche (dort stehen die Namensschilder fuer die naechste Pruefung)
         kamera.Setzen((ort.KastenMin.X + ort.KastenMax.X) / 2, (ort.KastenMin.Z + ort.KastenMax.Z) / 2);
 
-        // Tasten: Pfeil verschiebt, Q dreht, + zoomt
-        float x = kamera.ZielX, d = kamera.Drehung, a = kamera.Abstand;
-        var tasten = seite.Flaeche.Taste(Key.Left) & seite.Flaeche.Taste(Key.Q) & seite.Flaeche.Taste(Key.OemPlus);
-        var bewegt = tasten && kamera.ZielX != x && kamera.Drehung != d && kamera.Abstand < a;
-        Pruefe("Tasten bewegen die Kamera", bewegt, bewegt ? "ja" : "nein");
+        // Tasten: Q dreht, + zoomt, R neigt; Welle A 0.80.0: draussen verschiebt der Pfeil nicht mehr (Nico Antwort 3)
+        float x = kamera.ZielX, d = kamera.Drehung, a = kamera.Abstand, n = kamera.Neigung;
+        var pfeil = seite.Flaeche.Taste(Key.Left);
+        var tasten = seite.Flaeche.Taste(Key.Q) & seite.Flaeche.Taste(Key.OemPlus) & seite.Flaeche.Taste(Key.R);
+        var bewegt = tasten && !pfeil && kamera.ZielX == x && kamera.Drehung != d && kamera.Abstand < a && kamera.Neigung > n;
+        Pruefe("Tasten bewegen die Kamera", bewegt, string.Create(CultureInfo.InvariantCulture,
+            $"Pfeil {(pfeil ? "genommen" : "nichts")}, Drehung {d:F0} -> {kamera.Drehung:F0}, Abstand {a:F1} -> {kamera.Abstand:F1}, Neigung {n:F0} -> {kamera.Neigung:F0}"));
         kamera.Drehung = 0;
+        kamera.Neigung = n;
+        kamera.Zoomen(kamera.Abstand / a);
 
         // Schilder: mindestens ein Ortsname steht ueber der Stadt
         await seite.Flaeche.NaechstesBildAsync();
@@ -660,10 +676,14 @@ public static partial class AutoMessung
             await seite.Flaeche.NaechstesBildAsync();
             await ansicht.BildFertigAsync();
             var quer = KnoepfeImBild(seite, "quer");
-            seite.OrtslisteZeigen(true);
-            await ansicht.BildFertigAsync();
-            quer.AddRange(KnoepfeImBild(seite, "quer mit Ortsliste"));
-            seite.OrtslisteZeigen(false);
+            if (seite.ErsatzSichtbar)
+            {
+                // Welle A 0.80.0: die Ortsliste gibt es nur noch ohne 3D (mit 3D: Karte im Handy, eigenes Fenster)
+                seite.OrtslisteZeigen(true);
+                await ansicht.BildFertigAsync();
+                quer.AddRange(KnoepfeImBild(seite, "quer mit Ortsliste"));
+                seite.OrtslisteZeigen(false);
+            }
             var groesse = string.Create(CultureInfo.InvariantCulture, $"Seite {seite.Bounds.Width:F0} x {seite.Bounds.Height:F0}");
             Pruefe("Handy quer: Knoepfe im Bild", quer.Count == 0 && seite.Bounds.Height < 400, quer.Count == 0 ? "ja (" + groesse + ")" : string.Join("; ", quer));
             fenster.Width = breite;

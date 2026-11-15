@@ -10,6 +10,9 @@ namespace Lernplattform.Messung;
 /// echte Bedienung: Ortsliste ueber den Knopf „Orte“ oeffnen, zum Ort gehen, ankommen (drinnen), Bild abwarten. Danach
 /// wieder draussen: der Knopf „Orte“ ist da und oeffnet die Liste. Gegenprobe: mit dem Verhalten bis A 0.75.0
 /// (Schalter je Seite <c>OrtslisteAltFuerTests</c>) bleibt die Liste drinnen offen, ohne Knopf (wird erkannt).
+/// Welle A 0.80.0 (P12-258): mit 3D ist das Ortsmenue in die Karte im Handy gezogen. Draussen steht der Knopf „Karte“ statt
+/// „Orte“, die Ortsliste geht mit 3D nicht mehr auf (auch nicht ueber <c>OrtslisteZeigen</c>); drinnen keiner der Knoepfe.
+/// Die Gegenprobe bis A 0.75.0 bleibt (dort geht die Liste mit 3D auf und bleibt drinnen offen).
 /// </summary>
 public static partial class AutoMessung
 {
@@ -73,19 +76,21 @@ public static partial class AutoMessung
                         continue;
                     }
                     orte.Add(ort);
-                    if (seite.OrtslisteSichtbar || seite.OrteKnopfSichtbar)
+                    if (seite.OrtslisteSichtbar || seite.OrteKnopfSichtbar || seite.KarteKnopfSichtbar)
                     {
                         schlecht.Add(ort);
                     }
                     spiel.Verlassen();
                     await ansicht.BildFertigAsync();
-                    var knopf = seite.OrteKnopfSichtbar;
-                    seite.OrtslisteZeigen(!seite.OrtslisteSichtbar);
+                    // Welle A 0.80.0: draussen der Knopf „Karte“ (nie „Orte“), die Ortsliste bleibt mit 3D zu
+                    var knopf = seite.KarteKnopfSichtbar && !seite.OrteKnopfSichtbar;
+                    seite.OrtslisteZeigen(true);
                     await ansicht.BildFertigAsync();
-                    if (!knopf || !seite.OrtslisteSichtbar)
+                    if (!knopf || seite.OrtslisteSichtbar)
                     {
                         nichtWieder.Add(ort);
                     }
+                    seite.OrtslisteZeigen(false);
                 }
                 seite.OrtslisteZeigen(false);
                 return (orte, schlecht, nichtWieder);
@@ -102,7 +107,7 @@ public static partial class AutoMessung
                 var (orte, schlecht, nichtWieder) = await Durchgang();
                 Pruefe(groesse + " schliesst beim Betreten", orte.Count >= 3 && schlecht.Count == 0,
                     orte.Count + " Orte betreten (" + string.Join(", ", orte) + "), offen geblieben: " + (schlecht.Count == 0 ? "keiner" : string.Join(", ", schlecht)));
-                Pruefe(groesse + " draussen wieder zu oeffnen", nichtWieder.Count == 0, nichtWieder.Count == 0 ? "Knopf Orte da, Liste geht auf" : "Knopf fehlt oder Liste geht nicht auf: " + string.Join(", ", nichtWieder));
+                Pruefe(groesse + " draussen Knopf Karte", nichtWieder.Count == 0, nichtWieder.Count == 0 ? "Knopf Karte da, Ortsliste mit 3D zu" : "Knopf Karte fehlt oder Ortsliste geht mit 3D auf: " + string.Join(", ", nichtWieder));
                 seite.OrtslisteAltFuerTests = true;
                 try
                 {
