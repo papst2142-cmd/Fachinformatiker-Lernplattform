@@ -60,6 +60,27 @@ public static class EchtTexte
     public const string ErwarteteWerte = "Erwartet: %s";
     public const string Leer = "(leer)";
 
+    // -- Welle 2 (A 0.77.0): gezeichnete Anlagen und Zeichenaufgaben --------------------------------
+    public const string UmlName = "UML-Aktivitätsdiagramm";
+    public const string ErName = "ER-Modell in Chen-Notation";
+    public const string VerbundenMit = "verbunden mit";
+    public const string WeiterZu = "weiter zu";
+    public const string Attribute = "Attribute";
+    public const string SchluesselZusatz = "(Schlüssel)";
+    public const string Zwischen = "zwischen";
+    public const string Und = "und";
+    public const string Hoechstwert = "Höchster Wert %s um %s.";
+    public const string AlsText = "Als Text zeigen";
+    public const string BildZeigen = "Text ausblenden";
+    public const string BildName = "%s, Bild. Den Inhalt zeigt der Knopf „Als Text zeigen“ als Text.";
+    public const string Leitungen = "Beschriftung der Leitungen";
+    public const string ZeichnenHinweis = "Zeichne auf Papier. Nach dem Abgeben vergleichst du deine Zeichnung mit dem Musterbild "
+        + "und hakst ab, was stimmt.";
+    public const string Vorgabe = "Vorgegebener Anfang";
+    public const string Gezeichnet = "Auf Papier gezeichnet";
+    public const string NichtGezeichnet = "Nicht als gezeichnet markiert";
+    public const string Musterbild = "MUSTERBILD";
+
     public const string ErgebnisAufgaben = "Nach Aufgaben";
     public const string ErgebnisAufgabenUntertitel = "Unter 50 Prozent rot";
     public const string AufgabePunkte = "%d von %d";

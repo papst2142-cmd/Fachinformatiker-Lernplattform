@@ -1,5 +1,5 @@
 {
- "format": 1,
+ "format": 2,
  "saetze": [
   {
    "kennung": "alle_ap1_01",
@@ -1108,6 +1108,1408 @@
        "englisch": true,
        "loesung": [
         "Sie müssen von Hand durch eine Administratorin oder einen Administrator installiert werden."
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "si_b1_01",
+   "fachrichtung": "si",
+   "bereich": "b1",
+   "firma": "Lindgrün Pflegedienst GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Lindgrün Pflegedienst GmbH ist ein ambulanter Pflegedienst mit 140 Beschäftigten. Die Zentrale mit Verwaltung und Serverraum liegt in Hallbergen, eine Außenstelle in Wiesbach.",
+    "Rund 60 Pflegekräfte fahren täglich Touren zu ihren Patientinnen und Patienten und dokumentieren die Pflege auf Tablets.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Systemintegration in der IT-Abteilung, die aus drei Personen besteht.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Leistung des Dateiservers in der Zentrale",
+    "2. Netz der Außenstelle Wiesbach",
+    "3. Datenbank für die Tourenplanung",
+    "4. Sicherung und Tablets der Pflege"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "monitor",
+     "titel": "Auslastung des Dateiservers FS-01 am Dienstagvormittag",
+     "achse": "Uhrzeit",
+     "marken": [
+      "07:00",
+      "07:30",
+      "08:00",
+      "08:30",
+      "09:00",
+      "09:30",
+      "10:00",
+      "10:30",
+      "11:00",
+      "11:30",
+      "12:00"
+     ],
+     "reihen": [
+      {
+       "name": "Prozessor",
+       "einheit": "%",
+       "max": 100,
+       "werte": [
+        8,
+        12,
+        18,
+        22,
+        25,
+        24,
+        21,
+        19,
+        17,
+        15,
+        12
+       ]
+      },
+      {
+       "name": "Arbeitsspeicher belegt",
+       "einheit": "%",
+       "max": 100,
+       "werte": [
+        61,
+        63,
+        66,
+        70,
+        72,
+        73,
+        74,
+        74,
+        73,
+        72,
+        71
+       ]
+      },
+      {
+       "name": "Datenträger D: aktive Zeit",
+       "einheit": "%",
+       "max": 100,
+       "werte": [
+        15,
+        40,
+        78,
+        96,
+        99,
+        98,
+        97,
+        95,
+        88,
+        60,
+        35
+       ]
+      },
+      {
+       "name": "Netzwerk",
+       "einheit": "Mbit/s",
+       "max": 1000,
+       "werte": [
+        40,
+        120,
+        210,
+        260,
+        280,
+        270,
+        265,
+        250,
+        220,
+        150,
+        90
+       ]
+      }
+     ],
+     "zeilen": [
+      "Der Dateiserver hat einen Netzwerkanschluss mit 1 Gbit/s und vier Festplatten mit 7 200 Umdrehungen je Minute im RAID 5."
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "netzplan",
+     "titel": "Netzplan der Außenstelle Wiesbach",
+     "knoten": [
+      {
+       "id": "inet",
+       "typ": "internet",
+       "name": "Internet",
+       "x": 2,
+       "y": 0
+      },
+      {
+       "id": "rt",
+       "typ": "router",
+       "name": "Router RT-W",
+       "x": 2,
+       "y": 1,
+       "info": [
+        "G0/0: 198.51.100.18/30",
+        "G0/1.10: 172.20.10.1/24",
+        "G0/1.20: 172.20.20.1/24",
+        "G0/1.30: 172.20.30.1/26"
+       ]
+      },
+      {
+       "id": "sw",
+       "typ": "switch",
+       "name": "Switch SW-W1",
+       "x": 2,
+       "y": 2,
+       "info": [
+        "24 Ports"
+       ]
+      },
+      {
+       "id": "pc",
+       "typ": "pc",
+       "name": "PCs Verwaltung (8)",
+       "x": 0,
+       "y": 3,
+       "info": [
+        "VLAN 10"
+       ]
+      },
+      {
+       "id": "ap",
+       "typ": "wlan",
+       "name": "WLAN-Zugangspunkt AP-W1",
+       "x": 1,
+       "y": 3,
+       "info": [
+        "Tablets der Pflege"
+       ]
+      },
+      {
+       "id": "nas",
+       "typ": "nas",
+       "name": "NAS-W",
+       "x": 3,
+       "y": 3,
+       "info": [
+        "172.20.10.20"
+       ]
+      },
+      {
+       "id": "dr",
+       "typ": "drucker",
+       "name": "Drucker (3)",
+       "x": 4,
+       "y": 3,
+       "info": [
+        "DHCP"
+       ]
+      }
+     ],
+     "kanten": [
+      {
+       "von": "inet",
+       "nach": "rt",
+       "text": "Glasfaser, 500 Mbit/s"
+      },
+      {
+       "von": "rt",
+       "nach": "sw",
+       "text": "Port 24, Trunk mit VLAN 10, 20 und 30"
+      },
+      {
+       "von": "sw",
+       "nach": "pc",
+       "text": "Ports 1 bis 8, VLAN 10"
+      },
+      {
+       "von": "sw",
+       "nach": "ap",
+       "text": "Port 20, VLAN 20"
+      },
+      {
+       "von": "sw",
+       "nach": "nas",
+       "text": "Port 21, VLAN 10"
+      },
+      {
+       "von": "sw",
+       "nach": "dr",
+       "text": "Port 22, VLAN 30"
+      }
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "code",
+     "titel": "Auszug aus der Konfiguration von SW-W1",
+     "zeilen": [
+      " 1  interface Port21",
+      " 2   description NAS-W",
+      " 3   switchport mode access",
+      " 4   switchport access vlan 10",
+      " 5  interface Port22",
+      " 6   description Drucker",
+      " 7   switchport mode access",
+      " 8   switchport access vlan 20",
+      " 9  interface Port24",
+      "10   description Uplink RT-W",
+      "11   switchport mode trunk",
+      "12   switchport trunk allowed vlan 10,20,30"
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "text",
+     "titel": "Anforderungen an die Datenbank der Tourenplanung",
+     "zeilen": [
+      "Zu jeder Pflegekraft werden Personalnummer, Name und Qualifikation gespeichert.",
+      "Eine Tour hat eine Tournummer, ein Datum und eine Startzeit. Jede Tour fährt genau eine Pflegekraft, eine Pflegekraft fährt viele Touren.",
+      "Zu jeder Patientin und jedem Patienten werden Patientennummer, Name und Adresse gespeichert.",
+      "Auf einer Tour werden mehrere Patientinnen und Patienten besucht, und jede Person wird auf vielen Touren besucht. Für jeden Besuch wird die geplante Uhrzeit gespeichert."
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "englisch",
+     "titel": "Excerpt from the tablet management guide",
+     "zeilen": [
+      "The tablets can be locked to a single app. This is called kiosk mode.",
+      "In kiosk mode, the home button and the notification bar are disabled.",
+      "An administrator can leave kiosk mode with a six-digit PIN that is set in the management console.",
+      "If a tablet has not contacted the management server for 14 days, all business data on the tablet is wiped automatically.",
+      "Updates are only installed between 01:00 and 04:00 while the tablet is charging."
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Leistung des Dateiservers in der Zentrale",
+     "punkte": 25,
+     "einleitung": [
+      "In der Zentrale klagen die Beschäftigten, dass das Öffnen der Pflegedokumentation am Vormittag lange dauert. Sie haben die Auslastung des Dateiservers FS-01 einen Vormittag lang aufgezeichnet (Anlage 1)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie anhand von Anlage 1 die Komponente, die am Vormittag den Engpass bildet."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Prozessor",
+         "Arbeitsspeicher",
+         "Datenträger D:",
+         "Netzwerkanschluss"
+        ],
+        "richtig": [
+         2
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Datenträger D: (aktive Zeit von 08:30 bis 10:30 zwischen 95 und 99 %)"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie Ihre Wahl mit Werten aus Anlage 1."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Die aktive Zeit des Datenträgers liegt von 08:30 bis 10:30 bei 95 bis 99 %, er ist also fast dauernd beschäftigt.",
+        "Prozessor (höchstens 25 %), Arbeitsspeicher (höchstens 74 %) und Netzwerk (höchstens 280 von 1 000 Mbit/s) haben noch Reserven.",
+        "Anfragen müssen auf den Datenträger warten, darum dauert das Öffnen lange."
+       ],
+       "hinweise": [
+        {
+         "text": "Werte des Datenträgers genannt (95 bis 99 % am Vormittag)",
+         "punkte": 1
+        },
+        {
+         "text": "Reserven bei mindestens zwei anderen Komponenten mit Werten belegt",
+         "punkte": 1
+        },
+        {
+         "text": "Folge erklärt: Zugriffe warten auf den Datenträger",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Maßnahmen, die den Engpass beheben oder mildern."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "SSDs statt Festplatten einsetzen",
+        "RAID mit mehr Platten oder RAID 10 statt RAID 5",
+        "mehr Arbeitsspeicher als Zwischenspeicher (Cache)",
+        "Virenscan oder Indexierung in die Nacht verlegen",
+        "Daten auf einen zweiten Server verteilen"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "berechnen",
+       "text": [
+        "Die Geschäftsführung bestellt sechs SSDs mit je 3,84 TB für ein RAID 6. Berechnen Sie die nutzbare Kapazität in TB."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "TB",
+        "ergebnis": 15.36,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "loesung": [
+        "RAID 6 braucht die Kapazität von zwei Platten für die Paritäten.",
+        "(6 − 2) × 3,84 TB = 15,36 TB"
+       ],
+       "hinweise": [
+        {
+         "text": "zwei Platten für die Paritäten abgezogen",
+         "punkte": 1
+        },
+        {
+         "text": "Rechnung (6 − 2) × 3,84 TB",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "berechnen",
+       "text": [
+        "Die Pflegedokumentation belegt heute 9,2 TB und wächst jedes Jahr um 1,1 TB. Berechnen Sie, nach wie vielen vollen Jahren der neue Speicher aus d) erstmals zu mehr als 90 % belegt ist."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Jahre",
+        "ergebnis": 5,
+        "toleranz": 0,
+        "ersatz_ergebnis": 7,
+        "punkte_ergebnis": 2
+       },
+       "ersatzwert": {
+        "bezug": "1d",
+        "text": "Falls Sie d) nicht lösen konnten, rechnen Sie mit 18 TB."
+       },
+       "loesung": [
+        "90 % von 15,36 TB = 13,824 TB",
+        "(13,824 TB − 9,2 TB) ÷ 1,1 TB je Jahr ≈ 4,2 Jahre",
+        "Nach 4 Jahren: 13,6 TB (noch darunter), nach 5 Jahren: 14,7 TB, also nach 5 Jahren.",
+        "Mit dem Ersatzwert 18 TB: 90 % = 16,2 TB, (16,2 − 9,2) ÷ 1,1 ≈ 6,4, also nach 7 Jahren."
+       ],
+       "hinweise": [
+        {
+         "text": "Grenze 90 % der Kapazität richtig berechnet",
+         "punkte": 1
+        },
+        {
+         "text": "auf volle Jahre aufgerundet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Vorteile von SSDs gegenüber Festplatten für diesen Dateiserver."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Viel kürzere Zugriffszeiten: viele gleichzeitige kleine Zugriffe werden schnell bedient.",
+        "Keine beweglichen Teile: unempfindlicher gegen Erschütterung, leise.",
+        "Geringere Leistungsaufnahme und Wärme im Serverraum."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie RAID 6 und RAID 10 mit sechs gleichen Platten anhand der nutzbaren Kapazität und der Ausfallsicherheit."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "loesung": [
+        "Kapazität: RAID 6 nutzt vier von sechs Platten, RAID 10 nur drei von sechs.",
+        "Ausfallsicherheit: RAID 6 übersteht den Ausfall von zwei beliebigen Platten, RAID 10 nur, wenn nicht beide Platten eines Spiegels ausfallen."
+       ],
+       "hinweise": [
+        {
+         "text": "Kapazität beider Stufen verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Ausfallsicherheit beider Stufen verglichen",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Netz der Außenstelle Wiesbach",
+     "punkte": 25,
+     "einleitung": [
+      "Die Außenstelle Wiesbach bekommt einen neuen Switch und ein WLAN für die Tablets der Pflege. Den Netzplan finden Sie in Anlage 2."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für das Netz des VLAN 30 die Netzadresse und die Broadcastadresse sowie das Standardgateway der Drucker."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Netzadresse VLAN 30",
+          "art": "ip",
+          "loesung": [
+           "172.20.30.0"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Broadcastadresse VLAN 30",
+          "art": "ip",
+          "loesung": [
+           "172.20.30.63"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Standardgateway der Drucker",
+          "art": "ip",
+          "loesung": [
+           "172.20.30.1"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Netzadresse 172.20.30.0",
+        "Broadcastadresse 172.20.30.63 (/26)",
+        "Standardgateway 172.20.30.1 (G0/1.30 von RT-W)"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie, wie viele Geräte im VLAN 30 höchstens eine Adresse bekommen können, wenn der Router bereits eine Adresse belegt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Geräte",
+        "ergebnis": 61,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "/26 lässt 6 Bit für Hosts: 2⁶ − 2 = 62 nutzbare Adressen",
+        "abzüglich der Adresse des Routers: 62 − 1 = 61"
+       ],
+       "hinweise": [
+        {
+         "text": "nutzbare Adressen 2⁶ − 2 = 62",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, was „Trunk“ an der Verbindung zwischen RT-W und SW-W1 bedeutet."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Über eine einzige Leitung laufen die Daten mehrerer VLANs (10, 20 und 30).",
+        "Jeder Rahmen trägt dazu eine VLAN-Kennung (Tag nach IEEE 802.1Q), damit Router und Switch ihn dem richtigen VLAN zuordnen."
+       ],
+       "hinweise": [
+        {
+         "text": "mehrere VLANs über eine Leitung",
+         "punkte": 2
+        },
+        {
+         "text": "Kennzeichnung der Rahmen mit der VLAN-ID (tagged, 802.1Q)",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Tabelle der Switchports von SW-W1. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Port",
+         "Gerät",
+         "VLAN",
+         "Rahmen"
+        ],
+        "zeilen": [
+         [
+          "1 bis 8",
+          "PCs Verwaltung",
+          "10",
+          "untagged"
+         ],
+         [
+          "20",
+          "AP-W1",
+          "20",
+          {
+           "loesung": [
+            "untagged"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "21",
+          "NAS-W",
+          {
+           "loesung": [
+            "10"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "untagged"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "22",
+          "Drucker",
+          {
+           "loesung": [
+            "30"
+           ],
+           "punkte": 1
+          },
+          "untagged"
+         ],
+         [
+          "24",
+          "RT-W",
+          "10, 20, 30",
+          {
+           "loesung": [
+            "tagged"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Port 20: untagged",
+        "Port 21: VLAN 10, untagged",
+        "Port 22: VLAN 30",
+        "Port 24: tagged (Trunk)"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Maßnahmen, die das WLAN der Tablets absichern."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Verschlüsselung mit WPA3",
+        "Anmeldung je Gerät über 802.1X statt eines gemeinsamen Kennworts",
+        "eigenes VLAN, nur nötige Zugriffe über den Router freigeben",
+        "Firmware des Zugangspunkts aktuell halten",
+        "kein offenes Gastnetz im selben VLAN"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "korrigieren",
+       "text": [
+        "Die Drucker an Port 22 bekommen keine Adresse aus dem Netz des VLAN 30. Ermitteln Sie in Anlage 3 die falsche Zeile und geben Sie die richtige Zeile an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Nummer der falschen Zeile",
+          "art": "zahl",
+          "loesung": [
+           "8"
+          ],
+          "punkte": 2
+         },
+         {
+          "name": "Richtige Zeile",
+          "art": "text",
+          "loesung": [
+           "switchport access vlan 30"
+          ],
+          "punkte": 2
+         }
+        ]
+       },
+       "anlagen": [
+        "2",
+        "3"
+       ],
+       "loesung": [
+        "Zeile 8 ordnet Port 22 dem VLAN 20 zu.",
+        "Richtig: switchport access vlan 30"
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "begruenden",
+       "text": [
+        "Die Geschäftsführung möchte die Außenstelle über ein VPN von Standort zu Standort mit der Zentrale verbinden. Begründen Sie diese Lösung gegenüber einer VPN-Einwahl jedes einzelnen Geräts."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Der Tunnel steht dauerhaft zwischen den Routern, die Geräte brauchen keine eigene VPN-Software.",
+        "Alle Geräte der Außenstelle, auch Drucker und NAS, erreichen die Zentrale.",
+        "Nur zwei Endpunkte sind zu verwalten."
+       ],
+       "hinweise": [
+        {
+         "text": "Tunnel zwischen den Standorten statt je Gerät erklärt",
+         "punkte": 1
+        },
+        {
+         "text": "Vorteil für die Geräte genannt (keine Software, auch Drucker und NAS)",
+         "punkte": 1
+        },
+        {
+         "text": "Vorteil für die Verwaltung genannt",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Datenbank für die Tourenplanung",
+     "punkte": 25,
+     "einleitung": [
+      "Die Touren der Pflegekräfte werden bisher in einer Tabellenkalkulation geplant. Sie sollen eine Datenbank vorbereiten. Die Anforderungen stehen in Anlage 4."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie ein ER-Modell in Chen-Notation mit allen Entitäten, Beziehungen, Attributen und Kardinalitäten aus Anlage 4.",
+        "Der Anfang ist vorgegeben. Kennzeichnen Sie Schlüsselattribute durch Unterstreichen."
+       ],
+       "punkte": 9,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "er",
+        "vorgabe": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "pnr",
+           "typ": "attribut",
+           "text": "Personalnummer",
+           "x": 0,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "pname",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "tnr",
+           "typ": "attribut",
+           "text": "Tournummer",
+           "x": 4,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "pk",
+           "typ": "entitaet",
+           "text": "Pflegekraft",
+           "x": 1,
+           "y": 1
+          },
+          {
+           "id": "faehrt",
+           "typ": "beziehung",
+           "text": "fährt",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "tour",
+           "typ": "entitaet",
+           "text": "Tour",
+           "x": 5,
+           "y": 1
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "pk",
+           "nach": "pnr"
+          },
+          {
+           "von": "pk",
+           "nach": "pname"
+          },
+          {
+           "von": "tour",
+           "nach": "tnr"
+          },
+          {
+           "von": "faehrt",
+           "nach": "pk"
+          },
+          {
+           "von": "faehrt",
+           "nach": "tour"
+          }
+         ]
+        },
+        "muster": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "pnr",
+           "typ": "attribut",
+           "text": "Personalnummer",
+           "x": 0,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "pname",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "qual",
+           "typ": "attribut",
+           "text": "Qualifikation",
+           "x": 2,
+           "y": 0
+          },
+          {
+           "id": "tnr",
+           "typ": "attribut",
+           "text": "Tournummer",
+           "x": 4,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "datum",
+           "typ": "attribut",
+           "text": "Datum",
+           "x": 5,
+           "y": 0
+          },
+          {
+           "id": "zeit",
+           "typ": "attribut",
+           "text": "Startzeit",
+           "x": 6,
+           "y": 0
+          },
+          {
+           "id": "pk",
+           "typ": "entitaet",
+           "text": "Pflegekraft",
+           "x": 1,
+           "y": 1
+          },
+          {
+           "id": "faehrt",
+           "typ": "beziehung",
+           "text": "fährt",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "tour",
+           "typ": "entitaet",
+           "text": "Tour",
+           "x": 5,
+           "y": 1
+          },
+          {
+           "id": "uhr",
+           "typ": "attribut",
+           "text": "geplante Uhrzeit",
+           "x": 3,
+           "y": 2
+          },
+          {
+           "id": "besucht",
+           "typ": "beziehung",
+           "text": "besucht",
+           "x": 5,
+           "y": 2
+          },
+          {
+           "id": "pat",
+           "typ": "entitaet",
+           "text": "Patient",
+           "x": 5,
+           "y": 3
+          },
+          {
+           "id": "patnr",
+           "typ": "attribut",
+           "text": "Patientennummer",
+           "x": 4,
+           "y": 4,
+           "schluessel": true
+          },
+          {
+           "id": "patname",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 5,
+           "y": 4
+          },
+          {
+           "id": "adresse",
+           "typ": "attribut",
+           "text": "Adresse",
+           "x": 6,
+           "y": 4
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "pk",
+           "nach": "pnr"
+          },
+          {
+           "von": "pk",
+           "nach": "pname"
+          },
+          {
+           "von": "pk",
+           "nach": "qual"
+          },
+          {
+           "von": "tour",
+           "nach": "tnr"
+          },
+          {
+           "von": "tour",
+           "nach": "datum"
+          },
+          {
+           "von": "tour",
+           "nach": "zeit"
+          },
+          {
+           "von": "faehrt",
+           "nach": "pk",
+           "kard": "1"
+          },
+          {
+           "von": "faehrt",
+           "nach": "tour",
+           "kard": "n"
+          },
+          {
+           "von": "besucht",
+           "nach": "tour",
+           "kard": "n"
+          },
+          {
+           "von": "besucht",
+           "nach": "pat",
+           "kard": "m"
+          },
+          {
+           "von": "besucht",
+           "nach": "uhr"
+          },
+          {
+           "von": "pat",
+           "nach": "patnr"
+          },
+          {
+           "von": "pat",
+           "nach": "patname"
+          },
+          {
+           "von": "pat",
+           "nach": "adresse"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Entitäten: Pflegekraft, Tour, Patient (je mit Schlüsselattribut)",
+        "Beziehung „fährt“ zwischen Pflegekraft (1) und Tour (n)",
+        "Beziehung „besucht“ zwischen Tour (n) und Patient (m) mit dem Attribut „geplante Uhrzeit“"
+       ],
+       "hinweise": [
+        {
+         "text": "Entität Patient mit Schlüssel Patientennummer",
+         "punkte": 2
+        },
+        {
+         "text": "Beziehung „besucht“ zwischen Tour und Patient",
+         "punkte": 2
+        },
+        {
+         "text": "Kardinalität n:m bei „besucht“",
+         "punkte": 1
+        },
+        {
+         "text": "Kardinalität 1:n bei „fährt“",
+         "punkte": 1
+        },
+        {
+         "text": "Attribut „geplante Uhrzeit“ an der Beziehung „besucht“",
+         "punkte": 2
+        },
+        {
+         "text": "übrige Attribute vollständig (Qualifikation, Datum, Startzeit, Name, Adresse)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, wie die Beziehung „besucht“ im Tabellenmodell umgesetzt wird."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Es entsteht eine eigene Tabelle Besuch mit den Fremdschlüsseln Tournummer und Patientennummer.",
+        "Beide zusammen bilden den Primärschlüssel, dazu kommt die Spalte geplante Uhrzeit."
+       ],
+       "hinweise": [
+        {
+         "text": "eigene Tabelle mit zwei Fremdschlüsseln",
+         "punkte": 2
+        },
+        {
+         "text": "zusammengesetzter Primärschlüssel oder Spalte geplante Uhrzeit genannt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Schlüssel des Tabellenmodells. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Tabelle",
+         "Primärschlüssel",
+         "Fremdschlüssel"
+        ],
+        "zeilen": [
+         [
+          "Pflegekraft",
+          "Personalnummer",
+          "keiner"
+         ],
+         [
+          "Tour",
+          {
+           "loesung": [
+            "Tournummer"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "Personalnummer"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Patient",
+          {
+           "loesung": [
+            "Patientennummer"
+           ],
+           "punkte": 1
+          },
+          "keiner"
+         ],
+         [
+          "Besuch",
+          {
+           "loesung": [
+            "Tournummer, Patientennummer",
+            "Tournummer und Patientennummer",
+            "Patientennummer, Tournummer",
+            "Patientennummer und Tournummer"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "Tournummer, Patientennummer",
+            "Tournummer und Patientennummer",
+            "Patientennummer, Tournummer",
+            "Patientennummer und Tournummer"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Tour: Primärschlüssel Tournummer, Fremdschlüssel Personalnummer",
+        "Patient: Primärschlüssel Patientennummer",
+        "Besuch: Primärschlüssel Tournummer und Patientennummer, beide sind auch Fremdschlüssel"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Maßnahmen, mit denen die Patientendaten in der Datenbank geschützt werden."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Rechte nach Rollen vergeben (nur nötige Zugriffe)",
+        "Datenträger oder Datenbank verschlüsseln",
+        "Zugriffe protokollieren",
+        "regelmäßig sichern und die Rücksicherung prüfen"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie die Datenbank mit der bisherigen Tabellenkalkulation anhand von zwei Merkmalen und geben Sie eine Empfehlung."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Gleichzeitiges Arbeiten: die Datenbank erlaubt viele Nutzer zugleich, die Tabellendatei ist oft gesperrt.",
+        "Datenqualität: Schlüssel und Beziehungen verhindern doppelte oder widersprüchliche Einträge, in der Tabelle ist alles frei eintragbar.",
+        "Empfehlung: Datenbank."
+       ],
+       "hinweise": [
+        {
+         "text": "erstes Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "zweites Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "passende Empfehlung",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Sicherung und Tablets der Pflege",
+     "punkte": 25,
+     "einleitung": [
+      "Zum Schluss geht es um die nächtliche Datensicherung und die Verwaltung der Tablets."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "berechnen",
+       "text": [
+        "Die nächtliche Vollsicherung umfasst 2,4 TB und wird über eine Leitung mit 10 Gbit/s auf ein NAS geschrieben. Wegen Protokoll-Overhead stehen nur 80 % der Übertragungsrate zur Verfügung. Berechnen Sie die Dauer in Minuten (1 TB = 10¹² Byte)."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Minuten",
+        "ergebnis": 40,
+        "toleranz": 0.5,
+        "punkte_ergebnis": 2
+       },
+       "loesung": [
+        "Datenmenge: 2,4 × 10¹² Byte × 8 = 1,92 × 10¹³ bit",
+        "nutzbare Rate: 10 Gbit/s × 0,8 = 8 × 10⁹ bit/s",
+        "Dauer: 1,92 × 10¹³ bit ÷ 8 × 10⁹ bit/s = 2 400 s = 40 min"
+       ],
+       "hinweise": [
+        {
+         "text": "Byte in Bit umgerechnet",
+         "punkte": 1
+        },
+        {
+         "text": "nutzbare Rate mit 80 % berechnet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, warum zusätzlich eine Kopie der Sicherung außer Haus nötig ist."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Brand, Wasser oder Diebstahl in der Zentrale treffen Server und NAS zugleich.",
+        "Auch Schadsoftware kann die Sicherung im selben Netz verschlüsseln.",
+        "Nur eine Kopie an einem anderen Ort bleibt dann erhalten."
+       ],
+       "hinweise": [
+        {
+         "text": "Gefahr für Server und Sicherung am selben Ort genannt",
+         "punkte": 1
+        },
+        {
+         "text": "zweite Gefahr genannt (z. B. Schadsoftware)",
+         "punkte": 1
+        },
+        {
+         "text": "Folgerung: getrennter Ort erhält die Daten",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Angaben, die ein Sicherungsplan enthalten muss."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "welche Daten gesichert werden",
+        "wann und wie oft gesichert wird",
+        "wohin gesichert wird",
+        "wie lange die Sicherungen aufbewahrt werden",
+        "wer zuständig ist und wann die Rücksicherung geprüft wird"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Aufgaben einer Verwaltung für Mobilgeräte (MDM) bei den Tablets der Pflege."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Verlorene Tablets aus der Ferne sperren oder löschen, damit keine Patientendaten nach außen gelangen.",
+        "Apps und Updates zentral verteilen, ohne jedes Gerät einzeln anzufassen.",
+        "Richtlinien vorgeben, z. B. Bildschirmsperre mit PIN und Verschlüsselung."
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Aussagen nach Anlage 5 zutreffen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Im Kiosk-Modus lässt sich nur eine App benutzen.",
+         "Die PIN zum Verlassen des Kiosk-Modus legt jede Pflegekraft selbst fest.",
+         "Nach 14 Tagen ohne Verbindung zum Verwaltungsserver werden die Firmendaten gelöscht.",
+         "Updates werden jederzeit installiert, sobald sie verfügbar sind."
+        ],
+        "richtig": [
+         0,
+         2
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Zutreffend: nur eine App im Kiosk-Modus; Löschen der Firmendaten nach 14 Tagen ohne Verbindung."
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "beschreiben",
+       "text": [
+        "Eine Pflegekraft lässt ihr Tablet während eines Urlaubs von drei Wochen ausgeschaltet zu Hause. Beschreiben Sie, was nach Anlage 5 passiert und was danach zu tun ist."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Nach 14 Tagen ohne Verbindung werden die Firmendaten auf dem Tablet gelöscht, sobald die Regel greift.",
+        "Danach muss das Tablet neu eingerichtet oder die Daten erneut übertragen werden."
+       ],
+       "hinweise": [
+        {
+         "text": "Löschen der Firmendaten nach 14 Tagen erkannt",
+         "punkte": 2
+        },
+        {
+         "text": "Folge: neu einrichten oder Daten neu übertragen",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie die tägliche Vollsicherung mit einer wöchentlichen Vollsicherung und täglichen differenziellen Sicherungen anhand der Dauer der Sicherung und des Aufwands bei der Rücksicherung. Geben Sie eine Empfehlung."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Dauer: die tägliche Vollsicherung sichert jede Nacht alles (hier 40 min), die differenzielle nur die Änderungen seit der letzten Vollsicherung.",
+        "Rücksicherung: bei Vollsicherung ein Satz, bei differenzieller die letzte Voll- und die letzte differenzielle Sicherung.",
+        "Empfehlung: bei 40 min im Nachtfenster reicht die tägliche Vollsicherung; wird sie zu lang, die differenzielle."
+       ],
+       "hinweise": [
+        {
+         "text": "Dauer beider Verfahren verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Rücksicherung beider Verfahren verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "passende Empfehlung",
+         "punkte": 1
+        }
        ]
       }
      ]

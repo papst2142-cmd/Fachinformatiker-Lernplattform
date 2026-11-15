@@ -20,11 +20,20 @@ namespace Lernplattform.Views;
 /// Rechnen, Tabelle, Lueckenfeld und Auswahl, Bewertungsseite (gruen/rot vom Programm, Haekchen selbst) und Ergebnis
 /// "Nach Aufgaben". Ein Aufbau fuer PC und Handy (Pillen umbrechen, Tabellen als Zeilenbloecke). Zeichnet in den
 /// Koerper der Pruefungsseite (<see cref="KlausurTeil"/>), der Ablauf ohne Oberflaeche ist <see cref="EchtAblauf"/>.
+/// A 0.77.0 (Welle 2, Weisung P12-265): gezeichnete Anlagen (Netzplan, Monitor-Bild) mit Textfassung
+/// (<see cref="EchtBilder"/>), Zeichenaufgaben Stufe 1 (auf Papier, Vorgabe sichtbar, Musterbild mit Haekchen) und am
+/// breiten PC zwei Spalten im Lauf (links die Aufgabe, rechts ihre Anlagen; Umschalter nur, wenn es schmal ist).
 /// </summary>
 public sealed class EchtFormatTeil
 {
     private const string Ausgang = "ausgang";
     private const string Zeit = "zeit";
+
+    /// <summary>Ab dieser Breite des Koerpers (mal Schriftfaktor) stehen Aufgabe und Anlagen nebeneinander.</summary>
+    internal const double ZweiSpaltenAb = 1000;
+
+    /// <summary>Schluessel der Antwort "Auf Papier gezeichnet" einer Zeichenaufgabe.</summary>
+    internal const string Papier = "papier";
 
     private readonly StackPanel _koerper;
     private readonly Action _leeren;
@@ -44,6 +53,8 @@ public sealed class EchtFormatTeil
     private StackPanel? _inhalt;
     private Pillen? _reiterPillen;
     private Pillen? _umschalter;
+    private bool _zweiSpalten;
+    private bool _alsText;
 
     public EchtFormatTeil(StackPanel koerper, Action leeren, Action zurAuswahl, Func<bool> andereLaeuft)
     {
@@ -56,6 +67,15 @@ public sealed class EchtFormatTeil
             () => DateTimeOffset.Now, TimeZoneInfo.Local);
         _takt.Tick += (_, _) => Ticken();
         _speichern.Tick += (_, _) => Festhalten();
+        _koerper.SizeChanged += (_, _) =>
+        {
+            // Breite geaendert (Fenster, Drehen): zwei Spalten an oder aus, nur im Lauf
+            if (Aktiv && !Bewertet && _inhalt is not null && _umschalter is not null && _a.Satz is not null && ZweiSpalten != _zweiSpalten)
+            {
+                Festhalten();
+                LaufMalen();
+            }
+        };
         Zustand.EchtVorab();
     }
 
@@ -139,6 +159,9 @@ public sealed class EchtFormatTeil
     }
 
     private Pruefungsbereich Bereich => EchtArten.Bereich(_a.Art)!;
+
+    /// <summary>Aufgabe und Anlagen nebeneinander: breiter Koerper und Schrift unter der Stufe "untereinander".</summary>
+    private bool ZweiSpalten => Schrift.Faktor < Schrift.UntereinanderAb && _koerper.Bounds.Width >= ZweiSpaltenAb * Schrift.Faktor;
 
     private string BereichName => Bereich.Name + EchtTexte.NameZusatz;
 
@@ -311,7 +334,10 @@ public sealed class EchtFormatTeil
         var zustand = _a.Zustand!;
         _inhalt!.Children.Clear();
         _felder.Clear();
-        _umschalter!.IsVisible = _reiter is not (Ausgang or Zeit);
+        _zweiSpalten = ZweiSpalten;
+        var aufgabeReiter = _reiter is not (Ausgang or Zeit);
+        var mitAnlagen = aufgabeReiter && satz.Aufgaben[int.Parse(_reiter, CultureInfo.InvariantCulture) - 1].Teile.Any(t => t.Anlagen.Count > 0);
+        _umschalter!.IsVisible = aufgabeReiter && !(_zweiSpalten && mitAnlagen);
         if (_reiter == Ausgang)
         {
             var text = new StackPanel { Spacing = 8 };
@@ -343,14 +369,7 @@ public sealed class EchtFormatTeil
         {
             var n = int.Parse(_reiter, CultureInfo.InvariantCulture);
             var aufgabe = satz.Aufgaben[n - 1];
-            if (_anlagen)
-            {
-                foreach (var anlage in AnlagenVon(satz, aufgabe))
-                {
-                    _inhalt.Children.Add(AnlageKarte(anlage));
-                }
-            }
-            else
+            Border AufgabeKarte()
             {
                 var inhalt = new StackPanel { Spacing = 6 };
                 foreach (var zeile in aufgabe.Einleitung)
@@ -362,8 +381,33 @@ public sealed class EchtFormatTeil
                     inhalt.Children.Add(Abstand(Teilkopf(teil), 14));
                     inhalt.Children.Add(Antwortfelder(n, teil, zustand));
                 }
-                _inhalt.Children.Add(Schrift.KopfKarte(Beschriftungen.Einsetzen(EchtTexte.AufgabeTitel, n, aufgabe.Titel),
-                    EchtTexte.PunkteText(aufgabe.Punkte), inhalt));
+                return Schrift.KopfKarte(Beschriftungen.Einsetzen(EchtTexte.AufgabeTitel, n, aufgabe.Titel), EchtTexte.PunkteText(aufgabe.Punkte), inhalt);
+            }
+            if (_zweiSpalten && mitAnlagen)
+            {
+                // breiter PC: links die Aufgabe, rechts ihre Anlagen (Plan P12-152 Abschnitt 3)
+                var rechts = new StackPanel { Spacing = 14 };
+                foreach (var anlage in AnlagenVon(satz, aufgabe))
+                {
+                    rechts.Children.Add(AnlageKarte(anlage, _alsText));
+                }
+                var spalten = new Grid { ColumnDefinitions = new ColumnDefinitions("11*,14,9*") };
+                var links = AufgabeKarte();
+                Grid.SetColumn(rechts, 2);
+                spalten.Children.Add(links);
+                spalten.Children.Add(rechts);
+                _inhalt.Children.Add(spalten);
+            }
+            else if (_anlagen)
+            {
+                foreach (var anlage in AnlagenVon(satz, aufgabe))
+                {
+                    _inhalt.Children.Add(AnlageKarte(anlage, _alsText));
+                }
+            }
+            else
+            {
+                _inhalt.Children.Add(AufgabeKarte());
             }
         }
         FortschrittZeigen();
@@ -376,9 +420,13 @@ public sealed class EchtFormatTeil
         return nr.Count == 0 ? satz.Anlagen : satz.Anlagen.Where(a => nr.Contains(a.Nr));
     }
 
-    private static Border AnlageKarte(EchtAnlage anlage)
+    private static Border AnlageKarte(EchtAnlage anlage, bool alsText)
     {
         var inhalt = new StackPanel { Spacing = 6 };
+        if (EchtBilder.Anlage(anlage, alsText) is { } bild)
+        {
+            return Schrift.KopfKarte(Beschriftungen.Einsetzen(EchtTexte.Anlage, anlage.Nr, anlage.Titel), null, bild);
+        }
         switch (anlage.Art)
         {
             case "code":
@@ -504,6 +552,20 @@ public sealed class EchtFormatTeil
                         FortschrittZeigen();
                     }, radio: false));
                 }
+                break;
+            case EchtSaetze.FormZeichnen:
+                feld.Children.Add(new LernText(EchtTexte.ZeichnenHinweis, "Klein", FontWeight.Normal, "Pinsel.muted"));
+                if (a.Vorgabe is { } vorgabe)
+                {
+                    feld.Children.Add(LernTeile.Label(EchtTexte.Vorgabe));
+                    feld.Children.Add(EchtBilder.Diagramm(vorgabe, EchtTexte.Vorgabe + ": " + EchtZeichnung.Name(a.Diagramm), _alsText));
+                }
+                var schluessel = EchtBewertung.Feld(n, teil.Nr, Papier);
+                feld.Children.Add(Option(EchtTexte.Gezeichnet, "", EchtBewertung.Antwort(zustand, schluessel).Length > 0, an =>
+                {
+                    _a.Festhalten([(schluessel, an ? TrainerTexte.Ja : "")]);
+                    FortschrittZeigen();
+                }, radio: false));
                 break;
         }
         return feld;
@@ -695,6 +757,11 @@ public sealed class EchtFormatTeil
             {
                 inhalt.Children.Add(new TabellenText(zeile, "Klein", FontWeight.Normal, "Pinsel.text_soft"));
             }
+            if (teil.Antwort.Muster is { } muster)
+            {
+                inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.Musterbild), 8));
+                inhalt.Children.Add(EchtBilder.Diagramm(muster, EchtTexte.Musterbild + ": " + EchtZeichnung.Name(muster.Art), _alsText));
+            }
             if (EchtBewertung.HakenAnzahl(teil) > 0)
             {
                 var selbst = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.text_soft");
@@ -786,6 +853,9 @@ public sealed class EchtFormatTeil
                 {
                     Bewertet(a.Felder[f].Name, Wert(EchtBewertung.Luecke(f)), wertung.Felder[f], a.Felder[f].Loesung[0]);
                 }
+                break;
+            case EchtSaetze.FormZeichnen:
+                Text(Wert(Papier).Length > 0 ? EchtTexte.Gezeichnet : EchtTexte.NichtGezeichnet);
                 break;
             case EchtSaetze.FormAuswahl:
                 var gewaehlt = EchtBewertung.Gewaehlt(zustand, n, teil.Nr);
@@ -880,14 +950,24 @@ public sealed class EchtFormatTeil
         "pruefung/echt-lauf-ausgangssituation", "pruefung/echt-lauf-aufgabe1", "pruefung/echt-lauf-aufgabe2", "pruefung/echt-lauf-aufgabe4",
         "pruefung/echt-lauf-anlagen1", "pruefung/echt-lauf-anlagen4", "pruefung/echt-lauf-zeitfrage", "pruefung/echt-bewertung-aufgabe1",
         "pruefung/echt-bewertung-aufgabe2", "pruefung/echt-ergebnis",
+        // A 0.77.0 (Welle 2): Probesatz AP2 Konzeption mit Netzplan, Monitor-Bild und Zeichenaufgabe
+        "pruefung/echt-b1-lauf-aufgabe2", "pruefung/echt-b1-anlagen2", "pruefung/echt-b1-anlagen1", "pruefung/echt-b1-lauf-aufgabe3",
+        "pruefung/echt-b1-bewertung-aufgabe3", "pruefung/echt-b1-anlagen2-text", "pruefung/echt-diagramm-uml",
     ];
 
-    /// <summary>Probezustand: Probesatz, 754 s gelaufen, Antworten teils richtig, teils falsch, teils leer.</summary>
-    internal JsonObject ProbeZustand(bool bewertet)
+    /// <summary>Erste Nummer der Ansichten der Welle 2 in <see cref="ProbeNamen"/>.</summary>
+    internal const int Welle2Ab = 10;
+
+    /// <summary>
+    /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung SI), 754 s gelaufen,
+    /// Antworten teils richtig, teils falsch, teils leer.
+    /// </summary>
+    internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1)
     {
         _probeBestand = null;
-        var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == EchtSaetze.Ap1);
-        var zustand = EchtAblauf.Neu(satz, EchtArten.Praefix + EchtSaetze.Ap1, DateTimeOffset.Now.AddSeconds(-754), TimeZoneInfo.Local);
+        var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == bereich);
+        var art = bereich == EchtSaetze.Ap1 ? EchtArten.Praefix + EchtSaetze.Ap1 : EchtArten.Art(Fachrichtung.Nach(satz.Fachrichtung), bereich);
+        var zustand = EchtAblauf.Neu(satz, art, DateTimeOffset.Now.AddSeconds(-754), TimeZoneInfo.Local);
         var antworten = (JsonObject)zustand["antworten"]!;
         var haken = (JsonObject)zustand["haken"]!;
         var de = CultureInfo.GetCultureInfo("de-DE");
@@ -936,6 +1016,9 @@ public sealed class EchtFormatTeil
                     case EchtSaetze.FormAuswahl:
                         antworten[F(EchtBewertung.Wahl)] = richtig ? string.Join(",", a.Richtig) : "0,1";
                         break;
+                    case EchtSaetze.FormZeichnen:
+                        antworten[F(Papier)] = richtig ? TrainerTexte.Ja : "";
+                        break;
                 }
                 if (bewertet && EchtBewertung.HakenAnzahl(teil) > 0)
                 {
@@ -979,15 +1062,67 @@ public sealed class EchtFormatTeil
                 _reiter = art == 7 ? "1" : "2";
                 BewertungZeigen();
                 break;
-            default:
+            case 9:
                 var zustand = ProbeZustand(bewertet: true);
                 var ergebnis = EchtBewertung.Auswerten(_a.Bestand.Satz(Json.Text(zustand["satz"]))!, zustand);
                 _a.ProbeSetzen(zustand, ergebnis);
                 ErgebnisZeigen(Json.Text(zustand["art"])!, ergebnis);
                 break;
+            case Welle2Ab + 4:
+                _a.ProbeSetzen(ProbeZustand(bewertet: true, EchtSaetze.B1));
+                _reiter = "3";
+                BewertungZeigen();
+                break;
+            case Welle2Ab + 6:
+                UmlZeigen();
+                break;
+            default:
+                _a.ProbeSetzen(ProbeZustand(bewertet: false, EchtSaetze.B1));
+                _alsText = art == Welle2Ab + 5;
+                (_reiter, _anlagen) = (art - Welle2Ab) switch
+                {
+                    0 => ("2", false),
+                    1 or 5 => ("2", true),
+                    2 => ("1", true),
+                    _ => ("3", false),
+                };
+                LaufZeigen();
+                _alsText = false;
+                break;
         }
         _takt.Stop();
     }
+
+    /// <summary>
+    /// Nur Start ohne Bedienung: ein UML-Aktivitaetsdiagramm aus <see cref="ProbeUml"/> (der Probesatz der Welle 2 hat eine
+    /// ER-Aufgabe; UML kommt mit den Inhalten), damit Bilder und Layoutpruefung beide Diagrammarten sehen.
+    /// </summary>
+    private void UmlZeigen()
+    {
+        _leeren();
+        Aktiv = true;
+        var diagramm = EchtZeichnung.Diagramm(JsonNode.Parse(ProbeUml), EchtZeichnung.Uml, vollstaendig: true, "Probe");
+        _inhalt = new StackPanel { Spacing = 14 };
+        _koerper.Children.Add(_inhalt);
+        _inhalt.Children.Add(Schrift.KopfKarte(EchtTexte.Musterbild, EchtTexte.UmlName, EchtBilder.Diagramm(diagramm, EchtTexte.UmlName)));
+    }
+
+    /// <summary>Kleines erfundenes UML-Aktivitaetsdiagramm (Stoerungsannahme) nur fuer den Start ohne Bedienung.</summary>
+    internal const string ProbeUml = """
+        {"art": "uml", "elemente": [
+          {"id": "s", "typ": "start", "x": 1, "y": 0},
+          {"id": "a1", "typ": "aktion", "text": "Störungsmeldung aufnehmen", "x": 1, "y": 1},
+          {"id": "v", "typ": "verzweigung", "x": 1, "y": 2},
+          {"id": "a2", "typ": "aktion", "text": "Bereitschaft anrufen", "x": 0, "y": 3},
+          {"id": "a3", "typ": "aktion", "text": "Ticket mit Priorität „normal“ anlegen", "x": 2, "y": 3},
+          {"id": "z", "typ": "zusammenfuehrung", "x": 1, "y": 4},
+          {"id": "a4", "typ": "aktion", "text": "Rückmeldung an die Station", "x": 1, "y": 5},
+          {"id": "e", "typ": "ende", "x": 1, "y": 6}],
+         "verbindungen": [
+          {"von": "s", "nach": "a1"}, {"von": "a1", "nach": "v"},
+          {"von": "v", "nach": "a2", "text": "[dringend]"}, {"von": "v", "nach": "a3", "text": "[sonst]"},
+          {"von": "a2", "nach": "z"}, {"von": "a3", "nach": "z"}, {"von": "z", "nach": "a4"}, {"von": "a4", "nach": "e"}]}
+        """;
 
     /// <summary>Nur Start ohne Bedienung: Bestand mit einer Meldung der Ladepruefung (Platzhalter mit Meldung zeigen).</summary>
     internal void ProbeBestand(EchtBestand? bestand) => _probeBestand = bestand;
@@ -1017,6 +1152,12 @@ public sealed class EchtFormatTeil
     internal Pillen? ProbeUmschalter => _umschalter;
 
     internal StackPanel? ProbeInhalt => _inhalt;
+
+    /// <summary>Probe: Text "x von y Teilaufgaben bearbeitet" (Bedienprobe "Auf Papier gezeichnet").</summary>
+    internal string ProbeFortschritt => _fortschritt?.Text ?? "";
+
+    /// <summary>Probe: stehen Aufgabe und Anlagen gerade nebeneinander, und sollten sie es bei dieser Breite?</summary>
+    internal (bool Gezeigt, bool Soll) ProbeZweiSpalten => (_zweiSpalten, ZweiSpalten);
 
     // -- Bausteine ----------------------------------------------------------------------------------
 
