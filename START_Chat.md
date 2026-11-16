@@ -20,7 +20,7 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 | Jetzt | Warten auf die nächste Weisung (P12-286). Danach laut Roadmap (je nur nach eigener Weisung): Prüfung echt für DPA und DV, Inhaltspakete („DLC“), Haltungen 352 mit 358, Welle Werkstatt 355–357, Beta. |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Sollwerte | G1–G52, Testdaten, `inhalte/`, fünf Zeichen-Tabellen und `einteilung_bisher.json` fest, dazu seit Phase 13 die Stadt-Fassung 0 (92 Dateien mit Prüfsumme); die CI erzeugt nichts mehr aus Python, nur die drei Live-Proben mit Python 0.63.2 (Sicherungen für die alte App) bleiben bis 1.0. G52 entsteht bei Inhalte-Wellen mit `pruefe_lerninhalte.py` ohne Python-Linie. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P12-170** (AE fertig, gemergt) / nächste Meldung P12-171, Weisung P12-286, Sollwert-Änderung Nr. 20 |
+| Letzte/nächste Meldung | **P12-170** (AE fertig, gemergt) / nächste Meldung P12-171, Weisung P12-287 (P12-286 aktuell: Kurzplan 362, Patch A 0.84.1), Sammelliste 364, Sollwert-Änderung Nr. 20 |
 | Sammelliste | nächste freie Nummer **361** (offene Punkte siehe `CLAUDE.md` „Aktueller Stand“ und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
