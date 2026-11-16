@@ -44,10 +44,17 @@ public static partial class AutoMessung
             }
         }
 
-        // Auswahl: AE mit Startknopf je Bereich, DV (Probe mit Meldungen) ohne Startknopf fuer b1/b2
+        // Auswahl: AE mit Startknopf je Bereich, DV (Probe mit Meldungen) ohne Startknopf fuer b1/b2. Die heutige Klausur hat
+        // Knoepfe mit derselben Aufschrift ("Softwareprodukt starten"); gezaehlt wird darum nur ein Knopf, der neben der
+        // Angabe des echten Formats steht ("... · Sätze: n, davon bearbeitet: m").
+        var angabe = EchtTexte.Angabe.Split("%d")[1];
+        bool Echt(Button b) => b.GetVisualAncestors().OfType<NebenOderUnter>().FirstOrDefault() is { } zeile
+            && zeile.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text?.Contains(angabe, StringComparison.Ordinal) == true);
         int Startknoepfe(Fachrichtung f) => ansicht.GetVisualDescendants().OfType<Button>().Count(b => b.IsEffectivelyVisible
-            && (Avalonia.Automation.AutomationProperties.GetName(b) == Beschriftungen.Einsetzen(EchtTexte.Starten, f.Bereich(EchtSaetze.B1).Kurz)
-                || Avalonia.Automation.AutomationProperties.GetName(b) == Beschriftungen.Einsetzen(EchtTexte.Starten, f.Bereich(EchtSaetze.B2).Kurz)));
+            && b.Content is TextBlock { Text: { } aufschrift }
+            && (aufschrift == Beschriftungen.Einsetzen(EchtTexte.Starten, f.Bereich(EchtSaetze.B1).Kurz)
+                || aufschrift == Beschriftungen.Einsetzen(EchtTexte.Starten, f.Bereich(EchtSaetze.B2).Kurz))
+            && Echt(b));
         k.Probe(1);
         await ansicht.BildFertigAsync();
         var aeKnoepfe = Startknoepfe(ae);
