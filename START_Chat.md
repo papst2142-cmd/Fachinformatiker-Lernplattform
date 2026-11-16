@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.75.0** / **S 0.53.0** (Welle E4, PR #189, main a3c7df0). Patch-Zweig `claude/project-thread-sytq8r`: **A 0.75.1 / S 0.53.1** (Pixelfehler Mali 340, Figur nur an Übergängen 342, Ortsliste innen 343). |
-| Phase | **0–13 abgenommen** (Phase 13 Stadtbau-Werkzeug: Nico 14.11.2026, Antworten 1b 2a 3a, Bericht `Fi-Austausch/anlagen/P13-Bericht_Phase13.md`). Stadt 1 von Nico ist seit A 0.71.0 im Spiel (Fassung 1). |
-| Jetzt | Patch A 0.75.1 / S 0.53.1 (Weisungen P12-252/256/257/258): Ecken-Shader unter OpenGL ES `highp`, Zeilen „Tiefe“/„Genauigkeit“ im Problembericht; Figur nie auf Fahrbahn/Gleis (`StadtSzene.Queren.cs`); Ortsliste schließt beim Betreten; Ortsmenü zieht später in die Karte im Spiel-Handy (Welle Kamera + Karte); Meldung P12-151, Test am Tab A8 durch Nico, Merge nach Nicos Merge-OK. Danach Phase „Prüfung im echten Format“ (erst Plan nach Chats Strukturblatt), dann Kamera + Karte A 0.76.0 (Antworten in P12-257). |
+| Version | Auf `main` **A 0.81.1** / **S 0.53.1** (Patch 341, PR #198, main 1df8055). Patch-Zweig `claude/project-thread-8wgido`: **A 0.81.2** (Sammelliste 346 Tausenderpunkt, Entwurf-PR, Merge erst nach Nicos Antwort). |
+| Phase | **0–13 abgenommen** (Phase 13 Stadtbau-Werkzeug: Nico 14.11.2026, Bericht `Fi-Austausch/anlagen/P13-Bericht_Phase13.md`). Stadt 1 von Nico ist im Spiel (seit A 0.75.2 Fassung 2). Prüfung im echten Format (A 0.76–0.79), Kamera und Karte (A 0.80), Handy-X, Sitzen/Liegen (A 0.81) gemergt. |
+| Jetzt | Patch A 0.81.2 (Weisung P12-278): `EchtBewertung.Tausenderpunkt` (ab Musterlösung 1000 gilt „1.340“ als 1340, Regel `Zahlen.PasstGruppen` wie im Rechen-Trainer), Test `EchtTausenderpunktTests` mit Gegenprobe. Danach (nur nach eigener Weisung): Prüfung echt für AE/DPA/DV, Nachladen der Stadtteile, Inhaltspakete, Welle 352 Haltungen, Beta. |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Sollwerte | G1–G52, Testdaten, `inhalte/`, fünf Zeichen-Tabellen und `einteilung_bisher.json` fest, dazu seit Phase 13 die Stadt-Fassung 0 (92 Dateien mit Prüfsumme); die CI erzeugt nichts mehr aus Python, nur die drei Live-Proben mit Python 0.63.2 (Sicherungen für die alte App) bleiben bis 1.0. G52 entsteht bei Inhalte-Wellen mit `pruefe_lerninhalte.py` ohne Python-Linie. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P12-151** (Patch A 0.75.1) / nächste Meldung P12-152, Weisung P12-259 |
-| Sammelliste | nächste freie Nummer **344** (340, 342, 343 = Patch A 0.75.1 in Arbeit; offene Punkte siehe `CLAUDE.md` „Aktueller Stand“ und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
+| Letzte/nächste Meldung | **P12-164** (Patch A 0.81.2) / nächste Meldung P12-165, Weisung P12-279 |
+| Sammelliste | nächste freie Nummer **353** (346 = Patch A 0.81.2 in Arbeit; offene Punkte siehe `CLAUDE.md` „Aktueller Stand“ und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat
