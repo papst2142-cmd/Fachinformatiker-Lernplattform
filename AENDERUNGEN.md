@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.84.0
+Die Prüfung im echten Format gibt es jetzt auch für die Fachrichtung Anwendungsentwicklung, mit zehn neuen Prüfungssätzen.
+
+- Hast du Anwendungsentwicklung gewählt, findest du in beiden Bereichen der AP2, „Planen eines Softwareproduktes“ und „Entwicklung und Umsetzung von Algorithmen“, je fünf Sätze. Bisher stand dort nur ein Hinweis, dass es noch keine Prüfung gibt.
+- Jeder Satz spielt in einer eigenen erfundenen Firma, vom Softwarehaus über die Weinkellerei bis zur Bergbahn. Die vier Aufgaben eines Satzes gehören zu dieser Firma.
+- Es geht unter anderem um Anforderungen, Scrum, Aufwand und Kosten, Lizenzen, Testfälle, Pseudocode mit Schreibtischtest, Fehler im Code, Suchen und Sortieren, SQL-Abfragen und Normalisierung. Anlagen sind Gesprächsnotizen, Tabellen, Code-Ausschnitte und ein englischer Text.
+- Aktivitätsdiagramme und ER-Modelle zeichnest du auf Papier oder mit dem Zeichen-Baukasten. Klassendiagramme, Use-Case-Diagramme und Struktogramme zeichnest du auf Papier und vergleichst sie danach mit der Musterlösung. SQL und Code schreibst du als Text; nach dem Abgeben siehst du die Musterlösung und hakst die Punkte selbst ab.
+- Für Daten- und Prozessanalyse und für Digitale Vernetzung bleibt der Hinweis, bis ihre Sätze kommen. Die AP1, die Sätze der Systemintegration, dein Lernstand und das Spiel bleiben, wie sie sind.
+
 ## A 0.83.0
 Stadtteile können jetzt Namen tragen, und die Nummern auf der Karte im Spiel-Handy liegen nie mehr übereinander oder halb außerhalb der Karte.
 
