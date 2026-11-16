@@ -67,12 +67,32 @@ public sealed partial class StadtFlaeche
     /// <summary>Soll die Szene mit Nachladen geladen werden? Nur draussen relevant; innen bleibt der Zustand.</summary>
     private bool NachladenGewuenscht()
     {
-        if (_nachladenAusGemerkt || !FesteKamera || _spiel is null || !_kameras.TryGetValue(ProbeWelt.Stadt, out var k))
+        if (_nachladenAusGemerkt || _spiel is null)
+        {
+            return false;
+        }
+        if (NachladenGrosseKarte)
+        {
+            // Werkzeug (Welle S 0.55.0): nur grosse Karten, Mitte = Ziel der Kamera
+            return _spiel.Szene.Breite > Stadtteile.AltesFormatBis || _spiel.Szene.Tiefe > Stadtteile.AltesFormatBis;
+        }
+        if (!FesteKamera || !_kameras.TryGetValue(ProbeWelt.Stadt, out var k))
         {
             return false;
         }
         return k.Bereich.Max <= SpielKamera.AbstandMax;
     }
+
+    /// <summary>
+    /// Welle S 0.55.0 (Weisung P12-282 Punkt 3): das Werkzeug laedt Karten groesser als <see cref="Stadtteile.AltesFormatBis"/>
+    /// nach wie das Spiel (gleiche Engine-Rechnung: <see cref="Nachlader"/>, <see cref="Ladeplan"/>), nur mit freier Kamera:
+    /// Mitte des Nachladens ist das Ziel der Kamera statt der Figur. Kleine Karten (Stadt 1) bleiben wie bisher ganz geladen.
+    /// </summary>
+    public bool NachladenGrosseKarte { get; init; }
+
+    /// <summary>Mitte des Nachladens: im Spiel die Figur, im Werkzeug das Ziel der Kamera.</summary>
+    private (float X, float Z) NachladenMitte(StadtSpiel spiel) =>
+        NachladenGrosseKarte && _kameras.TryGetValue(ProbeWelt.Stadt, out var k) ? (k.ZielX, k.ZielZ) : (spiel.FigurX, spiel.FigurZ);
 
     /// <summary>Gegenprobe merken (im Ablauf des Aufrufers, siehe <see cref="NachladenAusFuerTests"/>).</summary>
     private void NachladenAusMerken() => _nachladenAusGemerkt = NachladenAusFuerTests;
@@ -123,7 +143,8 @@ public sealed partial class StadtFlaeche
         _gruen = null;
         var lader = new Nachlader(spiel.Szene, _gw.Gruen(SpielKamera.AbstandMax));
         NachladenGrundlage(gl, lader);
-        lader.Takt(spiel.FigurX, spiel.FigurZ);
+        var (mx, mz) = NachladenMitte(spiel);
+        lader.Takt(mx, mz);
         lader.StartBauen(lader.Noetig);
         foreach (var k in lader.Noetig)
         {
@@ -171,12 +192,7 @@ public sealed partial class StadtFlaeche
     }
 
     /// <summary>Kugel um eine Kachel (Boden bis zur hoechsten Stelle eines Hauses, mindestens 6 fuer Baeume und Laternen).</summary>
-    private (Vector3 Mitte, float Halb) KachelKugel(Stadtteile.Kachel k)
-    {
-        var h = MathF.Max(6f, _lader?.Grundlage.Hoehen.GetValueOrDefault(k) ?? 0f);
-        var m = k.Mitte;
-        return (new Vector3(m.X, h / 2, m.Y), MathF.Sqrt((2 * (Stadtteile.Groesse / 2) * (Stadtteile.Groesse / 2)) + (h * h / 4)));
-    }
+    private (Vector3 Mitte, float Halb) KachelKugel(Stadtteile.Kachel k) => Nachlader.Kugel(_lader?.Grundlage, k);
 
     /// <summary>Ein Takt vor dem Zeichnen: freigeben, hochladen (in Stuecken), noetige Kacheln im Bild sofort.</summary>
     private void NachladenTakt(GlInterface gl, StadtSpiel spiel, Matrix4x4 sichtProj)
@@ -187,9 +203,10 @@ public sealed partial class StadtFlaeche
             return;
         }
         // Ankunft mit Bus oder Zug: liegt das Ende des Wegs ausserhalb des Rings, wird es vorher vorbereitet
-        lader.Ziel = ZielFuerProbe ?? (spiel.WegEnde is { } ende && !spiel.ImInnenraum
+        lader.Ziel = ZielFuerProbe ?? (!NachladenGrosseKarte && spiel.WegEnde is { } ende && !spiel.ImInnenraum
             && MathF.Abs(ende.X - spiel.FigurX) + MathF.Abs(ende.Z - spiel.FigurZ) > Ladeplan.Vor ? ende : null);
-        foreach (var k in lader.Takt(spiel.FigurX, spiel.FigurZ))
+        var (mx, mz) = NachladenMitte(spiel);
+        foreach (var k in lader.Takt(mx, mz))
         {
             KachelFreigeben(gl, k);
         }
@@ -285,10 +302,11 @@ public sealed partial class StadtFlaeche
         (KachelnImBild, KachelnNah, KachelnFern, KachelnLoch) = (imBild, nah, fern, loch);
     }
 
-    /// <summary>Dunst fuer dieses Bild: nur draussen mit Nachladen (sonst 0 = Bild wie vorher).</summary>
+    /// <summary>Dunst fuer dieses Bild: nur draussen mit Nachladen im Spiel (sonst 0 = Bild wie vorher; das Werkzeug zeigt die
+    /// ganze Karte mit freier Kamera ohne Dunst, Welle S 0.55.0).</summary>
     private void DunstFestlegen(bool draussen, Vector3 himmel)
     {
-        _dunstJetzt = draussen && _lader is not null ? Dunst.Staerke : 0f;
+        _dunstJetzt = draussen && _lader is not null && !NachladenGrosseKarte ? Dunst.Staerke : 0f;
         _dunstFarbe = himmel;
     }
 

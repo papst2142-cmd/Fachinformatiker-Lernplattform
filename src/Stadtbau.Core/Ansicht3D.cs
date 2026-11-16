@@ -55,7 +55,17 @@ public static class Ansicht3D
         {
             var spiel = new StadtSpiel(stadt, ablauf, grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
                 () => einstellung.Fest, () => einstellung.Jahreszeit, vorrat);
-            spiel.Szene.Vorbereiten();
+            // Welle S 0.55.0 (Weisung P12-282 Punkt 3): grosse Karten laedt die 3D-Ansicht nach (Grundlage und Stadtteile),
+            // der ganze Bau auf einmal faellt weg
+            if (GrenzenLive.MitNachladenFuer(spiel.Szene.Breite, spiel.Szene.Tiefe))
+            {
+                spiel.NurGrundlage = true;
+                spiel.Szene.GrundlageVorbereiten();
+            }
+            else
+            {
+                spiel.Szene.Vorbereiten();
+            }
             return spiel;
         }
     }

@@ -1316,7 +1316,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var nachladen = NachladenGewuenscht();
         spiel.NurGrundlage = nachladen;
         var mitGruen = _gw.Gruen(SpielKamera.AbstandMax);
-        var (figurX, figurZ) = (spiel.FigurX, spiel.FigurZ);
+        var (figurX, figurZ) = nachladen ? NachladenMitte(spiel) : (spiel.FigurX, spiel.FigurZ);
         _vorladenBeginn = Stopwatch.GetTimestamp();
         _hochladenErledigt = 0;
         _hochladenGesamt = 0;
