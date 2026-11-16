@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.55.0
+
+Stadtteile benennen und schnellere Prüfung großer Karten.
+
+- Der Knopf „Stadtteil-Namen“ (oder die Taste B) in der Stadt von oben: Ziehe mit der Maus oder dem Finger ein Rechteck und gib einen Namen ein. Rechts in der Liste kannst du einen Stadtteil umbenennen, verschieben, größer oder kleiner machen und löschen. „Neuer Stadtteil“ legt einen in der Mitte der Ansicht an, das geht auch nur mit der Tastatur. Jede Änderung lässt sich rückgängig machen.
+- Ein Name darf nicht leer, nicht doppelt und höchstens 24 Zeichen lang sein; zwei Stadtteile dürfen sich nicht überdecken. Ist etwas nicht erlaubt, nennt eine rote Zeile den Grund. Dieselben Regeln prüft auch die Prüfung der Stadt vor dem Export.
+- Städte ohne Namen werden genau wie bisher gespeichert. Mit Namen speichert das Werkzeug in einem neuen Format, das ältere Fassungen nicht öffnen können.
+- Die Prüfung einer sehr großen Karte ist deutlich schneller und findet dieselben Fehler wie vorher.
+
 ## S 0.54.0
 
 Karten bis 256 × 256 Felder und ein neuer Knopf „Stadtteile“.
