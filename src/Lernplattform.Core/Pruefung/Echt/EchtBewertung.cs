@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json.Nodes;
 using Lernplattform.Core.Lernen;
+using Lernplattform.Core.Rechner;
 using Lernplattform.Core.Suche;
 
 namespace Lernplattform.Core.Pruefung.Echt;
@@ -96,10 +97,33 @@ public static class EchtBewertung
         return (umgekehrt & (umgekehrt + 1)) == 0;    // nur Einsen links, dann nur Nullen
     }
 
+    private static string OhneLeerraum(string? eingabe) => (eingabe ?? "").Trim().Replace(" ", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal);
+
+    private static readonly AsyncLocal<bool> TausenderAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests): Zahlenfelder wie bis A 0.81.1, der Punkt ist dort immer ein Dezimalzeichen.</summary>
+    public static void TausenderAltFuerTests(bool an) => TausenderAlt.Value = an;
+
+    /// <summary>
+    /// Sammelliste 346 (A 0.81.2): Zahl aus der Eingabe eines Zahlenfelds, dessen Musterloesung <paramref name="loesung"/>
+    /// ist. Ab einer Musterloesung von 1000 gilt ein Punkt als Tausenderpunkt, wenn danach genau Dreiergruppen folgen
+    /// ("1.340", "20.508", "1.340.000"; gleiche Regel wie im Rechen-Trainer, <see cref="Zahlen.PasstGruppen"/>).
+    /// Alles andere liest <see cref="Dezimal"/> wie bisher ("1.34", "1.3400", "1.340,00", unter 1000 auch "1.340").
+    /// </summary>
+    public static double? Tausenderpunkt(string? eingabe, double loesung)
+    {
+        var roh = OhneLeerraum(eingabe);
+        if (!TausenderAlt.Value && loesung >= 1000 && Zahlen.PasstGruppen(roh))
+        {
+            return double.Parse(roh.Replace(".", "", StringComparison.Ordinal), NumberStyles.None, CultureInfo.InvariantCulture);
+        }
+        return Dezimal(eingabe);
+    }
+
     /// <summary>Zahl aus einer Eingabe: Komma oder Punkt als Dezimalzeichen; mit beiden ist der Punkt ein Tausenderpunkt.</summary>
     public static double? Dezimal(string? eingabe)
     {
-        var roh = (eingabe ?? "").Trim().Replace(" ", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal);
+        var roh = OhneLeerraum(eingabe);
         if (roh.Contains(',', StringComparison.Ordinal) && roh.Contains('.', StringComparison.Ordinal))
         {
             roh = roh.Replace(".", "", StringComparison.Ordinal);
@@ -130,20 +154,31 @@ public static class EchtBewertung
         return text.ToString();
     }
 
-    /// <summary>Passt die Eingabe zu einer der erlaubten Loesungen?</summary>
-    public static bool Passt(string art, string? eingabe, IEnumerable<string> loesungen) =>
-        Normal(art, eingabe) is { } wert && loesungen.Any(l => Normal(art, l) == wert);
+    /// <summary>
+    /// Passt die Eingabe zu einer der erlaubten Loesungen? Zahlenfelder lesen die Eingabe je Loesung ueber
+    /// <see cref="Tausenderpunkt"/> (Sammelliste 346).
+    /// </summary>
+    public static bool Passt(string art, string? eingabe, IEnumerable<string> loesungen)
+    {
+        if (art == "zahl")
+        {
+            return loesungen.Any(l => Dezimal(l) is { } ziel && Tausenderpunkt(eingabe, ziel) is { } zahl
+                && ZahlText(zahl) == ZahlText(ziel));
+        }
+        return Normal(art, eingabe) is { } wert && loesungen.Any(l => Normal(art, l) == wert);
+    }
 
-    /// <summary>Rechenergebnis richtig: nahe der Loesung oder (bei Folgerechnung) nahe dem Ergebnis mit Ersatzwert.</summary>
+    private static string ZahlText(double zahl) => zahl.ToString("R", CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// Rechenergebnis richtig: nahe der Loesung oder (bei Folgerechnung) nahe dem Ergebnis mit Ersatzwert; die Eingabe
+    /// liest je Wert <see cref="Tausenderpunkt"/> (Sammelliste 346).
+    /// </summary>
     public static bool ErgebnisRichtig(EchtAntwort antwort, string? eingabe)
     {
-        if (Dezimal(eingabe) is not { } zahl)
-        {
-            return false;
-        }
         var grenze = antwort.Toleranz + 1e-9;
-        return Math.Abs(zahl - antwort.Ergebnis) <= grenze
-            || (antwort.ErsatzErgebnis is { } ersatz && Math.Abs(zahl - ersatz) <= grenze);
+        bool Nahe(double ziel) => Tausenderpunkt(eingabe, ziel) is { } zahl && Math.Abs(zahl - ziel) <= grenze;
+        return Nahe(antwort.Ergebnis) || (antwort.ErsatzErgebnis is { } ersatz && Nahe(ersatz));
     }
 
     // -- Bewertung je Teil --------------------------------------------------------------------

@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 0.81.2
+In der Prüfung im echten Format zählt eine große Zahl mit Tausenderpunkt jetzt richtig, zum Beispiel „1.340“ für 1340.
+
+- Bisher wurde „1.340“ in einem Zahlenfeld als 1,34 gelesen und damit falsch gewertet, obwohl 1340 gemeint war.
+- Jetzt gilt der Punkt als Tausenderpunkt, wenn die richtige Lösung 1000 oder mehr ist und nach jedem Punkt genau drei Ziffern folgen („1.340“, „20.508“, „1.340.000“). Das gilt für Rechenergebnisse und für Zahlen in Lückentexten.
+- Alles andere wird gewertet wie bisher: „1.340,00“ und „1340“ sind weiter richtig, „1.34“ oder „1,340“ bleiben 1,34, und bei kleinen Lösungen unter 1000 ist der Punkt weiter ein Komma.
+
 ## A 0.81.1
 Nach dem Wechsel zwischen hell und dunkel ist in der Seitenleiste und in der Leiste unten wieder nur die Seite hervorgehoben, auf der du gerade bist.
 

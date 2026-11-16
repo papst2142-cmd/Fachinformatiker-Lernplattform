@@ -1,19 +1,20 @@
-Nach dem Wechsel zwischen hell und dunkel ist in der Seitenleiste und in der Leiste unten wieder nur die Seite hervorgehoben, auf der du gerade bist.
+In der Prüfung im echten Format zählt eine große Zahl mit Tausenderpunkt jetzt richtig, zum Beispiel „1.340“ für 1340.
 
-- Bisher konnten nach einem Wechsel der Darstellung (hell oder dunkel) mehrere Einträge der Seitenleiste und der Leiste unten gleichzeitig hervorgehoben aussehen, nämlich alle, die du vorher schon einmal geöffnet hattest. Jetzt ist immer genau der aktuelle Eintrag markiert.
-- Im Rundgang beim ersten Start behielt ein Datumsfeld nach dem Wechsel der Darstellung seinen roten Rahmen, obwohl der Fehler schon im anderen Feld lag. Jetzt ist nur das Feld rot umrandet, das gerade einen Fehler hat.
+- Bisher wurde „1.340“ in einem Zahlenfeld als 1,34 gelesen und damit falsch gewertet, obwohl 1340 gemeint war.
+- Jetzt gilt der Punkt als Tausenderpunkt, wenn die richtige Lösung 1000 oder mehr ist und nach jedem Punkt genau drei Ziffern folgen („1.340“, „20.508“, „1.340.000“). Das gilt für Rechenergebnisse und für Zahlen in Lückentexten.
+- Alles andere wird gewertet wie bisher: „1.340,00“ und „1340“ sind weiter richtig, „1.34“ oder „1,340“ bleiben 1,34, und bei kleinen Lösungen unter 1000 ist der Punkt weiter ein Komma.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.81.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.81.2**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.81.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.81.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.81.1-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.81.1-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.81.2-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.81.2-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.81.2-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.81.2-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
