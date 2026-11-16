@@ -107,6 +107,7 @@ public class EchtInhalteAeTests
         var satz = AeSaetze.First(s => s.Aufgaben.SelectMany(a => a.Teile).Any(Papier));
         var a = satz.Aufgaben.First(x => x.Teile.Any(Papier));
         var ohne = a with { Teile = [.. a.Teile.Select(t => Papier(t) ? t with { Text = ["Erstellen Sie das Diagramm."] } : t)] };
+        Assert.True(Papier(ohne.Teile.First(t => t.Text[0] == "Erstellen Sie das Diagramm.")));
         Assert.NotEmpty(PapierFunde(satz with { Aufgaben = [.. satz.Aufgaben.Select(x => x == a ? ohne : x)] }));
     }
 
@@ -123,7 +124,9 @@ public class EchtInhalteAeTests
         }
     }
 
-    private static bool Papier(EchtTeil t) => t.Operator is "erstellen" or "zeichnen" && t.Antwort.Form != EchtSaetze.FormZeichnen;
+    /// <summary>Zeichnung ohne Baukasten: Operator erstellen/zeichnen, keine Zeichenform, Text verlangt ein Diagramm oder Struktogramm.</summary>
+    private static bool Papier(EchtTeil t) => t.Operator is "erstellen" or "zeichnen" && t.Antwort.Form != EchtSaetze.FormZeichnen
+        && System.Text.RegularExpressions.Regex.IsMatch(string.Join(" ", t.Text), "[Dd]iagramm|Struktogramm");
 
     private static List<string> PapierFunde(EchtSatz s) => [.. s.Aufgaben.SelectMany(a => a.Teile).Where(Papier)
         .Where(t => !string.Join(" ", t.Text).Contains("Papier", StringComparison.Ordinal) || t.Antwort.Form != EchtSaetze.FormZeilen)
