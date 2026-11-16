@@ -161,7 +161,7 @@ public sealed class StadtKarteBild : Control
             dc.DrawRectangle(OrtHaus, rand, new Rect(P(o.Min), P(o.Max)));
         }
         var f = Faktor;
-        // Welle A 0.83.0 (Weisung P12-282): Stadtteile mit Namen als gestrichelter Rahmen, Name oben im Rahmen
+        // Welle A 0.83.0 (Weisung P12-282): Stadtteile mit Namen als gestrichelter Rahmen, Name unten im Rahmen
         var teilRand = new Pen(Bereich, 2, new DashStyle([4, 3], 0));
         foreach (var b in sz.StadtteilNamen)
         {
@@ -170,8 +170,9 @@ public sealed class StadtKarteBild : Control
         foreach (var b in sz.StadtteilNamen)
         {
             var text = Text(b.Name, Bereich, 11 * f, true);
-            var oben = P(new((float)((b.X1 + b.X2) / 2), (float)b.Z1));
-            var kasten = new Rect(oben.X - (text.Width / 2) - (5 * f), oben.Y + (3 * f), text.Width + (10 * f), text.Height + (2 * f));
+            // unten in der Mitte des Rahmens: oben stehen in einer Stadt meist die Marken der Orte (Bild P12-168)
+            var unten = P(new((float)((b.X1 + b.X2) / 2), (float)b.Z2));
+            var kasten = new Rect(unten.X - (text.Width / 2) - (5 * f), unten.Y - text.Height - (5 * f), text.Width + (10 * f), text.Height + (2 * f));
             dc.DrawRectangle(BereichSchild, null, kasten, 5 * f, 5 * f);
             dc.DrawText(text, new Point(kasten.X + (5 * f), kasten.Y + f));
         }
