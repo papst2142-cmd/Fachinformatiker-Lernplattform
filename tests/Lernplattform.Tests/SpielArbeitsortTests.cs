@@ -357,7 +357,7 @@ public sealed class SpielArbeitsortTests
             Assert.False(Py.Hat(a, Questebene.FeldOhneQuestgeber) || Py.Hat(a, Questebene.FeldArbeitsstelle) || (Py.Hat(a, "etage") && !Py.Gleich(a["id"], Quest)), Py.Str(a["id"]));
         }
         Assert.False(Questebene.HatArbeitsort(Fassung0.Stadtdaten));
-        Assert.Equal(1, StadtFassung.FormatFuer(Fassung0.Stadtdaten));
-        Assert.Equal(2, StadtFassung.FormatFuer(SpielQuestTests.Stadtdaten(Abschnitte(Arbeitsort("buero", true)))));
+        Assert.Equal(1, StadtFassung.FormatFuer(Fassung0.Stadtdaten, Fassung0.Karte));
+        Assert.Equal(2, StadtFassung.FormatFuer(SpielQuestTests.Stadtdaten(Abschnitte(Arbeitsort("buero", true))), Fassung0.Karte));
     }
 }

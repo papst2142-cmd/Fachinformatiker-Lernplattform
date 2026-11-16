@@ -422,7 +422,20 @@ public sealed partial class StadtSzene
     public Netz NetzBauen(bool fern = false) => NetzBauen(fern, null);
 
     /// <summary>Welle D2: wie <see cref="NetzBauen(bool)"/>, ohne die Stuecke und Baeume aus <paramref name="plan"/> (die zeichnet das Instancing).</summary>
-    public Netz NetzBauen(bool fern, Instanzplan? plan)
+    public Netz NetzBauen(bool fern, Instanzplan? plan) => NetzBauen(fern, plan, null);
+
+    /// <summary>
+    /// Welle Nachladen (Weisung P12-280): wie <see cref="NetzBauen(bool, Instanzplan?)"/>, mit <paramref name="auswahl"/> nur
+    /// der Boden (die zwei Bodenquader und das Gelaende, immer geladen) oder nur eine Kachel (alles andere, zugeschnitten mit
+    /// <see cref="Netz.NurKachel"/>). Ohne Auswahl bitgleich wie vorher.
+    /// </summary>
+    private Netz NetzBauen(bool fern, Instanzplan? plan, Auswahl? auswahl)
+    {
+        var netzAuswahl = NetzBauenRoh(fern, plan, auswahl);
+        return auswahl is { Kachel: { } k } ? netzAuswahl.NurKachel(k, Breite, Tiefe) : netzAuswahl;
+    }
+
+    private Netz NetzBauenRoh(bool fern, Instanzplan? plan, Auswahl? auswahl)
     {
         var ohneStueck = plan?.Stuecke ?? Instanzplan.Leer.Stuecke;
         var ohneBaum = plan?.Baeume ?? Instanzplan.Leer.Baeume;
@@ -435,11 +448,11 @@ public sealed partial class StadtSzene
         }
         if (Jahreszeit == Jahreszeit.Sommer)
         {
-            var netz = Netz.Aus(Teile.Where((_, i) => !teileHaus[i] && i < FestTeileVon));
+            var netz = Netz.Aus(Teile.Where((t, i) => !teileHaus[i] && i < FestTeileVon && Nimmt(auswahl, i, t)));
             // Weisung P8-56: die Fest-Teile danach, das Licht der eigenen Laternen leuchtet nachts
             for (var i = FestTeileVon; i < Teile.Count; i++)
             {
-                if (!teileHaus[i])
+                if (!teileHaus[i] && Nimmt(auswahl, i, Teile[i]))
                 {
                     var von = netz.AnzahlEcken;
                     netz.Hinzu(Teile[i]);
@@ -451,19 +464,28 @@ public sealed partial class StadtSzene
             }
             foreach (var streifen in Streifen)
             {
-                netz.Hinzu(streifen);
+                if (Nimmt(auswahl, streifen))
+                {
+                    netz.Hinzu(streifen);
+                }
             }
             // S 0.8.0 (Weisung P12-47): Ufer und Wasser der Teiche im selben Netz (ohne Teiche nichts, bitgleich wie vorher)
             foreach (var flaeche in Flaechen)
             {
-                netz.Hinzu(flaeche);
+                if (Nimmt(auswahl, flaeche))
+                {
+                    netz.Hinzu(flaeche);
+                }
             }
             // Welle A 0.66.0: das Gelaende im selben Netz (kein neuer Zeichenaufruf; aus der Ferne Raster 1,0)
-            Gelaende?.Hinzu(netz, Breite, Tiefe, fern);
+            if (auswahl is null || auswahl.NurBoden)
+            {
+                Gelaende?.Hinzu(netz, Breite, Tiefe, fern);
+            }
             netz.UnterseiteBis = Unterseiten;
             for (var i = 0; i < Stuecke.Count; i++)
             {
-                if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
+                if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original && Nimmt(auswahl, Stuecke[i].Lage, original))
                 {
                     var von = netz.AnzahlEcken;
                     var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
@@ -479,7 +501,7 @@ public sealed partial class StadtSzene
             foreach (var baum in GruenKlein?.Baeume ?? [])
             {
                 nb++;
-                if (!ohneBaum.Contains(nb) && Grafik?.Modell(baum.Name) is { } modell)
+                if (!ohneBaum.Contains(nb) && Grafik?.Modell(baum.Name) is { } modell && Nimmt(auswahl, baum.Lage, modell))
                 {
                     netz.Hinzu(modell, baum.Lage);
                 }
@@ -490,7 +512,7 @@ public sealed partial class StadtSzene
         var gefaerbt = new Netz();
         for (var i = 0; i < Teile.Count; i++)
         {
-            if (!teileHaus[i])
+            if (!teileHaus[i] && Nimmt(auswahl, i, Teile[i]))
             {
                 var t = Teile[i];
                 gefaerbt.Faerbung = i < FestTeileVon
@@ -510,18 +532,27 @@ public sealed partial class StadtSzene
         var eis = Eis && Jahreszeit == Jahreszeit.Winter;
         foreach (var streifen in Streifen)
         {
-            gefaerbt.Hinzu(eis && streifen.Farbe == Farben.Wasser ? streifen with { Farbe = EisFarbe } : streifen);
+            if (Nimmt(auswahl, streifen))
+            {
+                gefaerbt.Hinzu(eis && streifen.Farbe == Farben.Wasser ? streifen with { Farbe = EisFarbe } : streifen);
+            }
         }
         foreach (var flaeche in Flaechen)
         {
-            gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
+            if (Nimmt(auswahl, flaeche))
+            {
+                gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
+            }
         }
-        Gelaende?.Hinzu(gefaerbt, Breite, Tiefe, fern);
+        if (auswahl is null || auswahl.NurBoden)
+        {
+            Gelaende?.Hinzu(gefaerbt, Breite, Tiefe, fern);
+        }
         gefaerbt.Faerbung = null;
         gefaerbt.UnterseiteBis = Unterseiten;
         for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
+            if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original && Nimmt(auswahl, Stuecke[i].Lage, original))
             {
                 var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
                 if (Katalogstueck.IstEffekt(modell.Name))
@@ -539,7 +570,7 @@ public sealed partial class StadtSzene
         foreach (var baum in GruenKlein?.Baeume ?? [])
         {
             nbf++;
-            if (!ohneBaum.Contains(nbf) && Grafik?.Modell(baum.Name) is { } modell)
+            if (!ohneBaum.Contains(nbf) && Grafik?.Modell(baum.Name) is { } modell && Nimmt(auswahl, baum.Lage, modell))
             {
                 gefaerbt.Hinzu(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt));
             }
@@ -756,7 +787,10 @@ public sealed partial class StadtSzene
     /// <summary>Welle 327: Kantenlaenge der Zellen des Paket-Netzes (Felder).</summary>
     public const float PaketZelle = 8f;
 
-    private Netz PaketNetzRoh(bool fern)
+    private Netz PaketNetzRoh(bool fern) => PaketNetzRoh(fern, null);
+
+    /// <summary>Welle Nachladen: wie <see cref="PaketNetzRoh(bool)"/>, mit <paramref name="auswahl"/> nur die Stuecke nahe der Kachel (zuschneiden danach).</summary>
+    private Netz PaketNetzRoh(bool fern, Auswahl? auswahl)
     {
         var netz = new Netz();
         // P8-49: Bahnuebergaenge nah und fern ganz (klein), ihre Lichter leuchten nachts rot
@@ -773,7 +807,7 @@ public sealed partial class StadtSzene
         }
         for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (!ImPaket(Stuecke[i].Name) || Grafik.Modell(TanneIn(Stuecke[i].Name, Jahreszeit)) is not { } m)
+            if (!ImPaket(Stuecke[i].Name) || Grafik.Modell(TanneIn(Stuecke[i].Name, Jahreszeit)) is not { } m || !Nimmt(auswahl, Stuecke[i].Lage, m))
             {
                 continue;
             }
@@ -790,10 +824,16 @@ public sealed partial class StadtSzene
         }
         foreach (var l in Laternen)
         {
-            Nachtlicht.Hinzu(netz, Grafik, l, fern);
+            if (auswahl is not { Kachel: { } k } || Beruehrt(auswahl, k, l.Ort.X, l.Ort.X, l.Ort.Y, l.Ort.Y, LaterneUmkreis))
+            {
+                Nachtlicht.Hinzu(netz, Grafik, l, fern);
+            }
         }
         return netz;
     }
+
+    /// <summary>Welle Nachladen: so weit reicht eine Laterne samt Arm und Licht hoechstens von ihrem Fuss (grosszuegig).</summary>
+    private const float LaterneUmkreis = 3f;
 
     /// <summary>
     /// Welle Q2: Questgeber draussen in ein Netz (Paket-Netz oder Netz ihres Hauses); Fuesse auf dem Boden an ihrem Platz, Blick wie im Werkzeug
@@ -2791,17 +2831,24 @@ public sealed partial class StadtSzene
     public Netz? GruenNetzBauen() => GruenNetzBauen(null);
 
     /// <summary>Welle D2: wie <see cref="GruenNetzBauen()"/>, ohne die Stuecke aus <paramref name="plan"/>.</summary>
-    public Netz? GruenNetzBauen(Instanzplan? plan)
+    public Netz? GruenNetzBauen(Instanzplan? plan) => GruenNetzBauen(plan, null);
+
+    /// <summary>Welle Nachladen: wie <see cref="GruenNetzBauen(Instanzplan?)"/>, mit <paramref name="kachel"/> nur deren Teil.</summary>
+    private Netz? GruenNetzBauen(Instanzplan? plan, Stadtbau.Stadtteile.Kachel? kachel)
     {
         if (GruenKlein is not { } g || Grafik is null)
         {
             return null;
         }
+        var auswahl = kachel is { } k ? new Auswahl(k, false, Breite, Tiefe) : null;
         // Phase 8 W9: Kleingruen nach der Jahreszeit, im Winter Schnee auf Bueschel, Steinen und Beeten
         var netz = new Netz { Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Klein) };
         foreach (var t in g.Teile)
         {
-            netz.Hinzu(t);
+            if (auswahl is null || Nimmt(auswahl, 2, t))
+            {
+                netz.Hinzu(t);
+            }
         }
         netz.Faerbung = null;
         var ohne = plan?.Gruen ?? Instanzplan.Leer.Gruen;
@@ -2809,12 +2856,12 @@ public sealed partial class StadtSzene
         foreach (var st in g.Stuecke)
         {
             nr++;
-            if (!ohne.Contains(nr) && Grafik.Modell(st.Name) is { } m)
+            if (!ohne.Contains(nr) && Grafik.Modell(st.Name) is { } m && Nimmt(auswahl, st.Lage, m))
             {
                 netz.Hinzu(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein));
             }
         }
-        return netz;
+        return kachel is { } kk ? netz.NurKachel(kk, Breite, Tiefe) : netz;
     }
 
     /// <summary>Phase 8 W11: Tanne an (x, z)? Fest nach Lage, gerade und krumm im Wechsel; null = Laubbaum wie bisher.</summary>
