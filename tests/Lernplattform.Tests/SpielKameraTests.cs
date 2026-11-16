@@ -170,16 +170,17 @@ public sealed class SpielKameraTests
         Assert.True(karte.Orte[0].Aufgabe);
         Assert.All(karte.Orte.Skip(1), o => Assert.False(o.Aufgabe));
         var s = karte.Massstab(400, 400);
+        var marken = karte.Marken(s);
         foreach (var o in karte.Orte)
         {
-            // die eigene Marke trifft genau diesen Ort (oder einen mit derselben Mitte, wenn zwei uebereinander liegen)
-            var t = karte.Treffer(StadtKarte.Bild(o.Mitte, s), s);
+            // die eigene Marke trifft genau diesen Ort (seit A 0.83.0 ruecken sich ueberlappende Marken auseinander)
+            var t = karte.Treffer(marken[o.Nr - 1], s);
             Assert.NotNull(t);
-            Assert.Equal(o.Mitte, t!.Mitte);
+            Assert.Equal(o.Nr, t!.Nr);
         }
         // Gegenprobe: eine Stelle weit weg von jeder Marke und jedem Haus eines Orts trifft nichts
         var frei = Enumerable.Range(0, 80).SelectMany(i => Enumerable.Range(0, 80).Select(j => new Vector2(i * 5f, j * 5f)))
-            .First(p => karte.Orte.All(o => Vector2.Distance(StadtKarte.Bild(o.Mitte, s), p) > StadtKarte.TreffRadius + 5
+            .First(p => karte.Orte.All(o => Vector2.Distance(marken[o.Nr - 1], p) > StadtKarte.TreffRadius + 5
                 && !(p.X / s >= o.Min.X && p.X / s <= o.Max.X && p.Y / s >= o.Min.Y && p.Y / s <= o.Max.Y)));
         Assert.Null(karte.Treffer(frei, s));
     }

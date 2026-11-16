@@ -79,8 +79,18 @@ public sealed class StadtKarteBild : Control
     }
 
     /// <summary>Bildpunkt des Orts mit dieser Kennung (Mitte der Marke) oder null (Start-Test: echtes Antippen).</summary>
-    public Point? MarkeVon(string id) =>
-        _karte?.Orte.FirstOrDefault(o => o.Id == id) is { } o ? Punkt(StadtKarte.Bild(o.Mitte, Massstab)) : null;
+    public Point? MarkeVon(string id)
+    {
+        if (_karte is not { } k)
+        {
+            return null;
+        }
+        var i = k.Orte.ToList().FindIndex(o => o.Id == id);
+        return i < 0 ? null : Punkt(k.Marken(Massstab, Faktor)[i]);
+    }
+
+    /// <summary>Start-Test (Fund P12-283): Marken, die ueber den Rand ragen oder sich ueberlappen (leer = gut).</summary>
+    public List<string> MarkenFund() => _karte is { } k ? k.MarkenFund(k.Marken(Massstab, Faktor), Massstab, Faktor) : [];
 
     /// <summary>Antippen an (x, y) in Punkten der Karte (auch fuer den Start-Test); true = ein Ort war getroffen.</summary>
     public bool Tippen(Point p)
@@ -183,9 +193,11 @@ public sealed class StadtKarteBild : Control
             dc.DrawEllipse(HaltGruen, new Pen(Weiss, 1.5), m, r, r);
             Mitte(dc, Text("H", Weiss, 10 * f, true), m);
         }
-        foreach (var o in karte.Orte)
+        var marken = karte.Marken(s, f);
+        for (var i = 0; i < karte.Orte.Count; i++)
         {
-            var m = P(o.Mitte);
+            var o = karte.Orte[i];
+            var m = Punkt(marken[i]);
             var r = StadtKarte.MarkeRadius * f;
             dc.DrawEllipse(Marke, new Pen(Weiss, 1.5), m, r, r);
             Mitte(dc, Text(o.Nr.ToString(CultureInfo.InvariantCulture), Weiss, 11 * f, true), m);

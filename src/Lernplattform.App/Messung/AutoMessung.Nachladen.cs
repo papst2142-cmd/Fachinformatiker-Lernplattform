@@ -63,6 +63,18 @@ public static partial class AutoMessung
             var spiel = Nachladeprobe.Spiel(datei, vorher);
             Messwerte.Notiere(string.Create(inv, $"Spiel: Testkarte geladen ({spiel.Szene.Breite:F0} x {spiel.Szene.Tiefe:F0}, {spiel.Szene.Haeuser.Count} Haeuser) in {uhr.ElapsedMilliseconds} ms"));
             funde += TestkarteBauenMessen(spiel);
+            // Weisung P12-283 Fund 1: auf der Testkarte (Nicos Bild) liegt jede Marke ganz in der Karte, keine ueberlappt;
+            // Gegenprobe mit den Marken wie bis A 0.82.0 muss Funde zeigen (Altstadt: 8 ueber 4/2, Rand oben)
+            var (markenFund, gegenRot, markenWert) = MarkenPruefen(spiel.Szene);
+            Messwerte.Notiere("Spiel: Testkarte Marken der Karte: " + markenWert);
+            foreach (var m in markenFund)
+            {
+                Fehler("Marke der Karte: " + m);
+            }
+            if (!gegenRot)
+            {
+                Fehler("Gegenprobe Marken wie bis A 0.82.0 ohne Fund (Pruefung erkennt Nicos Fund nicht)");
+            }
             if (!gl)
             {
                 Messwerte.Notiere("Spiel: Testkarte Gang, Ankunft und Nahansicht nicht gemessen (ohne 3D kein Nachladen)");
