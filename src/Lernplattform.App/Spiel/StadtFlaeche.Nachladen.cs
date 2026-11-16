@@ -64,15 +64,78 @@ public sealed partial class StadtFlaeche
     /// <summary>Alle Hochladezeiten je Kachel in ms (Messpunkt „Kachel nachladen“, Hochladen).</summary>
     public List<double> KachelHochladenZeiten { get; } = [];
 
+    /// <summary>Die Kacheln zu <see cref="KachelHochladenZeiten"/> (gleiche Stelle).</summary>
+    public List<Stadtteile.Kachel> KachelHochladenKacheln { get; } = [];
+
+    private readonly Queue<(Nachlader.Paket Paket, TaskCompletionSource<double?> Fertig)> _hochladeProben = new();
+
+    /// <summary>
+    /// Start-Test (Messpunkt „Kachel nachladen, Hochladen“, Wiederholung und Gegenprobe): ein Paket im naechsten Bild genau wie
+    /// <see cref="KachelHochladen"/> auf die Grafikkarte laden, die Zeit messen und gleich wieder freigeben (es wird nie
+    /// gezeichnet). null, wenn kein Bild kam.
+    /// </summary>
+    public async Task<double?> HochladenProbeAsync(Nachlader.Paket p)
+    {
+        var fertig = new TaskCompletionSource<double?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _hochladeProben.Enqueue((p, fertig));
+        for (var i = 0; i < 60 && !fertig.Task.IsCompleted; i++)
+        {
+            await NaechstesBildAsync();
+        }
+        return fertig.Task.IsCompleted ? await fertig.Task : null;
+    }
+
+    private void HochladeProbenAbarbeiten(GlInterface gl)
+    {
+        while (_hochladeProben.TryDequeue(out var e))
+        {
+            var beginn = Stopwatch.GetTimestamp();
+            var fest = GlNetz.Laden(gl, e.Paket.Fest);
+            var haeuser = new List<GlNetz>();
+            foreach (var (_, netz) in e.Paket.Haeuser)
+            {
+                haeuser.Add(GlNetz.Laden(gl, netz));
+                _ = netz.Kugel();
+            }
+            var ms = MsSeit(beginn);
+            fest.Freigeben(gl);
+            foreach (var h in haeuser)
+            {
+                h.Freigeben(gl);
+            }
+            e.Fertig.TrySetResult(ms);
+        }
+    }
+
     /// <summary>Soll die Szene mit Nachladen geladen werden? Nur draussen relevant; innen bleibt der Zustand.</summary>
     private bool NachladenGewuenscht()
     {
-        if (_nachladenAusGemerkt || !FesteKamera || _spiel is null || !_kameras.TryGetValue(ProbeWelt.Stadt, out var k))
+        if (_nachladenAusGemerkt || _spiel is null)
+        {
+            return false;
+        }
+        if (NachladenGrosseKarte)
+        {
+            // Werkzeug (Welle S 0.55.0): nur grosse Karten, Mitte = Ziel der Kamera
+            return _spiel.Szene.Breite > Stadtteile.AltesFormatBis || _spiel.Szene.Tiefe > Stadtteile.AltesFormatBis;
+        }
+        if (!FesteKamera || !_kameras.TryGetValue(ProbeWelt.Stadt, out var k))
         {
             return false;
         }
         return k.Bereich.Max <= SpielKamera.AbstandMax;
     }
+
+    /// <summary>
+    /// Welle S 0.55.0 (Weisung P12-282 Punkt 3): das Werkzeug laedt Karten groesser als <see cref="Stadtteile.AltesFormatBis"/>
+    /// nach wie das Spiel (gleiche Engine-Rechnung: <see cref="Nachlader"/>, <see cref="Ladeplan"/>), nur mit freier Kamera:
+    /// Mitte des Nachladens ist das Ziel der Kamera statt der Figur. Kleine Karten (Stadt 1) bleiben wie bisher ganz geladen.
+    /// </summary>
+    public bool NachladenGrosseKarte { get; init; }
+
+    /// <summary>Mitte des Nachladens: im Spiel die Figur, im Werkzeug das Ziel der Kamera.</summary>
+    private (float X, float Z) NachladenMitte(StadtSpiel spiel) =>
+        NachladenGrosseKarte && _kameras.TryGetValue(ProbeWelt.Stadt, out var k) ? (k.ZielX, k.ZielZ) : (spiel.FigurX, spiel.FigurZ);
 
     /// <summary>Gegenprobe merken (im Ablauf des Aufrufers, siehe <see cref="NachladenAusFuerTests"/>).</summary>
     private void NachladenAusMerken() => _nachladenAusGemerkt = NachladenAusFuerTests;
@@ -123,7 +186,8 @@ public sealed partial class StadtFlaeche
         _gruen = null;
         var lader = new Nachlader(spiel.Szene, _gw.Gruen(SpielKamera.AbstandMax));
         NachladenGrundlage(gl, lader);
-        lader.Takt(spiel.FigurX, spiel.FigurZ);
+        var (mx, mz) = NachladenMitte(spiel);
+        lader.Takt(mx, mz);
         lader.StartBauen(lader.Noetig);
         foreach (var k in lader.Noetig)
         {
@@ -151,6 +215,7 @@ public sealed partial class StadtFlaeche
         var ms = MsSeit(beginn);
         KachelHochladenMs += ms;
         KachelHochladenZeiten.Add(ms);
+        KachelHochladenKacheln.Add(p.Kachel);
     }
 
     private void KachelFreigeben(GlInterface gl, Stadtteile.Kachel k)
@@ -171,25 +236,22 @@ public sealed partial class StadtFlaeche
     }
 
     /// <summary>Kugel um eine Kachel (Boden bis zur hoechsten Stelle eines Hauses, mindestens 6 fuer Baeume und Laternen).</summary>
-    private (Vector3 Mitte, float Halb) KachelKugel(Stadtteile.Kachel k)
-    {
-        var h = MathF.Max(6f, _lader?.Grundlage.Hoehen.GetValueOrDefault(k) ?? 0f);
-        var m = k.Mitte;
-        return (new Vector3(m.X, h / 2, m.Y), MathF.Sqrt((2 * (Stadtteile.Groesse / 2) * (Stadtteile.Groesse / 2)) + (h * h / 4)));
-    }
+    private (Vector3 Mitte, float Halb) KachelKugel(Stadtteile.Kachel k) => Nachlader.Kugel(_lader?.Grundlage, k);
 
     /// <summary>Ein Takt vor dem Zeichnen: freigeben, hochladen (in Stuecken), noetige Kacheln im Bild sofort.</summary>
     private void NachladenTakt(GlInterface gl, StadtSpiel spiel, Matrix4x4 sichtProj)
     {
         KachelHochladenMs = 0;
+        HochladeProbenAbarbeiten(gl);
         if (_lader is not { } lader)
         {
             return;
         }
         // Ankunft mit Bus oder Zug: liegt das Ende des Wegs ausserhalb des Rings, wird es vorher vorbereitet
-        lader.Ziel = ZielFuerProbe ?? (spiel.WegEnde is { } ende && !spiel.ImInnenraum
+        lader.Ziel = ZielFuerProbe ?? (!NachladenGrosseKarte && spiel.WegEnde is { } ende && !spiel.ImInnenraum
             && MathF.Abs(ende.X - spiel.FigurX) + MathF.Abs(ende.Z - spiel.FigurZ) > Ladeplan.Vor ? ende : null);
-        foreach (var k in lader.Takt(spiel.FigurX, spiel.FigurZ))
+        var (mx, mz) = NachladenMitte(spiel);
+        foreach (var k in lader.Takt(mx, mz))
         {
             KachelFreigeben(gl, k);
         }
@@ -285,10 +347,11 @@ public sealed partial class StadtFlaeche
         (KachelnImBild, KachelnNah, KachelnFern, KachelnLoch) = (imBild, nah, fern, loch);
     }
 
-    /// <summary>Dunst fuer dieses Bild: nur draussen mit Nachladen (sonst 0 = Bild wie vorher).</summary>
+    /// <summary>Dunst fuer dieses Bild: nur draussen mit Nachladen im Spiel (sonst 0 = Bild wie vorher; das Werkzeug zeigt die
+    /// ganze Karte mit freier Kamera ohne Dunst, Welle S 0.55.0).</summary>
     private void DunstFestlegen(bool draussen, Vector3 himmel)
     {
-        _dunstJetzt = draussen && _lader is not null ? Dunst.Staerke : 0f;
+        _dunstJetzt = draussen && _lader is not null && !NachladenGrosseKarte ? Dunst.Staerke : 0f;
         _dunstFarbe = himmel;
     }
 

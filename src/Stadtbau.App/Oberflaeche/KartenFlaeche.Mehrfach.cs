@@ -46,6 +46,7 @@ public sealed partial class KartenFlaeche
             {
                 SetzenBeenden();
                 MassbandAn = false;
+                NamenAn = false;
             }
             MehrereGeaendert?.Invoke();
             InvalidateVisual();

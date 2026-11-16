@@ -18,7 +18,7 @@ namespace Stadtbau.Core;
 /// Zu jedem Bild kommt, was sich bewegt (Autos oder Festgestalten, Figur, Kreis; <see cref="StadtbauSpiel.Bewegt"/>).
 /// Bildformat 16:9 (<see cref="BildBreite"/> × <see cref="BildHoehe"/>, PC; das Tablet zeigt mit 16:10 etwas weniger).
 /// </summary>
-public sealed record GrenzenLive(
+public sealed partial record GrenzenLive(
     (long Dreiecke, int Aufrufe) Gesamt,
     (long Dreiecke, int Aufrufe) Nah,
     float NahX, float NahZ, float NahAbstand, float NahDrehung,
@@ -55,7 +55,7 @@ public sealed record GrenzenLive(
     public double Anteil => StadtbauGrenzen.Anteil(Teuerstes.Dreiecke, Teuerstes.Aufrufe);
 
     public bool Ueber => Gesamt.Dreiecke > StadtbauGrenzen.Dreiecke || Gesamt.Aufrufe > StadtbauGrenzen.Aufrufe
-        || Nah.Dreiecke > StadtbauGrenzen.Dreiecke || Nah.Aufrufe > StadtbauGrenzen.Aufrufe;
+        || Nah.Dreiecke > StadtbauGrenzen.Dreiecke || Nah.Aufrufe > StadtbauGrenzen.Aufrufe || GeladenUeber;
 
     /// <summary>Dreiecke im Feld (x, y); ausserhalb der Karte 0.</summary>
     public long Feld(int x, int y) => x < 0 || y < 0 || x >= Breite || y >= Tiefe ? 0 : Felder[(y * Breite) + x];
@@ -99,6 +99,10 @@ public sealed record GrenzenLive(
     public static GrenzenLive Rechnen(StadtSpiel spiel, long uhr, long questgeber = 0)
     {
         var szene = spiel.Szene;
+        if (MitNachladenFuer(szene.Breite, szene.Tiefe))
+        {
+            return RechnenNachladen(spiel, uhr, questgeber);
+        }
         var fertig = szene.Vorbereiten();
         var zaehlung = new StadtbauGrenzen.Draussen(szene, fertig);
         var ohne = OhneSparenFuerTests;
@@ -271,12 +275,18 @@ public sealed record GrenzenLive(
         {
             return null;
         }
+        if (Kacheln is not null)
+        {
+            return FundNachladen();
+        }
         var nahUeber = Nah.Dreiecke > StadtbauGrenzen.Dreiecke || Nah.Aufrufe > StadtbauGrenzen.Aufrufe;
         var (bild, x, z) = nahUeber ? (Nah, NahX, NahZ) : (Gesamt, Breite / 2f, Tiefe / 2f);
         return new StadtbauFund(Texte.StadtZuTeuer(nahUeber, bild.Dreiecke, bild.Aufrufe), Texte.StadtZuTeuerTipp, true, x, z);
     }
 
     /// <summary>Text fuer die Ausgabe des Start-Tests.</summary>
-    public override string ToString() => string.Create(CultureInfo.InvariantCulture,
+    public override string ToString() => Kacheln is { } kacheln ? string.Create(CultureInfo.InvariantCulture,
+        $"Nachladen: {kacheln.Count} Stadtteile, teuerster {Teuerste?.Kachel.Name} {Nah.Dreiecke}/{Nah.Aufrufe} (Drehung {NahDrehung:F0}), gleichzeitig geladen hoechstens {GeladenBytes / 1048576.0:F1} MB, {Bilder} Bilder")
+        : string.Create(CultureInfo.InvariantCulture,
         $"Gesamt {Gesamt.Dreiecke}/{Gesamt.Aufrufe}, Nah {Nah.Dreiecke}/{Nah.Aufrufe} (Abstand {NahAbstand:F0}, Drehung {NahDrehung:F0}, bei {NahX:F1}/{NahZ:F1}), {Bilder} Bilder");
 }

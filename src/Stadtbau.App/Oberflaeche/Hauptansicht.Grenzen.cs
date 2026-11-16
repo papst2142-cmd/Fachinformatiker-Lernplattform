@@ -97,6 +97,7 @@ public sealed partial class Hauptansicht
         _waermeChip = Chip(Texte.Waermekarte, Texte.WaermekarteTipp, WaermeUmschalten);
         _werkzeugLeiste.Children.Insert(_werkzeugLeiste.Children.IndexOf(_ebenenHinweis), _waermeChip);
         StadtteileKnopfBauen();
+        NamenKnopfBauen();
     }
 
     /// <summary>Neben die Kamera-Karte, wenn beide nebeneinander passen, sonst darueber; die Karte haelt unten Platz frei.</summary>
@@ -193,8 +194,9 @@ public sealed partial class Hauptansicht
         _grenzKopf.Text = Texte.GrenzenLive + ": " + kopf;
         _grenzLiveBalken.Value = Math.Min(100, anteil * 100);
         _grenzLiveBalken.Farbe(ProgressBar.ForegroundProperty, anteil > 1 ? "Pinsel.red" : anteil >= GrenzenLive.GelbAb ? "Pinsel.yellow" : "Pinsel.green");
-        _grenzGesamt.Text = Texte.GrenzenLiveGesamt(g.Gesamt.Dreiecke, g.Gesamt.Aufrufe);
-        _grenzNah.Text = Texte.GrenzenLiveNah(g.Nah.Dreiecke, g.Nah.Aufrufe);
+        // Welle S 0.55.0: grosse Karten zeigt das Spiel nur mit Nachladen (nie ganz): teuerster Stadtteil und Netzdaten
+        _grenzGesamt.Text = g.Kacheln is not null ? Texte.GrenzenLiveGeladen(g.GeladenBytes / 1048576.0) : Texte.GrenzenLiveGesamt(g.Gesamt.Dreiecke, g.Gesamt.Aufrufe);
+        _grenzNah.Text = g.Teuerste is { } tk ? Texte.GrenzenLiveStadtteil(tk.Kachel.Name, tk.Dreiecke, tk.Aufrufe) : Texte.GrenzenLiveNah(g.Nah.Dreiecke, g.Nah.Aufrufe);
         _grenzStufen.Text = g.StufenInfo;
         AutomationProperties.SetName(_grenzLeiste, Texte.GrenzenLiveName(kopf));
         AutomationProperties.SetName(_grenzLiveBalken, Texte.GrenzenLive + ": " + kopf);
@@ -219,6 +221,17 @@ public sealed partial class Hauptansicht
             return null;
         }
         var szene = spiel.Szene;
+        if (GrenzenLive.MitNachladenFuer(szene.Breite, szene.Tiefe))
+        {
+            try
+            {
+                return await ZaehlungNachladenAsync(kamera, spiel);
+            }
+            finally
+            {
+                EinstellungSetzen(vorher);
+            }
+        }
         var zaehlung = new StadtbauGrenzen.Draussen(szene, szene.Vorbereiten());
         var uhr = Ansicht3D.Einstellung.Grenzen.Uhr;
         var (ax, az, ab, an, ad) = (kamera.ZielX, kamera.ZielZ, kamera.Abstand, kamera.Neigung, kamera.Drehung);
@@ -259,6 +272,81 @@ public sealed partial class Hauptansicht
             kamera.Zoomen(kamera.Abstand / ab);
             kamera.Neigung = an;
             EinstellungSetzen(vorher);
+        }
+        return (bilder, abweichungen);
+    }
+
+    /// <summary>
+    /// Welle S 0.55.0 (Weisung P12-282 Punkt 3): grosse Karte mit Nachladen. Kamera wie im Spiel (Mitte des teuersten
+    /// Stadtteils und zwei weitere, vier Blickrichtungen); gezaehlt mit <see cref="StadtbauGrenzen.Nachladen"/> ueber genau die
+    /// Stadtteile, die die 3D-Ansicht gerade geladen hat, und mit dem gezeichneten Bild verglichen.
+    /// </summary>
+    private async Task<(int Bilder, List<string> Abweichungen)> ZaehlungNachladenAsync(Kamera kamera, StadtSpiel spiel)
+    {
+        var szene = spiel.Szene;
+        // die 3D-Ansicht laedt die Szene der Grenzen erst nach dem Bau: warten, bis ihr Nachlader zu genau dieser Szene gehoert
+        for (var i = 0; i < 600 && Drei.Lader?.Szene != szene; i++)
+        {
+            await Drei.NaechstesBildAsync();
+        }
+        if (Drei.Lader is not { } lader || lader.Szene != szene)
+        {
+            return (0, ["die 3D-Ansicht hat die Szene der Grenzen nicht mit Nachladen geladen"]);
+        }
+        var uhr = Ansicht3D.Einstellung.Grenzen.Uhr;
+        var (ax, az, ab, an, ad) = (kamera.ZielX, kamera.ZielZ, kamera.Abstand, kamera.Neigung, kamera.Drehung);
+        var abweichungen = new List<string>();
+        var bilder = 0;
+        var pakete = new Dictionary<Stadtteile.Kachel, Nachlader.Paket>();
+        var stellen = new List<Stadtteile.Kachel>();
+        if (GrenzenLiveStand?.Teuerste is { } t)
+        {
+            stellen.Add(t.Kachel);
+        }
+        var alle = Stadtteile.Alle(szene.Breite, szene.Tiefe).ToList();
+        stellen.Add(alle[0]);
+        stellen.Add(alle[alle.Count / 2]);
+        try
+        {
+            kamera.Neigung = Lernplattform.Core.Spiel.SpielKamera.NeigungMin;
+            kamera.Zoomen(kamera.Abstand / Lernplattform.Core.Spiel.SpielKamera.AbstandMax);
+            foreach (var k in stellen.Distinct())
+            {
+                var m = k.Mitte;
+                foreach (var dreh in GrenzenLive.NachladenDrehungen)
+                {
+                    kamera.Drehung = dreh;
+                    kamera.Setzen(m.X, m.Y);
+                    // warten, bis alles Noetige oben ist (das Bild zeigt sonst ferne Kaesten, die Zaehlung auch)
+                    for (var i = 0; i < 200 && (i < 2 || lader.Fehlend().Any() || lader.Noetig.Any(x => !lader.Geladen.ContainsKey(x))); i++)
+                    {
+                        await Drei.NaechstesBildAsync();
+                    }
+                    await Drei.NaechstesBildAsync();
+                    var geladen = lader.Geladen.Keys.ToHashSet();
+                    foreach (var x in geladen.Where(x => !pakete.ContainsKey(x)).ToList())
+                    {
+                        pakete[x] = Nachlader.Packen(szene, x, lader.MitGruen);
+                    }
+                    var zaehlung = new StadtbauGrenzen.Nachladen(szene, lader.Grundlage, pakete.Values);
+                    var fest = zaehlung.Bild(Drei.LetzteSichtProj, Drei.LetzterAbstand, geladen, Lernplattform.Core.Spiel.Probe.Grafikstufen.Mittel);
+                    var bewegt = StadtbauSpiel.Bewegt(spiel, Drei.LetzterAbstand > StadtSzene.FernAb, Lernplattform.Spiel.StadtFlaeche.AutosHoechstens, uhr);
+                    bilder++;
+                    if (fest != (Drei.LetzteStadtDreiecke, Drei.LetzteStadtAufrufe)
+                        || (fest.Dreiecke + bewegt.Dreiecke, fest.Aufrufe + bewegt.Aufrufe) != (Drei.LetzteDreiecke, Drei.LetzteZeichenaufrufe))
+                    {
+                        abweichungen.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                            $"Nachladen {k.Name}, Drehung {dreh:F0} ({geladen.Count} Stadtteile geladen): gezeichnet {Drei.LetzteStadtDreiecke}/{Drei.LetzteStadtAufrufe} (ganz {Drei.LetzteDreiecke}/{Drei.LetzteZeichenaufrufe}), gezaehlt {fest.Dreiecke}/{fest.Aufrufe} (ganz {fest.Dreiecke + bewegt.Dreiecke}/{fest.Aufrufe + bewegt.Aufrufe})"));
+                    }
+                }
+            }
+        }
+        finally
+        {
+            kamera.Drehung = ad;
+            kamera.Setzen(ax, az);
+            kamera.Zoomen(kamera.Abstand / ab);
+            kamera.Neigung = an;
         }
         return (bilder, abweichungen);
     }

@@ -105,11 +105,15 @@ public sealed partial class StadtSpiel
     /// vor <paramref name="von"/>); Bus nur, wenn er weniger Minuten braucht, sonst null. Die Ortsliste rechnet genau so
     /// (<see cref="BusLohnt"/>, Figur an einem Ort), die Karte „Laufzeiten“ des Werkzeugs auch.
     /// </summary>
-    public (long ZuFuss, long Bus)? BusLohntVon(string von, string ziel, long uhr)
+    /// <remarks>
+    /// Welle A 0.83.0: <paramref name="merker"/> (nur die Karte „Laufzeiten“ des Werkzeugs, je Spiel einer) merkt sich die
+    /// Wege zu Fuss zwischen Tuer und Haltestelle; das Ergebnis bleibt gleich.
+    /// </remarks>
+    public (long ZuFuss, long Bus)? BusLohntVon(string von, string ziel, long uhr, Busfahrt.Merker? merker = null)
     {
         if (Linie is not { } linie || MinutenVon(von, ziel) is not { } fuss || Szene.Ort(von) is not { } a || Szene.Ort(ziel) is not { } b
             || Busfahrt.Planen(linie, Szene.Haltestellen, Szene.Laufraster, (a.StehX, a.StehZ), (b.StehX, b.StehZ), Stadt.Zelle,
-                Stadt.MinutenJeSchritt, uhr, Stadt.Beginn) is not { } plan || plan.Minuten >= fuss)
+                Stadt.MinutenJeSchritt, uhr, Stadt.Beginn, merker) is not { } plan || plan.Minuten >= fuss)
         {
             return null;
         }

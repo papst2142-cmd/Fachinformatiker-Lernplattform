@@ -394,6 +394,12 @@ public static partial class AutoMessung
         pruefe("Karte jeder Ort genau einmal mit Knopf", jeOrtEinmal, string.Create(inv, $"{karte?.Orte.Count ?? 0} Orte auf der Karte, {seite.KarteHingehen.Count} Knoepfe, {orte.Count} in der Stadt"));
         var marken = bild is null ? 0 : orte.Count(id => bild.MarkeVon(id) is { } p && p.X >= 0 && p.Y >= 0 && p.X <= bild.Bounds.Width && p.Y <= bild.Bounds.Height);
         pruefe("Karte alle Marken im Bild", marken == orte.Count && bild!.Bounds.Width > 100, string.Create(inv, $"{marken} von {orte.Count}, Karte {bild?.Bounds.Width:F0} x {bild?.Bounds.Height:F0}"));
+        // Welle A 0.83.0 (Weisung P12-283 Fund 1): jede Marke ganz in der Karte, keine ueberlappt (offene Karte und Lagen)
+        var offenFund = bild?.MarkenFund() ?? ["keine Karte"];
+        pruefe("Karte Marken ganz zu sehen (offen)", offenFund.Count == 0, offenFund.Count == 0 ? "ohne Fund" : string.Join("; ", offenFund));
+        var (lagenFund, gegenRot, lagenWert) = MarkenPruefen(spiel.Szene);
+        pruefe("Karte Marken ganz zu sehen (Lagen)", lagenFund.Count == 0, lagenFund.Count == 0 ? lagenWert : string.Join("; ", lagenFund));
+        pruefe("Karte Marken Gegenprobe wie bis A 0.82.0", gegenRot, gegenRot ? "Pruefung meldet Funde" : "Pruefung erkennt Ueberlappung nicht");
         await Zu();
         funde += Ergebnis("Spiel: Karte oeffnen (bis zum Bild)", await Messwiederholung.MessenAsync(erste, Geraetegrenze, Oeffnen, Zu, Task.Delay));
         await Zu();

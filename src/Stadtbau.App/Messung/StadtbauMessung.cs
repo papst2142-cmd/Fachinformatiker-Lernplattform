@@ -401,6 +401,8 @@ public static partial class StadtbauMessung
         await AlsGebaeudeAsync(a, f);
         await GrenzenLiveAsync(a, f);
         await StadtteileAsync(a, f);
+        await NamenAsync(a, f);
+        await TestkarteAsync(a, f);
         await NachtwelleAsync(a, f);
         await AlleBehebenAsync(a, f);
         await FundlistenAsync(a, f);

@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.83.0
+Stadtteile können jetzt Namen tragen, und die Nummern auf der Karte im Spiel-Handy liegen nie mehr übereinander oder halb außerhalb der Karte.
+
+- Hat eine Stadt benannte Stadtteile, erscheint beim Betreten eines anderen Stadtteils oben in der Mitte für einige Sekunden ein Schild mit seinem Namen. Ein Screenreader liest „Du bist jetzt in …“ vor.
+- Die Karte im Spiel-Handy zeigt jeden benannten Stadtteil mit einem gestrichelten Rahmen und seinem Namen, darunter steht die Liste der Stadtteile. Die heutige Stadt hat noch keine Namen und sieht aus wie bisher.
+- Liegen auf der Karte mehrere Orte dicht beieinander, rücken ihre Nummern so weit auseinander, dass jede ganz zu sehen ist. Am Rand der Karte rückt eine Nummer nach innen, auch mit dem Zeichen „!“ für einen offenen Auftrag. Antippen trifft weiter genau den Ort der Nummer.
+- Namen sind nur Anzeige: Spielstand, Spielzeit, Wege und Aufgaben bleiben unverändert.
+
 ## A 0.82.0
 Draußen lädt das Spiel jetzt nur die Stadtteile um deine Figur. So können später auch viel größere Städte flüssig laufen.
 

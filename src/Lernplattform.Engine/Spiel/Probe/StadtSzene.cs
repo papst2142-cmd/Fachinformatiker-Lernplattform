@@ -220,6 +220,12 @@ public sealed partial class StadtSzene
     /// <summary>Phase 8 W8 (Toene, P8-17c Punkt 2): Mittellinien des Flusses (geglaettet).</summary>
     public IReadOnlyList<IReadOnlyList<Vector2>> Fluesse { get; private init; } = [];
 
+    /// <summary>
+    /// Welle A 0.83.0 (Weisung P12-282): gezogene Stadtteile mit Namen (nur Anzeige: Karte im Spiel-Handy, Schild beim
+    /// Betreten); Stadt 1 und Fassung 0 haben keine (leer, alles wie bisher).
+    /// </summary>
+    public IReadOnlyList<Stadtbau.Stadtteile.Bereich> StadtteilNamen { get; private init; } = [];
+
     /// <summary>Phase 8 W6: die Festzeit, mit der die Szene gebaut wurde (null = keine).</summary>
     public string? Fest { get; private init; }
 
@@ -2025,6 +2031,7 @@ public sealed partial class StadtSzene
             Umgefaerbt = umgefaerbt,
             Parks = parkFlaechen,
             Fluesse = [.. wasser],
+            StadtteilNamen = Stadtbau.Stadtteile.Bereiche(stadt.Daten),
             Teiche = teiche,
             Stege = stege,
             Flaechen = flaechen,

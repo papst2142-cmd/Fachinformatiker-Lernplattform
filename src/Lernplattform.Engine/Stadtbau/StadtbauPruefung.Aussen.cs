@@ -48,6 +48,9 @@ public static partial class StadtbauPruefung
     /// <summary>Spielraum der Tuer zur Wand mit CC0-Modellen (wie der Test mit Grafik).</summary>
     public const float WandAbstandModell = 0.4f;
 
+    /// <summary>Tipp zu jedem Fund der Stadtteil-Namen.</summary>
+    public const string StadtteilTipp = "Den Stadtteil unter „Stadtteil-Namen“ umbenennen, verschieben oder löschen.";
+
     private static string Zf(double wert) => wert.ToString("0.##", CultureInfo.GetCultureInfo("de-DE"));
 
 
@@ -66,6 +69,11 @@ public static partial class StadtbauPruefung
             var fusswegeHeil = FusswegDaten(fassung, breite, hoehe, funde);
             // Welle A 0.54.0: falsch gespeicherte Zebrastreifen (die Szene laesst sie weg, Rot sperrt den Export)
             ZebraDaten(fassung, breite, hoehe, funde);
+            // Welle A 0.83.0 (Weisung P12-282): Stadtteil-Namen (nur Anzeige; ein falscher Eintrag fehlt im Spiel, Rot sperrt den Export)
+            foreach (var (text, x, z) in Stadtteile.Fehler(fassung.Stadtdaten, breite, hoehe))
+            {
+                funde.Add(new StadtbauFund(text, StadtteilTipp, true, x, z));
+            }
             // Welle A 0.60.0: falsch gespeicherte Ampeln (die Szene laesst sie weg, Rot sperrt den Export)
             AmpelDaten(fassung, breite, hoehe, funde);
             // Welle A 0.61.0: falsch gespeicherte Haltestellen und Parkplaetze
@@ -748,11 +756,13 @@ public static partial class StadtbauPruefung
             .Where(l => Py.Gleich(l["typ"], "strasse"))
             .Select(l => ListeOderLeer(l, "punkte").OfType<List<object?>>().Select(p => new Vector2((float)Py.F(p[0]), (float)Py.F(p[1]))).ToList())
             .ToList();
+        var rahmen = strassen.Select(Rahmen.Von).ToList();
         for (var i = 0; i < strassen.Count; i++)
         {
             for (var j = i + 1; j < strassen.Count; j++)
             {
-                if (strassen[i].Count < 2 || strassen[j].Count < 2)
+                // Welle A 0.83.0: weiter als eine Strassenbreite auseinander = keine Ueberdeckung (StrassenNaehe = 0)
+                if (strassen[i].Count < 2 || strassen[j].Count < 2 || rahmen[i].Fern(rahmen[j], StadtSzene.StrassenBreite))
                 {
                     continue;
                 }

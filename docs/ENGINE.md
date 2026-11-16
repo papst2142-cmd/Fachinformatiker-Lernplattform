@@ -216,7 +216,16 @@ Ersetzt „kein Streaming“ (Nico 11.11.2026; Nachladen fest vor der Beta seit 
   Gegenprobe `StadtFlaeche.NachladenAusFuerTests`.
 - **Grenzen** (Nico 4a): 48 MB Netzdaten und 2 000 ms „Stadt bauen“ gelten für das gleichzeitig Geladene; die Grenzen je Bild
   bleiben (160 000/40 Mittel, 125 000/32 Niedrig, 200 000/48 Hoch). Messpunkte „längstes Bild beim Gehen“ (400 ms) und
-  „Kachel nachladen“ (Info, Grenzwert = Nico). Start-Test-Teil `nachladen` mit der Testkarte 256 × 256
+  „Kachel nachladen“ (seit A 0.83.0 streng, Nico P12-282 a: Bauen 200 ms `StadtLast.KachelBauenGrenzeMs`, Hochladen 16 ms
+  `StadtLast.KachelHochladenGrenzeMs`, je langsamste Kachel, wiederholbar; Gegenprobe ganze Karte als ein Stück rot). Start-Test-Teil `nachladen` mit der Testkarte 256 × 256
   (`tests/Lernplattform.Tests/Testdaten/testkarte_256.fistadt`, erzeugt mit `werkzeuge/stadtbau/testkarte.py`).
-- **Werkzeug:** Knopf „Stadtteile“ (Taste T) zeigt Raster, Namen und Werte je Kachel (`StadtteilWert`). Nachladen in der
-  3D-Ansicht und Kosten je Kachel live kommen mit S 0.55.0.
+- **Werkzeug:** Knopf „Stadtteile“ (Taste T) zeigt Raster, Namen und Werte je Kachel (`StadtteilWert`).
+- **Werkzeug lädt nach (S 0.55.0, Weisung P12-282):** nur Karten über 64 (`GrenzenLive.MitNachladenFuer`); die 3D-Ansicht
+  (`StadtFlaeche.NachladenGrosseKarte`) lädt um die Mitte der Kamera (`NachladenMitte`), ohne Dunst und ohne Fahrtziel. Die
+  Grenzen live rechnen je Kachel mit der Spielkamera (Abstand max, Neigung min, vier Drehungen) über
+  `StadtbauGrenzen.Nachladen.Bild` = dieselbe Rechnung wie das Zeichnen (`Netz.Laeufe`, Fernkästen); Bytes = Grundlage plus
+  Vorrat-Ring (`Ladeplan.Vorbereiten`). Zu teure Kachel = roter Fund mit ihrem Namen (`Texte.StadtteilZuTeuer`), nie „Stadt zu
+  teuer“ für die ganze Karte. Start-Test `StadtbauMessung.Testkarte.cs` (Prüfzeit, Stadt bauen geladen < 2 000 ms, Zählung =
+  Bild, Gegenprobe zu teure Kachel C3).
+- **Namen der Stadtteile (A 0.83.0 / S 0.55.0):** Rechtecke `stadtdaten.stadtteile`; Schild beim Betreten, Rahmen auf der
+  Handy-Karte; nur Anzeige (keine Spielzeit, kein Ereignis). Werkzeug Knopf „Stadtteil-Namen“ (Taste B).

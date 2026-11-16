@@ -507,6 +507,25 @@ public static partial class Texte
     public static string StadtZuTeuer(bool nah, long dreiecke, int aufrufe) => string.Create(De,
         $"Stadt zu teuer: {(nah ? "in der Nahansicht hier" : "in der Gesamtansicht")} {dreiecke:N0} Dreiecke und {aufrufe} Zeichenaufrufe, erlaubt sind {StadtbauGrenzenWerte}.");
 
+    // ---- Welle S 0.55.0 (Weisung P12-282 Punkt 3): grosse Karten mit Nachladen, Kosten je Stadtteil ----
+
+    /// <summary>Zeile statt der Gesamtansicht bei grossen Karten (das Spiel zeigt sie nie ganz).</summary>
+    public static string GrenzenLiveGeladen(double mb) => string.Create(De,
+        $"Gleichzeitig geladen: höchstens {mb:N1} MB Netzdaten (erlaubt {Lernplattform.Core.Stadtbau.StadtLast.NetzdatenGrenzeMb:N0} MB)");
+
+    /// <summary>Zeile statt der Nahansicht bei grossen Karten: der teuerste Stadtteil.</summary>
+    public static string GrenzenLiveStadtteil(string name, long dreiecke, int aufrufe) =>
+        string.Create(De, $"Teuerster Stadtteil {name}: {dreiecke:N0} Dreiecke · {aufrufe} Aufrufe");
+
+    /// <summary>Roter Fund: ein Stadtteil ist zu teuer (Name, Werte, weitere zu teure Stadtteile).</summary>
+    public static string StadtteilZuTeuer(string name, long dreiecke, int aufrufe, IReadOnlyList<string> weitere) => string.Create(De,
+        $"Stadt zu teuer: im Stadtteil {name} zeigt das Spiel bis zu {dreiecke:N0} Dreiecke und {aufrufe} Zeichenaufrufe, erlaubt sind {StadtbauGrenzenWerte}.")
+        + (weitere.Count == 0 ? "" : " Auch zu teuer: " + string.Join(", ", weitere) + ".");
+
+    /// <summary>Roter Fund: gleichzeitig geladen zu viel (Netzdaten).</summary>
+    public static string StadtGeladenZuViel(double mb, string name) => string.Create(De,
+        $"Stadt zu teuer: steht die Figur im Stadtteil {name}, sind bis zu {mb:N1} MB Netzdaten gleichzeitig geladen, erlaubt sind {Lernplattform.Core.Stadtbau.StadtLast.NetzdatenGrenzeMb:N0} MB.");
+
     public const string StadtZuTeuerTipp = "Hier stehen zu viele Stücke dicht beieinander. Weniger oder einfachere Stücke setzen (die Wärmekarte zeigt, wo die meisten Dreiecke liegen). Solange die Stadt zu teuer ist, ruckelt das Spiel auf dem Tablet; darum sind Speichern als Stadt-Datei und Senden an CC gesperrt.";
 
     public const string Waermekarte = "Wärmekarte";
@@ -1124,6 +1143,7 @@ public static partial class Texte
         ("G", "Raster zeigen (Gebäude entwerfen)", ["G"]),
         ("W", "Wärmekarte an oder aus (Stadt von oben: wo die meisten Dreiecke liegen)", ["W"]),
         ("T", "Stadtteile an oder aus (Raster mit Namen und Werten; in 3D: Stadtteil in der Mitte)", ["T"]),
+        ("B", "Stadtteil-Namen an oder aus (Stadt von oben: Rechteck ziehen, Pfeiltasten verschieben den gewählten, Entf löscht ihn)", ["B"]),
         ("F11", "Vollbild", ["F11"]),
         ("F1 / ?", "Diese Übersicht", ["F1"]),
     ];

@@ -33,20 +33,29 @@ public sealed partial class Projekt
     /// oeffnet die Datei damit nur zum Lesen), 2 seit Welle 3 (Felder "aussen" und "leer"). Dateien mit Formatnummer 1 und 2
     /// lassen sich weiter oeffnen. 4 seit Welle E4 (S 0.53.0, Weisung P12-247): nur eine Datei, in der eine Quest einen
     /// Arbeitsort hat (im Stand oder im Verlauf), bekommt 4 (<see cref="FormatFuer"/>); jede andere bleibt bei 3 und bitgleich.
-    /// 5 seit Welle Nachladen (S 0.54.0, Weisung P12-280, Nico 2b): nur eine leere Stadt groesser als 64 je Seite (bis 256).
+    /// 5 seit Welle Nachladen (S 0.54.0, Weisung P12-280, Nico 2b): nur eine leere Stadt groesser als 64 je Seite (bis 256);
+    /// seit S 0.55.0 (Weisung P12-282) auch eine Datei mit Stadtteil-Namen (im Stand oder im Verlauf).
     /// </summary>
     public const long FormatVersion = 5;
 
     /// <summary>
-    /// Formatnummer beim Schreiben: 5 fuer eine leere Stadt groesser als 64 je Seite; sonst 4, wenn der Text der Stadt draussen oder des Verlaufs das Feld "arbeitsort" als Schluessel
+    /// Formatnummer beim Schreiben: 5 fuer eine leere Stadt groesser als 64 je Seite oder mit dem Teil "stadtdaten/stadtteile"
+    /// (Stadtteil-Namen, S 0.55.0) im Text der Stadt draussen oder des Verlaufs; sonst 4, wenn der Text der Stadt draussen oder des Verlaufs das Feld "arbeitsort" als Schluessel
     /// enthaelt, sonst 3. Ein Schluessel steht im JSON-Text als <c>"arbeitsort": </c>; derselbe Wortlaut in einem Text (Titel,
     /// Frage) steht dort maskiert (<c>\"arbeitsort\": </c>) und zaehlt darum nicht.
     /// </summary>
     internal static long FormatFuer(string aussenText, string verlaufText, (double Breite, double Hoehe)? leer = null) =>
-        leer is { } l && (l.Breite > Stadtteile.AltesFormatBis || l.Hoehe > Stadtteile.AltesFormatBis) ? 5
+        (leer is { } l && (l.Breite > Stadtteile.AltesFormatBis || l.Hoehe > Stadtteile.AltesFormatBis))
+            || aussenText.Contains(NamenSchluessel, StringComparison.Ordinal) || verlaufText.Contains(NamenSchluessel, StringComparison.Ordinal) ? 5
         : aussenText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) || verlaufText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) ? 4 : 3;
 
     private const string ArbeitsortSchluessel = "\"" + Questebene.FeldArbeitsort + "\": ";
+
+    /// <summary>Nur Tests: <see cref="FormatFuer"/> ohne leere Stadt.</summary>
+    internal static long FormatFuerTests(string aussenText, string verlaufText) => FormatFuer(aussenText, verlaufText);
+
+    /// <summary>Teil der Stadtteil-Namen in "aussen" und im Verlauf (Pfad wie <see cref="Aussen.Teile"/>).</summary>
+    private const string NamenSchluessel = "\"stadtdaten/" + Stadtteile.AbschnittNamen + "\": ";
 
     /// <summary>Kennung des Innenraums eines gesetzten Blueprints: "bau:" und der Modellname (Teil "bauten" der Stadt draussen).</summary>
     public const string BauPraefix = "bau:";

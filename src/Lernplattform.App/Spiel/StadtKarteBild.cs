@@ -33,6 +33,9 @@ public sealed class StadtKarteBild : Control
     private static readonly IBrush HaltGruen = new SolidColorBrush(Color.FromRgb(30, 120, 66));
     private static readonly IBrush Weiss = Brushes.White;
     private static readonly IBrush Cyan = new SolidColorBrush(Color.FromRgb(20, 170, 215));
+    private static readonly IBrush Bereich = new SolidColorBrush(Color.FromRgb(58, 40, 96));
+    private static readonly IBrush BereichFlaeche = new SolidColorBrush(Color.FromArgb(28, 255, 255, 255));
+    private static readonly IBrush BereichSchild = new SolidColorBrush(Color.FromArgb(225, 255, 255, 255));
 
     private StadtKarte? _karte;
     private Vector2 _figur;
@@ -76,8 +79,18 @@ public sealed class StadtKarteBild : Control
     }
 
     /// <summary>Bildpunkt des Orts mit dieser Kennung (Mitte der Marke) oder null (Start-Test: echtes Antippen).</summary>
-    public Point? MarkeVon(string id) =>
-        _karte?.Orte.FirstOrDefault(o => o.Id == id) is { } o ? Punkt(StadtKarte.Bild(o.Mitte, Massstab)) : null;
+    public Point? MarkeVon(string id)
+    {
+        if (_karte is not { } k)
+        {
+            return null;
+        }
+        var i = k.Orte.ToList().FindIndex(o => o.Id == id);
+        return i < 0 ? null : Punkt(k.Marken(Massstab, Faktor)[i]);
+    }
+
+    /// <summary>Start-Test (Fund P12-283): Marken, die ueber den Rand ragen oder sich ueberlappen (leer = gut).</summary>
+    public List<string> MarkenFund() => _karte is { } k ? k.MarkenFund(k.Marken(Massstab, Faktor), Massstab, Faktor) : [];
 
     /// <summary>Antippen an (x, y) in Punkten der Karte (auch fuer den Start-Test); true = ein Ort war getroffen.</summary>
     public bool Tippen(Point p)
@@ -158,6 +171,21 @@ public sealed class StadtKarteBild : Control
             dc.DrawRectangle(OrtHaus, rand, new Rect(P(o.Min), P(o.Max)));
         }
         var f = Faktor;
+        // Welle A 0.83.0 (Weisung P12-282): Stadtteile mit Namen als gestrichelter Rahmen, Name unten im Rahmen
+        var teilRand = new Pen(Bereich, 2, new DashStyle([4, 3], 0));
+        foreach (var b in sz.StadtteilNamen)
+        {
+            dc.DrawRectangle(BereichFlaeche, teilRand, new Rect(P(new((float)b.X1, (float)b.Z1)), P(new((float)b.X2, (float)b.Z2))));
+        }
+        foreach (var b in sz.StadtteilNamen)
+        {
+            var text = Text(b.Name, Bereich, 11 * f, true);
+            // unten in der Mitte des Rahmens: oben stehen in einer Stadt meist die Marken der Orte (Bild P12-168)
+            var unten = P(new((float)((b.X1 + b.X2) / 2), (float)b.Z2));
+            var kasten = new Rect(unten.X - (text.Width / 2) - (5 * f), unten.Y - text.Height - (5 * f), text.Width + (10 * f), text.Height + (2 * f));
+            dc.DrawRectangle(BereichSchild, null, kasten, 5 * f, 5 * f);
+            dc.DrawText(text, new Point(kasten.X + (5 * f), kasten.Y + f));
+        }
         foreach (var h in sz.Haltestellen)
         {
             var m = P(h.Mitte);
@@ -165,9 +193,11 @@ public sealed class StadtKarteBild : Control
             dc.DrawEllipse(HaltGruen, new Pen(Weiss, 1.5), m, r, r);
             Mitte(dc, Text("H", Weiss, 10 * f, true), m);
         }
-        foreach (var o in karte.Orte)
+        var marken = karte.Marken(s, f);
+        for (var i = 0; i < karte.Orte.Count; i++)
         {
-            var m = P(o.Mitte);
+            var o = karte.Orte[i];
+            var m = Punkt(marken[i]);
             var r = StadtKarte.MarkeRadius * f;
             dc.DrawEllipse(Marke, new Pen(Weiss, 1.5), m, r, r);
             Mitte(dc, Text(o.Nr.ToString(CultureInfo.InvariantCulture), Weiss, 11 * f, true), m);

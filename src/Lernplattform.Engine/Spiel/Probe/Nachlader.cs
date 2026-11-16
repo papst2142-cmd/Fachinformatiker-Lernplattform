@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Numerics;
 using Lernplattform.Core.Stadtbau;
 
 namespace Lernplattform.Core.Spiel.Probe;
@@ -87,6 +88,9 @@ public sealed class Nachlader
     /// <summary>Bauzeiten der Kacheln in ms (Messpunkt „Kachel nachladen“, Hintergrund), in der Reihenfolge des Baus.</summary>
     public List<double> BauZeiten { get; } = [];
 
+    /// <summary>Die Kacheln zu <see cref="BauZeiten"/> (gleiche Stelle), fuer die Wiederholung einer Messung.</summary>
+    public List<Stadtteile.Kachel> BauKacheln { get; } = [];
+
     /// <summary>Wie oft eine noetige Kachel sofort gebaut werden musste (sie war nicht vorbereitet).</summary>
     public int Sofort { get; private set; }
 
@@ -95,6 +99,18 @@ public sealed class Nachlader
     {
         var uhr = Stopwatch.StartNew();
         var n = szene.KachelVorbereiten(k);
+        var p = Packen(n, mitGruen);
+        return p with { BauMs = uhr.Elapsed.TotalMilliseconds };
+    }
+
+    /// <summary>
+    /// Welle S 0.55.0: schon gebaute Netze einer Kachel packen (das Werkzeug packt eine Kachel mit und ohne Kleingruen aus
+    /// EINEM Bau, fuer die Stufen Mittel/Hoch und Niedrig). Gleiche Rechnung wie <see cref="Packen(StadtSzene, Stadtteile.Kachel, bool)"/>.
+    /// </summary>
+    public static Paket Packen(StadtSzene.KachelNetze n, bool mitGruen)
+    {
+        var uhr = Stopwatch.StartNew();
+        var k = n.Kachel;
         var fest = new Netz();
         fest.Anhaengen(n.Stadt);
         if (n.Paket is { } p)
@@ -108,6 +124,17 @@ public sealed class Nachlader
         fest.NachZellenOrdnen(StadtSzene.PaketZelle);
         var bytes = StadtLast.Bytes(fest) + n.Haeuser.Sum(h => StadtLast.Bytes(h.Netz));
         return new Paket(k, fest, n.Haeuser, bytes, uhr.Elapsed.TotalMilliseconds);
+    }
+
+    /// <summary>
+    /// Kugel um eine Kachel fuer den Sichtkegel (Boden bis zur hoechsten Stelle eines Hauses, mindestens 6 fuer Baeume und
+    /// Laternen). Zeichnen (<c>StadtFlaeche</c>) und Zaehlung ohne Grafikkarte (<see cref="StadtbauGrenzen.Nachladen"/>) nutzen sie.
+    /// </summary>
+    public static (Vector3 Mitte, float Halb) Kugel(StadtSzene.Grundlage? grundlage, Stadtteile.Kachel k)
+    {
+        var h = MathF.Max(6f, grundlage?.Hoehen.GetValueOrDefault(k) ?? 0f);
+        var m = k.Mitte;
+        return (new Vector3(m.X, h / 2, m.Y), MathF.Sqrt((2 * (Stadtteile.Groesse / 2) * (Stadtteile.Groesse / 2)) + (h * h / 4)));
     }
 
     /// <summary>
@@ -242,6 +269,7 @@ public sealed class Nachlader
     private void Ablegen(Paket p)
     {
         BauZeiten.Add(p.BauMs);
+        BauKacheln.Add(p.Kachel);
         if (!_geladen.ContainsKey(p.Kachel))
         {
             _bereit[p.Kachel] = p;

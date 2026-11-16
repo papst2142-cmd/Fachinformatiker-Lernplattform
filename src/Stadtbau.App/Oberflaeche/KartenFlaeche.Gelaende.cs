@@ -145,6 +145,7 @@ public sealed partial class KartenFlaeche
             {
                 SetzenBeenden();
                 MassbandAn = false;
+                NamenAn = false;
                 Waehlen(null);
             }
             PinselGeaendert?.Invoke();

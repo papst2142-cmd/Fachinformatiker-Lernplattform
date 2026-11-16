@@ -45,7 +45,8 @@ public sealed class StadtKarte
     /// </summary>
     public Ort? Treffer(Vector2 bild, float massstab, float schrift = 1f)
     {
-        var naechster = Orte.Select(o => (o, d: Vector2.Distance(Bild(o.Mitte, massstab), bild))).OrderBy(t => t.d).ThenBy(t => t.o.Nr).FirstOrDefault();
+        var marken = Marken(massstab, schrift);
+        var naechster = Orte.Select((o, i) => (o, d: Vector2.Distance(marken[i], bild))).OrderBy(t => t.d).ThenBy(t => t.o.Nr).FirstOrDefault();
         if (naechster.o is not null && naechster.d <= TreffRadius * schrift)
         {
             return naechster.o;
@@ -53,6 +54,153 @@ public sealed class StadtKarte
         var welt = bild / massstab;
         return Orte.Where(o => welt.X >= o.Min.X && welt.X <= o.Max.X && welt.Y >= o.Min.Y && welt.Y <= o.Max.Y)
             .OrderBy(o => Vector2.Distance(o.Mitte, welt)).FirstOrDefault();
+    }
+
+    /// <summary>Halbmesser der Marke „!“ (offener Auftrag) oben rechts an der Nummernmarke, in Bildpunkten (Schriftfaktor 1).</summary>
+    public const float AufgabeRadius = 7f;
+
+    /// <summary>Breite des weissen Rands um Marken (Bildpunkte, ausserhalb des Halbmessers zur Haelfte).</summary>
+    public const float MarkeRand = 1.5f;
+
+    /// <summary>Abstand zwischen zwei Nummernmarken (Bildpunkte) nach dem Auseinanderschieben.</summary>
+    public const float MarkeLuecke = 2f;
+
+    /// <summary>Gegenprobe Fund P12-283: Marken wie bis A 0.82.0 genau in der Mitte des Orts (nur Tests).</summary>
+    public static bool MarkenAltFuerTests { get => MarkenAlt.Value; set => MarkenAlt.Value = value; }
+    private static readonly AsyncLocal<bool> MarkenAlt = new();
+
+    private (float Massstab, float Schrift, bool Alt, IReadOnlyList<Vector2> Punkte)? _marken;
+
+    /// <summary>
+    /// Welle A 0.83.0 (Weisung P12-283 Fund 1): Mitte jeder Nummernmarke im Bild, in der Reihenfolge von <see cref="Orte"/>.
+    /// Ausgang ist die Mitte des Orts; liegt eine Marke (samt Rand und Marke „!“) ueber dem Rand der Karte, rueckt sie nach
+    /// innen; ueberlappen sich zwei Nummernmarken, werden sie Schritt fuer Schritt auseinandergeschoben (gleich weit, immer
+    /// wieder nach innen gerueckt), bis jede mindestens <see cref="MarkeLuecke"/> Abstand hat. Zeichnen und Antippen nutzen
+    /// dieselben Punkte. Nur Darstellung.
+    /// </summary>
+    public IReadOnlyList<Vector2> Marken(float massstab, float schrift = 1f)
+    {
+        var alt = MarkenAlt.Value;
+        if (_marken is { } m && m.Massstab == massstab && m.Schrift == schrift && m.Alt == alt)
+        {
+            return m.Punkte;
+        }
+        var punkte = Orte.Select(o => Bild(o.Mitte, massstab)).ToArray();
+        if (!alt)
+        {
+            MarkenOrdnen(punkte, massstab, schrift);
+        }
+        _marken = (massstab, schrift, alt, punkte);
+        return punkte;
+    }
+
+    private void MarkenOrdnen(Vector2[] p, float massstab, float schrift)
+    {
+        var breite = Szene.Breite * massstab;
+        var hoehe = Szene.Tiefe * massstab;
+        var r = (MarkeRadius * schrift) + (MarkeRand / 2);
+        var b = (AufgabeRadius * schrift) + (MarkeRand / 2);
+        void Innen(int i)
+        {
+            // die Marke „!“ sitzt oben rechts (Mitte um r nach rechts und oben verschoben)
+            var rechts = Orte[i].Aufgabe ? MathF.Max(r, (MarkeRadius * schrift) + b) : r;
+            var oben = Orte[i].Aufgabe ? MathF.Max(r, (MarkeRadius * schrift) + b) : r;
+            p[i] = new Vector2(Math.Clamp(p[i].X, r, MathF.Max(r, breite - rechts)), Math.Clamp(p[i].Y, oben, MathF.Max(oben, hoehe - r)));
+        }
+        for (var i = 0; i < p.Length; i++)
+        {
+            Innen(i);
+        }
+        // Kreise je Marke: die Nummernmarke und, bei offenem Auftrag, die Marke „!“ oben rechts; jedes Paar fremder Kreise
+        // haelt mindestens MarkeLuecke Abstand (die „!“ verdeckt sonst die Nummer des Nachbarn, Bild P12-283)
+        for (var runde = 0; runde < 400; runde++)
+        {
+            var bewegt = false;
+            for (var i = 0; i < p.Length; i++)
+            {
+                for (var j = i + 1; j < p.Length; j++)
+                {
+                    foreach (var (ai, ri) in KreiseFund(i, schrift))
+                    {
+                        foreach (var (aj, rj) in KreiseFund(j, schrift))
+                        {
+                            var noetig = ri + rj + MarkeLuecke;
+                            var d = (p[j] + aj) - (p[i] + ai);
+                            var laenge = d.Length();
+                            if (laenge >= noetig - 0.01f)
+                            {
+                                continue;
+                            }
+                            // gleiche Stelle: feste Richtung je Paar (nie Zufall)
+                            var richtung = laenge > 1e-4f ? d / laenge : new Vector2(MathF.Cos(j * 2.399f), MathF.Sin(j * 2.399f));
+                            var schub = ((noetig - laenge) / 2) + 0.05f;
+                            p[i] -= richtung * schub;
+                            p[j] += richtung * schub;
+                            Innen(i);
+                            Innen(j);
+                            bewegt = true;
+                        }
+                    }
+                }
+            }
+            if (!bewegt)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Pruefung (Start-Test und Tests): je Marke, die ueber den Rand der Karte ragt (samt Rand und „!“), und je Paar sich
+    /// ueberlappender Nummernmarken ein Text. Leer = alles ganz zu sehen.
+    /// </summary>
+    public List<string> MarkenFund(IReadOnlyList<Vector2> p, float massstab, float schrift = 1f)
+    {
+        var funde = new List<string>();
+        var breite = Szene.Breite * massstab;
+        var hoehe = Szene.Tiefe * massstab;
+        var r = (MarkeRadius * schrift) + (MarkeRand / 2);
+        var b = (AufgabeRadius * schrift) + (MarkeRand / 2);
+        const float zugabe = 0.01f;
+        for (var i = 0; i < p.Count; i++)
+        {
+            var o = Orte[i];
+            var links = p[i].X - r;
+            var rechts = p[i].X + (o.Aufgabe ? MathF.Max(r, (MarkeRadius * schrift) + b) : r);
+            var oben = p[i].Y - (o.Aufgabe ? MathF.Max(r, (MarkeRadius * schrift) + b) : r);
+            var unten = p[i].Y + r;
+            if (links < -zugabe || oben < -zugabe || rechts > breite + zugabe || unten > hoehe + zugabe)
+            {
+                funde.Add($"Marke {o.Nr} ({o.Name}) ragt über den Rand der Karte");
+            }
+            for (var j = i + 1; j < p.Count; j++)
+            {
+                // Nummer und „!“ zaehlen beide zur Marke (in der Gegenprobe wie bis A 0.82.0 ebenso)
+                var ueber = false;
+                foreach (var (ai, ri) in KreiseFund(i, schrift))
+                {
+                    foreach (var (aj, rj) in KreiseFund(j, schrift))
+                    {
+                        ueber |= Vector2.Distance(p[i] + ai, p[j] + aj) < ri + rj - zugabe;
+                    }
+                }
+                if (ueber)
+                {
+                    funde.Add($"Marken {o.Nr} und {Orte[j].Nr} überlappen sich");
+                }
+            }
+        }
+        return funde;
+    }
+
+    /// <summary>Kreise einer Marke (Versatz zur Mitte, Halbmesser samt halbem Rand): Nummer und, bei Auftrag, „!“.</summary>
+    private IEnumerable<(Vector2 Versatz, float Radius)> KreiseFund(int i, float schrift)
+    {
+        yield return (Vector2.Zero, (MarkeRadius * schrift) + (MarkeRand / 2));
+        if (Orte[i].Aufgabe)
+        {
+            yield return (new Vector2(MarkeRadius * schrift, -MarkeRadius * schrift), (AufgabeRadius * schrift) + (MarkeRand / 2));
+        }
     }
 
     /// <summary>Wo die Figur auf der Karte steht: draussen ihre Stelle, an oder in einem Ort dessen Stehplatz.</summary>

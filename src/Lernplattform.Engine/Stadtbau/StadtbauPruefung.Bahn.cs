@@ -178,7 +178,8 @@ public static partial class StadtbauPruefung
                         }
                     }
                 }
-                var zuNah = Abgetastet(a.Glatt).FirstOrDefault(p => stoesse.All(s => Vector2.Distance(p, s) > 2 * GleisAbstand) && !AnWeiche(p) && Kurve.Abstand(p, b.Glatt) < GleisAbstand - Toleranz);
+                // Welle A 0.83.0: Gleise weiter als GleisAbstand auseinander kommen sich nicht zu nah
+                var zuNah = Rahmen.Von(a.Glatt).Fern(Rahmen.Von(b.Glatt), GleisAbstand) ? default : Abgetastet(a.Glatt).FirstOrDefault(p => stoesse.All(s => Vector2.Distance(p, s) > 2 * GleisAbstand) && !AnWeiche(p) && Kurve.Abstand(p, b.Glatt) < GleisAbstand - Toleranz);
                 if (zuNah != default)
                 {
                     funde.Add(new StadtbauFund($"Bahn Nr. {a.Nr} und Bahn Nr. {b.Nr} kreuzen sich oder liegen zu nah beieinander (weniger als {Zf(GleisAbstand)}). Weichen gibt es nicht.",

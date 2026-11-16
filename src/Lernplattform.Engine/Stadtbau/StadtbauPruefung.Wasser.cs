@@ -98,22 +98,34 @@ public static partial class StadtbauPruefung
             }
         }
 
-        // Strassen: nicht im Teich, nicht laengs im Fluss
+        // Strassen: nicht im Teich, nicht laengs im Fluss (Welle A 0.83.0: ferne Paare nach Rahmen uebersprungen)
         var snr = 0;
+        var teichRahmen = teiche.Select(t => Rahmen.Von(t.MitUfer)).ToList();
+        var flussRahmen = fluesse.Select(f => Rahmen.Von(f)).ToList();
         foreach (var s in szene.Strassen)
         {
             snr++;
             nr = 0;
+            var sr = Rahmen.Von(s);
             foreach (var t in teiche)
             {
                 nr++;
+                if (sr.Fern(teichRahmen[nr - 1], StadtSzene.StrassenBreite / 2))
+                {
+                    continue;
+                }
                 if (LinieImVieleck(s, t.MitUfer, StadtSzene.StrassenBreite / 2) is { } p)
                 {
                     funde.Add(new StadtbauFund($"Straße Nr. {snr} führt durch Teich Nr. {nr}.", "Straße um den Teich herum legen (über einen Teich baut das Spiel keine Brücke).", true, p.X, p.Y));
                 }
             }
-            foreach (var f in fluesse)
+            for (var fi = 0; fi < fluesse.Count; fi++)
             {
+                var f = fluesse[fi];
+                if (sr.Fern(flussRahmen[fi], FlussUferHalb))
+                {
+                    continue;
+                }
                 var (laenge, mitte) = LaengsIm(s, f, FlussUferHalb);
                 if (laenge > FlussQuerHoechstens)
                 {

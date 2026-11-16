@@ -150,7 +150,8 @@ public static partial class StadtbauPruefung
             // 2: Kreuzung oder Einmuendung im Bogen (eine andere Strasse beruehrt die Mittellinie fern der beiden Enden)
             for (var j = 0; j < strassen.Count; j++)
             {
-                if (j == i || strassen[j].Linie.Count < 2)
+                // Welle A 0.83.0: weiter als die Anschlussgrenze auseinander = keine Beruehrung
+                if (j == i || strassen[j].Linie.Count < 2 || Rahmen.Von(strassen[j].Linie).Fern(Rahmen.Von(kurve), AnschlussGrenze))
                 {
                     continue;
                 }
