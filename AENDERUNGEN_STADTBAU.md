@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.54.0
+
+Karten bis 256 × 256 Felder und ein neuer Knopf „Stadtteile“.
+
+- Eine neue Stadt darf jetzt bis 256 × 256 Felder groß sein (bisher 64 × 64). Städte bis 64 × 64 werden genau wie bisher gespeichert. Größere Städte speichert das Werkzeug in einem neuen Format, das ältere Fassungen des Werkzeugs nicht öffnen können.
+- Der Knopf „Stadtteile“ in der Leiste (oder die Taste T) zeigt in der Stadt von oben das feste Raster der Stadtteile mit ihren Namen (A1, B3 …). Ist ein Stadtteil groß genug zu sehen, stehen darunter seine Dreiecke und seine Netzdaten. Das Spiel lädt draußen immer nur die Stadtteile in der Nähe der Figur. Noch einmal drücken blendet das Raster aus.
+- In der 3D-Ansicht nennt der Knopf den Stadtteil in der Mitte der Ansicht.
+- Bei sehr großen Karten rechnet das Werkzeug die Grenzen und die Prüfung noch für die ganze Karte auf einmal. Das dauert länger und zeigt eine große Karte als „Stadt zu teuer“. Das Nachladen im Werkzeug selbst kommt mit der nächsten Fassung.
+
 ## S 0.53.1
 
 Die 3D-Ansicht zeigt auf Tablets mit einem Grafikchip von Mali keine Bildfehler mehr.

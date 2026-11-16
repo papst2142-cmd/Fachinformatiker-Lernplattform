@@ -341,9 +341,9 @@ public static partial class Texte
     public const string PruefungLaeuft = "Prüfung läuft …";
     public const string HausSetzen = "Gebäude setzen";
     public const string KeineInnenraeume = "Diese Stadt hat noch keine Häuser mit Innenraum.";
-    public const string LeerBreite = "Breite der Stadt (8 bis 64)";
-    public const string LeerHoehe = "Tiefe der Stadt (8 bis 64)";
-    public const string LeerGroesseUngueltig = "Die Größe passt nicht. Erlaubt sind 8 bis 64 in Schritten von 0,5.";
+    public const string LeerBreite = "Breite der Stadt (8 bis 256)";
+    public const string LeerHoehe = "Tiefe der Stadt (8 bis 256)";
+    public const string LeerGroesseUngueltig = "Die Größe passt nicht. Erlaubt sind 8 bis 256 in Schritten von 0,5.";
 
     // ---- Export und Senden ----
     public const string ExportGesperrt = "Datei kann noch nicht gespeichert werden";
@@ -517,6 +517,23 @@ public static partial class Texte
         bis is { } b ? string.Create(De, $"{von:N0}–{b:N0}") : string.Create(De, $"ab {von:N0}");
 
     public static string WaermekarteFeld(int x, int y, long dreiecke) => string.Create(De, $"Feld {x}/{y}: {dreiecke:N0} Dreiecke");
+
+    // ---- Welle Nachladen S 0.54.0 (Weisung P12-280, Nico 1c): Stadtteile zeigen ----
+    public const string Stadtteile = "Stadtteile";
+    public const string StadtteileTipp = "Zeigt das Raster der Stadtteile (je 16 × 16 Felder) mit Namen, Dreiecken und Netzdaten (T). Das Spiel lädt draußen nur die Stadtteile um die Figur. Nur zum Ansehen, ändert nichts.";
+    public const string StadtteileRechnet = "Stadtteile: Werte werden gerechnet …";
+
+    public static string StadtteileFertig(int anzahl) => string.Create(De, $"Stadtteile: Werte für {anzahl} Stadtteile gerechnet.");
+
+    /// <summary>Werte einer Kachel in der Draufsicht (zweite Zeile unter dem Namen).</summary>
+    public static string StadtteilWerte(long dreiecke, double mb) => string.Create(De, $"{dreiecke:N0} Dreiecke · {mb:N1} MB");
+
+    /// <summary>Vorlesen und Melden: Name und Werte einer Kachel.</summary>
+    public static string StadtteilName(string name, long? dreiecke, double? mb) =>
+        dreiecke is { } d && mb is { } m ? string.Create(De, $"Stadtteil {name}: {d:N0} Dreiecke, {m:N1} MB") : "Stadtteil " + name;
+
+    /// <summary>In 3D: welcher Stadtteil in der Mitte der Ansicht liegt.</summary>
+    public static string StadtteileIn3D(string stadtteil) => "In der Mitte der Ansicht: " + stadtteil + ". Das Raster zeigt die Stadt von oben.";
 
     public static string Grenzzeile(long dreiecke, int aufrufe, long grenzeDreiecke, int grenzeAufrufe) =>
         string.Create(System.Globalization.CultureInfo.GetCultureInfo("de-DE"),
@@ -1106,6 +1123,7 @@ public static partial class Texte
         ("+ / −", "3D-Ansicht näher / weiter weg", ["OemPlus", "Add", "OemMinus", "Subtract"]),
         ("G", "Raster zeigen (Gebäude entwerfen)", ["G"]),
         ("W", "Wärmekarte an oder aus (Stadt von oben: wo die meisten Dreiecke liegen)", ["W"]),
+        ("T", "Stadtteile an oder aus (Raster mit Namen und Werten; in 3D: Stadtteil in der Mitte)", ["T"]),
         ("F11", "Vollbild", ["F11"]),
         ("F1 / ?", "Diese Übersicht", ["F1"]),
     ];

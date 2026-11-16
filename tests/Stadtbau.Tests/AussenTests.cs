@@ -209,7 +209,11 @@ public class AussenTests
         Assert.True(Aussen.GroesseGueltig(20.5, 16));
         Assert.False(Aussen.GroesseGueltig(7.5, 16));
         Assert.False(Aussen.GroesseGueltig(20.3, 16));
-        Assert.False(Aussen.GroesseGueltig(65, 16));
+        // seit S 0.54.0 (Weisung P12-280, Nico 2b) bis 256 je Seite
+        Assert.True(Aussen.GroesseGueltig(65, 16));
+        Assert.True(Aussen.GroesseGueltig(256, 256));
+        Assert.False(Aussen.GroesseGueltig(256.5, 16));
+        Assert.False(Aussen.GroesseGueltig(16, 300));
         var f = Aussen.Leer(D.Fassung, "neu_test", 20, 16);
         Assert.Empty(Liste(f.Karte["orte"]));
         Assert.Empty(f.Laternen);

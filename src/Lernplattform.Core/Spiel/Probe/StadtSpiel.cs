@@ -25,6 +25,12 @@ public sealed partial class StadtSpiel
     public const float Tempo = 3.5f;
 
     private readonly List<(double X, double Y)> _weg = [];
+
+    /// <summary>
+    /// Welle Nachladen A 0.82.0 (Weisung P12-280, 5b, Ankunft mit Bus oder Zug): Ende des Wegs der Figur (null = kein Weg). Nur
+    /// fuer die Darstellung (die Kacheln am Ziel werden vorher vorbereitet); aendert nichts am Spiel.
+    /// </summary>
+    public (float X, float Z)? WegEnde => _weg.Count > 0 ? ((float)_weg[^1].X, (float)_weg[^1].Y) : null;
     private string? _zielOrt;
     private string? _danachZu;
     private object? _danach;   // Nachtrag 1 zu P7-12: naechstes Ziel (Ort-Id oder Bodenpunkt), erst nach der Ankunft

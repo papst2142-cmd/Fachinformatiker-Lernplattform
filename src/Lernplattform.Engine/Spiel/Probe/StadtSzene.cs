@@ -835,6 +835,9 @@ public sealed partial class StadtSzene
     /// <summary>Welle Nachladen: so weit reicht eine Laterne samt Arm und Licht hoechstens von ihrem Fuss (grosszuegig).</summary>
     private const float LaterneUmkreis = 3f;
 
+    /// <summary>Groesster Radius, fuer den die Raster-Pruefung des Kleingruens gilt (groesser: ganze Listen).</summary>
+    private const float FreiRMax = 0.35f;
+
     /// <summary>
     /// Welle Q2: Questgeber draussen in ein Netz (Paket-Netz oder Netz ihres Hauses); Fuesse auf dem Boden an ihrem Platz, Blick wie im Werkzeug
     /// (0 = +y, 90 = +x). Ohne Grafik (Tests) die einfache Probefigur.
@@ -1830,7 +1833,104 @@ public sealed partial class StadtSzene
             var haeuserKaesten = haeuser.Select(h => (h.Min, h.Max)).ToList();
             // W11 (Weisung P8-47): die Laternenplaetze aus Nicos Skizze bleiben frei von Kleingruen
             var laternenPlaetze = Nachtlicht.Wunschplaetze(strassen, breite, tiefe, laternenSkizze).ToList();
-            bool Frei(float x, float z, float r) =>
+            // Welle Nachladen A 0.82.0: dieselbe Pruefung ueber Raster (nur nahe Eintraege, gleiches Ergebnis; Radius ueber
+            // FreiRMax: ganze Listen wie bisher). Die Raster entstehen beim ersten Aufruf (alle Listen stehen dann fest).
+            NahRaster<int>? linienNah = null, punkteNah = null;
+            bool Frei(float x, float z, float r)
+            {
+                if (r > FreiRMax)
+                {
+                    return FreiGanz(x, z, r);
+                }
+                if (linienNah is null || punkteNah is null)
+                {
+                    (linienNah, punkteNah) = FreiRaster();
+                }
+                var q = new Vector2(x, z);
+                // Linien: 0..n Sperren, dann Gehwege, dann Laternenplaetze; Punkte/Kaesten: Orte, Haeuser, Hindernisse, Festplaetze, Kreuze
+                return linienNah.Alle(x, z, i => i < baeume.Sperren.Count
+                        ? Kurve.Abstand(q, baeume.Sperren[i].Linie) >= baeume.Sperren[i].Halb + r + 0.02f
+                        : i < baeume.Sperren.Count + gehwege.Count
+                            ? Kurve.Abstand(q, gehwege[i - baeume.Sperren.Count].Linie) >= gehwege[i - baeume.Sperren.Count].Halb + r + 0.02f
+                            : LaterneFrei(laternenPlaetze[i - baeume.Sperren.Count - gehwege.Count], q, r))
+                    && punkteNah.Alle(x, z, i => PunktFrei(i, x, z, r))
+                    && teiche.All(t => !Wasser.Drin(t.MitUfer, q) && Wasser.RandAbstand(t.MitUfer, q) >= r + 0.02f)
+                    && (gelaende is null || gelaende.Flach(x, z, r));
+            }
+            static bool LaterneFrei((Vector2 A, Vector2 B) lp, Vector2 q, float r) =>
+                Kurve.Abstand(q, [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f;
+            (NahRaster<int>, NahRaster<int>) FreiRaster()
+            {
+                var linien = new NahRaster<int>();
+                var nr = 0;
+                foreach (var (linie, halb) in baeume.Sperren.Concat(gehwege.Select(g => ((IReadOnlyList<Vector2>)g.Linie, g.Halb))))
+                {
+                    var (min, max) = Rahmen(linie);
+                    var w = halb + FreiRMax + 0.02f;
+                    linien.Hinzu(nr++, min.X - w, min.Y - w, max.X + w, max.Y + w);
+                }
+                foreach (var lp in laternenPlaetze)
+                {
+                    var w = Nachtlicht.AbstandModell + FreiRMax + 0.05f;
+                    linien.Hinzu(nr++, MathF.Min(lp.A.X, lp.B.X) - w, MathF.Min(lp.A.Y, lp.B.Y) - w, MathF.Max(lp.A.X, lp.B.X) + w, MathF.Max(lp.A.Y, lp.B.Y) + w);
+                }
+                var punkte = new NahRaster<int>();
+                nr = 0;
+                foreach (var o in orte)
+                {
+                    var w = 0.45f + FreiRMax;
+                    punkte.Hinzu(nr++, o.StehX - w, o.StehZ - w, o.StehX + w, o.StehZ + w);
+                }
+                foreach (var k in haeuserKaesten)
+                {
+                    var w = FreiRMax + 0.03f;
+                    punkte.Hinzu(nr++, k.Min.X - w, k.Min.Z - w, k.Max.X + w, k.Max.Z + w);
+                }
+                foreach (var h in hindernisseVorFest)
+                {
+                    punkte.Hinzu(nr++, (float)h.Item1 - FreiRMax, (float)h.Item2 - FreiRMax, (float)h.Item3 + FreiRMax, (float)h.Item4 + FreiRMax);
+                }
+                foreach (var fp in festPlaetze)
+                {
+                    var w = fp.R + FreiRMax + 0.05f;
+                    punkte.Hinzu(nr++, fp.P.X - w, fp.P.Y - w, fp.P.X + w, fp.P.Y + w);
+                }
+                foreach (var k in andreaskreuze)
+                {
+                    var w = Bahnuebergang.Grundriss + FreiRMax + 0.05f;
+                    punkte.Hinzu(nr++, k.Fuss.X - w, k.Fuss.Y - w, k.Fuss.X + w, k.Fuss.Y + w);
+                }
+                return (linien, punkte);
+            }
+            bool PunktFrei(int i, float x, float z, float r)
+            {
+                if (i < orte.Count)
+                {
+                    var o = orte[i];
+                    return Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r;
+                }
+                i -= orte.Count;
+                if (i < haeuserKaesten.Count)
+                {
+                    var k = haeuserKaesten[i];
+                    return x + r < k.Min.X - 0.03f || x - r > k.Max.X + 0.03f || z + r < k.Min.Z - 0.03f || z - r > k.Max.Z + 0.03f;
+                }
+                i -= haeuserKaesten.Count;
+                if (i < hindernisseVorFest.Count)
+                {
+                    var h = hindernisseVorFest[i];
+                    return x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4;
+                }
+                i -= hindernisseVorFest.Count;
+                if (i < festPlaetze.Count)
+                {
+                    var fp = festPlaetze[i];
+                    return Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f;
+                }
+                i -= festPlaetze.Count;
+                return Vector2.Distance(andreaskreuze[i].Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f;
+            }
+            bool FreiGanz(float x, float z, float r) =>
                 baeume.Sperren.All(sp => Kurve.Abstand(new Vector2(x, z), sp.Linie) >= sp.Halb + r + 0.02f)
                 && gehwege.All(g => Kurve.Abstand(new Vector2(x, z), g.Linie) >= g.Halb + r + 0.02f)
                 && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r)

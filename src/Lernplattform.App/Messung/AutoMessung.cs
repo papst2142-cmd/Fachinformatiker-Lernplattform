@@ -150,6 +150,14 @@ public static partial class AutoMessung
         {
             return await W12LaufAsync(ansicht);
         }
+        // Welle Nachladen A 0.82.0 (Weisung P12-280): eigener Teil mit der grossen Testkarte (eigener Schritt in der CI)
+        if (Teil == TeilNachladen)
+        {
+            Zeitplan("NachladenTeilAsync");
+            var n = await NachladenTeilAsync(ansicht);
+            Messwerte.Notiere(n == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({n} Funde)"));
+            return n;
+        }
         // Phase 11 W3 (Weisung P11-21): nur die Layoutpruefung, z. B. mit Windows-Skalierung 150 % (ci.yml)
         if (Teil == TeilLayout)
         {
@@ -227,6 +235,12 @@ public static partial class AutoMessung
             funde += await TafelZurueckAsync(ansicht);         // Welle A 0.81.0: Zurueck in der Spiel-Tafel fest oben (Nico 5a)
             Zeitplan("LeisteUebersichtAsync");
             funde += await LeisteUebersichtAsync(ansicht);     // Welle A 0.81.0: Uebersicht im Handy, Leiste schlank (Sammelliste 350)
+            if (Teil is null)
+            {
+                // lokal (ohne Teil) auch der Teil der Testkarte; die CI misst ihn als eigenen Schritt
+                Zeitplan("NachladenTeilAsync");
+                funde += await NachladenTeilAsync(ansicht);
+            }
         }
         if (MitLernen)
         {
@@ -261,9 +275,9 @@ public static partial class AutoMessung
     private static string? Teil => Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL");
 
     /// <summary>Ohne Angabe (lokal) misst der Start-Test alles in einem Lauf wie bisher.</summary>
-    private static bool MitLernen => Teil != TeilSpiel;
+    private static bool MitLernen => Teil is not (TeilSpiel or TeilNachladen);
 
-    private static bool MitSpiel => Teil is not (TeilLernen or TeilLayout);
+    private static bool MitSpiel => Teil is not (TeilLernen or TeilLayout or TeilNachladen);
 
     /// <summary>Erstes Oeffnen jeder Seite und die Messpunkte des Lernteils (Phasen 1 bis 6).</summary>
     private static async Task<int> LernteilMessenAsync(MainView ansicht, Lerninhalte? inhalte, List<string> reihenRot)

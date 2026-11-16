@@ -729,10 +729,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 else if (distance(farbe, vec3(0.12, 0.80, 0.32)) < 0.02) { leuchten = vec3(0.30, 1.0, 0.50); nacht = max(uNacht, 0.6); }
                 vec3 aus = mix(normal, leuchten, glut * nacht);
                 // Welle Nachladen A 0.82.0 (Nico 3b): leichter Dunst am Rand der Sicht in der Farbe des Himmels (Dunst.cs);
-                // ohne Nachladen ist uDunst 0 und das Bild wie vorher
-                if (uDunst > 0.0) {
-                    float weit = distance(vWelt.xz, vec2(uAugeX, uAugeZ));
-                    aus = mix(aus, vec3(uDunstR, uDunstG, uDunstB), uDunst * smoothstep(uDunstVon, uDunstBis, weit));
+                // ohne Nachladen ist uDunst 0 und das Bild wie vorher; naeher als uDunstVon ist der Anteil 0 (dort nichts
+                // rechnen: das Bild bleibt gleich, die Rechnung je Bildpunkt entfaellt fast ueberall, P12-281 Punkt 3)
+                vec2 vomAuge = vWelt.xz - vec2(uAugeX, uAugeZ);
+                float weit2 = dot(vomAuge, vomAuge);
+                if (uDunst > 0.0 && weit2 > uDunstVon * uDunstVon) {
+                    aus = mix(aus, vec3(uDunstR, uDunstG, uDunstB), uDunst * smoothstep(uDunstVon, uDunstBis, sqrt(weit2)));
                 }
                 fFarbe = vec4(aus, 1.0);
             }
@@ -1326,10 +1328,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 lader = new Nachlader(szene, mitGruen);
                 lader.Takt(figurX, figurZ);
-                foreach (var k in lader.Noetig)
-                {
-                    lader.JetztBauen(k);
-                }
+                lader.StartBauen(lader.Noetig);
             }
             else
             {

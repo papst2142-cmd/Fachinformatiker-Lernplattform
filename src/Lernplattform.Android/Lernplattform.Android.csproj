@@ -27,6 +27,11 @@
     <AndroidManifest>Properties\AndroidManifest.Probe.xml</AndroidManifest>
   </PropertyGroup>
 
+  <!-- Welle Nachladen A 0.82.0 (Weisung P12-280): die grosse Testkarte nur in der Probe-APK (Knopf "Testkarte"), nie in der App -->
+  <ItemGroup Condition="'$(Probe)' == 'true'">
+    <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\testkarte_256.fistadt" LogicalName="testkarte_256.fistadt" />
+  </ItemGroup>
+
   <!-- A 0.39.0 (Weisung P11-40 Frage 5a): Emulator-Probe des Updates im Programm, NUR in der CI (-p:UpdateProbe=true),
        nie ausgeliefert. x86_64 fuer den Emulator, Testserver und Fingerabdruck des Testschluessels aus dem Lauf;
        die App sucht beim Start ueber den Testserver und aktualisiert sich ohne Bedienung (UpdateProbe.cs). -->

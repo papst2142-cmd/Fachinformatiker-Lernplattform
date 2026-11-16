@@ -409,7 +409,7 @@ public static class Aussen
         };
     }
 
-    /// <summary>Groesse einer leeren Stadt: 8 bis 64 je Seite, auf 0,5 gerundet.</summary>
+    /// <summary>Groesse einer leeren Stadt: 8 bis 256 je Seite (seit S 0.54.0, Nico 2b; vorher 64), auf 0,5 gerundet.</summary>
     public static bool GroesseGueltig(double breite, double hoehe) =>
-        breite is >= 8 and <= 64 && hoehe is >= 8 and <= 64 && Math.Abs((breite * 2) - Math.Round(breite * 2)) < 1e-9 && Math.Abs((hoehe * 2) - Math.Round(hoehe * 2)) < 1e-9;
+        breite is >= 8 and <= Stadtteile.GroessteSeite && hoehe is >= 8 and <= Stadtteile.GroessteSeite && Math.Abs((breite * 2) - Math.Round(breite * 2)) < 1e-9 && Math.Abs((hoehe * 2) - Math.Round(hoehe * 2)) < 1e-9;
 }

@@ -3292,6 +3292,13 @@ public sealed partial class Hauptansicht : UserControl
                 e.Handled = true;
                 return;
             }
+            if (!_innen && e.Key == Key.T && e.KeyModifiers == KeyModifiers.None)
+            {
+                // S 0.54.0 (Weisung P12-280): Stadtteile an/aus
+                StadtteileUmschalten();
+                e.Handled = true;
+                return;
+            }
             if (!_innen && e.Key == Key.N && e.KeyModifiers == KeyModifiers.None)
             {
                 // S 0.27.0: Notiz setzen

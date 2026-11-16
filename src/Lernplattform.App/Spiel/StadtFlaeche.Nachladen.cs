@@ -52,6 +52,12 @@ public sealed partial class StadtFlaeche
 
     public int KachelnLoch { get; private set; }
 
+    /// <summary>Nur Start-Test und Leistungsprobe: Ziel einer Ankunft vorgeben (sonst das Ende des Wegs der Figur).</summary>
+    public (float X, float Z)? ZielFuerProbe { get; set; }
+
+    /// <summary>So lange darf ein Bild noetige Kacheln im Bild selbst bauen (danach fern, das naechste Bild baut weiter).</summary>
+    public const double SofortBisMs = 120;
+
     /// <summary>Hochladen von Kacheln im letzten Bild in ms (Teil von „Kachel nachladen“).</summary>
     public double KachelHochladenMs { get; private set; }
 
@@ -118,6 +124,7 @@ public sealed partial class StadtFlaeche
         var lader = new Nachlader(spiel.Szene, _gw.Gruen(SpielKamera.AbstandMax));
         NachladenGrundlage(gl, lader);
         lader.Takt(spiel.FigurX, spiel.FigurZ);
+        lader.StartBauen(lader.Noetig);
         foreach (var k in lader.Noetig)
         {
             KachelHochladen(gl, lader.JetztBauen(k));
@@ -179,14 +186,20 @@ public sealed partial class StadtFlaeche
         {
             return;
         }
+        // Ankunft mit Bus oder Zug: liegt das Ende des Wegs ausserhalb des Rings, wird es vorher vorbereitet
+        lader.Ziel = ZielFuerProbe ?? (spiel.WegEnde is { } ende && !spiel.ImInnenraum
+            && MathF.Abs(ende.X - spiel.FigurX) + MathF.Abs(ende.Z - spiel.FigurZ) > Ladeplan.Vor ? ende : null);
         foreach (var k in lader.Takt(spiel.FigurX, spiel.FigurZ))
         {
             KachelFreigeben(gl, k);
         }
-        // eine noetige Kachel im Bild, die noch fehlt, sofort (nie ein Loch)
+        // eine noetige Kachel im Bild, die noch fehlt, sofort (naechste zuerst); nach SofortBisMs in diesem Bild nur noch
+        // vorbereitete (die uebrigen zeichnet das Bild fern, nie ein Loch; das naechste Bild holt sie)
+        var sofort = Stopwatch.GetTimestamp();
         foreach (var k in lader.Noetig)
         {
-            if (!_kachelGl.ContainsKey(k) && KachelKugel(k) is var kugel && FestUebergang.ImSichtkegel(sichtProj, kugel.Mitte, kugel.Halb))
+            if (!_kachelGl.ContainsKey(k) && KachelKugel(k) is var kugel && FestUebergang.ImSichtkegel(sichtProj, kugel.Mitte, kugel.Halb)
+                && (lader.Bereit.ContainsKey(k) || MsSeit(sofort) < SofortBisMs))
             {
                 KachelHochladen(gl, lader.JetztBauen(k));
             }

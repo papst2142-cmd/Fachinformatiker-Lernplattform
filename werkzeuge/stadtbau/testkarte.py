@@ -4,7 +4,8 @@ Stadt 1 (Fassung 2, 64 x 64) wird 4 x 4 Mal nebeneinander gelegt. Die Kopie link
 Zugaengen, Haltestellen, Gelaende). Die anderen 15 Kopien bekommen Strassen, Parks, Bahn, Fluss, Baeume, Teiche, Stege,
 Fusswege, Zebrastreifen, Laternen und Beete, verschoben; jeder Ort wird dort ein Gebaeude ohne Ort mit demselben Modell und
 derselben Drehung (gleich viele Haeuser je Kachel wie in Stadt 1). Gelaende (hoechstens 16 Huegel) und Haltestellen bleiben
-nur in der ersten Kopie. Kopf: Stadt "testkarte", Fassung 0, Format 3 (Karte groesser als 64).
+nur in der ersten Kopie. Kopf: Stadt "neu_testkarte" ohne Basis (wie eine neue Stadt des Werkzeugs, oeffnet dort als eigenes Projekt), Fassung 0,
+Format 3 (Karte groesser als 64).
 
 Aufruf: python3 -I werkzeuge/stadtbau/testkarte.py <stadt1_fassung2.fistadt> <ziel.fistadt>
 """
@@ -87,7 +88,7 @@ def main(quelle, ziel):
     d["laternen"] = laternen
     d["beete"] = beete
     d["formatversion"] = 3
-    d["stadt"] = {"id": "testkarte", "fassung": 0, "basis": 0}
+    d["stadt"] = {"id": "neu_testkarte", "fassung": 0, "basis": None}
     d["nachricht"] = "Testkarte 256 x 256 aus Stadt 1 (Fassung 2), 4 x 4 Kopien (werkzeuge/stadtbau/testkarte.py)."
     d.pop("pruefsumme", None)
     text = json.dumps(d, ensure_ascii=False, separators=(",", ":"), sort_keys=True)

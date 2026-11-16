@@ -2,9 +2,9 @@
  "format": "fistadt",
  "formatversion": 3,
  "stadt": {
-  "id": "testkarte",
+  "id": "neu_testkarte",
   "fassung": 0,
-  "basis": 0
+  "basis": null
  },
  "werkzeug": "Fachinformatiker Stadtbau S 0.53.1",
  "erstellt": "2026-11-14T18:26:07+01:00",
@@ -44811,5 +44811,5 @@
    196.0
   ]
  ],
- "pruefsumme": "sha256:6c757c057ed068db5634d91cf8b0f0540618138923d0b72e21796585e0013821"
+ "pruefsumme": "sha256:4986dc419d4a38764369ad211fe9d17a803aad68560a3054ce9501e0e5b25fa1"
 }

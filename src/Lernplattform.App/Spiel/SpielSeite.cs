@@ -186,6 +186,41 @@ public sealed partial class SpielSeite : Grid
             };
             _knoepfe.Children.Add(probe);
         }
+        if (Nachladeprobe.An)
+        {
+            // Welle Nachladen A 0.82.0 (Weisung P12-280): nur in der Probe-APK; grosse Testkarte laden, Gang und Ankunft messen
+            // (Zeilen in spiel_bilder.log), danach bleibt die Testkarte zum Selbstgehen bis „Spiel verlassen“
+            var karte = Schrift.Knopf(SpielProbeTexte.Testkarte);
+            karte.Click += async (_, _) =>
+            {
+                if (Spiel is not { ImInnenraum: false } spiel || !Flaeche.GlBereit || Nachladeprobe.Laden() is not { } datei)
+                {
+                    return;
+                }
+                karte.IsEnabled = false;
+                try
+                {
+                    Leistungsprobe.BildschirmAn?.Invoke(true);
+                    var neu = Nachladeprobe.Spiel(datei, spiel);
+                    SpielSetzen(neu);
+                    for (var i = 0; i < 20 && !Flaeche.NachladenAktiv; i++)
+                    {
+                        await Flaeche.NaechstesBildAsync();
+                    }
+                    var gang = await Nachladeprobe.GangAsync(Flaeche, neu, Nachladeprobe.Schlange(neu.Szene.Breite, neu.Szene.Tiefe, 64f, 32f), 3 * StadtSpiel.Tempo);
+                    Flaeche.Zeiten.Probe.Add(Nachladeprobe.Zeile("Gang (dreifaches Gehtempo)", gang));
+                    var (ankunft, vorbereitet) = await Nachladeprobe.AnkunftAsync(Flaeche, neu, 32f, 32f);
+                    Flaeche.Zeiten.Probe.Add(Nachladeprobe.Zeile("Ankunft (Ziel vorbereitet: " + (vorbereitet ? "ja" : "nein") + ")", ankunft));
+                }
+                finally
+                {
+                    Leistungsprobe.BildschirmAn?.Invoke(false);
+                    ZeitenSchreiben(true);
+                    karte.IsEnabled = true;
+                }
+            };
+            _knoepfe.Children.Add(karte);
+        }
         // Phase 8 W10 (Sammelliste 148, Nico 1b): Pfeil links vor den Knoepfen klappt das Hinweisfeld zu;
         // zugeklappt bleibt nur der Pfeil, eine neue kurze Meldung steht 5 s daneben
         _klappSymbol = Views.Symbole.Block("arrow_drop_down", 26, "Pinsel.text");

@@ -166,6 +166,50 @@ public sealed class SpielKachelnTests
         Assert.True(Ladeplan.VorWeg > Ladeplan.Vor && Ladeplan.Vor > Ladeplan.NahWeg && Ladeplan.NahWeg > Ladeplan.Nah);
     }
 
+    /// <summary>
+    /// Die schnelle Laternen-Pruefung (<see cref="Nachtlicht.Regeln.Frei"/>, Raster nach Wirkkasten) ergibt an jedem Punkt
+    /// genau dasselbe wie die volle <see cref="Nachtlicht.Regeln.Pruefen"/>: Zufallspunkte ueber die ganze Karte und dichte
+    /// Punkte im Laternenabstand neben jeder Strasse (dort liegen die Grenzfaelle), Fassung 0, 1, 2 und die Testkarte.
+    /// </summary>
+    [Fact]
+    public void Laternenregeln_SchnellGleichVoll()
+    {
+        foreach (var szene in new[] { Spiel(0).Szene, Spiel(1).Szene, Spiel(2).Szene, SpielTestkarteTests.Testkarte.Value.Szene })
+        {
+            var regeln = new Nachtlicht.Regeln(szene);
+            var rnd = new Random(281);
+            var punkte = Enumerable.Range(0, 20000).Select(_ => new Vector2((float)rnd.NextDouble() * szene.Breite, (float)rnd.NextDouble() * szene.Tiefe)).ToList();
+            foreach (var strasse in szene.Strassen.Take(40))
+            {
+                for (var i = 0; i + 1 < strasse.Count; i++)
+                {
+                    var d = strasse[i + 1] - strasse[i];
+                    var laenge = d.Length();
+                    if (laenge < 1e-4f)
+                    {
+                        continue;
+                    }
+                    var quer = new Vector2(-d.Y, d.X) / laenge;
+                    for (var t = 0f; t <= laenge; t += 0.05f)
+                    {
+                        var p = strasse[i] + (d * (t / laenge));
+                        punkte.Add(p + (quer * Nachtlicht.Rand));
+                        punkte.Add(p - (quer * Nachtlicht.Rand));
+                    }
+                }
+            }
+            var frei = 0;
+            foreach (var q in punkte)
+            {
+                var voll = regeln.Pruefen(q).Frei;
+                Assert.True(voll == regeln.Frei(q), $"{szene.Breite}: Punkt {q.X:R} {q.Y:R}, voll {voll}");
+                frei += voll ? 1 : 0;
+            }
+            // beide Antworten kommen vor
+            Assert.InRange(frei, 1, punkte.Count - 1);
+        }
+    }
+
     [Fact]
     public void Formatnummer_Drei_NurFuerGrosseKarten()
     {
@@ -194,7 +238,7 @@ public sealed class SpielTestkarteTests
 {
     internal static readonly Lazy<StadtSpiel> Testkarte = new(() =>
     {
-        var f = StadtFassung.Lesen(File.ReadAllBytes(Path.Combine(Pfade.Wurzel, "tests/Stadtbau.Tests/Testdaten/testkarte_256.fistadt")));
+        var f = StadtFassung.Lesen(File.ReadAllBytes(Path.Combine(Pfade.Wurzel, "tests/Lernplattform.Tests/Testdaten/testkarte_256.fistadt")));
         var inhalt = f.MitKarte(SpielInhaltTests.Inhalt);
         return new StadtSpiel(f.StadtFuer(inhalt), SpielQuestTests.AllesErledigt(inhalt), SpielGrafikTests.Bibliothek.Value, SpielInnenraumTests.Innenraeume.Value);
     });

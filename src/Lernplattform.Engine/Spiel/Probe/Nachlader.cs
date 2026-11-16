@@ -29,6 +29,8 @@ public sealed class Nachlader
     private List<Stadtteile.Kachel> _noetig = [];
     private List<Stadtteile.Kachel> _vor = [];
     private (float X, float Z)? _ort;
+    private (float X, float Z)? _ziel;
+    private List<Stadtteile.Kachel> _zielKacheln = [];
 
     public Nachlader(StadtSzene szene, bool mitGruen, bool hintergrund = true)
     {
@@ -54,6 +56,24 @@ public sealed class Nachlader
 
     /// <summary>Die nah noetigen Kacheln beim letzten <see cref="Takt"/> (naechste zuerst).</summary>
     public IReadOnlyList<Stadtteile.Kachel> Noetig => _noetig;
+
+    /// <summary>
+    /// Ankunft mit Bus oder Zug (Weisung P12-280, 5b): das Ende des Wegs der Figur. Die dort noetigen Kacheln werden nach dem
+    /// Ring um die Figur im Hintergrund vorbereitet und nicht verworfen, solange das Ziel gilt (null = kein Ziel).
+    /// </summary>
+    public (float X, float Z)? Ziel
+    {
+        get => _ziel;
+        set
+        {
+            if (value == _ziel)
+            {
+                return;
+            }
+            _ziel = value;
+            _zielKacheln = value is { } z ? Ladeplan.Noetig(z.X, z.Z, Szene.Breite, Szene.Tiefe) : [];
+        }
+    }
 
     /// <summary>Gleichzeitig geladene Netzdaten in Byte: Grundlage, Kacheln auf der Grafikkarte und vorbereitete (Nico 4a).</summary>
     public long Bytes => Grundlage.Bytes + _geladen.Values.Sum() + _bereit.Values.Sum(p => p.Bytes);
@@ -112,12 +132,11 @@ public sealed class Nachlader
         {
             _geladen.Remove(k);
         }
-        foreach (var k in _bereit.Keys.Where(k => Ladeplan.FreigebenVor(k, x, z)).ToList())
+        foreach (var k in _bereit.Keys.Where(k => Ladeplan.FreigebenVor(k, x, z) && !_zielKacheln.Contains(k)).ToList())
         {
             _bereit.Remove(k);
         }
-        if (_bau is null && _vor.FirstOrDefault(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k)) is var naechste
-            && _vor.Any(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k)))
+        if (_bau is null && _vor.Concat(_zielKacheln).Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k)).Take(1).ToList() is [var naechste])
         {
             _bauKachel = naechste;
             if (_hintergrund)
@@ -175,6 +194,27 @@ public sealed class Nachlader
         }
         Merken();
         return p;
+    }
+
+    /// <summary>
+    /// Start (Ladebild, ausserhalb des Oberflaechen-Threads): die fehlenden <paramref name="kacheln"/> auf allen Kernen zugleich
+    /// bauen und vorbereitet ablegen (danach liefert <see cref="JetztBauen"/> sie ohne Bau). Jede Kachel wird genau wie mit
+    /// <see cref="Packen"/> gebaut, nur nebeneinander; die Szene rechnet ihre einmaligen Teile (Grundlage, Laternen) vorher.
+    /// </summary>
+    public void StartBauen(IReadOnlyList<Stadtteile.Kachel> kacheln)
+    {
+        _bau?.Wait();
+        Uebernehmen();
+        var fehlt = kacheln.Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k)).Distinct().ToList();
+        var pakete = new Paket[fehlt.Count];
+        var (szene, gruen) = (Szene, MitGruen);
+        _ = szene.Laternen;
+        Parallel.For(0, fehlt.Count, i => pakete[i] = Packen(szene, fehlt[i], gruen));
+        foreach (var p in pakete)
+        {
+            Ablegen(p);
+        }
+        Merken();
     }
 
     /// <summary>Alles auf der Grafikkarte gilt als verloren (OpenGL neu): die Kacheln werden neu hochgeladen.</summary>

@@ -73,7 +73,7 @@ jobs:
   # osx-arm64 keinen Rechner und wurde nach 28 Minuten abgebrochen). Ein Versprechen von GitHub ist die Reihenfolge nicht.
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
-    # Update-Probe A 0.81.2 -> A 0.81.3 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
+    # Update-Probe A 0.82.0 -> A 0.82.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # Stufe voll (4 Pakete) und ohne-mac (Welle CI schneller 2: nur win-x64 und linux-x64, Listen voll, ohne-mac)
     # Phase 11 FW10 (Weisung P11-18): Intel-Mac osx-x64 mit eigenem Velopack-Kanal
@@ -121,16 +121,16 @@ jobs:
         run: bash werkzeuge/ci/wachhund.sh 30 bash werkzeuge/pakete/pakete_und_update.sh ${{ matrix.rid }} pakete
       - uses: actions/upload-artifact@v7
         with:
-          name: paket-${{ matrix.rid }}-A-0.81.2
-          path: pakete/feed-A-0.81.2/
+          name: paket-${{ matrix.rid }}-A-0.82.0
+          path: pakete/feed-A-0.82.0/
       - uses: actions/upload-artifact@v7
         with:
-          name: updateprobe-${{ matrix.rid }}-A-0.81.3
-          path: pakete/feed-A-0.81.3/
+          name: updateprobe-${{ matrix.rid }}-A-0.82.1
+          path: pakete/feed-A-0.82.1/
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Linux'
         with:
-          name: appimage-linux-x64-A-0.81.2-tar
+          name: appimage-linux-x64-A-0.82.0-tar
           path: pakete/appimage/
       # Phase 6 W1 (VE1/VE4): Release-Dateien aus dem Stand im Repo, jede Datei in der Lizenzliste
       - name: Release-Dateien bauen (ohne Hochladen)
@@ -345,6 +345,30 @@ jobs:
           STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 19 || 9 }}
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel2
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_spiel2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
+      # Welle Nachladen A 0.82.0 (Weisung P12-280): eigener Teil mit der grossen Testkarte 256 x 256 (Stadt bauen geladen,
+      # Gang ueber die ganze Karte, Ankunft, Nahansicht an jeder Kachel in jeder Grafikstufe); eigener Schritt, weil die
+      # Spielansichten ihre 10 Minuten schon fast brauchen (Lauf 1016: ubuntu 486 s, windows 490 s). Gleiche Neustart-Regel.
+      - name: Testkarte Nachladen ohne Bedienung (1. Lauf, frischer Datenordner)
+        id: nachladen1
+        if: always() && matrix.spiel && steps.bauen.outcome == 'success'
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: nachladen
+          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 24 || 14 }}
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_nachladen1
+          LERNPLATTFORM_TESTKARTE: ${{ github.workspace }}/tests/Lernplattform.Tests/Testdaten/testkarte_256.fistadt
+        run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_nachladen1_versuch${{ github.run_attempt }}.txt
+      - name: Testkarte Nachladen ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
+        if: always() && steps.nachladen1.outputs.rc == '3' && steps.nachladen1.outputs.zweiter_lauf != 'nein'
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 25 || 15 }}
+        shell: bash
+        env:
+          LERNPLATTFORM_MESSUNG_TEIL: nachladen
+          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 24 || 14 }}
+          LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_nachladen2
+          LERNPLATTFORM_TESTKARTE: ${{ github.workspace }}/tests/Lernplattform.Tests/Testdaten/testkarte_256.fistadt
+        run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_nachladen2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_nachladen1_versuch${{ github.run_attempt }}.txt
       # Phase 7 W1 (Plan Abschnitt 4): eigener kurzer Lauf ohne OpenGL (--software, nur Windows und Linux;
       # macOS hat keinen Software-Schalter). Erwartet: Hinweis und Ortsliste, kein Absturz, Urteil gruen.
       - name: Spiel ohne OpenGL (kurzer Lauf mit Zeichnen in Software)
@@ -523,6 +547,12 @@ jobs:
         run: |
           echo "Rueckgabe des 1. Laufs der Spielansichten unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.spiel1.outputs.rc }}')"
           exit 1
+      - name: Testkarte Nachladen Rueckgabe pruefen
+        if: always() && steps.nachladen1.outcome == 'success' && steps.nachladen1.outputs.rc != '0' && steps.nachladen1.outputs.rc != '3'
+        shell: bash
+        run: |
+          echo "Rueckgabe des 1. Laufs der Testkarte unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.nachladen1.outputs.rc }}')"
+          exit 1
 
   pakete-stadtbau:
     # Phase 13 Welle 2 (Weisung P12-17): Windows-Paket des Stadtbau-Werkzeugs (eigene Linie S, Velopack-Kanal
@@ -685,11 +715,11 @@ jobs:
         id: apkbau
         if: env.CI_STUFE != 'werkzeug'
         run: dotnet publish src/Lernplattform.Android -c Release -o apk
-      # Spike D (A4b): zweite APK A 0.81.3 im selben Lauf, also mit demselben
-      # Testschluessel; auf dem S24 als Update ueber A 0.81.2 installierbar.
-      - name: Update-APK A 0.81.3 bauen
+      # Spike D (A4b): zweite APK A 0.82.1 im selben Lauf, also mit demselben
+      # Testschluessel; auf dem S24 als Update ueber A 0.82.0 installierbar.
+      - name: Update-APK A 0.82.1 bauen
         if: env.CI_STUFE != 'werkzeug'
-        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.81.3 -o apk-update
+        run: dotnet publish src/Lernplattform.Android -c Release -p:Version=0.82.1 -o apk-update
       # Phase 7 W1 (Weisung P7-2, Frage 4a): Probe-APK der 3D-Stichprobe fuer Nicos S24 mit eigener
       # Kennung ...lernplattform.probe und Namen "Lernplattform Probe", Testschluessel dieses Laufs.
       - name: Probe-APK 3D-Stichprobe bauen
@@ -743,19 +773,19 @@ jobs:
             head -n 1 kennung.txt | grep -q "name='io.github.papst2142cmd.lernplattform' " || { echo "FEHLER: falsche Kennung in $a"; exit 1; }
             grep -q "^application-label:'Fachinformatiker Lernplattform'" kennung.txt || { echo "FEHLER: falscher App-Name in $a"; exit 1; }
           done
-          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1008102'"
-          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1008103'"
+          "$BT/aapt2" dump badging apk/*-Signed.apk | head -n 1 | grep -q "versionCode='1008200'"
+          "$BT/aapt2" dump badging apk-update/*-Signed.apk | head -n 1 | grep -q "versionCode='1008201'"
           test "$(sort -u zertifikate.txt | wc -l)" -eq 1
       - uses: actions/upload-artifact@v7
         if: env.CI_STUFE != 'werkzeug'
         with:
-          name: lernplattform-android-A-0.81.2
+          name: lernplattform-android-A-0.82.0
           path: apk/*-Signed.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: env.CI_STUFE != 'werkzeug'
         with:
-          name: updateprobe-android-A-0.81.3
+          name: updateprobe-android-A-0.82.1
           path: apk-update/*-Signed.apk
           if-no-files-found: error
       # Phase 6 W1 (VE1/VE3/VE4, T2): Release-APK mit Testschluessel (keine Geheimnisse im CI-Lauf),
