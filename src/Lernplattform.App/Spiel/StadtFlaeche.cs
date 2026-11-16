@@ -156,6 +156,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private int _ortDurch;
     private int[] _lichtOrte = [];
     private int[] _autoLichtOrte = [];
+    private int[] _dunstOrte = [];
+    private int[] _autoDunstOrte = [];
     private Tageslicht.Licht _lichtVon = Tageslicht.Tag;
     private Tageslicht.Licht _lichtZiel = Tageslicht.Tag;
     private double _lichtSeit = double.MinValue;
@@ -229,6 +231,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _spiel = value;
             _kameras.Clear();
+            NachladenAusMerken();
             if (value is not null)
             {
                 // Nachtrag 1 zu P7-13 (Wunsch 2): naeher an der Figur (vorher Abstand 10, die Figur war am S24
@@ -455,7 +458,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public static int ProbeAufrufe { get; set; }
 
     /// <summary>Weisung P8-52 (nur Leistungsprobe): Stadt beim naechsten Bild neu in die Grafikkarte laden.</summary>
-    public void ProbeNeuLaden() => SzeneNeu();
+    public void ProbeNeuLaden()
+    {
+        NachladenAusMerken();
+        SzeneNeu();
+    }
 
     /// <summary>Weisung P8-51 (nur Messung W12): jedes Bild zusaetzlich hier, solange gesetzt.</summary>
     public static List<BildZeiten.Bild>? Mitschnitt { get; set; }
@@ -484,12 +491,14 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _ortHell = gl.GetUniformLocationString(_programm, "uHell");
             _ortDurch = gl.GetUniformLocationString(_programm, "uDurch");
             _lichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_programm, n))];
+            _dunstOrte = DunstOrte(gl, _programm);
             _autoProgramm = Programm(gl, es, v, autos: true);
             _autoOrtSichtProj = gl.GetUniformLocationString(_autoProgramm, "uSichtProj");
             _autoOrtLagen = gl.GetUniformLocationString(_autoProgramm, "uAutos");
             _autoOrtHell = gl.GetUniformLocationString(_autoProgramm, "uHell");
             _autoOrtDurch = gl.GetUniformLocationString(_autoProgramm, "uDurch");
             _autoLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_autoProgramm, n))];
+            _autoDunstOrte = DunstOrte(gl, _autoProgramm);
             InstanzenEinrichten(gl, es, v);
             GrafikEinrichten(gl, es, v);
             _genauigkeitGemeldet = false;
@@ -552,6 +561,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _neuNetze.Clear();
         _paket.Clear();
         _ampelLichter = null;
+        NachladenFrei(null);
         GrafikFrei(null);
         base.OnOpenGlLost();
     }
@@ -564,6 +574,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             netz?.Freigeben(gl);
         }
         _ampelLichter = null;
+        NachladenFrei(gl);
         GrafikFrei(gl);
         _innenGl.Clear();
         _hochladen = null;
@@ -675,6 +686,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             uniform float uAugeX;
             uniform float uAugeY;
             uniform float uAugeZ;
+            uniform float uDunst;
+            uniform float uDunstVon;
+            uniform float uDunstBis;
+            uniform float uDunstR;
+            uniform float uDunstG;
+            uniform float uDunstB;
             out vec4 fFarbe;
             void main() {
                 // halb durchsichtig ohne Mischen: jedes zweite Pixel faellt weg (Schachbrett)
@@ -710,7 +727,14 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 if (distance(farbe, vec3(0.92, 0.10, 0.08)) < 0.02) { leuchten = vec3(1.0, 0.16, 0.10); nacht = max(uNacht, 0.6); }
                 else if (distance(farbe, vec3(0.95, 0.66, 0.08)) < 0.02) { leuchten = vec3(1.0, 0.78, 0.18); nacht = max(uNacht, 0.6); }
                 else if (distance(farbe, vec3(0.12, 0.80, 0.32)) < 0.02) { leuchten = vec3(0.30, 1.0, 0.50); nacht = max(uNacht, 0.6); }
-                fFarbe = vec4(mix(normal, leuchten, glut * nacht), 1.0);
+                vec3 aus = mix(normal, leuchten, glut * nacht);
+                // Welle Nachladen A 0.82.0 (Nico 3b): leichter Dunst am Rand der Sicht in der Farbe des Himmels (Dunst.cs);
+                // ohne Nachladen ist uDunst 0 und das Bild wie vorher
+                if (uDunst > 0.0) {
+                    float weit = distance(vWelt.xz, vec2(uAugeX, uAugeZ));
+                    aus = mix(aus, vec3(uDunstR, uDunstG, uDunstB), uDunst * smoothstep(uDunstVon, uDunstBis, weit));
+                }
+                fFarbe = vec4(aus, 1.0);
             }
             """;
         return (Kopf(es, v, ecke: true) + ecke, Kopf(es, v, ecke: false) + pixel);
@@ -784,6 +808,11 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             VorladenBild(gl, jetzt, abstandMs, bytesBeginn, ruhte, startStempel);
             return;
         }
+        if (_spiel is { ImInnenraum: false } spielModus && GlBereit && !_szeneNeu && NachladenGewuenscht() != (_lader is not null))
+        {
+            // Welle Nachladen: Kamerabereich geoeffnet (Messung) oder wieder fest: Szene in der anderen Art neu laden
+            _szeneNeu = true;
+        }
         if (_spiel is { } spiel && _szeneNeu && GlBereit)
         {
             // Stadt in die Grafikkarte laden: beim Start und wenn sich die sichtbaren Orte aendern;
@@ -796,6 +825,16 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _haeuser.Clear();
             _haeuserFern.Clear();
             _hausKugel.Clear();
+            if (NachladenGewuenscht())
+            {
+                // Welle Nachladen A 0.82.0: nur Grundlage und die noetigen Kacheln, der Rest kommt beim Gehen
+                spiel.NurGrundlage = true;
+                NachladenSzeneLaden(gl, spiel);
+            }
+            else
+            {
+            spiel.NurGrundlage = false;
+            NachladenFrei(gl);
             // Weisung P8-55 (W12): die Netze baut die Szene einmal (bei einem Fest- oder Jahreszeitwechsel schon im
             // Haus im Hintergrund), hier wird nur noch hochgeladen
             var fertig = spiel.Szene.Vorbereiten();
@@ -829,6 +868,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _ampelLichter?.Freigeben(gl);
             _ampelLichter = fertig.AmpelLichter is { } lichter ? GlNetz.LadenMitNummern(gl, lichter) : null;
+            }
             // die Autos behalten ihre Lage, wenn die Szene neu geladen wird (neue Orte sichtbar); eine Szene mit
             // anderer Festzeit (neuer Tag) oder ein neues Spiel bekommt sofort seinen eigenen Satz; aendert sich draussen
             // in derselben Stadt nur die Uhr, wechselt der Satz nach und nach (Patch A 0.29.1)
@@ -923,6 +963,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var tagAnteil = (licht.Hell - 0.42f) / 0.58f;
         var hv = System.Numerics.Vector3.Lerp(licht.Himmel, new System.Numerics.Vector3(himmel.R / 255f, himmel.G / 255f, himmel.B / 255f), Math.Clamp(tagAnteil, 0f, 1f));
         gl.ClearColor(hv.X, hv.Y, hv.Z, 1f);
+        DunstFestlegen(_spiel is { ImInnenraum: false }, hv);
         gl.ClearDepth(1f);
         gl.Enable(GL_DEPTH_TEST);
         gl.DepthFunc(GlLequal);
@@ -932,26 +973,43 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         // Welle D1 (Teil C): ab dem Abstand der Fernformen (wie Autos und Laternen) die Stadt mit vereinfachter Fest-Deko
         // Welle Grafik G1: Abstand der Fernformen und des Kleingruens aus der Grafikstufe (Mittel = 25 und 18 wie vorher)
         var fernBild = kamera is not null && _gw.Fern(kamera.Abstand) && !OhneSparenFuerTests;
+        var nachladen = _lader is not null && _spiel is { ImInnenraum: false };
         var flaeche = _spiel is null ? null : _spiel.ImInnenraum ? _innen
+            : nachladen ? _boden
             : (fernBild ? _flaechen.GetValueOrDefault(StadtFern) : null) ?? _flaechen.GetValueOrDefault(ProbeWelt.Stadt);
         if (GlBereit && _spiel is not null && kamera is not null && flaeche is not null)
         {
             gl.UseProgram(_programm);
             gl.Uniform1f(_ortHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
             LichtSetzen(gl, _lichtOrte, licht, kamera.Auge);
+            DunstSetzen(gl, _dunstOrte);
             gl.Uniform1f(_ortDurch, 0f);
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
             LetzteSichtProj = sichtProj;
             LetzterAbstand = kamera.Abstand;
+            if (nachladen)
+            {
+                // Welle Nachladen: freigeben, hochladen, noetige Kacheln im Bild sofort (vor dem Zeichnen)
+                NachladenTakt(gl, _spiel, sichtProj);
+                gl.UseProgram(_programm);
+            }
             // Weisung P8-52 (nur Leistungsprobe der Probe-APK): die Stadt mehrfach an derselben Stelle (sonst einmal)
             for (var mal = 0; mal < (_spiel.ImInnenraum ? 1 : ProbeMehrfach); mal++)
             {
+            if (nachladen)
+            {
+                // Welle Nachladen: Boden, Kacheln nah (Stadt, Paket, Kleingruen in einem Netz je Kachel), sonst Fernkaesten
+                NachladenZeichnen(gl, sichtProj);
+            }
+            else
+            {
             ZeichnenFest(gl, flaeche, sichtProj);
-            if (!_spiel.ImInnenraum && _gruen is not null && _gw.Gruen(kamera.Abstand))
+            }
+            if (!nachladen && !_spiel.ImInnenraum && _gruen is not null && _gw.Gruen(kamera.Abstand))
             {
                 ZeichnenFest(gl, _gruen, sichtProj);
             }
-            if (!_spiel.ImInnenraum && _paket.TryGetValue(_gw.Fern(kamera.Abstand), out var paket))
+            if (!nachladen && !_spiel.ImInnenraum && _paket.TryGetValue(_gw.Fern(kamera.Abstand), out var paket))
             {
                 // Welle 327 (Weisung P12-244, Weg a): nur die Zellen im Bild, aufeinanderfolgende in einem Aufruf
                 ZeichnenFestImBild(gl, paket, sichtProj);
@@ -1199,8 +1257,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public int LieferpaketZahl { get; private set; }
 
     /// <summary>Alles, was das Vorladen auf dem Prozessor baut (im Hintergrund).</summary>
-    private sealed record Vorladepaket(StadtSzene Szene, StadtSzene.Fertig Netze, SatzPaket? Satz, bool VerkehrBleibt,
-        IReadOnlyList<string> Figuren, IReadOnlyList<Innenraum> Innen, PyObjekt? Aussehen);
+    private sealed record Vorladepaket(StadtSzene Szene, StadtSzene.Fertig? Netze, SatzPaket? Satz, bool VerkehrBleibt,
+        IReadOnlyList<string> Figuren, IReadOnlyList<Innenraum> Innen, PyObjekt? Aussehen, Nachlader? Lader = null);
 
     /// <summary>
     /// Weisung P8-55 (W12): wird gerade vorgeladen (Ladeanzeige)? Waehrenddessen zeichnet die Flaeche nur den Himmel
@@ -1252,12 +1310,31 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var innenFertig = spiel.AlleVorbereiten();
         var figurenCpu = _figurenCpu;
         var halb = _gw.AutosHalb;
+        // Welle Nachladen A 0.82.0: mit fester Kamera nur Grundlage und die Kacheln um die Figur (nicht die ganze Stadt)
+        var nachladen = NachladenGewuenscht();
+        spiel.NurGrundlage = nachladen;
+        var mitGruen = _gw.Gruen(SpielKamera.AbstandMax);
+        var (figurX, figurZ) = (spiel.FigurX, spiel.FigurZ);
         _vorladenBeginn = Stopwatch.GetTimestamp();
         _hochladenErledigt = 0;
         _hochladenGesamt = 0;
         _vorladeAufgabe = Task.Run(async () =>
         {
-            var netze = szene.Vorbereiten();
+            Nachlader? lader = null;
+            StadtSzene.Fertig? netze = null;
+            if (nachladen)
+            {
+                lader = new Nachlader(szene, mitGruen);
+                lader.Takt(figurX, figurZ);
+                foreach (var k in lader.Noetig)
+                {
+                    lader.JetztBauen(k);
+                }
+            }
+            else
+            {
+                netze = szene.Vorbereiten();
+            }
             SatzPaket? satzPaket = null;
             if (grafik is not null)
             {
@@ -1295,7 +1372,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                     }
                 }
             }
-            return new Vorladepaket(szene, netze, satzPaket, verkehrAlt is not null, figuren, innen, aussehen);
+            return new Vorladepaket(szene, netze, satzPaket, verkehrAlt is not null, figuren, innen, aussehen, lader);
         });
         _laedtVor = true;
         VorladenGeaendert?.Invoke();
@@ -1379,42 +1456,61 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             _hausKugel.Clear();
             _paket.Clear();
             _gruen = null;
-            _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, paket.Netze.Stadt);
+            NachladenFrei(gl);
+            if (paket.Netze is { } ganz)
+            {
+                _flaechen[ProbeWelt.Stadt] = GlNetz.Laden(gl, ganz.Stadt);
+            }
+            else if (paket.Lader is { } lader)
+            {
+                // Welle Nachladen: die Grundlage (Boden, Fernkaesten, Instancing, Ampel-Lichter)
+                NachladenGrundlage(gl, lader);
+            }
         });
-        if (paket.Netze.StadtFern is { } stadtFern)
+        if (paket.Lader is { } laderK)
         {
-            schritte.Enqueue(gl => _flaechen[StadtFern] = GlNetz.Laden(gl, stadtFern));
+            foreach (var k in laderK.Noetig)
+            {
+                schritte.Enqueue(gl => KachelHochladen(gl, laderK.JetztBauen(k)));
+            }
         }
-        foreach (var (haus, netz) in paket.Netze.Haeuser)
+        else if (paket.Netze is { } netzeG)
         {
-            var kugel = netz.Kugel();
-            var hausFern = paket.Netze.HaeuserFern?.GetValueOrDefault(haus);
+            if (netzeG.StadtFern is { } stadtFern)
+            {
+                schritte.Enqueue(gl => _flaechen[StadtFern] = GlNetz.Laden(gl, stadtFern));
+            }
+            foreach (var (haus, netz) in netzeG.Haeuser)
+            {
+                var kugel = netz.Kugel();
+                var hausFern = netzeG.HaeuserFern?.GetValueOrDefault(haus);
+                schritte.Enqueue(gl =>
+                {
+                    _haeuser[haus] = GlNetz.Laden(gl, netz);
+                    _hausKugel[haus] = kugel;
+                    if (hausFern is not null)
+                    {
+                        _haeuserFern[haus] = GlNetz.Laden(gl, hausFern);
+                    }
+                });
+            }
+            if (netzeG.Gruen is { } gruen)
+            {
+                schritte.Enqueue(gl => _gruen = GlNetz.Laden(gl, gruen));
+            }
+            schritte.Enqueue(gl => InstanzenLaden(gl, netzeG.Instanzen));
+            if (netzeG.PaketNah is { } nah && netzeG.PaketFern is { } fern)
+            {
+                schritte.Enqueue(gl => _paket[false] = GlNetz.Laden(gl, nah));
+                schritte.Enqueue(gl => _paket[true] = GlNetz.Laden(gl, fern));
+            }
+            var ampelLichter = netzeG.AmpelLichter;
             schritte.Enqueue(gl =>
             {
-                _haeuser[haus] = GlNetz.Laden(gl, netz);
-                _hausKugel[haus] = kugel;
-                if (hausFern is not null)
-                {
-                    _haeuserFern[haus] = GlNetz.Laden(gl, hausFern);
-                }
+                _ampelLichter?.Freigeben(gl);
+                _ampelLichter = ampelLichter is not null ? GlNetz.LadenMitNummern(gl, ampelLichter) : null;
             });
         }
-        if (paket.Netze.Gruen is { } gruen)
-        {
-            schritte.Enqueue(gl => _gruen = GlNetz.Laden(gl, gruen));
-        }
-        schritte.Enqueue(gl => InstanzenLaden(gl, paket.Netze.Instanzen));
-        if (paket.Netze.PaketNah is { } nah && paket.Netze.PaketFern is { } fern)
-        {
-            schritte.Enqueue(gl => _paket[false] = GlNetz.Laden(gl, nah));
-            schritte.Enqueue(gl => _paket[true] = GlNetz.Laden(gl, fern));
-        }
-        var ampelLichter = paket.Netze.AmpelLichter;
-        schritte.Enqueue(gl =>
-        {
-            _ampelLichter?.Freigeben(gl);
-            _ampelLichter = ampelLichter is not null ? GlNetz.LadenMitNummern(gl, ampelLichter) : null;
-        });
         schritte.Enqueue(gl =>
         {
             // eine Szene, die sich waehrend des Vorladens geaendert hat, laedt das naechste Bild wie bisher
@@ -2005,6 +2101,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var licht = AktuellesLicht();
         gl.Uniform1f(_autoOrtHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
         LichtSetzen(gl, _autoLichtOrte, licht, AktuelleKamera?.Auge ?? default);
+        DunstSetzen(gl, _autoDunstOrte);
         gl.Uniform1f(_autoOrtDurch, 0f);
         netz.Binden(gl);
         gl.DrawElements(GL_TRIANGLES, netz.Anzahl, GlUnsignedInt, IntPtr.Zero);

@@ -25,6 +25,7 @@ public sealed partial class StadtFlaeche
     private int _instanzOrtHell;
     private int _instanzOrtDurch;
     private int[] _instanzLichtOrte = [];
+    private int[] _instanzDunstOrte = [];
     private IntPtr _glTeiler;
     private IntPtr _glInstanziert;
 
@@ -83,6 +84,7 @@ public sealed partial class StadtFlaeche
         _instanzOrtHell = gl.GetUniformLocationString(_instanzProgramm, "uHell");
         _instanzOrtDurch = gl.GetUniformLocationString(_instanzProgramm, "uDurch");
         _instanzLichtOrte = [.. new[] { "uTag", "uTonR", "uTonG", "uTonB", "uNacht", "uAugeX", "uAugeY", "uAugeZ" }.Select(n => gl.GetUniformLocationString(_instanzProgramm, n))];
+        _instanzDunstOrte = DunstOrte(gl, _instanzProgramm);
     }
 
     /// <summary>Saetze hochladen (alte vorher frei).</summary>
@@ -183,6 +185,7 @@ public sealed partial class StadtFlaeche
                 gl.UniformMatrix4fv(_instanzOrtSichtProj, 1, false, &sichtProj);
                 gl.Uniform1f(_instanzOrtHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
                 LichtSetzen(gl, _instanzLichtOrte, licht, auge);
+                DunstSetzen(gl, _instanzDunstOrte);
                 gl.Uniform1f(_instanzOrtDurch, 0f);
                 mitProgramm = true;
             }

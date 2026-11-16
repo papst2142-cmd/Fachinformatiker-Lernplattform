@@ -32,8 +32,19 @@ public sealed partial class StadtSzene
         public long Dreiecke => Netze.Sum(n => (long)n.Indizes.Count / 3);
     }
 
-    /// <summary>Was beim Nachladen immer geladen bleibt (klein).</summary>
-    public sealed record Grundlage(Netz Boden, Netz FernKaesten, Instanzplan? Instanzen, IReadOnlyList<Netz> AmpelLichter);
+    /// <summary>
+    /// Was beim Nachladen immer geladen bleibt (klein). <see cref="FernBereiche"/>: je Kachel die Indizes ihrer Fernkaesten
+    /// in <see cref="FernKaesten"/> (nach Kacheln geordnet, Reihe fuer Reihe); <see cref="Hoehen"/>: hoechster Punkt eines Hauses
+    /// je Kachel (fuer den Sichtkegel).
+    /// </summary>
+    public sealed record Grundlage(Netz Boden, Netz FernKaesten, IReadOnlyDictionary<Stadtteile.Kachel, (int Start, int Anzahl)> FernBereiche,
+        IReadOnlyDictionary<Stadtteile.Kachel, float> Hoehen, Instanzplan? Instanzen, IReadOnlyList<Netz> AmpelLichter)
+    {
+        /// <summary>Netzdaten der Grundlage in Byte (wie <see cref="Stadtbau.StadtLast.Bytes"/>).</summary>
+        public long Bytes => new[] { Boden, FernKaesten }.Concat(AmpelLichter)
+            .Concat((Instanzen?.Saetze ?? []).SelectMany(z => new[] { z.Nah, z.Fern }).OfType<Netz>())
+            .Distinct(ReferenceEqualityComparer.Instance).Cast<Netz>().Sum(Stadtbau.StadtLast.Bytes);
+    }
 
     private Grundlage? _grundlage;
 
@@ -49,7 +60,8 @@ public sealed partial class StadtSzene
         }
         var plan = Instanzen.AusFuerTests ? null : InstanzplanBauen();
         var boden = NetzBauen(false, plan, new Auswahl(null, true));
-        g = new Grundlage(boden, FernKaestenBauen(), plan, Probe.Ampeln.LichtNetze(Ampeln) ?? []);
+        var (fern, bereiche, hoehen) = FernKaestenBauen();
+        g = new Grundlage(boden, fern, bereiche, hoehen, plan, Probe.Ampeln.LichtNetze(Ampeln) ?? []);
         _grundlage = g;
         return g;
     }
@@ -92,18 +104,28 @@ public sealed partial class StadtSzene
     public static readonly Vector3 FernHausFarbe = Netz.Farbe("#8C8378");
 
     /// <summary>
-    /// Welle Nachladen (Nico 3b: Fernform plus leichter Dunst): je Haus ein Kasten in seiner Groesse, nach Kacheln geordnet
-    /// (eine Zelle je Kachel); gezeichnet nur fuer Kacheln, die nicht nah geladen sind.
+    /// Welle Nachladen (Nico 3b: Fernform plus leichter Dunst): je Haus ein Kasten in seiner Groesse, nach der Kachel des
+    /// Hauses geordnet (Reihe fuer Reihe, ein Bereich je Kachel); gezeichnet nur fuer Kacheln, die nicht nah geladen sind.
     /// </summary>
-    public Netz FernKaestenBauen()
+    public (Netz Netz, Dictionary<Stadtteile.Kachel, (int Start, int Anzahl)> Bereiche, Dictionary<Stadtteile.Kachel, float> Hoehen) FernKaestenBauen()
     {
         var netz = new Netz();
-        foreach (var h in Haeuser)
+        var bereiche = new Dictionary<Stadtteile.Kachel, (int, int)>();
+        var hoehen = new Dictionary<Stadtteile.Kachel, float>();
+        foreach (var gruppe in Haeuser.GroupBy(KachelVon).OrderBy(g => g.Key.Reihe).ThenBy(g => g.Key.Spalte))
         {
-            netz.Hinzu(Quader(h.Min.X, 0f, h.Min.Z, h.Max.X, MathF.Max(h.Max.Y, 0.2f), h.Max.Z, FernHausFarbe));
+            var start = netz.Indizes.Count;
+            var hoehe = 0f;
+            foreach (var h in gruppe)
+            {
+                var oben = MathF.Max(h.Max.Y, 0.2f);
+                netz.Hinzu(Quader(h.Min.X, 0f, h.Min.Z, h.Max.X, oben, h.Max.Z, FernHausFarbe));
+                hoehe = MathF.Max(hoehe, oben);
+            }
+            bereiche[gruppe.Key] = (start, netz.Indizes.Count - start);
+            hoehen[gruppe.Key] = hoehe;
         }
-        netz.NachZellenOrdnen(Stadtteile.Groesse);
-        return netz;
+        return (netz, bereiche, hoehen);
     }
 
     /// <summary>Welle Nachladen: nimmt die Auswahl dieses Teil (Index <paramref name="i"/>; 0 und 1 sind die Bodenquader)?</summary>

@@ -206,11 +206,17 @@ public static class Kurve
         var best = float.MaxValue;
         for (var i = 0; i + 1 < p.Count; i++)
         {
-            var d = p[i + 1] - p[i];
-            var l2 = d.LengthSquared();
-            var t = l2 < 1e-12f ? 0 : Math.Clamp(Vector2.Dot(q - p[i], d) / l2, 0f, 1f);
-            best = MathF.Min(best, Vector2.Distance(q, p[i] + (d * t)));
+            best = MathF.Min(best, AbstandStrecke(q, p[i], p[i + 1]));
         }
         return best;
+    }
+
+    /// <summary>Abstand von <paramref name="q"/> zur Strecke von <paramref name="a"/> nach <paramref name="b"/> (Teil von <see cref="Abstand"/>).</summary>
+    public static float AbstandStrecke(Vector2 q, Vector2 a, Vector2 b)
+    {
+        var d = b - a;
+        var l2 = d.LengthSquared();
+        var t = l2 < 1e-12f ? 0 : Math.Clamp(Vector2.Dot(q - a, d) / l2, 0f, 1f);
+        return Vector2.Distance(q, a + (d * t));
     }
 }

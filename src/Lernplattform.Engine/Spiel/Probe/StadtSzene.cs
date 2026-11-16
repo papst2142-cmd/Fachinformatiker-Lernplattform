@@ -1173,10 +1173,12 @@ public sealed partial class StadtSzene
                         // Bruecken (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt
                         // Weisung P12-214 (Nico): die Bruecke umrahmt auch den Gehweg; Strassen ohne Gehweg wie bisher (gw = 0)
                         var strassenGehweg = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(GehwegBreite).ToList();
+                        // Welle Nachladen: der Linienzug des Flusses einmal (vorher je Strasse neu, gleiches Ergebnis)
+                        var flussLinie = Linienzug(item);
                         for (var si = 0; si < strassen.Count; si++)
                         {
                             var gw = BrueckeSchmalAlt.Value ? 0f : strassenGehweg[si];
-                            foreach (var (mitte, richtung, sinus) in Kreuzungen(Linienzug(item), strassen[si]))
+                            foreach (var (mitte, richtung, sinus) in Kreuzungen(flussLinie, strassen[si]))
                             {
                                 Bruecke(teile, streifen, mitte, richtung, sinus, gw);
                                 bruecken.Add(mitte);
@@ -1184,7 +1186,7 @@ public sealed partial class StadtSzene
                             }
                         }
                         // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2); Welle K1: Radius je Eckpunkt
-                        var glatt = Linienzug(item);
+                        var glatt = flussLinie;
                         streifen.Add(new Streifen(glatt, FlussBreite + 0.3f, Hoehe.Ufer, Hoehe.Ufer, Farben.Ufer));
                         streifen.Add(new Streifen(glatt, FlussBreite, Hoehe.Wasser, Hoehe.Wasser, Farben.Wasser));
                         wasser.Add(glatt);
@@ -2010,15 +2012,28 @@ public sealed partial class StadtSzene
     public static List<(float X1, float Z1, float X2, float Z2)> MittellinienStriche(IReadOnlyList<List<Vector2>> strassen, bool ohneKette = false)
     {
         var ergebnis = new List<(float, float, float, float)>();
+        // Welle Nachladen (grosse Karten), gleiches Ergebnis wie vorher: gleiche Linienzuege einmal als Gruppe bestimmt (statt
+        // jede Strasse gegen jede zu vergleichen), und eine andere Strasse prueft den Abstand nur, wenn die Mitte im Rahmen der
+        // Strasse plus Breite liegt (ausserhalb ist der Abstand sicher groesser)
+        var gruppe = new int[strassen.Count];
+        var gruppen = new Dictionary<List<Vector2>, int>(new GleicheLinie());
+        for (var k = 0; k < strassen.Count; k++)
+        {
+            gruppe[k] = gruppen.TryGetValue(strassen[k], out var g) ? g : gruppen[strassen[k]] = k;
+        }
+        var rahmen = strassen.Select(Rahmen).ToList();
+        const float weite = (StrassenBreite / 2) + 0.05f;
         foreach (var zug in MittellinienZuege(strassen, ohneKette))
         {
-            var eigene = zug.Strassen.Select(k => strassen[k]).ToList();
-            var andere = strassen.Where((s2, k) => !zug.Strassen.Contains(k) && !eigene.Any(e2 => s2.SequenceEqual(e2))).ToList();
+            var eigeneGruppen = zug.Strassen.Select(k => gruppe[k]).ToHashSet();
+            var andere = Enumerable.Range(0, strassen.Count).Where(k => !zug.Strassen.Contains(k) && !eigeneGruppen.Contains(gruppe[k])).ToList();
             foreach (var (x1, z1, x2, z2) in Kreisverkehr.Geschlossen([.. zug.Linie.Select(q => new Vector2(q.X, q.Z))])
                 ? RingStriche(zug.Linie) : Striche(zug.Linie, 0.2f, 0.25f))
             {
                 var mitte = new Vector2((x1 + x2) / 2, (z1 + z2) / 2);
-                if (andere.Any(a => Kurve.Abstand(mitte, a) <= (StrassenBreite / 2) + 0.05f))
+                if (andere.Any(a => mitte.X >= rahmen[a].Min.X - weite - 0.01f && mitte.X <= rahmen[a].Max.X + weite + 0.01f
+                    && mitte.Y >= rahmen[a].Min.Y - weite - 0.01f && mitte.Y <= rahmen[a].Max.Y + weite + 0.01f
+                    && Kurve.Abstand(mitte, strassen[a]) <= weite))
                 {
                     continue;
                 }
@@ -2166,16 +2181,21 @@ public sealed partial class StadtSzene
                 {
                     continue;
                 }
-                float x1 = l.Min(p => p.X), x2 = l.Max(p => p.X), z1 = l.Min(p => p.Y), z2 = l.Max(p => p.Y);
-                var (s0, s1) = Bereich(x1 - weite, x2 + weite, spalten);
-                var (r0, r1) = Bereich(z1 - weite, z2 + weite, zeilen);
-                for (var s = s0; s <= s1; s++)
+                // Welle Nachladen (grosse Karten): Strecke fuer Strecke, je nur die Zellen in ihrem Umkreis. Gleiches Ergebnis:
+                // der Abstand zum Linienzug ist der kleinste Abstand zu einer Strecke (Kurve.AbstandStrecke, dieselbe Rechnung)
+                for (var i = 0; i + 1 < l.Count || (l.Count == 1 && i == 0); i++)
                 {
-                    for (var z = r0; z <= r1; z++)
+                    var (a, b) = l.Count == 1 ? (l[0], l[0]) : (l[i], l[i + 1]);
+                    var (s0, s1) = Bereich(MathF.Min(a.X, b.X) - weite, MathF.Max(a.X, b.X) + weite, spalten);
+                    var (r0, r1) = Bereich(MathF.Min(a.Y, b.Y) - weite, MathF.Max(a.Y, b.Y) + weite, zeilen);
+                    for (var s = s0; s <= s1; s++)
                     {
-                        if (!ziel[(s * zeilen) + z] && Kurve.Abstand(Mitte(s, z), l) <= weite)
+                        for (var z = r0; z <= r1; z++)
                         {
-                            ziel[(s * zeilen) + z] = true;
+                            if (!ziel[(s * zeilen) + z] && (l.Count == 1 ? Vector2.Distance(Mitte(s, z), a) : Kurve.AbstandStrecke(Mitte(s, z), a, b)) <= weite)
+                            {
+                                ziel[(s * zeilen) + z] = true;
+                            }
                         }
                     }
                 }
@@ -2561,6 +2581,12 @@ public sealed partial class StadtSzene
     public static List<(Vector2 Mitte, Vector2 Richtung, float Sinus)> Kreuzungen(IReadOnlyList<Vector2> a, IReadOnlyList<Vector2> b)
     {
         var liste = new List<(Vector2, Vector2, float)>();
+        // Welle Nachladen (grosse Karten): Linienzuege, deren Rahmen sich nicht beruehren, kreuzen sich nicht (gleiches Ergebnis,
+        // Zugabe 0,01 gegen Rundung)
+        if (a.Count < 2 || b.Count < 2 || !RahmenBeruehren(a, b, 0.01f))
+        {
+            return liste;
+        }
         for (var i = 0; i + 1 < a.Count; i++)
         {
             for (var j = 0; j + 1 < b.Count; j++)
@@ -2591,6 +2617,42 @@ public sealed partial class StadtSzene
             }
         }
         return liste;
+    }
+
+    /// <summary>Welle Nachladen: gleiche Linienzuege (gleich wie <c>SequenceEqual</c>), fuer Gruppen.</summary>
+    private sealed class GleicheLinie : IEqualityComparer<List<Vector2>>
+    {
+        public bool Equals(List<Vector2>? x, List<Vector2>? y) => ReferenceEquals(x, y) || (x is not null && y is not null && x.SequenceEqual(y));
+
+        public int GetHashCode(List<Vector2> l)
+        {
+            var h = new HashCode();
+            h.Add(l.Count);
+            foreach (var p in l)
+            {
+                h.Add(p);
+            }
+            return h.ToHashCode();
+        }
+    }
+
+    /// <summary>Welle Nachladen: beruehren sich die Rahmen zweier Linienzuege (mit Zugabe <paramref name="rand"/>)?</summary>
+    internal static bool RahmenBeruehren(IReadOnlyList<Vector2> a, IReadOnlyList<Vector2> b, float rand)
+    {
+        var (a0, a1) = Rahmen(a);
+        var (b0, b1) = Rahmen(b);
+        return a1.X + rand >= b0.X && b1.X + rand >= a0.X && a1.Y + rand >= b0.Y && b1.Y + rand >= a0.Y;
+    }
+
+    /// <summary>Welle Nachladen: kleinste und groesste Ecke eines Linienzugs.</summary>
+    internal static (Vector2 Min, Vector2 Max) Rahmen(IReadOnlyList<Vector2> l)
+    {
+        var (min, max) = (new Vector2(float.MaxValue), new Vector2(float.MinValue));
+        for (var i = 0; i < l.Count; i++)
+        {
+            (min, max) = (Vector2.Min(min, l[i]), Vector2.Max(max, l[i]));
+        }
+        return (min, max);
     }
 
     /// <summary>Bahnuebergang: Belag in Richtung der Strasse ueber dem Gleisbett, an Strassen Warnkreuze davor.</summary>

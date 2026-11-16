@@ -156,13 +156,14 @@ public sealed class SpielKachelnTests
             Assert.All(nah, k => Assert.Contains(k, vor));
             // nah zuerst: die Liste ist nach Abstand geordnet
             Assert.Equal(vor.Take(nah.Count), nah);
-            // eine Kachel, die nah oder vorbereitet ist, wird nie freigegeben
-            Assert.All(vor, k => Assert.False(Ladeplan.Freigeben(k, x, z)));
+            // eine Kachel, die nah oder vorbereitet ist, wird nie freigegeben (Grafikkarte bzw. Vorrat)
+            Assert.All(nah, k => Assert.False(Ladeplan.FreigebenNah(k, x, z)));
+            Assert.All(vor, k => Assert.False(Ladeplan.FreigebenVor(k, x, z)));
         }
         // die feste Kamera sieht den Boden bis rund 19 vor der Figur: jede Kachel in diesem Kreis ist nah
         var alle = Ladeplan.ImKreis(128, 128, 19f, 256, 256);
         Assert.All(alle, k => Assert.Contains(k, Ladeplan.Noetig(128, 128, 256, 256)));
-        Assert.True(Ladeplan.Weg > Ladeplan.Vor && Ladeplan.Vor > Ladeplan.Nah);
+        Assert.True(Ladeplan.VorWeg > Ladeplan.Vor && Ladeplan.Vor > Ladeplan.NahWeg && Ladeplan.NahWeg > Ladeplan.Nah);
     }
 
     [Fact]
@@ -179,5 +180,67 @@ public sealed class SpielKachelnTests
         Assert.Equal(1, StadtFassung.FormatFuer(null, genau));
         var namen = Py.Lesen("{\"stadtteile\":[]}") as PyObjekt;
         Assert.Equal(3, StadtFassung.FormatFuer(namen, genau));
+    }
+}
+
+/// <summary>
+/// Welle Nachladen A 0.82.0 (Weisung P12-280, Nico 2b und 4a): die Testkarte 256 × 256 (16 Kopien von Stadt 1, erzeugt mit
+/// <c>werkzeuge/stadtbau/testkarte.py</c>). Ein Gang ueber die ganze Karte (Reihe fuer Reihe, hin und zurueck) mit dem
+/// Nachlader wie im Spiel, nur ohne Hintergrund: an jeder Stelle sind alle noetigen Kacheln geladen (nach dem Anfang muss nie
+/// eine sofort gebaut werden), und das gleichzeitig Geladene bleibt zu jedem Zeitpunkt unter 48 MB Netzdaten.
+/// </summary>
+[Collection("Haenger")]
+public sealed class SpielTestkarteTests
+{
+    internal static readonly Lazy<StadtSpiel> Testkarte = new(() =>
+    {
+        var f = StadtFassung.Lesen(File.ReadAllBytes(Path.Combine(Pfade.Wurzel, "tests/Stadtbau.Tests/Testdaten/testkarte_256.fistadt")));
+        var inhalt = f.MitKarte(SpielInhaltTests.Inhalt);
+        return new StadtSpiel(f.StadtFuer(inhalt), SpielQuestTests.AllesErledigt(inhalt), SpielGrafikTests.Bibliothek.Value, SpielInnenraumTests.Innenraeume.Value);
+    });
+
+    [Fact]
+    public void GangUeberDieGanzeKarte_ImmerAllesNoetigeGeladen_UnterGrenzeNetzdaten()
+    {
+        var szene = Testkarte.Value.Szene;
+        Assert.Equal((256f, 256f), (szene.Breite, szene.Tiefe));
+        var lader = new Nachlader(szene, mitGruen: true, hintergrund: false);
+        var schritte = 0;
+        void An(float x, float z)
+        {
+            lader.Takt(x, z);
+            while (lader.Naechste() is { } p)
+            {
+                lader.Hochgeladen(p);
+            }
+            foreach (var k in lader.Fehlend().ToList())
+            {
+                lader.Hochgeladen(lader.JetztBauen(k));
+            }
+            Assert.All(lader.Noetig, k => Assert.True(lader.Geladen.ContainsKey(k), k.Name));
+            schritte++;
+        }
+        An(8, 8);
+        var sofortAmAnfang = lader.Sofort;
+        for (var reihe = 0; reihe < 8; reihe++)
+        {
+            var z = 8f + (reihe * 32f);
+            for (var i = 0; i <= 480; i++)
+            {
+                var x = reihe % 2 == 0 ? 8f + (i * 0.5f) : 248f - (i * 0.5f);
+                An(x, z);
+            }
+            if (reihe < 7)
+            {
+                for (var j = 1; j <= 64; j++)
+                {
+                    An(reihe % 2 == 0 ? 248f : 8f, z + (j * 0.5f));
+                }
+            }
+        }
+        // im Gang selbst ist jede noetige Kachel rechtzeitig vorbereitet (zu Fuss 0,5 je Takt)
+        Assert.Equal(sofortAmAnfang, lader.Sofort);
+        Assert.True(lader.HoechstBytes <= StadtLast.NetzdatenGrenzeMb * 1024 * 1024, $"hoechstens {lader.HoechstBytes / 1048576.0:F1} MB");
+        Assert.True(schritte > 4000);
     }
 }

@@ -215,6 +215,20 @@ public sealed partial class Netz
         return summe.Length() / 2f;
     }
 
+    /// <summary>
+    /// Welle Nachladen: die Ecken und Dreiecke von <paramref name="andere"/> unveraendert anhaengen (Zahl fuer Zahl, ohne
+    /// Umrechnung). So werden Stadtnetz, Paket-Netz und Kleingruen einer Kachel ein Netz und ein Zeichenaufruf je Lauf.
+    /// </summary>
+    public void Anhaengen(Netz andere)
+    {
+        var basis = (uint)AnzahlEcken;
+        _ecken.AddRange(andere._ecken);
+        foreach (var j in andere._indizes)
+        {
+            _indizes.Add(basis + j);
+        }
+    }
+
     /// <summary>Flaeche aller Dreiecke (Tests: alle Kacheln zusammen = ganzes Netz).</summary>
     public double FlaecheGesamt()
     {

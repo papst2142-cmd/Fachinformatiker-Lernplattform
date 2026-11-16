@@ -92,20 +92,25 @@ public static class Stadtteile
 
 /// <summary>
 /// Welle Nachladen (Weisung P12-280, Plan P12-165 Abschnitt 3): welche Kacheln das Spiel mit fester Kamera geladen haben muss.
-/// Nah = jede Kachel, die den Kreis <see cref="Nah"/> um die Figur beruehrt (die feste Kamera sieht den Boden bis rund 19,
-/// Abstand 9, Neigung 35, Sichtfeld 40, Breitbild; plus Zugabe). Vorladen = bis <see cref="Vor"/>. Entladen erst ueber
-/// <see cref="Weg"/> (kein Hin und Her an der Grenze). Reine Rechnung ohne Grafikkarte.
+/// Nah = jede Kachel, die den Kreis <see cref="Nah"/> um die Figur beruehrt (die feste Kamera sieht den Boden hoechstens rund 17
+/// von der Figur, Abstand 7 bis 9, Neigung 35 bis 70, Sichtfeld 40, Breitbild; plus Zugabe): sie liegt auf der Grafikkarte.
+/// Vorbereitet (im Hintergrund gebaut, noch nicht hochgeladen) wird bis <see cref="Vor"/>. Freigegeben wird erst ueber
+/// <see cref="NahWeg"/> bzw. <see cref="VorWeg"/> (kein Hin und Her an der Grenze). Die Kreise sind so klein gehalten, dass
+/// das gleichzeitig Geladene unter 48 MB Netzdaten bleibt (Nico 4a). Reine Rechnung ohne Grafikkarte.
 /// </summary>
 public static class Ladeplan
 {
-    /// <summary>Kreis der Kacheln, die gezeichnet werden muessen.</summary>
+    /// <summary>Kreis der Kacheln, die gezeichnet werden muessen (auf der Grafikkarte).</summary>
     public const float Nah = 24f;
 
-    /// <summary>Kreis der Kacheln, die im Hintergrund vorbereitet werden.</summary>
-    public const float Vor = Nah + Stadtteile.Groesse;
+    /// <summary>Ab diesem Abstand wird eine Kachel auf der Grafikkarte freigegeben.</summary>
+    public const float NahWeg = Nah + 4f;
 
-    /// <summary>Ab diesem Abstand wird eine Kachel freigegeben.</summary>
-    public const float Weg = Nah + (2 * Stadtteile.Groesse);
+    /// <summary>Kreis der Kacheln, die im Hintergrund vorbereitet werden (der naechste Ring nach dem nahen Kreis).</summary>
+    public const float Vor = Nah + 8f;
+
+    /// <summary>Ab diesem Abstand wird eine vorbereitete (noch nicht hochgeladene) Kachel verworfen.</summary>
+    public const float VorWeg = Vor + 4f;
 
     /// <summary>Kacheln im Kreis <paramref name="radius"/> um (x, z), naechste zuerst.</summary>
     public static List<Stadtteile.Kachel> ImKreis(float x, float z, float radius, float breite, float tiefe)
@@ -120,6 +125,9 @@ public static class Ladeplan
     /// <summary>Kacheln, die vorbereitet werden sollen (nah zuerst, dann der Ring).</summary>
     public static List<Stadtteile.Kachel> Vorbereiten(float x, float z, float breite, float tiefe) => ImKreis(x, z, Vor, breite, tiefe);
 
-    /// <summary>Darf eine geladene Kachel freigegeben werden?</summary>
-    public static bool Freigeben(Stadtteile.Kachel k, float x, float z) => k.Abstand(new Vector2(x, z)) > Weg;
+    /// <summary>Darf eine Kachel auf der Grafikkarte freigegeben werden?</summary>
+    public static bool FreigebenNah(Stadtteile.Kachel k, float x, float z) => k.Abstand(new Vector2(x, z)) > NahWeg;
+
+    /// <summary>Darf eine vorbereitete Kachel verworfen werden?</summary>
+    public static bool FreigebenVor(Stadtteile.Kachel k, float x, float z) => k.Abstand(new Vector2(x, z)) > VorWeg;
 }
