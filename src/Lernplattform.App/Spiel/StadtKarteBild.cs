@@ -33,6 +33,9 @@ public sealed class StadtKarteBild : Control
     private static readonly IBrush HaltGruen = new SolidColorBrush(Color.FromRgb(30, 120, 66));
     private static readonly IBrush Weiss = Brushes.White;
     private static readonly IBrush Cyan = new SolidColorBrush(Color.FromRgb(20, 170, 215));
+    private static readonly IBrush Bereich = new SolidColorBrush(Color.FromRgb(58, 40, 96));
+    private static readonly IBrush BereichFlaeche = new SolidColorBrush(Color.FromArgb(28, 255, 255, 255));
+    private static readonly IBrush BereichSchild = new SolidColorBrush(Color.FromArgb(225, 255, 255, 255));
 
     private StadtKarte? _karte;
     private Vector2 _figur;
@@ -158,6 +161,20 @@ public sealed class StadtKarteBild : Control
             dc.DrawRectangle(OrtHaus, rand, new Rect(P(o.Min), P(o.Max)));
         }
         var f = Faktor;
+        // Welle A 0.83.0 (Weisung P12-282): Stadtteile mit Namen als gestrichelter Rahmen, Name oben im Rahmen
+        var teilRand = new Pen(Bereich, 2, new DashStyle([4, 3], 0));
+        foreach (var b in sz.StadtteilNamen)
+        {
+            dc.DrawRectangle(BereichFlaeche, teilRand, new Rect(P(new((float)b.X1, (float)b.Z1)), P(new((float)b.X2, (float)b.Z2))));
+        }
+        foreach (var b in sz.StadtteilNamen)
+        {
+            var text = Text(b.Name, Bereich, 11 * f, true);
+            var oben = P(new((float)((b.X1 + b.X2) / 2), (float)b.Z1));
+            var kasten = new Rect(oben.X - (text.Width / 2) - (5 * f), oben.Y + (3 * f), text.Width + (10 * f), text.Height + (2 * f));
+            dc.DrawRectangle(BereichSchild, null, kasten, 5 * f, 5 * f);
+            dc.DrawText(text, new Point(kasten.X + (5 * f), kasten.Y + f));
+        }
         foreach (var h in sz.Haltestellen)
         {
             var m = P(h.Mitte);

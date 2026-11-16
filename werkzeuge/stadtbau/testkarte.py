@@ -7,6 +7,10 @@ derselben Drehung (gleich viele Haeuser je Kachel wie in Stadt 1). Gelaende (hoe
 nur in der ersten Kopie. Kopf: Stadt "neu_testkarte" ohne Basis (wie eine neue Stadt des Werkzeugs, oeffnet dort als eigenes Projekt), Fassung 0,
 Format 3 (Karte groesser als 64).
 
+Seit A 0.83.0 / S 0.55.0 (Weisung P12-282): jede der 16 Kopien ist ein Stadtteil mit Namen (stadtdaten.stadtteile, nur
+Anzeige: Karte im Spiel-Handy, Schild beim Betreten), damit Spiel, Werkzeug und Start-Test die Namen an einer echten
+grossen Karte zeigen.
+
 Aufruf: python3 -I werkzeuge/stadtbau/testkarte.py <stadt1_fassung2.fistadt> <ziel.fistadt>
 """
 import copy
@@ -16,6 +20,14 @@ import sys
 
 N = 4
 SEITE = 64.0
+
+# Namen der 16 Stadtteile, Spalte fuer Spalte (i = Spalte von links, j = Reihe von oben)
+NAMEN = [
+    ["Altstadt", "Lindenhof", "Am Mühlbach", "Südhang"],
+    ["Nordviertel", "Gartenstadt", "Am Bahndamm", "Talgrund"],
+    ["Hafenviertel", "Neustadt", "Sonnenfeld", "Westend"],
+    ["Ostend", "Birkenau", "Am Weiher", "Bergfeld"],
+]
 
 
 def verschoben(punkte, dx, dy):
@@ -85,6 +97,10 @@ def main(quelle, ziel):
     sd["wasser"]["teiche"] = teiche
     sd["wasser"]["stege"] = stege
     sd["zebrastreifen"] = zebras
+    sd["stadtteile"] = [
+        {"name": NAMEN[i][j], "x1": i * SEITE, "x2": (i + 1) * SEITE, "z1": j * SEITE, "z2": (j + 1) * SEITE}
+        for j in range(N) for i in range(N)
+    ]
     d["laternen"] = laternen
     d["beete"] = beete
     d["formatversion"] = 3

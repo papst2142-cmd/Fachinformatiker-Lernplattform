@@ -39,4 +39,18 @@ public static class KarteTexte
 
     /// <summary>Hier stehst du (Ort, an dem die Figur gerade ist).</summary>
     public const string HierBistDu = "Du bist hier";
+
+    // ---- Stadtteil-Namen (Welle A 0.83.0, Weisung P12-282 Punkt 3) ----------------------------------------------------
+
+    /// <summary>Legende der Karte: ein gestrichelter Rahmen ist ein Stadtteil.</summary>
+    public const string Stadtteil = "Stadtteil";
+
+    /// <summary>Zeile unter der Karte (Screenreader liest die Namen auch ohne Bild).</summary>
+    public const string StadtteileListe = "Stadtteile: {0}";
+
+    /// <summary>Kleine Zeile ueber dem Namen auf dem Schild beim Betreten.</summary>
+    public const string SchildKopf = "Stadtteil";
+
+    /// <summary>Was der Screenreader beim Betreten eines Stadtteils sagt.</summary>
+    public const string SchildVorlesen = "Du bist jetzt in {0}.";
 }

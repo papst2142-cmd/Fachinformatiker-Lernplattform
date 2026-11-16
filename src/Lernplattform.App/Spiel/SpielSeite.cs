@@ -129,6 +129,8 @@ public sealed partial class SpielSeite : Grid
         _ladeanzeige.VerticalAlignment = VerticalAlignment.Center;
         _ladeanzeige.IsVisible = false;
         Children.Add(_ladeanzeige);
+        // Welle A 0.83.0 (Weisung P12-282): Schild beim Betreten eines Stadtteils
+        StadtteilSchildBauen();
         _ladeTakt = new DispatcherTimer(TimeSpan.FromMilliseconds(50), DispatcherPriority.Background, (_, _) => LadeanzeigeSetzen());
         Flaeche.VorladenGeaendert += () => Dispatcher.UIThread.Post(LadeanzeigeSetzen);
 
@@ -340,6 +342,7 @@ public sealed partial class SpielSeite : Grid
             }
             OeffnenMs ??= Stopwatch.GetElapsedTime(_angehaengt).TotalMilliseconds;
             SchilderSetzen();
+            StadtteilSchildTakt();
         };
         // Sammelliste 162: neue Groesse (Fenster schmaler, waehrend eine andere Seite zu sehen war) sofort
         // beruecksichtigen; sonst standen die Schilder bis zum naechsten Bild an der alten Stelle ueber dem Rand

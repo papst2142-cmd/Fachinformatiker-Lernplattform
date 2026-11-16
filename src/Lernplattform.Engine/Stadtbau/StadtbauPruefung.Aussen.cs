@@ -48,6 +48,9 @@ public static partial class StadtbauPruefung
     /// <summary>Spielraum der Tuer zur Wand mit CC0-Modellen (wie der Test mit Grafik).</summary>
     public const float WandAbstandModell = 0.4f;
 
+    /// <summary>Tipp zu jedem Fund der Stadtteil-Namen.</summary>
+    public const string StadtteilTipp = "Den Stadtteil unter „Stadtteil-Namen“ umbenennen, verschieben oder löschen.";
+
     private static string Zf(double wert) => wert.ToString("0.##", CultureInfo.GetCultureInfo("de-DE"));
 
 
@@ -66,6 +69,11 @@ public static partial class StadtbauPruefung
             var fusswegeHeil = FusswegDaten(fassung, breite, hoehe, funde);
             // Welle A 0.54.0: falsch gespeicherte Zebrastreifen (die Szene laesst sie weg, Rot sperrt den Export)
             ZebraDaten(fassung, breite, hoehe, funde);
+            // Welle A 0.83.0 (Weisung P12-282): Stadtteil-Namen (nur Anzeige; ein falscher Eintrag fehlt im Spiel, Rot sperrt den Export)
+            foreach (var (text, x, z) in Stadtteile.Fehler(fassung.Stadtdaten, breite, hoehe))
+            {
+                funde.Add(new StadtbauFund(text, StadtteilTipp, true, x, z));
+            }
             // Welle A 0.60.0: falsch gespeicherte Ampeln (die Szene laesst sie weg, Rot sperrt den Export)
             AmpelDaten(fassung, breite, hoehe, funde);
             // Welle A 0.61.0: falsch gespeicherte Haltestellen und Parkplaetze

@@ -30,6 +30,9 @@ public sealed partial class SpielSeite
     /// <summary>Die gerade gezeigte Karte im Handy oder null (Start-Test, Fotos).</summary>
     public StadtKarteBild? KarteGezeigt { get; private set; }
 
+    /// <summary>Zeile „Stadtteile: …“ unter der Karte (Start-Test), null ohne Namen.</summary>
+    public TextBlock? KarteStadtteile { get; private set; }
+
     /// <summary>Knoepfe der Liste unter der Karte je Ort (Start-Test).</summary>
     public IReadOnlyDictionary<string, Button> KarteHingehen { get; private set; } = new Dictionary<string, Button>();
 
@@ -67,7 +70,20 @@ public sealed partial class SpielSeite
         KarteGezeigt = bild;
         liste.Children.Add(Schrift.Text(KarteTexte.Antippen, "Klein"));
         liste.Children.Add(bild);
-        liste.Children.Add(Legende());
+        liste.Children.Add(Legende(spiel.Szene.StadtteilNamen.Count > 0));
+        if (spiel.Szene.StadtteilNamen.Count > 0)
+        {
+            // Welle A 0.83.0: die Namen auch als Text (Screenreader, Kontrast)
+            var namen = Schrift.Text(string.Format(CultureInfo.CurrentCulture, KarteTexte.StadtteileListe,
+                string.Join(", ", spiel.Szene.StadtteilNamen.Select(b => b.Name))), "Klein");
+            namen.TextWrapping = TextWrapping.Wrap;
+            KarteStadtteile = namen;
+            liste.Children.Add(namen);
+        }
+        else
+        {
+            KarteStadtteile = null;
+        }
         var knoepfe = new Dictionary<string, Button>(StringComparer.Ordinal);
         var busKnoepfe = new Dictionary<string, Button>(StringComparer.Ordinal);
         var hier = spiel.ImFreien && !spiel.ImInnenraum ? null : spiel.Jetzt.Ort;
@@ -111,7 +127,7 @@ public sealed partial class SpielSeite
     private static void AutomationName(Control c, string name) => Avalonia.Automation.AutomationProperties.SetName(c, name);
 
     /// <summary>Legende unter der Karte als echte Texte (Kontrast und Screenreader wie jeder Text).</summary>
-    private static WrapPanel Legende()
+    private static WrapPanel Legende(bool stadtteile)
     {
         Border Kreis(string farbe, string text, bool ring = false)
         {
@@ -150,7 +166,7 @@ public sealed partial class SpielSeite
             Margin = new Thickness(0, 0, 14, 4),
             Children = { k, Schrift.Text(text, "Klein") },
         };
-        return new WrapPanel
+        var legende = new WrapPanel
         {
             Children =
             {
@@ -159,5 +175,21 @@ public sealed partial class SpielSeite
                 Teil(Kreis("#8B3DF0", "!"), KarteTexte.Aufgabe),
             },
         };
+        if (stadtteile)
+        {
+            // Welle A 0.83.0: gestrichelter Rahmen = Stadtteil (nur, wenn die Stadt Namen hat)
+            var rahmen = new Border
+            {
+                Width = 22 * Schrift.Faktor,
+                Height = 16 * Schrift.Faktor,
+                BorderThickness = new Thickness(2),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(58, 40, 96)),
+                Background = new SolidColorBrush(Color.FromRgb(143, 178, 122)),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 6, 0),
+            };
+            legende.Children.Add(Teil(rahmen, KarteTexte.Stadtteil));
+        }
+        return legende;
     }
 }
