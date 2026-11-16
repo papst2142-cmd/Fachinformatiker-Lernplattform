@@ -50,7 +50,7 @@ public static class Busfahrt
     /// des Tages (Minuten).
     /// </summary>
     public static Plan? Planen(Buslinie.Linie? linie, IReadOnlyList<Haltestelle> haltestellen, Wegsuche raster,
-        (double X, double Y) start, (double X, double Y) ziel, double zelle, long minutenJeSchritt, long uhr, long beginn)
+        (double X, double Y) start, (double X, double Y) ziel, double zelle, long minutenJeSchritt, long uhr, long beginn, Merker? merker = null)
     {
         if (linie is null || linie.Spur.Count < 3 || linie.Halte.Count < 2 || zelle <= 0)
         {
@@ -67,8 +67,8 @@ public static class Busfahrt
         var startWeg = busse[0].Weg;
         // je Haltestelle der Linie: Weg zu Fuss hin und zurueck (einmal gerechnet)
         var halte = linie.Halte.Select(h => (h.Front, Nr: h.Haltestelle, Punkt: Wartepunkt(haltestellen, h.Haltestelle))).ToList();
-        var hin = halte.Select(h => h.Punkt is { } p ? Fussweg(raster, start, p, zelle) : null).ToList();
-        var weg = halte.Select(h => h.Punkt is { } p ? Fussweg(raster, p, ziel, zelle) : null).ToList();
+        var hin = halte.Select(h => h.Punkt is { } p ? Fussweg(raster, start, p, zelle, merker) : null).ToList();
+        var weg = halte.Select(h => h.Punkt is { } p ? Fussweg(raster, p, ziel, zelle, merker) : null).ToList();
         Plan? bester = null;
         for (var a = 0; a < halte.Count; a++)
         {
@@ -113,10 +113,42 @@ public static class Busfahrt
     public static (double X, double Y)? Wartepunkt(IReadOnlyList<Haltestelle> haltestellen, int nr) =>
         haltestellen.FirstOrDefault(h => h.Nr == nr) is { } h ? (h.Wartend.X, h.Wartend.Y) : null;
 
-    private sealed record Fuss(IReadOnlyList<(double X, double Y)> Punkte, long Schritte);
+    internal sealed record Fuss(IReadOnlyList<(double X, double Y)> Punkte, long Schritte);
 
-    private static Fuss? Fussweg(Wegsuche raster, (double X, double Y) von, (double X, double Y) nach, double zelle)
+    /// <summary>
+    /// Welle A 0.83.0 (Weisung P12-282, Laufzeiten der Testkarte im Werkzeug): merkt sich Wege zu Fuss zwischen zwei Punkten
+    /// desselben Laufrasters. Die Karte „Laufzeiten“ plant fuer jedes Paar von Orten eine Fahrt; der Weg von einem Ort zu jeder
+    /// Haltestelle und von jeder Haltestelle zu einem Ort kommt dabei immer wieder vor. Die Wegsuche ist fest (gleiche Punkte,
+    /// gleicher Weg), gemerkt aendert also nichts am Ergebnis. Nur fuer EIN Raster verwenden; das Spiel ruft ohne.
+    /// </summary>
+    public sealed class Merker
     {
+        private readonly Dictionary<((double, double), (double, double)), Fuss?> _wege = [];
+
+        internal Fuss? Holen(Wegsuche raster, (double X, double Y) von, (double X, double Y) nach, double zelle)
+        {
+            lock (_wege)
+            {
+                if (_wege.TryGetValue((von, nach), out var f))
+                {
+                    return f;
+                }
+            }
+            var neu = Fussweg(raster, von, nach, zelle, null);
+            lock (_wege)
+            {
+                _wege[(von, nach)] = neu;
+            }
+            return neu;
+        }
+    }
+
+    private static Fuss? Fussweg(Wegsuche raster, (double X, double Y) von, (double X, double Y) nach, double zelle, Merker? merker)
+    {
+        if (merker is not null)
+        {
+            return merker.Holen(raster, von, nach, zelle);
+        }
         var punkte = raster.Weg(von, nach);
         if (punkte.Count == 0 && (Math.Abs(von.X - nach.X) > 0.5 || Math.Abs(von.Y - nach.Y) > 0.5))
         {

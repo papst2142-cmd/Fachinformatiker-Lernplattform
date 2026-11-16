@@ -127,16 +127,23 @@ public sealed class Stadt : Probe.IStadtSicht
                 }
             }
         }
-        for (long i = 0; i < Breite; i = checked(i + 1))
+        if (BegehbarAlt.Value)
         {
-            for (long j = 0; j < Hoehe; j = checked(j + 1))
+            for (long i = 0; i < Breite; i = checked(i + 1))
             {
-                var mitte = ((i + 0.5) * Zelle, (j + 0.5) * Zelle);
-                if (strecken.Any(s => Abstand(mitte, s.Item1, s.Item2) <= radius))
+                for (long j = 0; j < Hoehe; j = checked(j + 1))
                 {
-                    begehbar.Add((i, j));
+                    var mitte = ((i + 0.5) * Zelle, (j + 0.5) * Zelle);
+                    if (strecken.Any(s => Abstand(mitte, s.Item1, s.Item2) <= radius))
+                    {
+                        begehbar.Add((i, j));
+                    }
                 }
             }
+        }
+        else
+        {
+            BegehbarFuellen(strecken, radius);
         }
         foreach (var (id, wert) in Objekt(stadt["oeffnungszeiten"]))
         {
@@ -144,6 +151,60 @@ public sealed class Stadt : Probe.IStadtSicht
             zeiten[id] = (Py.Int(paar[0]), Py.Int(paar[1]));
         }
     }
+
+    /// <summary>
+    /// Welle A 0.83.0 (Weisung P12-282, Pruefung der Testkarte im Werkzeug): begehbare Zellen wie bisher (Mitte der Zelle
+    /// hoechstens <paramref name="radius"/> von einer Strecke), aber jede Zelle prueft nur die Strecken, deren Rahmen plus
+    /// Radius sie beruehrt (vorher jede Zelle gegen jede Strecke: auf 256 × 256 rund 9 s). Dieselbe Abstandsrechnung, dieselbe
+    /// Reihenfolge der Zellen (Spalte fuer Spalte): gleiche Menge in gleicher Reihenfolge. Gegenprobe <see cref="BegehbarAltFuerTests"/>.
+    /// </summary>
+    private void BegehbarFuellen(List<((double, double), (double, double))> strecken, double radius)
+    {
+        if (Breite <= 0 || Hoehe <= 0)
+        {
+            return;
+        }
+        var je = new List<int>?[checked(Breite * Hoehe)];
+        for (var n = 0; n < strecken.Count; n++)
+        {
+            var ((ax, ay), (bx, by)) = strecken[n];
+            // Zellen, deren Mitte im Rahmen der Strecke plus Radius liegen kann (eine Zelle Zugabe je Seite gegen Rundung)
+            var i0 = Math.Max(0L, (long)Math.Floor(((Math.Min(ax, bx) - radius) / Zelle) - 0.5) - 1);
+            var i1 = Math.Min(Breite - 1, (long)Math.Ceiling(((Math.Max(ax, bx) + radius) / Zelle) - 0.5) + 1);
+            var j0 = Math.Max(0L, (long)Math.Floor(((Math.Min(ay, by) - radius) / Zelle) - 0.5) - 1);
+            var j1 = Math.Min(Hoehe - 1, (long)Math.Ceiling(((Math.Max(ay, by) + radius) / Zelle) - 0.5) + 1);
+            for (var i = i0; i <= i1; i++)
+            {
+                for (var j = j0; j <= j1; j++)
+                {
+                    (je[(i * Hoehe) + j] ??= []).Add(n);
+                }
+            }
+        }
+        for (long i = 0; i < Breite; i = checked(i + 1))
+        {
+            for (long j = 0; j < Hoehe; j = checked(j + 1))
+            {
+                if (je[(i * Hoehe) + j] is not { } liste)
+                {
+                    continue;
+                }
+                var mitte = ((i + 0.5) * Zelle, (j + 0.5) * Zelle);
+                foreach (var n in liste)
+                {
+                    if (Abstand(mitte, strecken[n].Item1, strecken[n].Item2) <= radius)
+                    {
+                        begehbar.Add((i, j));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>Gegenprobe Welle A 0.83.0: begehbare Zellen wie bis A 0.82.0 (jede Zelle gegen jede Strecke), je Ablauf.</summary>
+    public static bool BegehbarAltFuerTests { get => BegehbarAlt.Value; set => BegehbarAlt.Value = value; }
+    private static readonly AsyncLocal<bool> BegehbarAlt = new();
 
     /// <summary>Gegenprobe P12-221: Weg-Raster ohne die Fusswege (Stand vor A 0.70.0).</summary>
     public static bool FusswegeAltFuerTests { get => FusswegeAlt.Value; set => FusswegeAlt.Value = value; }

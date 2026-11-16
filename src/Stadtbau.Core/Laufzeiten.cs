@@ -64,19 +64,25 @@ public static class Laufzeiten
         var spiel = OhneBusAlt.Value ? null : BusSpiel(stand, stadt, grafik);
         var orte = stadt.Regeln.Select(r => (Id: Py.Str(r["id"]), Name: Py.Str(r["name"]))).ToList();
         var wege = new List<Weg>();
+        // Welle A 0.83.0: Wege zu Fuss zwischen Tuer und Haltestelle nur einmal suchen (gleiches Ergebnis, Gegenprobe ohne)
+        var merker = MerkerAus.Value ? null : new Busfahrt.Merker();
         for (var i = 0; i < orte.Count; i++)
         {
             for (var j = i + 1; j < orte.Count; j++)
             {
                 var w = stadt.Weg(orte[i].Id, orte[j].Id);
                 var fuss = w is null ? (long?)null : checked(w.Schritte * stadt.MinutenJeSchritt);
-                var hin = fuss is null ? null : spiel?.BusLohntVon(orte[i].Id, orte[j].Id, stadt.Beginn)?.Bus;
-                var zurueck = fuss is null ? null : spiel?.BusLohntVon(orte[j].Id, orte[i].Id, stadt.Beginn)?.Bus;
+                var hin = fuss is null ? null : spiel?.BusLohntVon(orte[i].Id, orte[j].Id, stadt.Beginn, merker)?.Bus;
+                var zurueck = fuss is null ? null : spiel?.BusLohntVon(orte[j].Id, orte[i].Id, stadt.Beginn, merker)?.Bus;
                 wege.Add(new Weg(orte[i].Id, orte[j].Id, orte[i].Name, orte[j].Name, fuss, hin, zurueck));
             }
         }
         return [.. wege.OrderByDescending(w => w.Kuerzer ?? long.MaxValue).ThenBy(w => w.VonName, StringComparer.Ordinal).ThenBy(w => w.NachName, StringComparer.Ordinal)];
     }
+
+    /// <summary>Gegenprobe Welle A 0.83.0: Laufzeiten ohne gemerkte Fusswege (wie bis S 0.54.0), je Ablauf.</summary>
+    public static bool OhneMerkerFuerTests { get => MerkerAus.Value; set => MerkerAus.Value = value; }
+    private static readonly AsyncLocal<bool> MerkerAus = new();
 
     /// <summary>Spiel fuer die Busrechnung (wie die 3D-Ansicht, ohne Netze); null ohne Haltestellen oder wenn die Szene nicht baut.</summary>
     private static StadtSpiel? BusSpiel(StadtFassung stand, Stadt stadt, GrafikBibliothek? grafik)

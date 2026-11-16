@@ -748,11 +748,13 @@ public static partial class StadtbauPruefung
             .Where(l => Py.Gleich(l["typ"], "strasse"))
             .Select(l => ListeOderLeer(l, "punkte").OfType<List<object?>>().Select(p => new Vector2((float)Py.F(p[0]), (float)Py.F(p[1]))).ToList())
             .ToList();
+        var rahmen = strassen.Select(Rahmen.Von).ToList();
         for (var i = 0; i < strassen.Count; i++)
         {
             for (var j = i + 1; j < strassen.Count; j++)
             {
-                if (strassen[i].Count < 2 || strassen[j].Count < 2)
+                // Welle A 0.83.0: weiter als eine Strassenbreite auseinander = keine Ueberdeckung (StrassenNaehe = 0)
+                if (strassen[i].Count < 2 || strassen[j].Count < 2 || rahmen[i].Fern(rahmen[j], StadtSzene.StrassenBreite))
                 {
                     continue;
                 }
