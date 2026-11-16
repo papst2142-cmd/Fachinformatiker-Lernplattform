@@ -1040,6 +1040,477 @@
     },
     "punkte_selbst": 56,
     "punkte_programm": 44
+   },
+   "ae_b1_01": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Lindenhöhe Softwaremanufaktur GmbH",
+    "punkte": [
+     24,
+     25,
+     25,
+     26
+    ],
+    "teile": [
+     7,
+     7,
+     6,
+     8
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "text",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 3,
+     "luecke": 1,
+     "rechnen": 6,
+     "tabelle": 2,
+     "zeilen": 11
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 6,
+     "beschreiben": 3,
+     "ergaenzen": 2,
+     "erlaeutern": 3,
+     "ermitteln": 4,
+     "nennen": 3,
+     "vergleichen": 3,
+     "zeichnen": 1
+    },
+    "punkte_selbst": 66,
+    "punkte_programm": 34
+   },
+   "ae_b1_02": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Stadtwerke Eulenbach GmbH",
+    "punkte": [
+     26,
+     25,
+     24,
+     25
+    ],
+    "teile": [
+     5,
+     6,
+     6,
+     8
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "text",
+     "tabelle",
+     "englisch",
+     "code"
+    ],
+    "formen": {
+     "angaben": 4,
+     "auswahl": 3,
+     "luecke": 1,
+     "rechnen": 4,
+     "tabelle": 3,
+     "zeichnen": 1,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 4,
+     "beschreiben": 2,
+     "ergaenzen": 3,
+     "erlaeutern": 4,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "nennen": 3,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 64,
+    "punkte_programm": 36
+   },
+   "ae_b1_03": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Hofgut Sonnenacker eG",
+    "punkte": [
+     25,
+     26,
+     24,
+     25
+    ],
+    "teile": [
+     7,
+     6,
+     7,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "text",
+     "tabelle",
+     "code",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 1,
+     "luecke": 1,
+     "rechnen": 5,
+     "tabelle": 3,
+     "zeilen": 10
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 5,
+     "beschreiben": 2,
+     "ergaenzen": 3,
+     "erlaeutern": 5,
+     "ermitteln": 2,
+     "erstellen": 1,
+     "nennen": 5,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 66,
+    "punkte_programm": 34
+   },
+   "ae_b1_04": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Museumsverbund Silberstollen gGmbH",
+    "punkte": [
+     25,
+     26,
+     24,
+     25
+    ],
+    "teile": [
+     7,
+     5,
+     7,
+     6
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "text",
+     "tabelle",
+     "code",
+     "tabelle",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 2,
+     "luecke": 1,
+     "rechnen": 5,
+     "tabelle": 3,
+     "zeichnen": 1,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 4,
+     "beschreiben": 2,
+     "ergaenzen": 4,
+     "erlaeutern": 3,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "nennen": 3,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 63,
+    "punkte_programm": 37
+   },
+   "ae_b1_05": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Spedition Kolbenhof GmbH",
+    "punkte": [
+     25,
+     26,
+     25,
+     24
+    ],
+    "teile": [
+     7,
+     7,
+     6,
+     7
+    ],
+    "anlagen": [
+     "text",
+     "code",
+     "englisch",
+     "text",
+     "tabelle",
+     "monitor"
+    ],
+    "formen": {
+     "angaben": 4,
+     "auswahl": 3,
+     "luecke": 1,
+     "rechnen": 6,
+     "tabelle": 4,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 6,
+     "beschreiben": 3,
+     "ergaenzen": 4,
+     "erlaeutern": 3,
+     "ermitteln": 4,
+     "nennen": 3,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 54,
+    "punkte_programm": 46
+   },
+   "ae_b2_01": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Kletterhalle Felsenfest GmbH",
+    "punkte": [
+     24,
+     25,
+     25,
+     26
+    ],
+    "teile": [
+     7,
+     6,
+     8,
+     7
+    ],
+    "anlagen": [
+     "code",
+     "text",
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 2,
+     "auswahl": 2,
+     "luecke": 1,
+     "rechnen": 5,
+     "tabelle": 4,
+     "zeilen": 14
+    },
+    "operatoren": {
+     "begruenden": 1,
+     "berechnen": 4,
+     "beschreiben": 4,
+     "ergaenzen": 5,
+     "erlaeutern": 5,
+     "ermitteln": 7,
+     "nennen": 1,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 59,
+    "punkte_programm": 41
+   },
+   "ae_b2_02": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Weinkellerei Rebenhang eG",
+    "punkte": [
+     25,
+     24,
+     26,
+     25
+    ],
+    "teile": [
+     7,
+     6,
+     6,
+     7
+    ],
+    "anlagen": [
+     "code",
+     "text",
+     "tabelle",
+     "text",
+     "tabelle",
+     "code",
+     "tabelle",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 3,
+     "auswahl": 1,
+     "luecke": 4,
+     "rechnen": 3,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 12
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 3,
+     "beschreiben": 2,
+     "ergaenzen": 5,
+     "erlaeutern": 4,
+     "ermitteln": 5,
+     "erstellen": 2,
+     "nennen": 3
+    },
+    "punkte_selbst": 68,
+    "punkte_programm": 32
+   },
+   "ae_b2_03": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Messnetz Hochmoorwetter GmbH",
+    "punkte": [
+     25,
+     26,
+     24,
+     25
+    ],
+    "teile": [
+     7,
+     6,
+     7,
+     7
+    ],
+    "anlagen": [
+     "monitor",
+     "code",
+     "text",
+     "englisch",
+     "tabelle",
+     "code",
+     "code"
+    ],
+    "formen": {
+     "angaben": 4,
+     "auswahl": 1,
+     "luecke": 7,
+     "rechnen": 2,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 10
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 2,
+     "beschreiben": 2,
+     "ergaenzen": 3,
+     "erlaeutern": 3,
+     "ermitteln": 7,
+     "erstellen": 1,
+     "korrigieren": 1,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 60,
+    "punkte_programm": 40
+   },
+   "ae_b2_04": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Zahnradbahn Gipfelblick GmbH",
+    "punkte": [
+     24,
+     26,
+     25,
+     25
+    ],
+    "teile": [
+     6,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "code",
+     "code",
+     "tabelle",
+     "tabelle",
+     "code",
+     "code",
+     "text",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 2,
+     "auswahl": 1,
+     "luecke": 5,
+     "rechnen": 3,
+     "tabelle": 3,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 2,
+     "beschreiben": 1,
+     "ergaenzen": 5,
+     "erlaeutern": 5,
+     "ermitteln": 7,
+     "nennen": 2,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 57,
+    "punkte_programm": 43
+   },
+   "ae_b2_05": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Imkerei-Genossenschaft Honigtau eG",
+    "punkte": [
+     24,
+     25,
+     26,
+     25
+    ],
+    "teile": [
+     7,
+     6,
+     8,
+     8
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "tabelle",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 1,
+     "luecke": 6,
+     "rechnen": 2,
+     "tabelle": 2,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 2,
+     "beschreiben": 3,
+     "ergaenzen": 2,
+     "erlaeutern": 4,
+     "ermitteln": 6,
+     "erstellen": 1,
+     "korrigieren": 2,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 62,
+    "punkte_programm": 38
    }
   },
   "sichten": {
@@ -1077,8 +1548,20 @@
      "alle_ap1_05",
      "alle_ap1_06"
     ],
-    "b1": [],
-    "b2": []
+    "b1": [
+     "ae_b1_01",
+     "ae_b1_02",
+     "ae_b1_03",
+     "ae_b1_04",
+     "ae_b1_05"
+    ],
+    "b2": [
+     "ae_b2_01",
+     "ae_b2_02",
+     "ae_b2_03",
+     "ae_b2_04",
+     "ae_b2_05"
+    ]
    },
    "dpa": {
     "ap1": [
