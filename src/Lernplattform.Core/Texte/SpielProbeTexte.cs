@@ -32,6 +32,9 @@ public static class SpielProbeTexte
 
     /// <summary>Weisung P8-52 (Text von Chat angenommen): Knopf der Leistungsprobe, nur in der Probe-APK.</summary>
     public const string Leistungsprobe = "Leistungsprobe";
+
+    /// <summary>Welle Nachladen A 0.82.0 (nur Probe-APK): grosse Testkarte laden und den Gang messen.</summary>
+    public const string Testkarte = "Testkarte";
     public const string Hingehen = "Hingehen";
 
     // ---- Welle A 0.67.0 (Weisung P12-204, Sammelliste 302): Bus fuer den Spieler ----

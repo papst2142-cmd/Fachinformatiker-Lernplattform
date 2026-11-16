@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 0.82.0
+Draußen lädt das Spiel jetzt nur die Stadtteile um deine Figur. So können später auch viel größere Städte flüssig laufen.
+
+- Die Stadt ist in feste Stadtteile von 16 × 16 Feldern geteilt (Namen wie A1 oder B3). Geladen sind nur die Stadtteile in deiner Nähe, weitere werden im Hintergrund vorbereitet, während du gehst. Du merkst davon nichts: es entsteht nie ein Loch im Bild.
+- Weiter weg zeigt das Spiel jedes Haus als einfachen Kasten. Darüber liegt leichter Dunst, damit der Übergang weich wirkt. Den Dunst siehst du nur oben am Bildrand, wenn die Kamera flach steht.
+- Fährst du mit Bus oder Zug, wird das Ziel schon während der Fahrt vorbereitet. Beim Aussteigen ist alles sofort da.
+- Die Stadt sieht in deiner Nähe genau so aus wie vorher. Spielstand, Spielzeit, Wege und alle Aufgaben bleiben unverändert.
+
 ## A 0.81.2
 In der Prüfung im echten Format zählt eine große Zahl mit Tausenderpunkt jetzt richtig, zum Beispiel „1.340“ für 1340.
 

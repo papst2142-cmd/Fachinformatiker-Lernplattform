@@ -121,7 +121,11 @@ public class ArbeitsortFormatTests
             var fehler = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(text)));
             Assert.Contains(fehler.Funde, t => t.Contains("passt aber nicht zum Inhalt", StringComparison.Ordinal));
         }
+        // seit S 0.54.0 gibt es Format 3 (Karten ueber 64): auf einer kleinen Karte passt die Nummer nicht zum Inhalt,
+        // die naechste Nummer (4) ist eine neuere Fassung
         var drei = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(neu.Replace("\"formatversion\": 2,", "\"formatversion\": 3,", StringComparison.Ordinal))));
-        Assert.Contains(drei.Funde, t => t.Contains("neueren Fassung des Formats", StringComparison.Ordinal));
+        Assert.Contains(drei.Funde, t => t.Contains("passt aber nicht zum Inhalt", StringComparison.Ordinal));
+        var vier = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(neu.Replace("\"formatversion\": 2,", "\"formatversion\": 4,", StringComparison.Ordinal))));
+        Assert.Contains(vier.Funde, t => t.Contains("neueren Fassung des Formats", StringComparison.Ordinal));
     }
 }

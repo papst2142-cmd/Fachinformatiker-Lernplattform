@@ -67,18 +67,60 @@ public sealed partial class StadtSzene
         var zeilen = (int)Math.Ceiling(tiefe / FeinRaster);
         // je Feld Merkmale (Bits), Strecke fuer Strecke gesetzt (gleich der Pruefung gegen den ganzen Linienzug, aber nur nahe Felder)
         const byte gleisNah = 1, strasseGanz = 2, fahrbahnNah = 4, querungGanz = 8;
-        var merkmal = new byte[spalten * zeilen];
         const float diag = FeinRaster * 0.7072f;
         Vector2 Mitte(int s, int z) => new((s + 0.5f) * FeinRaster, (z + 0.5f) * FeinRaster);
-        void Markieren(IReadOnlyList<Vector2> linie, float weite, byte bit)
+        // Welle Nachladen A 0.82.0 (grosse Karten): die Felder werden erst beim ersten Abfragen eines Blocks von Block x Block
+        // Feldern berechnet (dieselben Strecken, dieselbe Rechnung je Feld, nur auf den Block beschraenkt; gleiches Ergebnis wie
+        // das ganze Feld auf einmal). Die Strecken stehen in derselben Reihenfolge wie bisher.
+        var strecken = new List<(Vector2 P, Vector2 Q, float Weite, byte Bit)>();
+        void Merken(IReadOnlyList<Vector2> linie, float weite, byte bit)
         {
             for (var i = 1; i < linie.Count; i++)
             {
-                var (p, q) = (linie[i - 1], linie[i]);
-                var s0 = Math.Max(0, (int)((MathF.Min(p.X, q.X) - weite) / FeinRaster) - 1);
-                var s1 = Math.Min(spalten - 1, (int)((MathF.Max(p.X, q.X) + weite) / FeinRaster) + 1);
-                var z0 = Math.Max(0, (int)((MathF.Min(p.Y, q.Y) - weite) / FeinRaster) - 1);
-                var z1 = Math.Min(zeilen - 1, (int)((MathF.Max(p.Y, q.Y) + weite) / FeinRaster) + 1);
+                strecken.Add((linie[i - 1], linie[i], weite, bit));
+            }
+        }
+        // Gleis: gesperrt, ausser das Feld liegt ganz auf einer Strasse oder ihrem Gehweg (Bahnuebergang) oder auf einem Fussweg
+        foreach (var gleis in gleise.Where(g => g.Count >= 2))
+        {
+            Merken(gleis, (GleisBreite / 2) + diag, gleisNah);
+        }
+        foreach (var st in strassen.Where(st => st.Count >= 2))
+        {
+            Merken(st, (StrassenBreite / 2) - diag, strasseGanz);
+        }
+        foreach (var (linie, halb) in gehwege.Where(g => g.Linie.Count >= 2))
+        {
+            Merken(linie, halb - diag, strasseGanz);
+            // Fahrbahn einer Strasse mit Gehweg: gesperrt, ausser das Feld liegt ganz auf einem Uebergang
+            Merken(linie, (StrassenBreite / 2) + diag, fahrbahnNah);
+        }
+        foreach (var w in wege.Where(w => w.Count >= 2))
+        {
+            Merken(w, WegBreite / 2, strasseGanz);
+        }
+        var queren = (querungen ?? []).ToList();
+        const int block = 128;
+        var blockSpalten = (spalten + block - 1) / block;
+        var blockZeilen = (zeilen + block - 1) / block;
+        var bloecke = new bool[]?[blockSpalten * blockZeilen];
+        var sperre = new object();
+        bool[] Block(int bs, int bz)
+        {
+            var (bs0, bs1) = (bs * block, Math.Min(spalten - 1, ((bs + 1) * block) - 1));
+            var (bz0, bz1) = (bz * block, Math.Min(zeilen - 1, ((bz + 1) * block) - 1));
+            var hoch = bz1 - bz0 + 1;
+            var merkmal = new byte[(bs1 - bs0 + 1) * hoch];
+            foreach (var (p, q, weite, bit) in strecken)
+            {
+                var s0 = Math.Max(bs0, Math.Max(0, (int)((MathF.Min(p.X, q.X) - weite) / FeinRaster) - 1));
+                var s1 = Math.Min(bs1, Math.Min(spalten - 1, (int)((MathF.Max(p.X, q.X) + weite) / FeinRaster) + 1));
+                var z0 = Math.Max(bz0, Math.Max(0, (int)((MathF.Min(p.Y, q.Y) - weite) / FeinRaster) - 1));
+                var z1 = Math.Min(bz1, Math.Min(zeilen - 1, (int)((MathF.Max(p.Y, q.Y) + weite) / FeinRaster) + 1));
+                if (s0 > s1 || z0 > z1)
+                {
+                    continue;
+                }
                 var d = q - p;
                 var ll = Vector2.Dot(d, d);
                 for (var s = s0; s <= s1; s++)
@@ -89,54 +131,36 @@ public sealed partial class StadtSzene
                         var t = ll > 0 ? Math.Clamp(Vector2.Dot(m - p, d) / ll, 0f, 1f) : 0f;
                         if (Vector2.DistanceSquared(m, p + (d * t)) <= weite * weite)
                         {
-                            merkmal[(s * zeilen) + z] |= bit;
+                            merkmal[((s - bs0) * hoch) + z - bz0] |= bit;
                         }
                     }
                 }
             }
-        }
-        // Gleis: gesperrt, ausser das Feld liegt ganz auf einer Strasse oder ihrem Gehweg (Bahnuebergang) oder auf einem Fussweg
-        foreach (var gleis in gleise.Where(g => g.Count >= 2))
-        {
-            Markieren(gleis, (GleisBreite / 2) + diag, gleisNah);
-        }
-        foreach (var st in strassen.Where(st => st.Count >= 2))
-        {
-            Markieren(st, (StrassenBreite / 2) - diag, strasseGanz);
-        }
-        foreach (var (linie, halb) in gehwege.Where(g => g.Linie.Count >= 2))
-        {
-            Markieren(linie, halb - diag, strasseGanz);
-            // Fahrbahn einer Strasse mit Gehweg: gesperrt, ausser das Feld liegt ganz auf einem Uebergang
-            Markieren(linie, (StrassenBreite / 2) + diag, fahrbahnNah);
-        }
-        foreach (var w in wege.Where(w => w.Count >= 2))
-        {
-            Markieren(w, WegBreite / 2, strasseGanz);
-        }
-        foreach (var q in querungen ?? [])
-        {
-            var r = (StrassenBreite / 2) + 0.3f;
-            var s0 = Math.Max(0, (int)((q.Mitte.X - r) / FeinRaster) - 1);
-            var s1 = Math.Min(spalten - 1, (int)((q.Mitte.X + r) / FeinRaster) + 1);
-            var z0 = Math.Max(0, (int)((q.Mitte.Y - r) / FeinRaster) - 1);
-            var z1 = Math.Min(zeilen - 1, (int)((q.Mitte.Y + r) / FeinRaster) + 1);
-            for (var s = s0; s <= s1; s++)
+            foreach (var q in queren)
             {
-                for (var z = z0; z <= z1; z++)
+                var r = (StrassenBreite / 2) + 0.3f;
+                var s0 = Math.Max(bs0, Math.Max(0, (int)((q.Mitte.X - r) / FeinRaster) - 1));
+                var s1 = Math.Min(bs1, Math.Min(spalten - 1, (int)((q.Mitte.X + r) / FeinRaster) + 1));
+                var z0 = Math.Max(bz0, Math.Max(0, (int)((q.Mitte.Y - r) / FeinRaster) - 1));
+                var z1 = Math.Min(bz1, Math.Min(zeilen - 1, (int)((q.Mitte.Y + r) / FeinRaster) + 1));
+                for (var s = s0; s <= s1; s++)
                 {
-                    if (q.Drauf(Mitte(s, z), -diag, 0.2f))
+                    for (var z = z0; z <= z1; z++)
                     {
-                        merkmal[(s * zeilen) + z] |= querungGanz;
+                        if (q.Drauf(Mitte(s, z), -diag, 0.2f))
+                        {
+                            merkmal[((s - bs0) * hoch) + z - bz0] |= querungGanz;
+                        }
                     }
                 }
             }
-        }
-        var gesperrt = new bool[merkmal.Length];
-        for (var i = 0; i < merkmal.Length; i++)
-        {
-            var m = merkmal[i];
-            gesperrt[i] = ((m & gleisNah) != 0 && (m & strasseGanz) == 0) || ((m & fahrbahnNah) != 0 && (m & querungGanz) == 0);
+            var gesperrt = new bool[merkmal.Length];
+            for (var i = 0; i < merkmal.Length; i++)
+            {
+                var m = merkmal[i];
+                gesperrt[i] = ((m & gleisNah) != 0 && (m & strasseGanz) == 0) || ((m & fahrbahnNah) != 0 && (m & querungGanz) == 0);
+            }
+            return gesperrt;
         }
         return (x, y) =>
         {
@@ -146,7 +170,26 @@ public sealed partial class StadtSzene
             }
             var s = (int)(x / FeinRaster);
             var z = (int)(y / FeinRaster);
-            return s < spalten && z < zeilen && gesperrt[(s * zeilen) + z];
+            if (s >= spalten || z >= zeilen)
+            {
+                return false;
+            }
+            var nr = ((s / block) * blockZeilen) + (z / block);
+            var feld = Volatile.Read(ref bloecke[nr]);
+            if (feld is null)
+            {
+                lock (sperre)
+                {
+                    feld = bloecke[nr];
+                    if (feld is null)
+                    {
+                        feld = Block(s / block, z / block);
+                        Volatile.Write(ref bloecke[nr], feld);
+                    }
+                }
+            }
+            var hoch = Math.Min(zeilen - 1, (((z / block) + 1) * block) - 1) - ((z / block) * block) + 1;
+            return feld[((s % block) * hoch) + (z % block)];
         };
     }
 

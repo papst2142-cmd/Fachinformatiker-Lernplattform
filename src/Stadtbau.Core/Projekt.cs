@@ -33,16 +33,18 @@ public sealed partial class Projekt
     /// oeffnet die Datei damit nur zum Lesen), 2 seit Welle 3 (Felder "aussen" und "leer"). Dateien mit Formatnummer 1 und 2
     /// lassen sich weiter oeffnen. 4 seit Welle E4 (S 0.53.0, Weisung P12-247): nur eine Datei, in der eine Quest einen
     /// Arbeitsort hat (im Stand oder im Verlauf), bekommt 4 (<see cref="FormatFuer"/>); jede andere bleibt bei 3 und bitgleich.
+    /// 5 seit Welle Nachladen (S 0.54.0, Weisung P12-280, Nico 2b): nur eine leere Stadt groesser als 64 je Seite (bis 256).
     /// </summary>
-    public const long FormatVersion = 4;
+    public const long FormatVersion = 5;
 
     /// <summary>
-    /// Formatnummer beim Schreiben: 4, wenn der Text der Stadt draussen oder des Verlaufs das Feld "arbeitsort" als Schluessel
+    /// Formatnummer beim Schreiben: 5 fuer eine leere Stadt groesser als 64 je Seite; sonst 4, wenn der Text der Stadt draussen oder des Verlaufs das Feld "arbeitsort" als Schluessel
     /// enthaelt, sonst 3. Ein Schluessel steht im JSON-Text als <c>"arbeitsort": </c>; derselbe Wortlaut in einem Text (Titel,
     /// Frage) steht dort maskiert (<c>\"arbeitsort\": </c>) und zaehlt darum nicht.
     /// </summary>
-    internal static long FormatFuer(string aussenText, string verlaufText) =>
-        aussenText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) || verlaufText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) ? 4 : 3;
+    internal static long FormatFuer(string aussenText, string verlaufText, (double Breite, double Hoehe)? leer = null) =>
+        leer is { } l && (l.Breite > Stadtteile.AltesFormatBis || l.Hoehe > Stadtteile.AltesFormatBis) ? 5
+        : aussenText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) || verlaufText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) ? 4 : 3;
 
     private const string ArbeitsortSchluessel = "\"" + Questebene.FeldArbeitsort + "\": ";
 
@@ -641,7 +643,7 @@ public sealed partial class Projekt
         var verlaufText = verlauf.Append(']').ToString();
         var objekt = new List<(string, string)>
         {
-            ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatFuer(aussenText, verlaufText))), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
+            ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatFuer(aussenText, verlaufText, Leer is { } lg ? (lg.Breite, lg.Hoehe) : null))), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
             ("name", PythonJson.Standard(Name)), ("stadt", PythonJson.Standard(Basis.StadtId)), ("basis", PythonJson.Standard(Leer is null ? Basis.Nummer : null)),
             ("leer", PythonJson.Standard(leer)), ("ort", PythonJson.Standard(Ort)), ("nachricht", PythonJson.Standard(Nachricht)), ("grundrisse", PythonJson.Standard(grundrisse)),
             ("aussen", aussenText), ("verlauf", verlaufText), ("zeiger", PythonJson.Standard((long)Math.Max(0, _zeiger - start))),

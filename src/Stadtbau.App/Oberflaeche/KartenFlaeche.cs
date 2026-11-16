@@ -800,6 +800,8 @@ public sealed partial class KartenFlaeche : Control
 
         // Welle D2: Waermekarte ueber der Stadt, unter Funden und Auswahl-Hilfen
         WaermeZeichnen(ctx);
+        // Welle Nachladen S 0.54.0: Raster der Stadtteile mit Namen
+        StadtteileZeichnen(ctx);
         // Funde mit Stelle
         foreach (var f in Zeigt(Ebene.Funde) ? Funde : [])
         {

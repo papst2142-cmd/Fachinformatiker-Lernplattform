@@ -65,11 +65,11 @@ public static partial class StadtbauPruefung
         {
             funde.Add("Feld „formatversion“ ist kleiner als 1.");
         }
-        else if (d["stadtdaten"] is PyObjekt sdFormat && Py.Int(d["formatversion"]) != StadtFassung.FormatFuer(sdFormat))
+        else if (d["stadtdaten"] is PyObjekt sdFormat && Py.Int(d["formatversion"]) != StadtFassung.FormatFuer(sdFormat, d["karte"] as PyObjekt))
         {
             // Welle E4: Formatnummer 2 genau dann, wenn eine Quest einen Arbeitsort hat (sonst laese ein aelteres Programm
             // den Arbeitsort still nicht oder lehnte eine Datei ohne Arbeitsort ab)
-            funde.Add(string.Create(CultureInfo.InvariantCulture, $"Feld „formatversion“ ist {Py.Int(d["formatversion"])}, passt aber nicht zum Inhalt (mit Arbeitsort einer Quest 2, sonst 1)."));
+            funde.Add(string.Create(CultureInfo.InvariantCulture, $"Feld „formatversion“ ist {Py.Int(d["formatversion"])}, passt aber nicht zum Inhalt (Karte groesser als 64 oder mit Stadtteil-Namen 3, sonst mit Arbeitsort einer Quest 2, sonst 1)."));
         }
         if (d["stadt"] is not PyObjekt stadt)
         {

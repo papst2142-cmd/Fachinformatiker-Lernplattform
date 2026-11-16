@@ -194,8 +194,29 @@ Lernplattform.Grundlagen  ←  Lernplattform.Engine  ←  Lernplattform.Core  �
 Nachweis: Fingerabdrücke, `StadtSzeneHash` und Rechnerfest-Werte, `SOLLWERTE.sha256`, Fassung 0 und Testdateien bitgleich,
 Spiel- und Werkzeug-Fotos pixelgleich vorher/nachher.
 
-## 9. Entscheidung: kein Streaming (Nico 11.11.2026 06:35 MEZ)
+## 9. Stadtteile mit Nachladen (A 0.82.0 / S 0.54.0, Weisung P12-280, Nico 1c 2b 3b 4a 5b)
 
-Die Stadt wird ganz geladen, nicht in Zellen nachgeladen. Gemessen (A 0.62.1): Netzdaten rund **19 MB** (Grenze 48 MB),
-„Stadt bauen“ im Spiel rund 0,15 s, im Werkzeug bis rund **0,8 s** (Windows; Grenze 2 s). Beides liegt weit unter den
-Grenzen. **Erst bei einer großen durchgehenden Welt (mehrere Städte ohne Zug dazwischen) neu fragen.**
+Ersetzt „kein Streaming“ (Nico 11.11.2026; Nachladen fest vor der Beta seit Nico 14.11.2026, Weisung P12-250).
+
+- **Raster:** jede Karte ist in feste Kacheln 16 × 16 geteilt (`Stadtbau/Stadtteile.cs`, Namen A1, B3 …, ab Spalte 26 AA …).
+  Größte Karte 256 × 256 (`Stadtteile.GroessteSeite`). Bis 64 bleibt die Datei im alten Format, darüber Stadt-Datei Format 3
+  und Projekt Format 5 (`StadtFassung.FormatFuer`, `Projekt.FormatFuer`); der Abschnitt `stadtteile` (gezogene Namen) wird
+  heute nur gelesen und geprüft, gebaut in S 0.55.0.
+- **Bau:** Straßen, Kreuzungen, Bahn, Fluss werden aus der ganzen Stadt geplant; erst die fertigen Dreiecke kommen nach
+  ihrer Mitte in eine Kachel (`StadtSzene.KachelVorbereiten`, `Netz.NurKachel`). Boden, Fernkästen (ein Kasten je Haus),
+  Instancing und Ampel-Lichter bleiben immer geladen (`StadtSzene.GrundlageVorbereiten`). Summe aller Kacheln = ganzer Bau
+  (Test `SpielKachelnTests`).
+- **Ladeplan** (`Ladeplan`, reine Rechnung): nah = jede Kachel im Kreis 24 um die Figur, vorbereitet bis 32, frei erst ab
+  28 (Grafikkarte) bzw. 36 (Vorrat). `Nachlader` baut im Hintergrund (`Packen`), am Start alle nötigen Kacheln nebeneinander
+  (`StartBauen`), und bereitet das Ziel einer Fahrt vor (`Ziel`, Ende des Wegs). Das Spiel lädt hoch in Häppchen
+  (`StadtFlaeche.Nachladen.cs`, je Bild höchstens `HochladenJeBildMs`, Rest im nächsten Bild) und baut eine fehlende Kachel
+  im Bild nur bis `SofortBisMs` sofort (sonst zeigt das Bild sie fern, nie ein Loch).
+- **Fern:** nicht geladene Kacheln zeigen die Fernkästen, darüber leichter Dunst (`Dunst.Staerke` 0,6, Nico P12-281 a).
+- **Nur mit fester Kamera draußen** (`StadtFlaeche.NachladenAktiv`); Messungen mit `MessungFrei()` laden alles wie bisher.
+  Gegenprobe `StadtFlaeche.NachladenAusFuerTests`.
+- **Grenzen** (Nico 4a): 48 MB Netzdaten und 2 000 ms „Stadt bauen“ gelten für das gleichzeitig Geladene; die Grenzen je Bild
+  bleiben (160 000/40 Mittel, 125 000/32 Niedrig, 200 000/48 Hoch). Messpunkte „längstes Bild beim Gehen“ (400 ms) und
+  „Kachel nachladen“ (Info, Grenzwert = Nico). Start-Test-Teil `nachladen` mit der Testkarte 256 × 256
+  (`tests/Lernplattform.Tests/Testdaten/testkarte_256.fistadt`, erzeugt mit `werkzeuge/stadtbau/testkarte.py`).
+- **Werkzeug:** Knopf „Stadtteile“ (Taste T) zeigt Raster, Namen und Werte je Kachel (`StadtteilWert`). Nachladen in der
+  3D-Ansicht und Kosten je Kachel live kommen mit S 0.55.0.

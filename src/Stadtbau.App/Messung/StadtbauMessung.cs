@@ -400,6 +400,7 @@ public static partial class StadtbauMessung
         await IndustrieAsync(a, f);
         await AlsGebaeudeAsync(a, f);
         await GrenzenLiveAsync(a, f);
+        await StadtteileAsync(a, f);
         await NachtwelleAsync(a, f);
         await AlleBehebenAsync(a, f);
         await FundlistenAsync(a, f);

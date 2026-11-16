@@ -25,6 +25,12 @@ public sealed partial class StadtSpiel
     public const float Tempo = 3.5f;
 
     private readonly List<(double X, double Y)> _weg = [];
+
+    /// <summary>
+    /// Welle Nachladen A 0.82.0 (Weisung P12-280, 5b, Ankunft mit Bus oder Zug): Ende des Wegs der Figur (null = kein Weg). Nur
+    /// fuer die Darstellung (die Kacheln am Ziel werden vorher vorbereitet); aendert nichts am Spiel.
+    /// </summary>
+    public (float X, float Z)? WegEnde => _weg.Count > 0 ? ((float)_weg[^1].X, (float)_weg[^1].Y) : null;
     private string? _zielOrt;
     private string? _danachZu;
     private object? _danach;   // Nachtrag 1 zu P7-12: naechstes Ziel (Ort-Id oder Bodenpunkt), erst nach der Ankunft
@@ -1221,6 +1227,12 @@ public sealed partial class StadtSpiel
     /// ueber Mitternacht), die Szene fuer das Hinausgehen schon jetzt im Hintergrund bauen (aus einer Kopie des
     /// Spielstands, mit allen Netzen). Draussen oder ohne Wechsel geschieht nichts. Die Oberflaeche ruft das im Takt.
     /// </summary>
+    /// <summary>
+    /// Welle Nachladen A 0.82.0 (Weisung P12-280): die Darstellung laedt Kacheln nach; im Hintergrund wird dann nur die
+    /// Grundlage der naechsten Szene vorbereitet (<see cref="StadtSzene.GrundlageVorbereiten"/>), nie alle Netze auf einmal.
+    /// </summary>
+    public bool NurGrundlage { get; set; }
+
     public void SzeneVorbereiten()
     {
         if (!ImInnenraum)
@@ -1238,11 +1250,19 @@ public sealed partial class StadtSpiel
         {
             return;
         }
-        var (stadt, kopie, grafik, feste) = (Stadt, Ablauf.Stand.Kopie(), Grafik, Feste);
+        var (stadt, kopie, grafik, feste, nurGrundlage) = (Stadt, Ablauf.Stand.Kopie(), Grafik, Feste, NurGrundlage);
         _szeneVorbereitung = (fest, jahreszeit, signatur, Task.Run(() =>
         {
             var szene = StadtSzene.Bauen(stadt, kopie, grafik, fest, feste, jahreszeit);
-            szene.Vorbereiten();
+            if (nurGrundlage)
+            {
+                // Welle Nachladen A 0.82.0: nur das immer Geladene, die Kacheln kommen beim Gehen
+                szene.GrundlageVorbereiten();
+            }
+            else
+            {
+                szene.Vorbereiten();
+            }
             return szene;
         }));
     }

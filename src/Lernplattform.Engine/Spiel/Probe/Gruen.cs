@@ -31,8 +31,18 @@ public static class Gruen
     /// <summary>Fester "Wuerfel" 0..1 fuer eine Lage (SHA-256 wie StadtSzene.Licht).</summary>
     public static float Wurf(string art, float x, float z, int nr = 0)
     {
-        var text = string.Create(CultureInfo.InvariantCulture, $"{art}|{x:F2}|{z:F2}|{nr}");
-        var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text));
+        // Welle Nachladen A 0.82.0: dieselben UTF-8-Bytes ohne Zwischentext (schneller beim Bau grosser Karten)
+        Span<byte> text = stackalloc byte[256];
+        Span<byte> hash = stackalloc byte[32];
+        if (System.Text.Unicode.Utf8.TryWrite(text, CultureInfo.InvariantCulture, $"{art}|{x:F2}|{z:F2}|{nr}", out var laenge))
+        {
+            System.Security.Cryptography.SHA256.HashData(text[..laenge], hash);
+        }
+        else
+        {
+            var lang = string.Create(CultureInfo.InvariantCulture, $"{art}|{x:F2}|{z:F2}|{nr}");
+            System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(lang), hash);
+        }
         return ((hash[0] << 16) | (hash[1] << 8) | hash[2]) / (float)(1 << 24);
     }
 
@@ -80,10 +90,34 @@ public static class Gruen
     {
         var erg = new Ergebnis();
         var belegt = new List<(Vector2 P, float R)>();
+        // Welle Nachladen A 0.82.0: dieselben Abfragen ueber ein Raster (nur die nahen Eintraege; gleiches Ergebnis wie die
+        // ganze Liste, weil jeder ferne Eintrag die Bedingung sicher erfuellt). Groesserer Radius als RMax: ganze Liste.
+        const float RMax = 0.35f;
+        var belegtNah = new NahRaster<(Vector2 P, float R)>();
+        var baeumeNah = new NahRaster<(Vector2 Mitte, float R)>();
+        void BelegtHinzu((Vector2 P, float R) b)
+        {
+            belegt.Add(b);
+            var w = b.R + RMax + 0.03f;
+            belegtNah.Hinzu(b, b.P.X - w, b.P.Y - w, b.P.X + w, b.P.Y + w);
+        }
+        void BaumNah((Vector2 Mitte, float R) b)
+        {
+            var w = (b.R * 0.5f) + RMax;
+            baeumeNah.Hinzu(b, b.Mitte.X - w, b.Mitte.Y - w, b.Mitte.X + w, b.Mitte.Y + w);
+        }
+        foreach (var b in baeume)
+        {
+            BaumNah(b);
+        }
         bool Platz(float x, float z, float r) =>
             x - r > 0.2f && z - r > 0.2f && x + r < breite - 0.2f && z + r < tiefe - 0.2f
-            && frei(x, z, r) && belegt.All(b => Vector2.Distance(b.P, new Vector2(x, z)) >= b.R + r + 0.03f)
-            && baeume.All(b => Vector2.Distance(b.Mitte, new Vector2(x, z)) >= (b.R * 0.5f) + r);
+            && frei(x, z, r)
+            && (r <= RMax
+                ? belegtNah.Alle(x, z, b => Vector2.Distance(b.P, new Vector2(x, z)) >= b.R + r + 0.03f)
+                    && baeumeNah.Alle(x, z, b => Vector2.Distance(b.Mitte, new Vector2(x, z)) >= (b.R * 0.5f) + r)
+                : belegt.All(b => Vector2.Distance(b.P, new Vector2(x, z)) >= b.R + r + 0.03f)
+                    && baeume.All(b => Vector2.Distance(b.Mitte, new Vector2(x, z)) >= (b.R * 0.5f) + r));
         void Zaehlen(string art) => erg.Anzahl[art] = erg.Anzahl.GetValueOrDefault(art) + 1;
         void Setzen(string art, float x, float z)
         {
@@ -94,7 +128,8 @@ public static class Gruen
                     {
                         Baum(erg.Baeume, grafik, x, z, 0.38f, 0.8f);
                         baeume.Add((new Vector2(x, z), 0.38f));
-                        belegt.Add((new Vector2(x, z), 0.35f));
+                        BaumNah((new Vector2(x, z), 0.38f));
+                        BelegtHinzu((new Vector2(x, z), 0.35f));
                         // Stamm als Hindernis (die Krone ueberragt den Weg)
                         erg.Plaetze.Add((art, x, z, 0.12f));
                         Zaehlen(art);
@@ -116,7 +151,7 @@ public static class Gruen
                     if (Platz(x, z, 0.18f))
                     {
                         Beet(erg.Teile, x, z);
-                        belegt.Add((new Vector2(x, z), 0.18f));
+                        BelegtHinzu((new Vector2(x, z), 0.18f));
                         erg.Plaetze.Add((art, x, z, 0.18f));
                         Zaehlen(art);
                     }
@@ -133,7 +168,7 @@ public static class Gruen
             var s = hoehe / Math.Max(0.05f, m.Max.Y);
             var winkel = Wurf(art + "dreh", x, z) * MathF.Tau;
             erg.Stuecke.Add(new ModellStueck(name, StadtSzene.Lage(m, Vector3.Zero, new Vector3(s), new Vector3(x, 0.012f, z), new Vector2(MathF.Sin(winkel), MathF.Cos(winkel)))));
-            belegt.Add((new Vector2(x, z), r));
+            BelegtHinzu((new Vector2(x, z), r));
             erg.Plaetze.Add((art, x, z, r));
             Zaehlen(art);
         }

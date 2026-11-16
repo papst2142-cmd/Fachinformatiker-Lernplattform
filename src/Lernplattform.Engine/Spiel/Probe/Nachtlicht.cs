@@ -235,7 +235,7 @@ public static class Nachtlicht
                     var (p, d) = Punkt(strasse, s);
                     var quer = new Vector2(-d.Y, d.X) * seite;
                     var q = p + (quer * Rand);
-                    if (liste.Any(l => Vector2.Distance(l.Ort, q) < Zwischen) || !regeln.Pruefen(q).Frei)
+                    if (liste.Any(l => Vector2.Distance(l.Ort, q) < Zwischen) || !regeln.Frei(q))
                     {
                         continue;
                     }
@@ -312,18 +312,34 @@ public static class Nachtlicht
     {
         var min = new Vector2(KartenRand);
         var max = new Vector2(breite - KartenRand, tiefe - KartenRand);
-        foreach (var (x, z, _) in skizze)
+        // Welle Nachladen A 0.82.0 (grosse Karten): jeder Platz fuer sich auf allen Kernen, Reihenfolge wie die Skizze
+        var ohneStrasseAlt = OhneStrasseAltFuerTests;
+        var plaetze = new (Vector2 A, Vector2 B)?[skizze.Count];
+        // ein Fehler kommt wie bisher als er selbst heraus (nicht verpackt), z. B. in der Gegenprobe OhneStrasseAltFuerTests
+        try
         {
-            var (strasse, laenge, seite) = StrasseVon(strassen, new Vector2(x, z));
-            if (strasse.Count < 2 && !OhneStrasseAltFuerTests)
-            {
-                continue;   // Sammelliste 271: Laterne ohne Strasse (siehe Plaetze)
-            }
-            var (p, d) = Punkt(strasse, laenge);
-            var q = p + (new Vector2(-d.Y, d.X) * seite * Rand);
-            // am Kartenrand nur bis zum ersten erlaubten Platz (Regel Kartenrand 0,3)
-            yield return (Vector2.Clamp(q - (d * WunschStreifen), min, max), Vector2.Clamp(q + (d * WunschStreifen), min, max));
+            Parallel.For(0, skizze.Count, i => plaetze[i] = Wunschplatz(strassen, skizze[i], min, max, ohneStrasseAlt));
         }
+        catch (AggregateException fehler) when (fehler.InnerExceptions.Count > 0)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(fehler.InnerExceptions[0]).Throw();
+        }
+        return plaetze.OfType<(Vector2 A, Vector2 B)>().ToList();
+    }
+
+    private static (Vector2 A, Vector2 B)? Wunschplatz(IReadOnlyList<IReadOnlyList<Vector2>> strassen, (float X, float Z, bool Doppelt) wunsch,
+        Vector2 min, Vector2 max, bool ohneStrasseAlt)
+    {
+        var (x, z, _) = wunsch;
+        var (strasse, laenge, seite) = StrasseVon(strassen, new Vector2(x, z));
+        if (strasse.Count < 2 && !ohneStrasseAlt)
+        {
+            return null;   // Sammelliste 271: Laterne ohne Strasse (siehe Plaetze)
+        }
+        var (p, d) = Punkt(strasse, laenge);
+        var q = p + (new Vector2(-d.Y, d.X) * seite * Rand);
+        // am Kartenrand nur bis zum ersten erlaubten Platz (Regel Kartenrand 0,3)
+        return (Vector2.Clamp(q - (d * WunschStreifen), min, max), Vector2.Clamp(q + (d * WunschStreifen), min, max));
     }
 
     private static float Laenge(IReadOnlyList<Vector2> linie)
@@ -399,6 +415,127 @@ public static class Nachtlicht
                 }
                 _kaesten.Add(("Teil " + t.Art, new Vector2(MathF.Min(t.X1, t.X2), MathF.Min(t.Z1, t.Z2)), new Vector2(MathF.Max(t.X1, t.X2), MathF.Max(t.Z1, t.Z2))));
             }
+        }
+
+        private NahRaster<Func<Vector2, bool>>? _raster;
+
+        /// <summary>
+        /// Welle Nachladen A 0.82.0 (grosse Karten): genau <c>Pruefen(q).Frei</c>, aber schnell. Jede Sperre steht mit ihrem
+        /// Wirkkasten (Gegenstand plus Abstand der Regel) in einem <see cref="NahRaster{T}"/>; ausserhalb davon sperrt sie sicher
+        /// nicht. Linien zaehlen je Strecke (der kleinste Abstand ist unter der Grenze genau dann, wenn eine Strecke es ist).
+        /// Gleichheit mit <see cref="Pruefen"/> prueft ein Test an vielen Punkten jeder Stadt.
+        /// </summary>
+        public bool Frei(Vector2 q)
+        {
+            var sz = _szene;
+            if (q.X < KartenRand || q.Y < KartenRand || q.X > sz.Breite - KartenRand || q.Y > sz.Tiefe - KartenRand)
+            {
+                return false;
+            }
+            // fein gedrehte Haeuser (wenige) ohne Raster: ihre genaue Grundflaeche muss nicht im Ort-Kasten liegen
+            foreach (var fh in sz.Haeuser)
+            {
+                if (fh.Fein.Aktiv && fh.Abstand(q) < AbstandModell)
+                {
+                    return false;
+                }
+            }
+            _raster ??= RasterBauen();
+            return _raster.Alle(q.X, q.Y, sperrt => !sperrt(q));
+        }
+
+        private NahRaster<Func<Vector2, bool>> RasterBauen()
+        {
+            var sz = _szene;
+            var r = new NahRaster<Func<Vector2, bool>>();
+            void Kasten(Vector2 min, Vector2 max, float um, Func<Vector2, bool> sperrt) => r.Hinzu(sperrt, min.X - um, min.Y - um, max.X + um, max.Y + um);
+            void Punkt(Vector2 p, float um, Func<Vector2, bool> sperrt) => Kasten(p, p, um, sperrt);
+            void Linie(IReadOnlyList<Vector2> linie, float halb, float grenze)
+            {
+                if (linie.Count == 1)
+                {
+                    var p0 = linie[0];
+                    Punkt(p0, halb + grenze, q => Vector2.Distance(q, p0) - halb < grenze);
+                    return;
+                }
+                for (var i = 0; i + 1 < linie.Count; i++)
+                {
+                    var (a, b) = (linie[i], linie[i + 1]);
+                    Kasten(Vector2.Min(a, b), Vector2.Max(a, b), halb + grenze, q => Kurve.AbstandStrecke(q, a, b) - halb < grenze);
+                }
+            }
+            foreach (var (linie, halb) in sz.BaumSperren)
+            {
+                Linie(linie, halb, 0.08f);
+            }
+            foreach (var h in sz.Haeuser.Where(h => !h.Fein.Aktiv).Select(h => (h.Min, h.Max))
+                .Concat(sz.Orte.Where(o => sz.Haeuser.All(h => !h.Fein.Aktiv || h.Id != o.Id)).Select(o => (Min: o.KastenMin, Max: o.KastenMax))))
+            {
+                var (hmin, hmax) = h;
+                Kasten(new Vector2(hmin.X, hmin.Z), new Vector2(hmax.X, hmax.Z), AbstandModell, q =>
+                {
+                    var dx = MathF.Max(MathF.Max(hmin.X - q.X, 0), q.X - hmax.X);
+                    var dz = MathF.Max(MathF.Max(hmin.Z - q.Y, 0), q.Y - hmax.Z);
+                    return MathF.Sqrt((dx * dx) + (dz * dz)) < AbstandModell;
+                });
+            }
+            foreach (var (m, rb) in sz.Baeume)
+            {
+                Punkt(m, rb + 0.1f, q => Vector2.Distance(q, m) - rb < 0.1f);
+            }
+            foreach (var t in sz.Tueren)
+            {
+                var (mitte, anfang) = (t.Mitte, t.WegAnfang);
+                Kasten(Vector2.Min(mitte, anfang), Vector2.Max(mitte, anfang), AbstandTuer, q =>
+                    MathF.Min(Vector2.Distance(q, mitte), Vector2.Distance(q, anfang)) < AbstandTuer
+                    || Kurve.Abstand(q, (IReadOnlyList<Vector2>)[mitte, anfang]) < AbstandWeg);
+            }
+            foreach (var (_, kmin, kmax) in _kaesten)
+            {
+                Kasten(kmin, kmax, AbstandModell, q =>
+                {
+                    var dx = MathF.Max(MathF.Max(kmin.X - q.X, 0), q.X - kmax.X);
+                    var dz = MathF.Max(MathF.Max(kmin.Y - q.Y, 0), q.Y - kmax.Y);
+                    return MathF.Sqrt((dx * dx) + (dz * dz)) < AbstandModell;
+                });
+            }
+            foreach (var (_, gx, gz, gr) in sz.GruenKlein?.Plaetze ?? [])
+            {
+                var g = new Vector2(gx, gz);
+                Punkt(g, gr + AbstandModell, q => Vector2.Distance(q, g) - gr < AbstandModell);
+            }
+            foreach (var (p, rf) in sz.FestPlaetzeAlle)
+            {
+                Punkt(p, rf + 0.15f, q => Vector2.Distance(q, p) - rf < 0.15f);
+            }
+            foreach (var k in sz.Andreaskreuze)
+            {
+                var punkte = Bahnuebergang.Grundpunkte(k);
+                var min = punkte.Aggregate(Vector2.Min);
+                var max = punkte.Aggregate(Vector2.Max);
+                Kasten(min, max, AbstandModell, q => punkte.Min(p => Vector2.Distance(q, p)) < AbstandModell);
+            }
+            foreach (var u in sz.Uebergaenge)
+            {
+                var um = u.Mitte;
+                Punkt(um, 0.5f + AbstandModell, q => Vector2.Distance(q, um) - 0.5f < AbstandModell);
+            }
+            foreach (var (mitte, richtung, halbLaenge, halbBreite) in sz.BrueckenKaesten)
+            {
+                var weit = MathF.Sqrt((halbLaenge * halbLaenge) + (halbBreite * halbBreite)) + AbstandModell;
+                Punkt(mitte, weit, q =>
+                {
+                    var rq = q - mitte;
+                    var laengs = MathF.Max(0, MathF.Abs(Vector2.Dot(rq, richtung)) - halbLaenge);
+                    var quer = MathF.Max(0, MathF.Abs(Vector2.Dot(rq, new Vector2(-richtung.Y, richtung.X))) - halbBreite);
+                    return MathF.Sqrt((laengs * laengs) + (quer * quer)) < AbstandModell;
+                });
+            }
+            foreach (var f in sz.Fluesse)
+            {
+                Linie(f, StadtSzene.FlussBreite / 2, AbstandFluss);
+            }
+            return r;
         }
 
         /// <summary>Ist der Platz frei? Sonst der erste verletzte Grund und sein Abstand.</summary>

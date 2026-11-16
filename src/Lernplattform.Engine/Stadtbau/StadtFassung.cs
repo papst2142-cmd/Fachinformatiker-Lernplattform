@@ -29,12 +29,17 @@ public sealed class StadtFassung
     /// <summary>
     /// Hoechste Formatnummer, die dieses Programm liest (eine neuere Datei wird abgelehnt, nie umgeschrieben). 2 seit Welle E4
     /// (A 0.75.0 / S 0.53.0, Weisung P12-247): nur eine Datei mit Arbeitsort einer Quest bekommt 2 (<see cref="FormatFuer"/>),
-    /// jede andere bleibt bitgleich bei 1, damit ein aelteres Programm sie weiter liest.
+    /// jede andere bleibt bitgleich bei 1, damit ein aelteres Programm sie weiter liest. 3 seit Welle Nachladen (A 0.82.0 /
+    /// S 0.54.0, Weisung P12-280): nur eine Karte groesser als 64 oder mit Stadtteil-Namen (<see cref="Stadtteile"/>).
     /// </summary>
-    public const long FormatVersion = 2;
+    public const long FormatVersion = 3;
 
-    /// <summary>Formatnummer, die eine Datei mit diesen Stadtdaten bekommt: 2 nur mit Arbeitsort, sonst 1.</summary>
-    public static long FormatFuer(PyObjekt? stadtdaten) => Questebene.HatArbeitsort(stadtdaten) ? 2 : 1;
+    /// <summary>
+    /// Formatnummer, die eine Datei bekommt: 3 bei einer Karte groesser als 64 oder mit Stadtteil-Namen, sonst 2 mit
+    /// Arbeitsort, sonst 1 (bitgleich wie vorher).
+    /// </summary>
+    public static long FormatFuer(PyObjekt? stadtdaten, PyObjekt? karte) =>
+        Stadtteile.GrosseKarte(karte) || Stadtteile.HatNamen(stadtdaten) ? 3 : Questebene.HatArbeitsort(stadtdaten) ? 2 : 1;
 
     /// <summary>Dateiendung der Fassungen und Exporte.</summary>
     public const string Endung = ".fistadt";
@@ -93,7 +98,7 @@ public sealed class StadtFassung
     private PyObjekt OhnePruefsumme() => new()
     {
         { "format", Format },
-        { "formatversion", FormatFuer(Stadtdaten) },
+        { "formatversion", FormatFuer(Stadtdaten, Karte) },
         { "stadt", new PyObjekt { { "id", StadtId }, { "fassung", Nummer }, { "basis", Basis } } },
         { "werkzeug", Werkzeug },
         { "erstellt", Erstellt },

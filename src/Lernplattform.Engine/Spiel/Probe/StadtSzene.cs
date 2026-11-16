@@ -422,7 +422,20 @@ public sealed partial class StadtSzene
     public Netz NetzBauen(bool fern = false) => NetzBauen(fern, null);
 
     /// <summary>Welle D2: wie <see cref="NetzBauen(bool)"/>, ohne die Stuecke und Baeume aus <paramref name="plan"/> (die zeichnet das Instancing).</summary>
-    public Netz NetzBauen(bool fern, Instanzplan? plan)
+    public Netz NetzBauen(bool fern, Instanzplan? plan) => NetzBauen(fern, plan, null);
+
+    /// <summary>
+    /// Welle Nachladen (Weisung P12-280): wie <see cref="NetzBauen(bool, Instanzplan?)"/>, mit <paramref name="auswahl"/> nur
+    /// der Boden (die zwei Bodenquader und das Gelaende, immer geladen) oder nur eine Kachel (alles andere, zugeschnitten mit
+    /// <see cref="Netz.NurKachel"/>). Ohne Auswahl bitgleich wie vorher.
+    /// </summary>
+    private Netz NetzBauen(bool fern, Instanzplan? plan, Auswahl? auswahl)
+    {
+        var netzAuswahl = NetzBauenRoh(fern, plan, auswahl);
+        return auswahl is { Kachel: { } k } ? netzAuswahl.NurKachel(k, Breite, Tiefe) : netzAuswahl;
+    }
+
+    private Netz NetzBauenRoh(bool fern, Instanzplan? plan, Auswahl? auswahl)
     {
         var ohneStueck = plan?.Stuecke ?? Instanzplan.Leer.Stuecke;
         var ohneBaum = plan?.Baeume ?? Instanzplan.Leer.Baeume;
@@ -435,11 +448,11 @@ public sealed partial class StadtSzene
         }
         if (Jahreszeit == Jahreszeit.Sommer)
         {
-            var netz = Netz.Aus(Teile.Where((_, i) => !teileHaus[i] && i < FestTeileVon));
+            var netz = Netz.Aus(Teile.Where((t, i) => !teileHaus[i] && i < FestTeileVon && Nimmt(auswahl, i, t)));
             // Weisung P8-56: die Fest-Teile danach, das Licht der eigenen Laternen leuchtet nachts
             for (var i = FestTeileVon; i < Teile.Count; i++)
             {
-                if (!teileHaus[i])
+                if (!teileHaus[i] && Nimmt(auswahl, i, Teile[i]))
                 {
                     var von = netz.AnzahlEcken;
                     netz.Hinzu(Teile[i]);
@@ -451,19 +464,28 @@ public sealed partial class StadtSzene
             }
             foreach (var streifen in Streifen)
             {
-                netz.Hinzu(streifen);
+                if (Nimmt(auswahl, streifen))
+                {
+                    netz.Hinzu(streifen);
+                }
             }
             // S 0.8.0 (Weisung P12-47): Ufer und Wasser der Teiche im selben Netz (ohne Teiche nichts, bitgleich wie vorher)
             foreach (var flaeche in Flaechen)
             {
-                netz.Hinzu(flaeche);
+                if (Nimmt(auswahl, flaeche))
+                {
+                    netz.Hinzu(flaeche);
+                }
             }
             // Welle A 0.66.0: das Gelaende im selben Netz (kein neuer Zeichenaufruf; aus der Ferne Raster 1,0)
-            Gelaende?.Hinzu(netz, Breite, Tiefe, fern);
+            if (auswahl is null || auswahl.NurBoden)
+            {
+                Gelaende?.Hinzu(netz, Breite, Tiefe, fern);
+            }
             netz.UnterseiteBis = Unterseiten;
             for (var i = 0; i < Stuecke.Count; i++)
             {
-                if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
+                if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original && Nimmt(auswahl, Stuecke[i].Lage, original))
                 {
                     var von = netz.AnzahlEcken;
                     var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
@@ -479,7 +501,7 @@ public sealed partial class StadtSzene
             foreach (var baum in GruenKlein?.Baeume ?? [])
             {
                 nb++;
-                if (!ohneBaum.Contains(nb) && Grafik?.Modell(baum.Name) is { } modell)
+                if (!ohneBaum.Contains(nb) && Grafik?.Modell(baum.Name) is { } modell && Nimmt(auswahl, baum.Lage, modell))
                 {
                     netz.Hinzu(modell, baum.Lage);
                 }
@@ -490,7 +512,7 @@ public sealed partial class StadtSzene
         var gefaerbt = new Netz();
         for (var i = 0; i < Teile.Count; i++)
         {
-            if (!teileHaus[i])
+            if (!teileHaus[i] && Nimmt(auswahl, i, Teile[i]))
             {
                 var t = Teile[i];
                 gefaerbt.Faerbung = i < FestTeileVon
@@ -510,18 +532,27 @@ public sealed partial class StadtSzene
         var eis = Eis && Jahreszeit == Jahreszeit.Winter;
         foreach (var streifen in Streifen)
         {
-            gefaerbt.Hinzu(eis && streifen.Farbe == Farben.Wasser ? streifen with { Farbe = EisFarbe } : streifen);
+            if (Nimmt(auswahl, streifen))
+            {
+                gefaerbt.Hinzu(eis && streifen.Farbe == Farben.Wasser ? streifen with { Farbe = EisFarbe } : streifen);
+            }
         }
         foreach (var flaeche in Flaechen)
         {
-            gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
+            if (Nimmt(auswahl, flaeche))
+            {
+                gefaerbt.Hinzu(eis && flaeche.Farbe == Farben.Wasser ? flaeche with { Farbe = EisFarbe } : flaeche);
+            }
         }
-        Gelaende?.Hinzu(gefaerbt, Breite, Tiefe, fern);
+        if (auswahl is null || auswahl.NurBoden)
+        {
+            Gelaende?.Hinzu(gefaerbt, Breite, Tiefe, fern);
+        }
         gefaerbt.Faerbung = null;
         gefaerbt.UnterseiteBis = Unterseiten;
         for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original)
+            if (!stueckeHaus[i] && !ohneStueck.Contains(i) && !ImPaket(Stuecke[i].Name) && ModellAn(i) is { } original && Nimmt(auswahl, Stuecke[i].Lage, original))
             {
                 var modell = fern && i >= FestStueckeVon ? Fernform.Von(original) : original;
                 if (Katalogstueck.IstEffekt(modell.Name))
@@ -539,7 +570,7 @@ public sealed partial class StadtSzene
         foreach (var baum in GruenKlein?.Baeume ?? [])
         {
             nbf++;
-            if (!ohneBaum.Contains(nbf) && Grafik?.Modell(baum.Name) is { } modell)
+            if (!ohneBaum.Contains(nbf) && Grafik?.Modell(baum.Name) is { } modell && Nimmt(auswahl, baum.Lage, modell))
             {
                 gefaerbt.Hinzu(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt));
             }
@@ -565,19 +596,20 @@ public sealed partial class StadtSzene
         {
             Array.Fill(stueckeHaus, true, h.StueckeVon, h.StueckeBis - h.StueckeVon);
         }
-        var kandidaten = new List<Instanzen.Kandidat>();
+        // Welle Nachladen A 0.82.0: jedes Stueck fuer sich (auf allen Kernen), Reihenfolge wie bisher (Stuecke, Baeume, Kleingruen)
         Netz Lokal(GrafikModell m, Matrix4x4 lage, Modellfaerbung? f, float? unterseite)
         {
             var n = new Netz { UnterseiteBis = unterseite };
             n.HinzuLokal(m, lage, f);
             return n;
         }
-        for (var i = 0; i < Stuecke.Count; i++)
+        var ausStuecken = new Instanzen.Kandidat?[Stuecke.Count];
+        Parallel.For(0, Stuecke.Count, i =>
         {
             if (stueckeHaus[i] || ImPaket(Stuecke[i].Name) || ModellAn(i) is not { } original || Katalogstueck.IstEffekt(original.Name)
                 || !Instanzen.Geeignet(Stuecke[i].Lage))
             {
-                continue;
+                return;
             }
             var lage = Stuecke[i].Lage;
             var fernModell = Fernform.Von(original);
@@ -585,39 +617,42 @@ public sealed partial class StadtSzene
             var fern = Lokal(fernModell, lage, i < FestStueckeVon ? ModellFaerbung(fernModell, lage, Faerbeart.Stadt) : FestLicht(fernModell), Unterseiten);
             if (nah.AnzahlEcken > 0)
             {
-                kandidaten.Add(new(Instanzen.Stadt, 's', i, original.Name, lage, nah, fern));
+                ausStuecken[i] = new(Instanzen.Stadt, 's', i, original.Name, lage, nah, fern);
             }
-        }
-        var b = -1;
-        foreach (var baum in GruenKlein?.Baeume ?? [])
+        });
+        var baeume = GruenKlein?.Baeume ?? [];
+        var ausBaeumen = new Instanzen.Kandidat?[baeume.Count];
+        Parallel.For(0, baeume.Count, b =>
         {
-            b++;
+            var baum = baeume[b];
             if (Grafik.Modell(baum.Name) is not { } modell || !Instanzen.Geeignet(baum.Lage))
             {
-                continue;
+                return;
             }
             var fernModell = Fernform.Von(modell);
             var nah = Lokal(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt), Unterseiten);
             var fern = Lokal(fernModell, baum.Lage, ModellFaerbung(fernModell, baum.Lage, Faerbeart.Stadt), Unterseiten);
             if (nah.AnzahlEcken > 0)
             {
-                kandidaten.Add(new(Instanzen.Stadt, 'b', b, modell.Name, baum.Lage, nah, fern));
+                ausBaeumen[b] = new(Instanzen.Stadt, 'b', b, modell.Name, baum.Lage, nah, fern);
             }
-        }
-        var g = -1;
-        foreach (var st in GruenKlein?.Stuecke ?? [])
+        });
+        var klein = GruenKlein?.Stuecke ?? [];
+        var ausGruen = new Instanzen.Kandidat?[klein.Count];
+        Parallel.For(0, klein.Count, g =>
         {
-            g++;
+            var st = klein[g];
             if (Grafik.Modell(st.Name) is not { } m || !Instanzen.Geeignet(st.Lage))
             {
-                continue;
+                return;
             }
             var nah = Lokal(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein), null);
             if (nah.AnzahlEcken > 0)
             {
-                kandidaten.Add(new(Instanzen.Gruen, 'g', g, m.Name, st.Lage, nah, null));
+                ausGruen[g] = new(Instanzen.Gruen, 'g', g, m.Name, st.Lage, nah, null);
             }
-        }
+        });
+        var kandidaten = ausStuecken.Concat(ausBaeumen).Concat(ausGruen).OfType<Instanzen.Kandidat>().ToList();
         return Instanzen.Planen(kandidaten);
     }
 
@@ -756,15 +791,23 @@ public sealed partial class StadtSzene
     /// <summary>Welle 327: Kantenlaenge der Zellen des Paket-Netzes (Felder).</summary>
     public const float PaketZelle = 8f;
 
-    private Netz PaketNetzRoh(bool fern)
+    private Netz PaketNetzRoh(bool fern) => PaketNetzRoh(fern, null);
+
+    /// <summary>Welle Nachladen: wie <see cref="PaketNetzRoh(bool)"/>, mit <paramref name="auswahl"/> nur die Stuecke nahe der Kachel (zuschneiden danach).</summary>
+    private Netz PaketNetzRoh(bool fern, Auswahl? auswahl)
     {
         var netz = new Netz();
+        // Welle Nachladen (grosse Karten): fuer eine Kachel nur Ausstattung, die sie beruehren kann (der Zuschnitt danach
+        // liesse die anderen ohnehin ganz weg; gleiches Ergebnis, ohne jede Kachel die ganze Karte zu bauen)
+        Func<Netz, Matrix4x4, bool>? nimmt = auswahl is { Kachel: { } kachel }
+            ? (muster, lage) => muster.KannInKachel(lage, kachel, auswahl.Breite, auswahl.Tiefe)
+            : null;
         // P8-49: Bahnuebergaenge nah und fern ganz (klein), ihre Lichter leuchten nachts rot
-        Bahnuebergang.Hinzu(netz, Andreaskreuze);
+        Bahnuebergang.Hinzu(netz, Andreaskreuze, nimmt);
         // Welle A 0.60.0: Masten der Ampeln wie die Bahnuebergaenge (nah und fern ganz, klein); die Lampen leuchten im eigenen Aufruf
-        Probe.Ampeln.Hinzu(netz, Ampeln);
+        Probe.Ampeln.Hinzu(netz, Ampeln, nimmt);
         // Welle A 0.61.0: Haeuschen und Mast der Haltestellen wie die Masten der Ampeln (nah und fern ganz, klein)
-        Probe.Haltestellen.Hinzu(netz, Haltestellen);
+        Probe.Haltestellen.Hinzu(netz, Haltestellen, nimmt);
         // Welle Q2: Questgeber draussen (nah die Figur mit ihrem Aussehen, fern zwei Kaesten wie die wartenden Figuren)
         QuestgeberHinzu(netz, fern);
         if (Grafik is null)
@@ -773,7 +816,7 @@ public sealed partial class StadtSzene
         }
         for (var i = 0; i < Stuecke.Count; i++)
         {
-            if (!ImPaket(Stuecke[i].Name) || Grafik.Modell(TanneIn(Stuecke[i].Name, Jahreszeit)) is not { } m)
+            if (!ImPaket(Stuecke[i].Name) || Grafik.Modell(TanneIn(Stuecke[i].Name, Jahreszeit)) is not { } m || !Nimmt(auswahl, Stuecke[i].Lage, m))
             {
                 continue;
             }
@@ -790,10 +833,19 @@ public sealed partial class StadtSzene
         }
         foreach (var l in Laternen)
         {
-            Nachtlicht.Hinzu(netz, Grafik, l, fern);
+            if (auswahl is not { Kachel: { } k } || Beruehrt(auswahl, k, l.Ort.X, l.Ort.X, l.Ort.Y, l.Ort.Y, LaterneUmkreis))
+            {
+                Nachtlicht.Hinzu(netz, Grafik, l, fern);
+            }
         }
         return netz;
     }
+
+    /// <summary>Welle Nachladen: so weit reicht eine Laterne samt Arm und Licht hoechstens von ihrem Fuss (grosszuegig).</summary>
+    private const float LaterneUmkreis = 3f;
+
+    /// <summary>Groesster Radius, fuer den die Raster-Pruefung des Kleingruens gilt (groesser: ganze Listen).</summary>
+    private const float FreiRMax = 0.35f;
 
     /// <summary>
     /// Welle Q2: Questgeber draussen in ein Netz (Paket-Netz oder Netz ihres Hauses); Fuesse auf dem Boden an ihrem Platz, Blick wie im Werkzeug
@@ -1115,6 +1167,7 @@ public sealed partial class StadtSzene
         var brueckenKaesten = new List<(Vector2, Vector2, float, float)>();
         var strassenEnden = new List<(Vector2 Punkt, Vector2 Richtung, float Verlaengert)>();
         var uebergaenge = new List<(Vector2 Mitte, bool Strasse)>();
+        List<List<Vector2>>? alleStrassen = null;
         foreach (var art in (string[])["park", "fluss", "strasse", "bahn"])
         {
             foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], art)))
@@ -1133,10 +1186,12 @@ public sealed partial class StadtSzene
                         // Bruecken (Wunsch Nico 25.10.2026): wo eine Strasse den Fluss kreuzt
                         // Weisung P12-214 (Nico): die Bruecke umrahmt auch den Gehweg; Strassen ohne Gehweg wie bisher (gw = 0)
                         var strassenGehweg = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(GehwegBreite).ToList();
+                        // Welle Nachladen: der Linienzug des Flusses einmal (vorher je Strasse neu, gleiches Ergebnis)
+                        var flussLinie = Linienzug(item);
                         for (var si = 0; si < strassen.Count; si++)
                         {
                             var gw = BrueckeSchmalAlt.Value ? 0f : strassenGehweg[si];
-                            foreach (var (mitte, richtung, sinus) in Kreuzungen(Linienzug(item), strassen[si]))
+                            foreach (var (mitte, richtung, sinus) in Kreuzungen(flussLinie, strassen[si]))
                             {
                                 Bruecke(teile, streifen, mitte, richtung, sinus, gw);
                                 bruecken.Add(mitte);
@@ -1144,7 +1199,7 @@ public sealed partial class StadtSzene
                             }
                         }
                         // glatter Bogen, gleich breit, mit Ufer (Nachtrag 1, Wunsch 2); Welle K1: Radius je Eckpunkt
-                        var glatt = Linienzug(item);
+                        var glatt = flussLinie;
                         streifen.Add(new Streifen(glatt, FlussBreite + 0.3f, Hoehe.Ufer, Hoehe.Ufer, Farben.Ufer));
                         streifen.Add(new Streifen(glatt, FlussBreite, Hoehe.Wasser, Hoehe.Wasser, Farben.Wasser));
                         wasser.Add(glatt);
@@ -1155,14 +1210,16 @@ public sealed partial class StadtSzene
                             // Phase 8 W11 (Sammelliste 157): ein Strassenende, das weder am Kartenrand noch an einer
                             // anderen Strasse liegt, endet buendig an der Gehwegkante (halbe Gehwegbreite statt halber Strassenbreite)
                             var pp = Punkte(item["punkte"]);
-                            var alleStr = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+                            // Welle Nachladen A 0.82.0 (grosse Karten): alle Strassen einmal je Bau gelesen, nicht je Strasse und
+                            // je Ende neu (gleiche Werte, die Daten aendern sich waehrend des Baus nicht)
+                            var alleStr = alleStrassen ??= landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+                            var eigeneLinie = Vektoren(item["punkte"]);
                             float Ende(Vector2 e)
                             {
                                 var amRand = e.X <= 0.01f || e.Y <= 0.01f || e.X >= breite - 0.01f || e.Y >= tiefe - 0.01f;
-                                var anStrasse = alleStr.Any(a => !a.SequenceEqual(Vektoren(item["punkte"])) && Kurve.Abstand(e, a) <= 0.05f);
+                                var anStrasse = alleStr.Any(a => !a.SequenceEqual(eigeneLinie) && Kurve.Abstand(e, a) <= 0.05f);
                                 return amRand || anStrasse ? StrassenBreite / 2 : WegBreite / 2;
                             }
-                            var eigeneLinie = Vektoren(item["punkte"]);
                             if (Kreisverkehr.IstRing(item) && Kreisverkehr.Geschlossen(eigeneLinie))
                             {
                                 // Welle K3 (Weisung P12-59): der Ring als geschlossenes Band mit Gehrung auch am Stoss (je
@@ -1788,7 +1845,104 @@ public sealed partial class StadtSzene
             var haeuserKaesten = haeuser.Select(h => (h.Min, h.Max)).ToList();
             // W11 (Weisung P8-47): die Laternenplaetze aus Nicos Skizze bleiben frei von Kleingruen
             var laternenPlaetze = Nachtlicht.Wunschplaetze(strassen, breite, tiefe, laternenSkizze).ToList();
-            bool Frei(float x, float z, float r) =>
+            // Welle Nachladen A 0.82.0: dieselbe Pruefung ueber Raster (nur nahe Eintraege, gleiches Ergebnis; Radius ueber
+            // FreiRMax: ganze Listen wie bisher). Die Raster entstehen beim ersten Aufruf (alle Listen stehen dann fest).
+            NahRaster<int>? linienNah = null, punkteNah = null;
+            bool Frei(float x, float z, float r)
+            {
+                if (r > FreiRMax)
+                {
+                    return FreiGanz(x, z, r);
+                }
+                if (linienNah is null || punkteNah is null)
+                {
+                    (linienNah, punkteNah) = FreiRaster();
+                }
+                var q = new Vector2(x, z);
+                // Linien: 0..n Sperren, dann Gehwege, dann Laternenplaetze; Punkte/Kaesten: Orte, Haeuser, Hindernisse, Festplaetze, Kreuze
+                return linienNah.Alle(x, z, i => i < baeume.Sperren.Count
+                        ? Kurve.Abstand(q, baeume.Sperren[i].Linie) >= baeume.Sperren[i].Halb + r + 0.02f
+                        : i < baeume.Sperren.Count + gehwege.Count
+                            ? Kurve.Abstand(q, gehwege[i - baeume.Sperren.Count].Linie) >= gehwege[i - baeume.Sperren.Count].Halb + r + 0.02f
+                            : LaterneFrei(laternenPlaetze[i - baeume.Sperren.Count - gehwege.Count], q, r))
+                    && punkteNah.Alle(x, z, i => PunktFrei(i, x, z, r))
+                    && teiche.All(t => !Wasser.Drin(t.MitUfer, q) && Wasser.RandAbstand(t.MitUfer, q) >= r + 0.02f)
+                    && (gelaende is null || gelaende.Flach(x, z, r));
+            }
+            static bool LaterneFrei((Vector2 A, Vector2 B) lp, Vector2 q, float r) =>
+                Kurve.Abstand(q, [lp.A, lp.B]) >= Nachtlicht.AbstandModell + r + 0.05f;
+            (NahRaster<int>, NahRaster<int>) FreiRaster()
+            {
+                var linien = new NahRaster<int>();
+                var nr = 0;
+                foreach (var (linie, halb) in baeume.Sperren.Concat(gehwege.Select(g => ((IReadOnlyList<Vector2>)g.Linie, g.Halb))))
+                {
+                    var (min, max) = Rahmen(linie);
+                    var w = halb + FreiRMax + 0.02f;
+                    linien.Hinzu(nr++, min.X - w, min.Y - w, max.X + w, max.Y + w);
+                }
+                foreach (var lp in laternenPlaetze)
+                {
+                    var w = Nachtlicht.AbstandModell + FreiRMax + 0.05f;
+                    linien.Hinzu(nr++, MathF.Min(lp.A.X, lp.B.X) - w, MathF.Min(lp.A.Y, lp.B.Y) - w, MathF.Max(lp.A.X, lp.B.X) + w, MathF.Max(lp.A.Y, lp.B.Y) + w);
+                }
+                var punkte = new NahRaster<int>();
+                nr = 0;
+                foreach (var o in orte)
+                {
+                    var w = 0.45f + FreiRMax;
+                    punkte.Hinzu(nr++, o.StehX - w, o.StehZ - w, o.StehX + w, o.StehZ + w);
+                }
+                foreach (var k in haeuserKaesten)
+                {
+                    var w = FreiRMax + 0.03f;
+                    punkte.Hinzu(nr++, k.Min.X - w, k.Min.Z - w, k.Max.X + w, k.Max.Z + w);
+                }
+                foreach (var h in hindernisseVorFest)
+                {
+                    punkte.Hinzu(nr++, (float)h.Item1 - FreiRMax, (float)h.Item2 - FreiRMax, (float)h.Item3 + FreiRMax, (float)h.Item4 + FreiRMax);
+                }
+                foreach (var fp in festPlaetze)
+                {
+                    var w = fp.R + FreiRMax + 0.05f;
+                    punkte.Hinzu(nr++, fp.P.X - w, fp.P.Y - w, fp.P.X + w, fp.P.Y + w);
+                }
+                foreach (var k in andreaskreuze)
+                {
+                    var w = Bahnuebergang.Grundriss + FreiRMax + 0.05f;
+                    punkte.Hinzu(nr++, k.Fuss.X - w, k.Fuss.Y - w, k.Fuss.X + w, k.Fuss.Y + w);
+                }
+                return (linien, punkte);
+            }
+            bool PunktFrei(int i, float x, float z, float r)
+            {
+                if (i < orte.Count)
+                {
+                    var o = orte[i];
+                    return Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r;
+                }
+                i -= orte.Count;
+                if (i < haeuserKaesten.Count)
+                {
+                    var k = haeuserKaesten[i];
+                    return x + r < k.Min.X - 0.03f || x - r > k.Max.X + 0.03f || z + r < k.Min.Z - 0.03f || z - r > k.Max.Z + 0.03f;
+                }
+                i -= haeuserKaesten.Count;
+                if (i < hindernisseVorFest.Count)
+                {
+                    var h = hindernisseVorFest[i];
+                    return x + r < h.Item1 || x - r > h.Item3 || z + r < h.Item2 || z - r > h.Item4;
+                }
+                i -= hindernisseVorFest.Count;
+                if (i < festPlaetze.Count)
+                {
+                    var fp = festPlaetze[i];
+                    return Vector2.Distance(fp.P, new Vector2(x, z)) >= fp.R + r + 0.05f;
+                }
+                i -= festPlaetze.Count;
+                return Vector2.Distance(andreaskreuze[i].Fuss, new Vector2(x, z)) >= Bahnuebergang.Grundriss + r + 0.05f;
+            }
+            bool FreiGanz(float x, float z, float r) =>
                 baeume.Sperren.All(sp => Kurve.Abstand(new Vector2(x, z), sp.Linie) >= sp.Halb + r + 0.02f)
                 && gehwege.All(g => Kurve.Abstand(new Vector2(x, z), g.Linie) >= g.Halb + r + 0.02f)
                 && orte.All(o => Vector2.Distance(new Vector2(x, z), new Vector2(o.StehX, o.StehZ)) >= 0.45f + r)
@@ -1970,15 +2124,28 @@ public sealed partial class StadtSzene
     public static List<(float X1, float Z1, float X2, float Z2)> MittellinienStriche(IReadOnlyList<List<Vector2>> strassen, bool ohneKette = false)
     {
         var ergebnis = new List<(float, float, float, float)>();
+        // Welle Nachladen (grosse Karten), gleiches Ergebnis wie vorher: gleiche Linienzuege einmal als Gruppe bestimmt (statt
+        // jede Strasse gegen jede zu vergleichen), und eine andere Strasse prueft den Abstand nur, wenn die Mitte im Rahmen der
+        // Strasse plus Breite liegt (ausserhalb ist der Abstand sicher groesser)
+        var gruppe = new int[strassen.Count];
+        var gruppen = new Dictionary<List<Vector2>, int>(new GleicheLinie());
+        for (var k = 0; k < strassen.Count; k++)
+        {
+            gruppe[k] = gruppen.TryGetValue(strassen[k], out var g) ? g : gruppen[strassen[k]] = k;
+        }
+        var rahmen = strassen.Select(Rahmen).ToList();
+        const float weite = (StrassenBreite / 2) + 0.05f;
         foreach (var zug in MittellinienZuege(strassen, ohneKette))
         {
-            var eigene = zug.Strassen.Select(k => strassen[k]).ToList();
-            var andere = strassen.Where((s2, k) => !zug.Strassen.Contains(k) && !eigene.Any(e2 => s2.SequenceEqual(e2))).ToList();
+            var eigeneGruppen = zug.Strassen.Select(k => gruppe[k]).ToHashSet();
+            var andere = Enumerable.Range(0, strassen.Count).Where(k => !zug.Strassen.Contains(k) && !eigeneGruppen.Contains(gruppe[k])).ToList();
             foreach (var (x1, z1, x2, z2) in Kreisverkehr.Geschlossen([.. zug.Linie.Select(q => new Vector2(q.X, q.Z))])
                 ? RingStriche(zug.Linie) : Striche(zug.Linie, 0.2f, 0.25f))
             {
                 var mitte = new Vector2((x1 + x2) / 2, (z1 + z2) / 2);
-                if (andere.Any(a => Kurve.Abstand(mitte, a) <= (StrassenBreite / 2) + 0.05f))
+                if (andere.Any(a => mitte.X >= rahmen[a].Min.X - weite - 0.01f && mitte.X <= rahmen[a].Max.X + weite + 0.01f
+                    && mitte.Y >= rahmen[a].Min.Y - weite - 0.01f && mitte.Y <= rahmen[a].Max.Y + weite + 0.01f
+                    && Kurve.Abstand(mitte, strassen[a]) <= weite))
                 {
                     continue;
                 }
@@ -2126,16 +2293,21 @@ public sealed partial class StadtSzene
                 {
                     continue;
                 }
-                float x1 = l.Min(p => p.X), x2 = l.Max(p => p.X), z1 = l.Min(p => p.Y), z2 = l.Max(p => p.Y);
-                var (s0, s1) = Bereich(x1 - weite, x2 + weite, spalten);
-                var (r0, r1) = Bereich(z1 - weite, z2 + weite, zeilen);
-                for (var s = s0; s <= s1; s++)
+                // Welle Nachladen (grosse Karten): Strecke fuer Strecke, je nur die Zellen in ihrem Umkreis. Gleiches Ergebnis:
+                // der Abstand zum Linienzug ist der kleinste Abstand zu einer Strecke (Kurve.AbstandStrecke, dieselbe Rechnung)
+                for (var i = 0; i + 1 < l.Count || (l.Count == 1 && i == 0); i++)
                 {
-                    for (var z = r0; z <= r1; z++)
+                    var (a, b) = l.Count == 1 ? (l[0], l[0]) : (l[i], l[i + 1]);
+                    var (s0, s1) = Bereich(MathF.Min(a.X, b.X) - weite, MathF.Max(a.X, b.X) + weite, spalten);
+                    var (r0, r1) = Bereich(MathF.Min(a.Y, b.Y) - weite, MathF.Max(a.Y, b.Y) + weite, zeilen);
+                    for (var s = s0; s <= s1; s++)
                     {
-                        if (!ziel[(s * zeilen) + z] && Kurve.Abstand(Mitte(s, z), l) <= weite)
+                        for (var z = r0; z <= r1; z++)
                         {
-                            ziel[(s * zeilen) + z] = true;
+                            if (!ziel[(s * zeilen) + z] && (l.Count == 1 ? Vector2.Distance(Mitte(s, z), a) : Kurve.AbstandStrecke(Mitte(s, z), a, b)) <= weite)
+                            {
+                                ziel[(s * zeilen) + z] = true;
+                            }
                         }
                     }
                 }
@@ -2521,6 +2693,12 @@ public sealed partial class StadtSzene
     public static List<(Vector2 Mitte, Vector2 Richtung, float Sinus)> Kreuzungen(IReadOnlyList<Vector2> a, IReadOnlyList<Vector2> b)
     {
         var liste = new List<(Vector2, Vector2, float)>();
+        // Welle Nachladen (grosse Karten): Linienzuege, deren Rahmen sich nicht beruehren, kreuzen sich nicht (gleiches Ergebnis,
+        // Zugabe 0,01 gegen Rundung)
+        if (a.Count < 2 || b.Count < 2 || !RahmenBeruehren(a, b, 0.01f))
+        {
+            return liste;
+        }
         for (var i = 0; i + 1 < a.Count; i++)
         {
             for (var j = 0; j + 1 < b.Count; j++)
@@ -2551,6 +2729,42 @@ public sealed partial class StadtSzene
             }
         }
         return liste;
+    }
+
+    /// <summary>Welle Nachladen: gleiche Linienzuege (gleich wie <c>SequenceEqual</c>), fuer Gruppen.</summary>
+    private sealed class GleicheLinie : IEqualityComparer<List<Vector2>>
+    {
+        public bool Equals(List<Vector2>? x, List<Vector2>? y) => ReferenceEquals(x, y) || (x is not null && y is not null && x.SequenceEqual(y));
+
+        public int GetHashCode(List<Vector2> l)
+        {
+            var h = new HashCode();
+            h.Add(l.Count);
+            foreach (var p in l)
+            {
+                h.Add(p);
+            }
+            return h.ToHashCode();
+        }
+    }
+
+    /// <summary>Welle Nachladen: beruehren sich die Rahmen zweier Linienzuege (mit Zugabe <paramref name="rand"/>)?</summary>
+    internal static bool RahmenBeruehren(IReadOnlyList<Vector2> a, IReadOnlyList<Vector2> b, float rand)
+    {
+        var (a0, a1) = Rahmen(a);
+        var (b0, b1) = Rahmen(b);
+        return a1.X + rand >= b0.X && b1.X + rand >= a0.X && a1.Y + rand >= b0.Y && b1.Y + rand >= a0.Y;
+    }
+
+    /// <summary>Welle Nachladen: kleinste und groesste Ecke eines Linienzugs.</summary>
+    internal static (Vector2 Min, Vector2 Max) Rahmen(IReadOnlyList<Vector2> l)
+    {
+        var (min, max) = (new Vector2(float.MaxValue), new Vector2(float.MinValue));
+        for (var i = 0; i < l.Count; i++)
+        {
+            (min, max) = (Vector2.Min(min, l[i]), Vector2.Max(max, l[i]));
+        }
+        return (min, max);
     }
 
     /// <summary>Bahnuebergang: Belag in Richtung der Strasse ueber dem Gleisbett, an Strassen Warnkreuze davor.</summary>
@@ -2791,17 +3005,24 @@ public sealed partial class StadtSzene
     public Netz? GruenNetzBauen() => GruenNetzBauen(null);
 
     /// <summary>Welle D2: wie <see cref="GruenNetzBauen()"/>, ohne die Stuecke aus <paramref name="plan"/>.</summary>
-    public Netz? GruenNetzBauen(Instanzplan? plan)
+    public Netz? GruenNetzBauen(Instanzplan? plan) => GruenNetzBauen(plan, null);
+
+    /// <summary>Welle Nachladen: wie <see cref="GruenNetzBauen(Instanzplan?)"/>, mit <paramref name="kachel"/> nur deren Teil.</summary>
+    private Netz? GruenNetzBauen(Instanzplan? plan, Stadtbau.Stadtteile.Kachel? kachel)
     {
         if (GruenKlein is not { } g || Grafik is null)
         {
             return null;
         }
+        var auswahl = kachel is { } k ? new Auswahl(k, false, Breite, Tiefe) : null;
         // Phase 8 W9: Kleingruen nach der Jahreszeit, im Winter Schnee auf Bueschel, Steinen und Beeten
         var netz = new Netz { Faerbung = Jahreszeitfarben.FuerTeile(Jahreszeit, Faerbeart.Klein) };
         foreach (var t in g.Teile)
         {
-            netz.Hinzu(t);
+            if (auswahl is null || Nimmt(auswahl, 2, t))
+            {
+                netz.Hinzu(t);
+            }
         }
         netz.Faerbung = null;
         var ohne = plan?.Gruen ?? Instanzplan.Leer.Gruen;
@@ -2809,12 +3030,12 @@ public sealed partial class StadtSzene
         foreach (var st in g.Stuecke)
         {
             nr++;
-            if (!ohne.Contains(nr) && Grafik.Modell(st.Name) is { } m)
+            if (!ohne.Contains(nr) && Grafik.Modell(st.Name) is { } m && Nimmt(auswahl, st.Lage, m))
             {
                 netz.Hinzu(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein));
             }
         }
-        return netz;
+        return kachel is { } kk ? netz.NurKachel(kk, Breite, Tiefe) : netz;
     }
 
     /// <summary>Phase 8 W11: Tanne an (x, z)? Fest nach Lage, gerade und krumm im Wechsel; null = Laubbaum wie bisher.</summary>

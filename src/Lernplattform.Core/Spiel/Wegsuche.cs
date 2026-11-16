@@ -39,22 +39,38 @@ public sealed class Wegsuche
         FeinSchritt = feinSchritt;
         var liste = frei.ToList();
         Schritt = schritt;
-        AnzahlFrei = liste.Distinct().Count();
         if (liste.Count == 0)
         {
             _frei = [];
             _vorher = _marke = _reihe = [];
             return;
         }
-        _spalte0 = liste.Min(z => z.Spalte);
-        _zeile0 = liste.Min(z => z.Zeile);
-        _spalten = liste.Max(z => z.Spalte) - _spalte0 + 1;
-        _zeilen = liste.Max(z => z.Zeile) - _zeile0 + 1;
-        _frei = new bool[_spalten * _zeilen];
+        // Welle Nachladen A 0.82.0 (grosse Karten): Grenzen in einem Durchgang, Anzahl der verschiedenen Zellen = gesetzte
+        // Felder (gleiches Ergebnis wie Distinct, ohne Menge ueber Millionen Zellen)
+        var (s0, s1, z0, z1) = (int.MaxValue, int.MinValue, int.MaxValue, int.MinValue);
         foreach (var (spalte, zeile) in liste)
         {
-            _frei[Index(spalte, zeile)] = true;
+            s0 = Math.Min(s0, spalte);
+            s1 = Math.Max(s1, spalte);
+            z0 = Math.Min(z0, zeile);
+            z1 = Math.Max(z1, zeile);
         }
+        _spalte0 = s0;
+        _zeile0 = z0;
+        _spalten = s1 - _spalte0 + 1;
+        _zeilen = z1 - _zeile0 + 1;
+        _frei = new bool[_spalten * _zeilen];
+        var anzahl = 0;
+        foreach (var (spalte, zeile) in liste)
+        {
+            ref var f = ref _frei[Index(spalte, zeile)];
+            if (!f)
+            {
+                f = true;
+                anzahl++;
+            }
+        }
+        AnzahlFrei = anzahl;
         _vorher = new int[_frei.Length];
         _marke = new int[_frei.Length];
         _reihe = new int[_frei.Length];

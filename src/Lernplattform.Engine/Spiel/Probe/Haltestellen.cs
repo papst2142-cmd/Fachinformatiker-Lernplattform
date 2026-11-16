@@ -233,12 +233,23 @@ public static class Haltestellen
     public const float BankTiefe = 0.11f;
 
     /// <summary>Haeuschen und Mast aller Haltestellen in ein Netz der Stadt (Paket-Netz, nah und fern gleich).</summary>
-    public static void Hinzu(Netz ziel, IEnumerable<Haltestelle> haltestellen)
+    public static void Hinzu(Netz ziel, IEnumerable<Haltestelle> haltestellen) => Hinzu(ziel, haltestellen, null);
+
+    /// <summary>Wie <see cref="Hinzu(Netz, IEnumerable{Haltestelle})"/>, nur Teile, fuer die <paramref name="nimmt"/> (Muster, Lage) ja sagt.</summary>
+    public static void Hinzu(Netz ziel, IEnumerable<Haltestelle> haltestellen, Func<Netz, Matrix4x4, bool>? nimmt)
     {
         foreach (var h in haltestellen)
         {
-            ziel.Hinzu(HaeuschenMuster.Value, Lage(h.Haeuschen, h.Fahrt, h.Aussen));
-            ziel.Hinzu(MastMuster.Value, Lage(h.Schild, h.Fahrt, h.Aussen));
+            var haeuschen = Lage(h.Haeuschen, h.Fahrt, h.Aussen);
+            if (nimmt is null || nimmt(HaeuschenMuster.Value, haeuschen))
+            {
+                ziel.Hinzu(HaeuschenMuster.Value, haeuschen);
+            }
+            var mast = Lage(h.Schild, h.Fahrt, h.Aussen);
+            if (nimmt is null || nimmt(MastMuster.Value, mast))
+            {
+                ziel.Hinzu(MastMuster.Value, mast);
+            }
         }
     }
 

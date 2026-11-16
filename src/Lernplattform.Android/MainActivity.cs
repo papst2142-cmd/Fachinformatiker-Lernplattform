@@ -40,6 +40,18 @@ public class MainActivity : AvaloniaMainActivity
         Lernplattform.Spiel.TonProbe.Geraet = _tonprobe;
         // Weisung P8-52: Leistungsprobe (nur Probe-APK)
         Lernplattform.Spiel.Leistungsprobe.An = true;
+        // Welle Nachladen A 0.82.0 (Weisung P12-280): grosse Testkarte (nur Probe-APK, eingebettet)
+        Lernplattform.Spiel.Nachladeprobe.Quelle = () =>
+        {
+            using var strom = typeof(MainActivity).Assembly.GetManifestResourceStream("testkarte_256.fistadt");
+            if (strom is null)
+            {
+                return null;
+            }
+            using var puffer = new MemoryStream();
+            strom.CopyTo(puffer);
+            return puffer.ToArray();
+        };
         Lernplattform.Spiel.Leistungsprobe.BildschirmAn = an => RunOnUiThread(() =>
         {
             if (an)

@@ -96,6 +96,7 @@ public sealed partial class Hauptansicht
 
         _waermeChip = Chip(Texte.Waermekarte, Texte.WaermekarteTipp, WaermeUmschalten);
         _werkzeugLeiste.Children.Insert(_werkzeugLeiste.Children.IndexOf(_ebenenHinweis), _waermeChip);
+        StadtteileKnopfBauen();
     }
 
     /// <summary>Neben die Kamera-Karte, wenn beide nebeneinander passen, sonst darueber; die Karte haelt unten Platz frei.</summary>
@@ -164,6 +165,7 @@ public sealed partial class Hauptansicht
             }
             GrenzLeisteZeigen();
             Karte.Waerme = GrenzenLiveStand;
+            StadtteileRechnen();
             Messwerte.Reihe("Grenzen live im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
             AussenFundeZusammen();
             if (_aussenGeprueft.Task.IsCompleted)

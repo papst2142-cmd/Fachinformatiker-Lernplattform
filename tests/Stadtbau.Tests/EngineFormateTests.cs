@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
@@ -31,33 +32,38 @@ public class EngineFormateTests
     }
 
     /// <summary>
-    /// Stadt-Datei <c>.fistadt</c>: heute hoechstens Format 2 (nur mit Arbeitsort, Welle E4; Einzelheiten in
-    /// <c>ArbeitsortFormatTests</c>); beide echten Dateien der Nummer 1 lesbar, Format 3 ist ein Fehler.
+    /// Stadt-Datei <c>.fistadt</c>: heute hoechstens Format 3 (nur Karten ueber 64 oder mit Stadtteil-Namen, Welle Nachladen;
+    /// 2 nur mit Arbeitsort, Welle E4, Einzelheiten in <c>ArbeitsortFormatTests</c>); beide echten Dateien der Nummer 1 und die
+    /// echte Datei der Nummer 2 (S 0.53.0) lesbar, Format 4 ist ein Fehler.
     /// </summary>
     [Fact]
     public void Fistadt_NeuereNummerFehler_EchteDateienLesbar()
     {
-        Assert.Equal(2, StadtFassung.FormatVersion);
+        Assert.Equal(3, StadtFassung.FormatVersion);
         var f0 = Daten.Lesen(AktiveFassung.Ordner + StadtFassung.Dateiname(AktiveFassung.Stadt1, 0))!;
         foreach (var echt in new[] { f0, Testdatei("stadt1_fassung1.fistadt") })
         {
             Assert.Contains("\"formatversion\": 1,", Encoding.UTF8.GetString(echt), StringComparison.Ordinal);
             Assert.Equal(AktiveFassung.Stadt1, StadtFassung.Lesen(echt).StadtId);
         }
-        var neuer = Ersetzt(Encoding.UTF8.GetString(f0), "\"formatversion\": 1,", "\"formatversion\": 3,");
+        var zwei = Testdatei("stadt_S0.53.0_arbeitsort.fistadt");
+        Assert.Contains("\"formatversion\": 2,", Encoding.UTF8.GetString(zwei), StringComparison.Ordinal);
+        Assert.Equal(2, StadtFassung.FormatFuer(StadtFassung.Lesen(zwei).Stadtdaten, StadtFassung.Lesen(zwei).Karte));
+        var neuer = Ersetzt(Encoding.UTF8.GetString(f0), "\"formatversion\": 1,", "\"formatversion\": 4,");
         var fehler = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(neuer)));
         Assert.Contains(fehler.Funde, t => t.Contains("neueren Fassung des Formats", StringComparison.Ordinal));
     }
 
     /// <summary>
-    /// Projekt <c>.fisbau</c>: heute hoechstens Format 4 (nur mit Arbeitsort, Welle E4), sonst 3; Format 1 (S 0.1.0) und 2 (S 0.4.0) oeffnen sich zum Bearbeiten mit dem alten
+    /// Projekt <c>.fisbau</c>: heute hoechstens Format 5 (nur leere Stadt ueber 64, Welle Nachladen), 4 nur mit Arbeitsort
+    /// (Welle E4, echte Datei S 0.53.0 oeffnet sich zum Bearbeiten), sonst 3; Format 1 (S 0.1.0) und 2 (S 0.4.0) oeffnen sich zum Bearbeiten mit dem alten
     /// Inhalt. Eine neuere Nummer oeffnet nur zum Lesen (<see cref="Projekt.NurLesen"/>, die Oberflaeche sagt es, die Datei
     /// bleibt Byte fuer Byte gleich), nie still ueberschrieben.
     /// </summary>
     [Fact]
     public void Fisbau_NeuereNummerNurLesen_EchteDateienLesbar()
     {
-        Assert.Equal(4, Projekt.FormatVersion);
+        Assert.Equal(5, Projekt.FormatVersion);
         var ablage = Daten.NeueAblage();
         Directory.CreateDirectory(ablage.Projekte);
         Projekt Oeffnen(string name, byte[] daten)
@@ -85,11 +91,41 @@ public class EngineFormateTests
         Assert.Contains("\"formatversion\": 2,", Encoding.UTF8.GetString(v2), StringComparison.Ordinal);
         Assert.False(Oeffnen("Projekt aus S 040", v2).NurLesen);
 
+        var v4 = Testdatei("projekt_S0.53.0_arbeitsort.fisbau");
+        Assert.Contains("\"formatversion\": 4,", Encoding.UTF8.GetString(v4), StringComparison.Ordinal);
+        Assert.False(Oeffnen("Projekt aus S 0530", v4).NurLesen);
+
         var neuText = Ersetzt(Encoding.UTF8.GetString(v1), "\"formatversion\": 1,", "\"formatversion\": " + (Projekt.FormatVersion + 1) + ",");
         var neu = Encoding.UTF8.GetBytes(neuText);
         var pn = Oeffnen("Neuer", neu);
         Assert.True(pn.NurLesen);
         Assert.Equal(neu, File.ReadAllBytes(pn.Datei));
+    }
+
+    /// <summary>
+    /// Welle Nachladen (S 0.54.0, Weisung P12-280, Nico 2b): eine leere Stadt bis 256 je Seite. Nur ueber 64 bekommt das
+    /// Projekt die Formatnummer 5 (ein aelteres Werkzeug oeffnet es dann nur zum Lesen); bis 64 bleibt 3 wie bisher. Die
+    /// gespeicherte grosse Stadt oeffnet sich wieder mit ihrer Groesse.
+    /// </summary>
+    [Fact]
+    public void Fisbau_GrosseLeereStadt_Format5_BisVierundsechzigUnveraendert()
+    {
+        var ablage = Daten.NeueAblage();
+        long Nummer(Projekt p)
+        {
+            p.Speichern(vonHand: true);
+            var text = Encoding.UTF8.GetString(File.ReadAllBytes(p.Datei));
+            var i = text.IndexOf("\"formatversion\": ", StringComparison.Ordinal) + "\"formatversion\": ".Length;
+            return long.Parse(text[i..text.IndexOf(',', i)], CultureInfo.InvariantCulture);
+        }
+        Assert.Equal(3, Nummer(Projekt.Neu("Klein64", D, ablage, leer: (64, 64))));
+        Assert.Equal(5, Nummer(Projekt.Neu("Breit", D, ablage, leer: (64.5, 16))));
+        var gross = Projekt.Neu("Gross256", D, ablage, leer: (256, 128));
+        Assert.Equal(5, Nummer(gross));
+        var wieder = Projekt.Oeffnen(gross.Datei, D, ablage);
+        Assert.False(wieder.NurLesen);
+        Assert.Equal((256d, 128d), wieder.Leer);
+        Assert.Throws<ArgumentException>(() => Projekt.Neu("Zu gross", D, ablage, leer: (256.5, 16)));
     }
 
     /// <summary>

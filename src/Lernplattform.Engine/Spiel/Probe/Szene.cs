@@ -157,6 +157,9 @@ public sealed partial class Netz
     private void HinzuMit(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung, List<Vector3>? dreiecksfarben, bool lokal)
     {
         var e = modell.Ecken;
+        // Welle Nachladen A 0.82.0: Platz vorab (nur schneller, gleicher Inhalt)
+        _ecken.EnsureCapacity(_ecken.Count + (modell.Dreiecke * 3 * Zahlen));
+        _indizes.EnsureCapacity(_indizes.Count + (modell.Dreiecke * 3));
         for (var d = 0; d < modell.Dreiecke; d++)
         {
             var a = Vector3.Transform(new Vector3(e[d * 9], e[(d * 9) + 1], e[(d * 9) + 2]), lage);
@@ -255,7 +258,7 @@ public sealed partial class Netz
             Ecke(new Vector3(p[ia].X, f.Hoehe, p[ia].Y), Vector3.UnitY, farbe);
             Ecke(new Vector3(p[ic].X, f.Hoehe, p[ic].Y), Vector3.UnitY, farbe);
             Ecke(new Vector3(p[ib].X, f.Hoehe, p[ib].Y), Vector3.UnitY, farbe);
-            _indizes.AddRange([basis, basis + 1, basis + 2]);
+            _indizes.AddRange((ReadOnlySpan<uint>)[basis, basis + 1, basis + 2]);
         }
     }
 
@@ -299,7 +302,7 @@ public sealed partial class Netz
         {
             Ecke(p, n, farbe);
         }
-        _indizes.AddRange([basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
+        _indizes.AddRange((ReadOnlySpan<uint>)[basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
     }
 
     private void Satteldach(Teil t)
@@ -361,7 +364,7 @@ public sealed partial class Netz
         {
             Ecke(p, n, farbe);
         }
-        _indizes.AddRange([basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
+        _indizes.AddRange((ReadOnlySpan<uint>)[basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
     }
 
     /// <summary>Ein fertiges Netz an seiner Lage einfuegen (Schaufensterpuppe mit Kleidung).</summary>
@@ -391,7 +394,7 @@ public sealed partial class Netz
         Ecke(a, n, fa);
         Ecke(b, n, fb);
         Ecke(c, n, fc);
-        _indizes.AddRange([basis, basis + 1, basis + 2]);
+        _indizes.AddRange((ReadOnlySpan<uint>)[basis, basis + 1, basis + 2]);
     }
 
     /// <summary>Welle A 0.70.0: Ecken ab <paramref name="von"/> um die Hochachse durch <paramref name="mitte"/> drehen (Grad, Uhrzeigersinn von oben).</summary>
@@ -411,7 +414,7 @@ public sealed partial class Netz
 
     private void Ecke(Vector3 p, Vector3 n, Vector3 farbe)
     {
-        _ecken.AddRange([p.X, p.Y, p.Z, n.X, n.Y, n.Z, farbe.X, farbe.Y, farbe.Z]);
+        _ecken.AddRange((ReadOnlySpan<float>)[p.X, p.Y, p.Z, n.X, n.Y, n.Z, farbe.X, farbe.Y, farbe.Z]);
     }
 
     /// <summary>

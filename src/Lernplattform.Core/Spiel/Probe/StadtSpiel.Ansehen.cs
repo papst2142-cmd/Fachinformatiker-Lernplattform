@@ -23,4 +23,16 @@ public sealed partial class StadtSpiel
         InnenGeaendert?.Invoke();
         Geaendert?.Invoke();
     }
+
+    /// <summary>
+    /// Welle Nachladen A 0.82.0 (nur Start-Test, Leistungsprobe und Bilder): die Figur draussen an (<paramref name="x"/>,
+    /// <paramref name="z"/>) stellen, ohne Weg, ohne Ereignis, ohne Spielzeit (nur Darstellung, wie <see cref="Ansehen"/>).
+    /// </summary>
+    public void HinstellenFuerTests(float x, float z)
+    {
+        WegLeeren();
+        FigurX = x;
+        FigurZ = z;
+        Geaendert?.Invoke();
+    }
 }

@@ -137,6 +137,16 @@ public static class SpielStart
     }
 
     /// <summary>
+    /// Welle Nachladen A 0.82.0 (Weisung P12-280): Stadt und Innenraeume aus einer Stadt-Datei (Testkarte 256 × 256), nur fuer
+    /// Start-Test, Leistungsprobe der Probe-APK und Bilder. Das Spiel nimmt immer <see cref="Fassung"/>.
+    /// </summary>
+    internal static (Stadt Stadt, PyObjekt Innenraeume) AusDateiFuerTests(byte[] datei)
+    {
+        var fassung = MitVerbautPruefen(StadtFassung.Lesen(datei));
+        return (fassung.StadtFuer(InhaltLaden(fassung).Inhalt), fassung.Innenraeume);
+    }
+
+    /// <summary>
     /// Spielinhalte (inhalte/spiel) und die Lerninhalte, aus denen sie die Testprojekte nehmen (laeuft im Hintergrund).
     /// Phase 13 Welle 1: der Abschnitt "orte" (Karte) kommt aus der geltenden Stadt-Fassung und durchlaeuft dieselbe
     /// Ladepruefung wie vorher orte.json.
