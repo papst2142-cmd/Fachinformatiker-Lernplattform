@@ -234,6 +234,8 @@ public static partial class AutoMessung
             await WechselReihenAsync(ansicht, reihenRot);
             Zeitplan("P8W5ScrollleistenAsync");
             funde += await P8W5ScrollleistenAsync(ansicht);    // Weisung P8-10: Scrollleisten schmal und rund
+            Zeitplan("Markierung341Async");
+            funde += await Markierung341Async(ansicht);         // Patch A 0.81.1: Markierung in den Leisten nach hell/dunkel (Sammelliste 341)
         }
         Zeitplan("LayoutAsync");
         funde += await LayoutAsync(ansicht, inhalte);

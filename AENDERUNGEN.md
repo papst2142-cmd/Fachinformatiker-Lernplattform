@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.81.1
+Nach dem Wechsel zwischen hell und dunkel ist in der Seitenleiste und in der Leiste unten wieder nur die Seite hervorgehoben, auf der du gerade bist.
+
+- Bisher konnten nach einem Wechsel der Darstellung (hell oder dunkel) mehrere Einträge der Seitenleiste und der Leiste unten gleichzeitig hervorgehoben aussehen, nämlich alle, die du vorher schon einmal geöffnet hattest. Jetzt ist immer genau der aktuelle Eintrag markiert.
+- Im Rundgang beim ersten Start behielt ein Datumsfeld nach dem Wechsel der Darstellung seinen roten Rahmen, obwohl der Fehler schon im anderen Feld lag. Jetzt ist nur das Feld rot umrandet, das gerade einen Fehler hat.
+
 ## A 0.81.0
 Das Spiel-Handy hat oben rechts ein X zum Schließen und zeigt jetzt auch die Übersicht, die Leiste unten ist schlanker, und deine Figur kann sich hinsetzen und hinlegen.
 

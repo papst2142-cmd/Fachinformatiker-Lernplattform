@@ -463,6 +463,40 @@ public sealed class Navigationsleisten
         return leiste.Farbe(Border.BackgroundProperty, "Pinsel.sidebar");
     }
 
+    /// <summary>
+    /// Sammelliste 341 (Start-Test): welche Eintraege gerade markiert aussehen, je Teil die Kennungen, deren Farbe genau die
+    /// Ressource der Markierung der aktuellen Farbwelt ist (Knopf card_hi, Strich Verlauf accent, Symbol accent, Text text,
+    /// Pfeil accent, Pille unten card_hi). Nur fuer Tests.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> MarkiertFuerTests()
+    {
+        object? Res(string schluessel) => Seitenleiste.TryFindResource(schluessel, out var wert) ? wert : null;
+        var hi = Res("Pinsel.card_hi");
+        var verlauf = Res("Verlauf.accent");
+        var akzent = Res("Pinsel.accent");
+        var text = Res("Pinsel.text");
+        IReadOnlyList<string> Wo<T>(IEnumerable<KeyValuePair<string, T>> quelle, Func<T, object?> wert, object? soll) =>
+            soll is null ? [] : quelle.Where(q => ReferenceEquals(wert(q.Value), soll)).Select(q => q.Key).OrderBy(k => k, StringComparer.Ordinal).ToList();
+        return new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
+        {
+            ["Knopf"] = Wo(_seitenKnoepfe, k => k.Background, hi),
+            ["Strich"] = Wo(_seitenTeile, t => t.Strich.Background, verlauf),
+            ["Symbol"] = Wo(_seitenTeile, t => t.Symbol.Foreground, akzent),
+            ["Text"] = Wo(_seitenTeile, t => t.Text.Foreground, text),
+            ["Pfeil"] = Wo(_pfeile, p => p.Foreground, akzent),
+            ["Pille"] = Wo(_untenTeile, t => t.Pille.Background, hi),
+        };
+    }
+
+    /// <summary>Sammelliste 341: Kennung des Eintrags der unteren Leiste, der zu einer Seite gehoert (null = keiner).</summary>
+    public string? UntenZielFuerTests(string id) => _untenTeile.ContainsKey(Texte.HandyZiel(id)) ? Texte.HandyZiel(id) : null;
+
+    /// <summary>Sammelliste 341: alle Kennungen der Seitenleiste (nur fuer Tests).</summary>
+    public IReadOnlyList<string> SeitenKennungenFuerTests => _seitenKnoepfe.Keys.ToList();
+
+    /// <summary>Sammelliste 341: hat die Seite einen Pfeil (Eintrag mit Unterpunkten)?</summary>
+    public bool HatPfeilFuerTests(string id) => _pfeile.ContainsKey(id);
+
     /// <summary>Hebt den Eintrag der offenen Seite hervor (am Handy: Lernbereiche unter "Lernen").</summary>
     public void Markiere(string id)
     {
@@ -480,11 +514,12 @@ public sealed class Navigationsleisten
             var aktiv = kennung == unten;
             if (aktiv)
             {
-                pille.Farbe(Border.BackgroundProperty, "Pinsel.card_hi");
+                pille.FarbeNeu(Border.BackgroundProperty, "Pinsel.card_hi");
             }
             else
             {
-                pille.ClearValue(Border.BackgroundProperty);
+                // Sammelliste 341: ClearValue beendet die Bindung nicht (nach hell/dunkel kam die Markierung zurueck)
+                Markierung.Loesen(pille, Border.BackgroundProperty);
                 pille.Background = Brushes.Transparent;
             }
             aus.IsVisible = !aktiv;
@@ -497,11 +532,11 @@ public sealed class Navigationsleisten
     {
         if (aktiv)
         {
-            knopf.Farbe(Button.BackgroundProperty, "Pinsel.card_hi");
+            knopf.FarbeNeu(Button.BackgroundProperty, "Pinsel.card_hi");
         }
         else
         {
-            knopf.ClearValue(Button.BackgroundProperty);
+            Markierung.Loesen(knopf, Button.BackgroundProperty);
             knopf.Background = Brushes.Transparent;
         }
         var id = _seitenKnoepfe.First(k => k.Value == knopf).Key;
@@ -511,11 +546,11 @@ public sealed class Navigationsleisten
         }
         if (aktiv)
         {
-            teile.Strich.Farbe(Border.BackgroundProperty, "Verlauf.accent");
+            teile.Strich.FarbeNeu(Border.BackgroundProperty, "Verlauf.accent");
         }
         else
         {
-            teile.Strich.ClearValue(Border.BackgroundProperty);
+            Markierung.Loesen(teile.Strich, Border.BackgroundProperty);
             teile.Strich.Background = Brushes.Transparent;
         }
         teile.Symbol.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.accent" : "Pinsel.muted");
