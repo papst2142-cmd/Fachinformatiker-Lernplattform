@@ -244,6 +244,11 @@ public sealed partial class Hauptansicht
         }
         _aussenAuswahl.Children.Add(Schrift.Text(Texte.StadtteilNamen, "Mittel", FontWeight.Bold));
         _aussenAuswahl.Children.Add(Schrift.Text(Texte.StadtteilNamenErklaerung, "Klein"));
+        // die rote Zeile gleich oben, damit sie ohne Bildlauf zu sehen ist
+        if (_namenFehler is { } f)
+        {
+            _aussenAuswahl.Children.Add(Schrift.Text(f, "Klein", FontWeight.Bold, "Pinsel.red"));
+        }
         var neu = Knopf(Texte.StadtteilNeu, Texte.StadtteilNeuTipp, () => NameInDerMitte(), betont: true).Vorlese(Texte.StadtteilNeu);
         neu.IsEnabled = !lesen;
         _aussenAuswahl.Children.Add(neu);
@@ -312,10 +317,6 @@ public sealed partial class Hauptansicht
             var loeschen = Knopf(Texte.StadtteilLoeschen, Texte.StadtteilLoeschen, NameLoeschen).Vorlese(Texte.StadtteilLoeschen);
             loeschen.IsEnabled = !lesen;
             _aussenAuswahl.Children.Add(loeschen);
-        }
-        if (_namenFehler is { } f)
-        {
-            _aussenAuswahl.Children.Add(Schrift.Text(f, "Klein", farbe: "Pinsel.red"));
         }
         _aussenAuswahl.Children.Add(Knopf(Texte.StadtteilFertig, Texte.StadtteilFertigTipp, () => Karte.NamenAn = false).Vorlese(Texte.StadtteilFertig));
         return true;
