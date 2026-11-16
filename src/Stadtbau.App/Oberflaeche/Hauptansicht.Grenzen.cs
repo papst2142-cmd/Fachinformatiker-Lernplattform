@@ -97,6 +97,7 @@ public sealed partial class Hauptansicht
         _waermeChip = Chip(Texte.Waermekarte, Texte.WaermekarteTipp, WaermeUmschalten);
         _werkzeugLeiste.Children.Insert(_werkzeugLeiste.Children.IndexOf(_ebenenHinweis), _waermeChip);
         StadtteileKnopfBauen();
+        NamenKnopfBauen();
     }
 
     /// <summary>Neben die Kamera-Karte, wenn beide nebeneinander passen, sonst darueber; die Karte haelt unten Platz frei.</summary>

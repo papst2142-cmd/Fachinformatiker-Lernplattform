@@ -1,0 +1,15 @@
+{
+ "format": "fisbau",
+ "formatversion": 5,
+ "werkzeug": "Fachinformatiker Stadtbau S 0.54.0",
+ "name": "Namen",
+ "stadt": "neu_namen",
+ "basis": null,
+ "leer": {"breite": 32.0, "hoehe": 24.0, "frei": true},
+ "ort": "",
+ "nachricht": "",
+ "grundrisse": {},
+ "aussen": {"stadtdaten/stadtteile": [[{"name": "Altstadt", "x1": 0.0, "x2": 16.0, "z1": 0.0, "z2": 12.0}, {"name": "Am Hafen", "x1": 16.0, "x2": 32.0, "z1": 0.0, "z2": 24.0}]]},
+ "verlauf": [{"ort": "_stadt", "was": "Stadtteil angelegt", "vorher": {"stadtdaten/stadtteile": []}, "nachher": {"stadtdaten/stadtteile": [[{"name": "Altstadt", "x1": 0.0, "x2": 16.0, "z1": 0.0, "z2": 12.0}]]}}, {"ort": "_stadt", "was": "Stadtteil angelegt", "vorher": {"stadtdaten/stadtteile": [[{"name": "Altstadt", "x1": 0.0, "x2": 16.0, "z1": 0.0, "z2": 12.0}]]}, "nachher": {"stadtdaten/stadtteile": [[{"name": "Altstadt", "x1": 0.0, "x2": 16.0, "z1": 0.0, "z2": 12.0}, {"name": "Am Hafen", "x1": 16.0, "x2": 32.0, "z1": 0.0, "z2": 24.0}]]}}],
+ "zeiger": 2
+}

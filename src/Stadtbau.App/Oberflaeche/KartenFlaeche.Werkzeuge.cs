@@ -64,6 +64,7 @@ public sealed partial class KartenFlaeche
             if (value)
             {
                 GelaendePinsel = null;
+                NamenAn = false;
                 SetzenBeenden();
                 Waehlen(null);
             }

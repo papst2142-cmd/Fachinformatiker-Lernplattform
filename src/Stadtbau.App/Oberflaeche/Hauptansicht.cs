@@ -1337,6 +1337,11 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
+        // S 0.55.0: bei „Stadtteil-Namen“ rechts die Liste und der gewaehlte Stadtteil
+        if (NamenTeil())
+        {
+            return;
+        }
         if (Karte.SetzenArt is not null && _projekt is not null && !_projekt.NurLesen)
         {
             // S 0.9.1 (Weisung P12-53 Teil A): auch rechts bei der Auswahl, gut erreichbar am Tablet
@@ -2098,7 +2103,16 @@ public sealed partial class Hauptansicht : UserControl
         {
             Karte.Waehlen(null);
         }
+        if (drei)
+        {
+            // S 0.55.0: Stadtteil-Namen nur in „Stadt von oben“
+            Karte.NamenAn = false;
+        }
         ChipsZeigen();
+        if (_namenChip is not null)
+        {
+            NamenChipZeigen();
+        }
     }
 
     public void DreiZeigen()
@@ -3296,6 +3310,18 @@ public sealed partial class Hauptansicht : UserControl
             {
                 // S 0.54.0 (Weisung P12-280): Stadtteile an/aus
                 StadtteileUmschalten();
+                e.Handled = true;
+                return;
+            }
+            if (!_innen && e.Key == Key.B && e.KeyModifiers == KeyModifiers.None)
+            {
+                // S 0.55.0 (Weisung P12-282): Stadtteil-Namen an/aus
+                NamenUmschalten();
+                e.Handled = true;
+                return;
+            }
+            if (!_innen && !_drei && e.KeyModifiers == KeyModifiers.None && NamenTaste(e.Key))
+            {
                 e.Handled = true;
                 return;
             }

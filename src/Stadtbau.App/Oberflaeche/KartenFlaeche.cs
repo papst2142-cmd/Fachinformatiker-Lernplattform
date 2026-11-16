@@ -74,6 +74,8 @@ public sealed partial class KartenFlaeche : Control
             {
                 // S 0.27.0: Setzen beendet das Massband; S 0.28.0 auch das Tuer-Setzen
                 MassbandAn = false;
+                // S 0.55.0: und die Stadtteil-Namen
+                NamenAn = false;
                 TuerSetzenBeenden();
             }
             ZiehZuruecksetzen();
@@ -802,6 +804,8 @@ public sealed partial class KartenFlaeche : Control
         WaermeZeichnen(ctx);
         // Welle Nachladen S 0.54.0: Raster der Stadtteile mit Namen
         StadtteileZeichnen(ctx);
+        // Welle S 0.55.0: gezogene Stadtteil-Namen (nur wenn die Stadt welche hat) und die Vorschau beim Ziehen
+        NamenZeichnen(ctx);
         // Funde mit Stelle
         foreach (var f in Zeigt(Ebene.Funde) ? Funde : [])
         {
@@ -1632,6 +1636,12 @@ public sealed partial class KartenFlaeche : Control
             Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, false));
             return;
         }
+        if (NamenAn)
+        {
+            // Welle S 0.55.0: ein Finger oder die Maus zieht das Rechteck eines Stadtteils, Tippen waehlt einen
+            Anwenden(_geste.Druecken(e.Pointer.Id, p.X, p.Y, erster && _projekt?.NurLesen == false));
+            return;
+        }
         if (GelaendePinsel is not null)
         {
             // S 0.42.0: ein Finger malt einen Zug (wie ein Stueck ziehen), zwei Finger bleiben bei der Ansicht
@@ -1797,6 +1807,10 @@ public sealed partial class KartenFlaeche : Control
     /// Flaeche schiebt die Ansicht, zwei Finger zoomen und schieben.</summary>
     private void Anwenden(Fingergeste.Schritt s)
     {
+        if (NamenAn && NamenAnwenden(s))
+        {
+            return;
+        }
         if (TuerFuer is not null && TuerAnwenden(s))
         {
             return;

@@ -1124,6 +1124,7 @@ public static partial class Texte
         ("G", "Raster zeigen (Gebäude entwerfen)", ["G"]),
         ("W", "Wärmekarte an oder aus (Stadt von oben: wo die meisten Dreiecke liegen)", ["W"]),
         ("T", "Stadtteile an oder aus (Raster mit Namen und Werten; in 3D: Stadtteil in der Mitte)", ["T"]),
+        ("B", "Stadtteil-Namen an oder aus (Stadt von oben: Rechteck ziehen, Pfeiltasten verschieben den gewählten, Entf löscht ihn)", ["B"]),
         ("F11", "Vollbild", ["F11"]),
         ("F1 / ?", "Diese Übersicht", ["F1"]),
     ];
