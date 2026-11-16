@@ -13,6 +13,29 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// </summary>
 public sealed partial class Netz
 {
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Netz, System.Runtime.CompilerServices.StrongBox<float>> Radien = new();
+
+    /// <summary>
+    /// Kann dieses Netz (ein festes Muster, danach nie mehr geaendert), in der Lage <paramref name="lage"/> eingefuegt, die
+    /// Kachel <paramref name="k"/> beruehren? Kreis um den Ursprung bis zur fernsten Ecke mal groesstem Massstab, dazu 0,05
+    /// Zugabe (grosszuegig: was hier nein ist, haette <see cref="NurKachel"/> ohnehin ganz weggelassen).
+    /// </summary>
+    public bool KannInKachel(Matrix4x4 lage, Stadtteile.Kachel k, float breite, float tiefe)
+    {
+        var r = Radien.GetValue(this, n =>
+        {
+            var m = 0f;
+            for (var e = 0; e < n.AnzahlEcken; e++)
+            {
+                m = MathF.Max(m, n.Ort(e).Length());
+            }
+            return new System.Runtime.CompilerServices.StrongBox<float>(m);
+        }).Value;
+        var massstab = MathF.Max(new Vector3(lage.M11, lage.M12, lage.M13).Length(), MathF.Max(new Vector3(lage.M21, lage.M22, lage.M23).Length(), new Vector3(lage.M31, lage.M32, lage.M33).Length()));
+        var rr = (r * massstab) + 0.05f;
+        return Beruehrt(k, lage.M41 - rr, lage.M41 + rr, lage.M43 - rr, lage.M43 + rr, breite, tiefe);
+    }
+
     /// <summary>Dreiecke, die beim Zuschneiden geteilt wurden (Tests, Messung).</summary>
     public int Geteilt { get; private set; }
 

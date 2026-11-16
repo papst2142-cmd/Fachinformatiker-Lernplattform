@@ -124,9 +124,18 @@ public static class Instanzen
     {
         var gruppen = new Dictionary<string, List<Kandidat>>(StringComparer.Ordinal);
         var reihe = new List<string>();
-        foreach (var k in kandidaten)
+        // Welle Nachladen A 0.82.0: Schluessel auf allen Kernen, Gruppen der Reihe nach wie bisher
+        var alle = kandidaten as IReadOnlyList<Kandidat> ?? kandidaten.ToList();
+        var schluesselJe = new string[alle.Count];
+        Parallel.For(0, alle.Count, i =>
         {
-            var schluessel = k.Ziel + "|" + k.Modell + "|" + Schluessel(k.Nah) + "|" + (k.Fern is null ? "-" : Schluessel(k.Fern));
+            var k = alle[i];
+            schluesselJe[i] = k.Ziel + "|" + k.Modell + "|" + Schluessel(k.Nah) + "|" + (k.Fern is null ? "-" : Schluessel(k.Fern));
+        });
+        for (var i = 0; i < alle.Count; i++)
+        {
+            var k = alle[i];
+            var schluessel = schluesselJe[i];
             if (!gruppen.TryGetValue(schluessel, out var liste))
             {
                 gruppen[schluessel] = liste = [];

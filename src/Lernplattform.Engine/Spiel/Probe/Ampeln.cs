@@ -269,13 +269,20 @@ public static class Ampeln
     });
 
     /// <summary>Masten aller Ampeln in ein Netz der Stadt (Paket-Netz, nah und fern gleich).</summary>
-    public static void Hinzu(Netz ziel, IEnumerable<Ampel> ampeln)
+    public static void Hinzu(Netz ziel, IEnumerable<Ampel> ampeln) => Hinzu(ziel, ampeln, null);
+
+    /// <summary>Wie <see cref="Hinzu(Netz, IEnumerable{Ampel})"/>, nur Masten, fuer die <paramref name="nimmt"/> (Muster, Lage) ja sagt.</summary>
+    public static void Hinzu(Netz ziel, IEnumerable<Ampel> ampeln, Func<Netz, Matrix4x4, bool>? nimmt)
     {
         foreach (var a in ampeln)
         {
             foreach (var (fuss, blick, _) in a.Masten)
             {
-                ziel.Hinzu(MastMuster.Value, Lage(fuss, blick));
+                var lage = Lage(fuss, blick);
+                if (nimmt is null || nimmt(MastMuster.Value, lage))
+                {
+                    ziel.Hinzu(MastMuster.Value, lage);
+                }
             }
         }
     }

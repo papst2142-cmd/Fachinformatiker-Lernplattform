@@ -37,7 +37,10 @@ public sealed class Nachlader
         Szene = szene;
         MitGruen = mitGruen;
         _hintergrund = hintergrund;
+        // Welle Nachladen: die Laternen (jede Kachel braucht sie) entstehen neben der Grundlage auf einem zweiten Kern
+        var laternen = Task.Run(() => szene.Laternen);
         Grundlage = szene.GrundlageVorbereiten();
+        _ = laternen.GetAwaiter().GetResult();
         HoechstBytes = Bytes;
     }
 

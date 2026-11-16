@@ -159,11 +159,21 @@ public static class Bahnuebergang
     }
 
     /// <summary>Alle Ausstattungen in ein Netz der Stadt; die Lichter bekommen die Nachtmarke.</summary>
-    public static void Hinzu(Netz ziel, IEnumerable<Kreuz> kreuze)
+    public static void Hinzu(Netz ziel, IEnumerable<Kreuz> kreuze) => Hinzu(ziel, kreuze, null);
+
+    /// <summary>Welle Nachladen: Muster einmal gebaut (nie geaendert, nur kopiert).</summary>
+    private static readonly Lazy<(Netz Netz, int LichtVon, int LichtBis)> MusterMitLicht = new(Bauen);
+
+    /// <summary>Wie <see cref="Hinzu(Netz, IEnumerable{Kreuz})"/>, nur Kreuze, fuer die <paramref name="nimmt"/> (Muster, Lage) ja sagt.</summary>
+    public static void Hinzu(Netz ziel, IEnumerable<Kreuz> kreuze, Func<Netz, Matrix4x4, bool>? nimmt)
     {
-        var (s, lichtVon, lichtBis) = Bauen();
+        var (s, lichtVon, lichtBis) = MusterMitLicht.Value;
         foreach (var k in kreuze)
         {
+            if (nimmt is not null && !nimmt(s, k.Lage))
+            {
+                continue;
+            }
             var von = ziel.AnzahlEcken;
             ziel.Hinzu(s, k.Lage);
             ziel.Leuchten(von + lichtVon, von + lichtBis);

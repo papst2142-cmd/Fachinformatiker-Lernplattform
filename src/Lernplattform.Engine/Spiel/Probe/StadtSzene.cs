@@ -596,19 +596,20 @@ public sealed partial class StadtSzene
         {
             Array.Fill(stueckeHaus, true, h.StueckeVon, h.StueckeBis - h.StueckeVon);
         }
-        var kandidaten = new List<Instanzen.Kandidat>();
+        // Welle Nachladen A 0.82.0: jedes Stueck fuer sich (auf allen Kernen), Reihenfolge wie bisher (Stuecke, Baeume, Kleingruen)
         Netz Lokal(GrafikModell m, Matrix4x4 lage, Modellfaerbung? f, float? unterseite)
         {
             var n = new Netz { UnterseiteBis = unterseite };
             n.HinzuLokal(m, lage, f);
             return n;
         }
-        for (var i = 0; i < Stuecke.Count; i++)
+        var ausStuecken = new Instanzen.Kandidat?[Stuecke.Count];
+        Parallel.For(0, Stuecke.Count, i =>
         {
             if (stueckeHaus[i] || ImPaket(Stuecke[i].Name) || ModellAn(i) is not { } original || Katalogstueck.IstEffekt(original.Name)
                 || !Instanzen.Geeignet(Stuecke[i].Lage))
             {
-                continue;
+                return;
             }
             var lage = Stuecke[i].Lage;
             var fernModell = Fernform.Von(original);
@@ -616,39 +617,42 @@ public sealed partial class StadtSzene
             var fern = Lokal(fernModell, lage, i < FestStueckeVon ? ModellFaerbung(fernModell, lage, Faerbeart.Stadt) : FestLicht(fernModell), Unterseiten);
             if (nah.AnzahlEcken > 0)
             {
-                kandidaten.Add(new(Instanzen.Stadt, 's', i, original.Name, lage, nah, fern));
+                ausStuecken[i] = new(Instanzen.Stadt, 's', i, original.Name, lage, nah, fern);
             }
-        }
-        var b = -1;
-        foreach (var baum in GruenKlein?.Baeume ?? [])
+        });
+        var baeume = GruenKlein?.Baeume ?? [];
+        var ausBaeumen = new Instanzen.Kandidat?[baeume.Count];
+        Parallel.For(0, baeume.Count, b =>
         {
-            b++;
+            var baum = baeume[b];
             if (Grafik.Modell(baum.Name) is not { } modell || !Instanzen.Geeignet(baum.Lage))
             {
-                continue;
+                return;
             }
             var fernModell = Fernform.Von(modell);
             var nah = Lokal(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt), Unterseiten);
             var fern = Lokal(fernModell, baum.Lage, ModellFaerbung(fernModell, baum.Lage, Faerbeart.Stadt), Unterseiten);
             if (nah.AnzahlEcken > 0)
             {
-                kandidaten.Add(new(Instanzen.Stadt, 'b', b, modell.Name, baum.Lage, nah, fern));
+                ausBaeumen[b] = new(Instanzen.Stadt, 'b', b, modell.Name, baum.Lage, nah, fern);
             }
-        }
-        var g = -1;
-        foreach (var st in GruenKlein?.Stuecke ?? [])
+        });
+        var klein = GruenKlein?.Stuecke ?? [];
+        var ausGruen = new Instanzen.Kandidat?[klein.Count];
+        Parallel.For(0, klein.Count, g =>
         {
-            g++;
+            var st = klein[g];
             if (Grafik.Modell(st.Name) is not { } m || !Instanzen.Geeignet(st.Lage))
             {
-                continue;
+                return;
             }
             var nah = Lokal(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein), null);
             if (nah.AnzahlEcken > 0)
             {
-                kandidaten.Add(new(Instanzen.Gruen, 'g', g, m.Name, st.Lage, nah, null));
+                ausGruen[g] = new(Instanzen.Gruen, 'g', g, m.Name, st.Lage, nah, null);
             }
-        }
+        });
+        var kandidaten = ausStuecken.Concat(ausBaeumen).Concat(ausGruen).OfType<Instanzen.Kandidat>().ToList();
         return Instanzen.Planen(kandidaten);
     }
 
@@ -793,12 +797,17 @@ public sealed partial class StadtSzene
     private Netz PaketNetzRoh(bool fern, Auswahl? auswahl)
     {
         var netz = new Netz();
+        // Welle Nachladen (grosse Karten): fuer eine Kachel nur Ausstattung, die sie beruehren kann (der Zuschnitt danach
+        // liesse die anderen ohnehin ganz weg; gleiches Ergebnis, ohne jede Kachel die ganze Karte zu bauen)
+        Func<Netz, Matrix4x4, bool>? nimmt = auswahl is { Kachel: { } kachel }
+            ? (muster, lage) => muster.KannInKachel(lage, kachel, auswahl.Breite, auswahl.Tiefe)
+            : null;
         // P8-49: Bahnuebergaenge nah und fern ganz (klein), ihre Lichter leuchten nachts rot
-        Bahnuebergang.Hinzu(netz, Andreaskreuze);
+        Bahnuebergang.Hinzu(netz, Andreaskreuze, nimmt);
         // Welle A 0.60.0: Masten der Ampeln wie die Bahnuebergaenge (nah und fern ganz, klein); die Lampen leuchten im eigenen Aufruf
-        Probe.Ampeln.Hinzu(netz, Ampeln);
+        Probe.Ampeln.Hinzu(netz, Ampeln, nimmt);
         // Welle A 0.61.0: Haeuschen und Mast der Haltestellen wie die Masten der Ampeln (nah und fern ganz, klein)
-        Probe.Haltestellen.Hinzu(netz, Haltestellen);
+        Probe.Haltestellen.Hinzu(netz, Haltestellen, nimmt);
         // Welle Q2: Questgeber draussen (nah die Figur mit ihrem Aussehen, fern zwei Kaesten wie die wartenden Figuren)
         QuestgeberHinzu(netz, fern);
         if (Grafik is null)
@@ -1158,6 +1167,7 @@ public sealed partial class StadtSzene
         var brueckenKaesten = new List<(Vector2, Vector2, float, float)>();
         var strassenEnden = new List<(Vector2 Punkt, Vector2 Richtung, float Verlaengert)>();
         var uebergaenge = new List<(Vector2 Mitte, bool Strasse)>();
+        List<List<Vector2>>? alleStrassen = null;
         foreach (var art in (string[])["park", "fluss", "strasse", "bahn"])
         {
             foreach (var item in landschaft.Where(t => Py.Gleich(t["typ"], art)))
@@ -1200,14 +1210,16 @@ public sealed partial class StadtSzene
                             // Phase 8 W11 (Sammelliste 157): ein Strassenende, das weder am Kartenrand noch an einer
                             // anderen Strasse liegt, endet buendig an der Gehwegkante (halbe Gehwegbreite statt halber Strassenbreite)
                             var pp = Punkte(item["punkte"]);
-                            var alleStr = landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+                            // Welle Nachladen A 0.82.0 (grosse Karten): alle Strassen einmal je Bau gelesen, nicht je Strasse und
+                            // je Ende neu (gleiche Werte, die Daten aendern sich waehrend des Baus nicht)
+                            var alleStr = alleStrassen ??= landschaft.Where(t => Py.Gleich(t["typ"], "strasse")).Select(t => Vektoren(t["punkte"])).ToList();
+                            var eigeneLinie = Vektoren(item["punkte"]);
                             float Ende(Vector2 e)
                             {
                                 var amRand = e.X <= 0.01f || e.Y <= 0.01f || e.X >= breite - 0.01f || e.Y >= tiefe - 0.01f;
-                                var anStrasse = alleStr.Any(a => !a.SequenceEqual(Vektoren(item["punkte"])) && Kurve.Abstand(e, a) <= 0.05f);
+                                var anStrasse = alleStr.Any(a => !a.SequenceEqual(eigeneLinie) && Kurve.Abstand(e, a) <= 0.05f);
                                 return amRand || anStrasse ? StrassenBreite / 2 : WegBreite / 2;
                             }
-                            var eigeneLinie = Vektoren(item["punkte"]);
                             if (Kreisverkehr.IstRing(item) && Kreisverkehr.Geschlossen(eigeneLinie))
                             {
                                 // Welle K3 (Weisung P12-59): der Ring als geschlossenes Band mit Gehrung auch am Stoss (je

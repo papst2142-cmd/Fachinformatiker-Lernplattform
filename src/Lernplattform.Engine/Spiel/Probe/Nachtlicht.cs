@@ -312,18 +312,34 @@ public static class Nachtlicht
     {
         var min = new Vector2(KartenRand);
         var max = new Vector2(breite - KartenRand, tiefe - KartenRand);
-        foreach (var (x, z, _) in skizze)
+        // Welle Nachladen A 0.82.0 (grosse Karten): jeder Platz fuer sich auf allen Kernen, Reihenfolge wie die Skizze
+        var ohneStrasseAlt = OhneStrasseAltFuerTests;
+        var plaetze = new (Vector2 A, Vector2 B)?[skizze.Count];
+        // ein Fehler kommt wie bisher als er selbst heraus (nicht verpackt), z. B. in der Gegenprobe OhneStrasseAltFuerTests
+        try
         {
-            var (strasse, laenge, seite) = StrasseVon(strassen, new Vector2(x, z));
-            if (strasse.Count < 2 && !OhneStrasseAltFuerTests)
-            {
-                continue;   // Sammelliste 271: Laterne ohne Strasse (siehe Plaetze)
-            }
-            var (p, d) = Punkt(strasse, laenge);
-            var q = p + (new Vector2(-d.Y, d.X) * seite * Rand);
-            // am Kartenrand nur bis zum ersten erlaubten Platz (Regel Kartenrand 0,3)
-            yield return (Vector2.Clamp(q - (d * WunschStreifen), min, max), Vector2.Clamp(q + (d * WunschStreifen), min, max));
+            Parallel.For(0, skizze.Count, i => plaetze[i] = Wunschplatz(strassen, skizze[i], min, max, ohneStrasseAlt));
         }
+        catch (AggregateException fehler) when (fehler.InnerExceptions.Count > 0)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(fehler.InnerExceptions[0]).Throw();
+        }
+        return plaetze.OfType<(Vector2 A, Vector2 B)>().ToList();
+    }
+
+    private static (Vector2 A, Vector2 B)? Wunschplatz(IReadOnlyList<IReadOnlyList<Vector2>> strassen, (float X, float Z, bool Doppelt) wunsch,
+        Vector2 min, Vector2 max, bool ohneStrasseAlt)
+    {
+        var (x, z, _) = wunsch;
+        var (strasse, laenge, seite) = StrasseVon(strassen, new Vector2(x, z));
+        if (strasse.Count < 2 && !ohneStrasseAlt)
+        {
+            return null;   // Sammelliste 271: Laterne ohne Strasse (siehe Plaetze)
+        }
+        var (p, d) = Punkt(strasse, laenge);
+        var q = p + (new Vector2(-d.Y, d.X) * seite * Rand);
+        // am Kartenrand nur bis zum ersten erlaubten Platz (Regel Kartenrand 0,3)
+        return (Vector2.Clamp(q - (d * WunschStreifen), min, max), Vector2.Clamp(q + (d * WunschStreifen), min, max));
     }
 
     private static float Laenge(IReadOnlyList<Vector2> linie)
