@@ -91,7 +91,17 @@ public static partial class AutoMessung
                 {
                     Fund(name + ": Reiter \"Aufgabe 2\" antippen wechselt nicht (Reiter " + e.ProbeStand.Reiter + ")");
                 }
-                if (!await TippenAsync(ansicht, e.ProbeUmschalter, Beschriftungen.Einsetzen(EchtTexte.Anlagen, satz.Anlagen.Count), art)
+                // Breites Fenster (zwei Spalten) und Aufgabe 2 mit Anlagen: die Anlagen stehen schon daneben, der Umschalter ist
+                // dann gewollt verborgen (EchtFormatTeil, wie in EchtWelle2 geprueft); sonst muss Antippen die Anlagen zeigen.
+                var daneben = e.ProbeZweiSpalten.Gezeigt && e.ProbeUmschalter?.IsVisible == false;
+                if (daneben)
+                {
+                    if (e.ProbeInhalt?.Children.OfType<Grid>().Any() != true)
+                    {
+                        Fund(name + ": zwei Spalten ohne Anlagen neben der Aufgabe");
+                    }
+                }
+                else if (!await TippenAsync(ansicht, e.ProbeUmschalter, Beschriftungen.Einsetzen(EchtTexte.Anlagen, satz.Anlagen.Count), art)
                     || !e.ProbeStand.Anlagen)
                 {
                     Fund(name + ": Umschalter \"Anlagen\" antippen zeigt die Anlagen nicht");
@@ -104,7 +114,8 @@ public static partial class AutoMessung
                 {
                     Fund(name + ": Haekchen der Bewertung antippen aendert den Zwischenstand nicht (" + vorher + " / " + e.ProbeStand.Summe + ")");
                 }
-                Messwerte.Notiere("Pruefung im echten Format AE Bedienprobe " + name + ": Reiter, Anlagen, Haekchen (" + vorher + " -> "
+                Messwerte.Notiere("Pruefung im echten Format AE Bedienprobe " + name + ": Reiter, Anlagen" + (daneben ? " daneben (zwei Spalten)" : "")
+                    + ", Haekchen (" + vorher + " -> "
                     + e.ProbeStand.Summe + ")");
             }
         }
