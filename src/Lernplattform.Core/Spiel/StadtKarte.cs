@@ -111,7 +111,8 @@ public sealed class StadtKarte
         {
             Innen(i);
         }
-        var noetig = (2 * MarkeRadius * schrift) + MarkeRand + MarkeLuecke;
+        // Kreise je Marke: die Nummernmarke und, bei offenem Auftrag, die Marke „!“ oben rechts; jedes Paar fremder Kreise
+        // haelt mindestens MarkeLuecke Abstand (die „!“ verdeckt sonst die Nummer des Nachbarn, Bild P12-283)
         for (var runde = 0; runde < 400; runde++)
         {
             var bewegt = false;
@@ -119,20 +120,27 @@ public sealed class StadtKarte
             {
                 for (var j = i + 1; j < p.Length; j++)
                 {
-                    var d = p[j] - p[i];
-                    var laenge = d.Length();
-                    if (laenge >= noetig - 0.01f)
+                    foreach (var (ai, ri) in KreiseFund(i, schrift))
                     {
-                        continue;
+                        foreach (var (aj, rj) in KreiseFund(j, schrift))
+                        {
+                            var noetig = ri + rj + MarkeLuecke;
+                            var d = (p[j] + aj) - (p[i] + ai);
+                            var laenge = d.Length();
+                            if (laenge >= noetig - 0.01f)
+                            {
+                                continue;
+                            }
+                            // gleiche Stelle: feste Richtung je Paar (nie Zufall)
+                            var richtung = laenge > 1e-4f ? d / laenge : new Vector2(MathF.Cos(j * 2.399f), MathF.Sin(j * 2.399f));
+                            var schub = ((noetig - laenge) / 2) + 0.05f;
+                            p[i] -= richtung * schub;
+                            p[j] += richtung * schub;
+                            Innen(i);
+                            Innen(j);
+                            bewegt = true;
+                        }
                     }
-                    // gleiche Stelle: feste Richtung je Paar (nie Zufall)
-                    var richtung = laenge > 1e-4f ? d / laenge : new Vector2(MathF.Cos(j * 2.399f), MathF.Sin(j * 2.399f));
-                    var schub = ((noetig - laenge) / 2) + 0.05f;
-                    p[i] -= richtung * schub;
-                    p[j] += richtung * schub;
-                    Innen(i);
-                    Innen(j);
-                    bewegt = true;
                 }
             }
             if (!bewegt)
@@ -167,13 +175,32 @@ public sealed class StadtKarte
             }
             for (var j = i + 1; j < p.Count; j++)
             {
-                if (Vector2.Distance(p[i], p[j]) < (2 * MarkeRadius * schrift) + MarkeRand - zugabe)
+                // Nummer und „!“ zaehlen beide zur Marke (in der Gegenprobe wie bis A 0.82.0 ebenso)
+                var ueber = false;
+                foreach (var (ai, ri) in KreiseFund(i, schrift))
+                {
+                    foreach (var (aj, rj) in KreiseFund(j, schrift))
+                    {
+                        ueber |= Vector2.Distance(p[i] + ai, p[j] + aj) < ri + rj - zugabe;
+                    }
+                }
+                if (ueber)
                 {
                     funde.Add($"Marken {o.Nr} und {Orte[j].Nr} überlappen sich");
                 }
             }
         }
         return funde;
+    }
+
+    /// <summary>Kreise einer Marke (Versatz zur Mitte, Halbmesser samt halbem Rand): Nummer und, bei Auftrag, „!“.</summary>
+    private IEnumerable<(Vector2 Versatz, float Radius)> KreiseFund(int i, float schrift)
+    {
+        yield return (Vector2.Zero, (MarkeRadius * schrift) + (MarkeRand / 2));
+        if (Orte[i].Aufgabe)
+        {
+            yield return (new Vector2(MarkeRadius * schrift, -MarkeRadius * schrift), (AufgabeRadius * schrift) + (MarkeRand / 2));
+        }
     }
 
     /// <summary>Wo die Figur auf der Karte steht: draussen ihre Stelle, an oder in einem Ort dessen Stehplatz.</summary>
