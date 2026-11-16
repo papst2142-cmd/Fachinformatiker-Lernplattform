@@ -251,6 +251,11 @@ public static partial class AutoMessung
             Zeitplan("Markierung341Async");
             funde += await Markierung341Async(ansicht);         // Patch A 0.81.1: Markierung in den Leisten nach hell/dunkel (Sammelliste 341)
         }
+        if (MitLernen)
+        {
+            Zeitplan("LayoutGleichAsync");
+            funde += await LayoutGleichAsync(ansicht, inhalte);   // Sammelliste 364: Layout-Warten prueft dasselbe wie Bild-Warten
+        }
         Zeitplan("LayoutAsync");
         funde += await LayoutAsync(ansicht, inhalte);
         if (MitLernen)
@@ -402,6 +407,7 @@ public static partial class AutoMessung
         var gepruefteGroessen = new List<string>();
         var groessenJeStufe = 0;
         var w4Gekuerzt = new List<string>();
+        Zeiten364.Clear();
         foreach (var stufe in Einstellungen.Schriftgroessen)
         {
             var faktor = Zustand.SchriftFaktor(stufe);
@@ -412,6 +418,9 @@ public static partial class AutoMessung
             groessenJeStufe = groessen.Count;
             foreach (var (name, breite, hoehe) in groessen)
             {
+                // Sammelliste 364: Fenstergroesse und Spiel warten auf gezeichnete Bilder, die Ansichten des Lernteils nur
+                // auf die fertige Oberflaeche (gleiche Pruefung, Beleg LayoutGleichAsync)
+                ansicht.Warten = MainView.WartenArt.Bild;
                 if (fenster is not null)
                 {
                     // Nie groesser als der Bildschirm (Windows-CI: 1024 x 768): sonst rechnet
@@ -439,6 +448,8 @@ public static partial class AutoMessung
                 // (nach der 3D-Stichprobe wie im ganzen Lauf); zusammen genau die Seiten des ganzen Laufs
                 foreach (var id in ansicht.GebauteSeiten.Keys.Where(id => id == Seiten.Spiel ? MitSpiel : MitLernen).ToList())
                 {
+                    using var seitenZeit = Zeit364("Seite " + id);
+                    ansicht.Warten = id == Seiten.Spiel ? MainView.WartenArt.Bild : MainView.WartenArt.Layout;
                     await ansicht.ZeigeAsync(id);
                     if (ansicht.GebauteSeiten[id] is DashboardSeite neuGerechnet)
                     {
@@ -466,7 +477,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 2: Ansichten nach dem Pruefen, Ergebnis und Fenster der Uebernahme
-                await foreach (var (ansichtName, _) in MitLernen ? W2Ansichten(ansicht, inhalte) : Keine<(string, int)>())
+                await foreach (var (ansichtName, _) in Gemessen364("W2Ansichten", MitLernen ? W2Ansichten(ansicht, inhalte) : Keine<(string, int)>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -474,7 +485,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 3, W2: Ansichten der Rechner-Seite
-                await foreach (var ansichtName in MitLernen ? RechnerAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("RechnerAnsichten", MitLernen ? RechnerAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -482,7 +493,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 4, W1: Ansichten der Lernseiten
-                await foreach (var ansichtName in MitLernen ? W1Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("W1Ansichten", MitLernen ? W1Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -490,7 +501,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 4, W2: Ansichten der Klausursimulation und ihre Rueckfragen
-                await foreach (var ansichtName in MitLernen ? KlausurAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("KlausurAnsichten", MitLernen ? KlausurAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -498,7 +509,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 4, W3: Reiter des Abschlussprojekts, Rueckfrage, Fehler beim Export, Kurzhinweis
-                await foreach (var ansichtName in MitLernen ? ProjektAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("ProjektAnsichten", MitLernen ? ProjektAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -511,7 +522,7 @@ public static partial class AutoMessung
                     w4Gekuerzt.Add(stufe);
                     continue;
                 }
-                await foreach (var ansichtName in MitLernen ? W4Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("W4Ansichten", MitLernen ? W4Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -519,7 +530,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 5, W1: Sicherung, Loeschen, Datenbank und ihre Fenster (gleiche Zeitgrenze wie W4)
-                await foreach (var ansichtName in MitLernen ? P5Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P5Ansichten", MitLernen ? P5Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -527,7 +538,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 5, W2: Diagnose und Werkzeuge mit Bericht, Fenster und Kurzhinweis
-                await foreach (var ansichtName in MitLernen ? P5W2Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P5W2Ansichten", MitLernen ? P5W2Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -535,7 +546,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 5, W3: Updates mit Fehlerzeile, Fenster "Update verfügbar" und "Update nicht abgeschlossen"
-                await foreach (var ansichtName in MitLernen ? P5W3Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P5W3Ansichten", MitLernen ? P5W3Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -543,7 +554,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 6, W2: Updates mit "Verknüpfung anlegen", Rueckfrage beim Start und ihr Ergebnis
-                await foreach (var ansichtName in MitLernen ? P6W2Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P6W2Ansichten", MitLernen ? P6W2Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -551,7 +562,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 8, W2: "Über das Programm" mit der Liste "Lizenzen" (zu und ein Bestandteil offen)
-                await foreach (var ansichtName in MitLernen ? P8W2Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P8W2Ansichten", MitLernen ? P8W2Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -559,7 +570,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 8, W2b: Seitenleiste mit offenen Unterpunkten, Optionen in Gruppen (alle Karten zu)
-                await foreach (var ansichtName in MitLernen ? P8W2bAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P8W2bAnsichten", MitLernen ? P8W2bAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -567,7 +578,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 8, W8: Optionen "Musik und Geräusche" mit eigenem Lied, "Vollbild", "Tastenbelegung" mit Meldung
-                await foreach (var ansichtName in MitLernen ? P8W8Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P8W8Ansichten", MitLernen ? P8W8Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -575,8 +586,9 @@ public static partial class AutoMessung
                     }
                 }
                 // Phase 7, W1: Spiel-Seite (Stadt, Ortsliste, Haus mit Oeffnungszeit, Buero, ohne 3D)
+                ansicht.Warten = MainView.WartenArt.Bild;
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P7W1Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P7W1Ansichten", MitSpiel ? P7W1Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -586,7 +598,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 7, W6: Spielansichten ueber der Stadt (Platzwahl, Figur, Uebersicht, Reise, Tickets, Firma)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P7W6Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P7W6Ansichten", MitSpiel ? P7W6Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -596,7 +608,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 7, W7: Moebelhaus und Elektromarkt (innen in 3D, Sortiment in der Tafel)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P7W7Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P7W7Ansichten", MitSpiel ? P7W7Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -606,7 +618,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 7, W7b: Bank und Amt (innen in 3D, Seiten am Schalter in der Tafel)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P7W7bAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P7W7bAnsichten", MitSpiel ? P7W7bAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -616,7 +628,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 12, Welle 1: Kleiderschrank (Anlegen mit Hinweis, Schrank, Kaufhaus ohne/voll, Wohnung, Zurueckverkaufen)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P12W1Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P12W1Ansichten", MitSpiel ? P12W1Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -626,7 +638,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 12, Welle 2: PC zu Hause (Online-Shop, Kredite, Gezahltes), Uebersicht, Paket vor der Haustuer
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P12W2Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P12W2Ansichten", MitSpiel ? P12W2Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -636,7 +648,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 13 W5: Etagen (Knopf vor der Treppe, 1. Obergeschoss)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P13W5Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P13W5Ansichten", MitSpiel ? P13W5Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -646,7 +658,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Welle Q2: Questgeber draussen und im Laden
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? Q2Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("Q2Ansichten", MitSpiel ? Q2Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -656,7 +668,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Welle A 0.66.0: Figur auf dem Huegel
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? GelaendeAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("GelaendeAnsichten", MitSpiel ? GelaendeAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -666,7 +678,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Welle A 0.67.0: Questlog im Handy, Ortsliste mit Bus, im Bus
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? QuestlogBusAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("QuestlogBusAnsichten", MitSpiel ? QuestlogBusAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -676,7 +688,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Welle A 0.73.0: Knoepfe Einsteigen, Aussteigen, Haelt an der naechsten Haltestelle
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? MitfahrtAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("MitfahrtAnsichten", MitSpiel ? MitfahrtAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -686,7 +698,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Welle D2: Leistungsanzeige im Spiel (Schalter an)
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? LeistungsanzeigeAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("LeistungsanzeigeAnsichten", MitSpiel ? LeistungsanzeigeAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -696,7 +708,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 8, W8b: neue Tueren (Bahnhof, Moebelhaus), Stellwerk mit Schild, Bahnhof innen als Wartehalle
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P8W8bAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P8W8bAnsichten", MitSpiel ? P8W8bAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -706,7 +718,7 @@ public static partial class AutoMessung
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 8, W10: Hinweisfeld zu (mit und ohne Meldung), Nacht, Uhr steht um 23 Uhr
                 P7W1AnsichtFehler.Clear();
-                await foreach (var ansichtName in MitSpiel ? P8W10Ansichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P8W10Ansichten", MitSpiel ? P8W10Ansichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -715,7 +727,7 @@ public static partial class AutoMessung
                 }
                 layoutFunde.AddRange(P7W1AnsichtFehler.Select(f => $"{ist} {stufe} {f}"));
                 // Phase 8, W10: Dashboard bei 1280 x 720 und 1920 x 1080 (nur einmal je Stufe, bei der Groesse "pc")
-                await foreach (var ansichtName in MitLernen && name == "pc" ? P8W10DashboardAnsichten(ansicht) : Keine<string>())
+                await foreach (var ansichtName in Gemessen364("P8W10DashboardAnsichten", MitLernen && name == "pc" ? P8W10DashboardAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {
@@ -725,13 +737,23 @@ public static partial class AutoMessung
             }
         }
 
+        ansicht.Warten = MainView.WartenArt.Bild;
         // Phase 2 (Weisung P2-4): alle 72 Farbwelten mit den neuen Ansichten (Layout und Lesbarkeit)
         if (MitLernen)
         {
-            funde += await FarbweltenAsync(ansicht, inhalte, layoutFunde);
+            ansicht.Warten = MainView.WartenArt.Layout;
+            try
+            {
+                funde += await FarbweltenAsync(ansicht, inhalte, layoutFunde);
+            }
+            finally
+            {
+                ansicht.Warten = MainView.WartenArt.Bild;
+            }
         }
         Zustand.DesignAnwenden();
 
+        ZeitenNotieren364();
         Messwerte.Notiere(string.Create(inv, $"Layoutpruefung (Woerter, Knoepfe, Rand), {Einstellungen.Schriftgroessen.Count} Schriftstufen x {ansicht.GebauteSeiten.Keys.Count(id => id == Seiten.Spiel ? MitSpiel : MitLernen)} Seiten x {groessenJeStufe} Groessen: {layoutFunde.Count} Funde"));
         if (MitLernen)
         {
@@ -1963,7 +1985,7 @@ public static partial class AutoMessung
                     FarbenAnwenden.Anwenden(palette);
                     anzahl++;
                     var welt = darstellung + "/" + grund.Id + "/" + hinter.Id;
-                    await foreach (var (name, nr) in W2Ansichten(ansicht, inhalte))
+                    await foreach (var (name, nr) in Gemessen364("Farbwelten W2Ansichten", W2Ansichten(ansicht, inhalte)))
                     {
                         if (nr is 1 or 10)
                         {
@@ -1973,84 +1995,84 @@ public static partial class AutoMessung
                             }
                         }
                     }
-                    await foreach (var name in RechnerAnsichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten RechnerAnsichten", RechnerAnsichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in W1Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten W1Ansichten", W1Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in KlausurAnsichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten KlausurAnsichten", KlausurAnsichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in ProjektAnsichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten ProjektAnsichten", ProjektAnsichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in W4Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten W4Ansichten", W4Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in P5Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten P5Ansichten", P5Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in P5W2Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten P5W2Ansichten", P5W2Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in P5W3Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten P5W3Ansichten", P5W3Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in P6W2Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten P6W2Ansichten", P6W2Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in P8W2Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten P8W2Ansichten", P8W2Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in P8W2bAnsichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten P8W2bAnsichten", P8W2bAnsichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {
                             layoutFunde.Add($"{welt} {name}: {fund}");
                         }
                     }
-                    await foreach (var name in P8W8Ansichten(ansicht))
+                    await foreach (var name in Gemessen364("Farbwelten P8W8Ansichten", P8W8Ansichten(ansicht)))
                     {
                         foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                         {

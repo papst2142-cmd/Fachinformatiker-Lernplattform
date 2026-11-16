@@ -1342,6 +1342,11 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
+        // S 0.56.0: bei „Plätze“ rechts Karte vergrößern und Stadtteil einsetzen
+        if (PlaetzeTeil())
+        {
+            return;
+        }
         if (Karte.SetzenArt is not null && _projekt is not null && !_projekt.NurLesen)
         {
             // S 0.9.1 (Weisung P12-53 Teil A): auch rechts bei der Auswahl, gut erreichbar am Tablet
@@ -1934,6 +1939,8 @@ public sealed partial class Hauptansicht : UserControl
         var bauten = (PyObjekt)Py.Kopie(Aussen.Bauten(_projekt.AussenStand))!;
         // Welle Q1: dazu die Funde der Quests und Questgeber (Umgebung hier kopiert, gerechnet im Hintergrund)
         var quests = _projekt.QuestUmgebung();
+        // S 0.56.0 (Sammelliste 362, Nico 3a): gelbe Hinweise offener Enden an der Grenze zweier Plaetze, wie Projekt.PruefenAussen()
+        var plaetzeStand = (PyObjekt)Py.Kopie(_projekt.AussenStand)!;
         AussenPruefungLaeuft();
         GrenzenLiveStarten(fassung, daten);
         var uhr = Stopwatch.StartNew();
@@ -1944,7 +1951,7 @@ public sealed partial class Hauptansicht : UserControl
             var wegeRechnen = Task.Run(() => Laufzeiten.Rechnen(fassung, daten.Inhalt, daten.Grafik));
             var funde = Projekt.PruefenAussen(fassung, daten, bauten, wege: []);
             var wege = await wegeRechnen.ConfigureAwait(false);
-            return ((List<StadtbauFund>)[.. funde, .. Laufzeiten.Pruefen(wege, Aussen.Aus(fassung)), .. QuestPruefung.Pruefen(quests).Select(f => f.FuerStadt)], wege);
+            return ((List<StadtbauFund>)[.. funde, .. Laufzeiten.Pruefen(wege, Aussen.Aus(fassung)), .. QuestPruefung.Pruefen(quests).Select(f => f.FuerStadt), .. Plaetze.RandHinweise(plaetzeStand)], wege);
         })).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
             if (stand != _aussenPruefStand)
@@ -2107,11 +2114,16 @@ public sealed partial class Hauptansicht : UserControl
         {
             // S 0.55.0: Stadtteil-Namen nur in „Stadt von oben“
             Karte.NamenAn = false;
+            Karte.PlaetzeAn = false;
         }
         ChipsZeigen();
         if (_namenChip is not null)
         {
             NamenChipZeigen();
+        }
+        if (_plaetzeChip is not null)
+        {
+            PlaetzeChipZeigen();
         }
     }
 
@@ -3317,6 +3329,18 @@ public sealed partial class Hauptansicht : UserControl
             {
                 // S 0.55.0 (Weisung P12-282): Stadtteil-Namen an/aus
                 NamenUmschalten();
+                e.Handled = true;
+                return;
+            }
+            if (!_innen && e.Key == Key.P && e.KeyModifiers == KeyModifiers.None)
+            {
+                // S 0.56.0 (Weisung P12-287): Plaetze an/aus
+                PlaetzeUmschalten();
+                e.Handled = true;
+                return;
+            }
+            if (!_innen && !_drei && e.KeyModifiers == KeyModifiers.None && PlaetzeTaste(e.Key))
+            {
                 e.Handled = true;
                 return;
             }

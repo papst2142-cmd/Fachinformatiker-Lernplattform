@@ -57,6 +57,7 @@ jobs:
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       anzeige: ${{ steps.version.outputs.anzeige }}
+      lauf: ${{ steps.lauf.outputs.lauf }}
     steps:
       - name: Nur von main
         run: |
@@ -76,7 +77,8 @@ jobs:
           python -I werkzeuge/release/release.py version | tee kennzahlen.txt
           echo "tag=$(grep -m1 '^TAG=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
           echo "anzeige=$(grep -m1 '^ANZEIGE=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
-      - name: Voller CI-Lauf 18/18 auf diesem Commit
+      - name: Voller CI-Lauf 18/18 auf diesem Commit oder mit gleichem Tree
+        id: lauf
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -99,14 +101,13 @@ jobs:
           tests (windows-latest, Lernteil und Spiel)
           sollwerte (Pruefsummen)'
           soll="$(echo "$soll" | sed 's/^ *//' | sort)"
-          gefunden=0
-          for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=workflow_dispatch&status=success&per_page=50" --jq '.workflow_runs[].id'); do
-            # Welle CI schneller 2: der Hinweis-Job "urteil (GitHub oder echt)" zaehlt nicht mit (urteil.py selbsttest prueft das)
-            ist="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?per_page=100" --jq '.jobs[] | select(.conclusion == "success" and .name != "urteil (GitHub oder echt)") | .name' | sort)"
-            if [ "$ist" = "$soll" ]; then echo "voller Lauf $id: 18/18 gruen"; gefunden=1; break; fi
-            echo "Lauf $id ist nicht 18/18 gruen:"; echo "$ist"
-          done
-          if [ "$gefunden" != 1 ]; then echo "FEHLER: kein voller Lauf 18/18 (Dispatch, Stufe voll) auf $GITHUB_SHA"; exit 1; fi
+          # Sammelliste 365 (Weisung P12-289): erst ein gruener Lauf auf diesem Commit, sonst einer mit gleichem Git-Tree
+          # (Datei fuer Datei derselbe Inhalt); Jobliste, Ergebnis jedes Jobs und Filter fuer den Hinweis-Job wie bisher
+          # (Welle CI schneller 2: der Hinweis-Job "urteil (GitHub oder echt)" zaehlt nicht mit, urteil.py selbsttest prueft das)
+          export SOLL="$soll"
+          export JOBFILTER='.jobs[] | select(.conclusion == "success" and .name != "urteil (GitHub oder echt)") | .name'
+          python -I werkzeuge/release/lauf_waehlen.py selbsttest
+          python -I werkzeuge/release/lauf_waehlen.py waehlen
       - name: Tag gibt es noch nicht
         env:
           TAG: ${{ steps.version.outputs.tag }}
@@ -234,6 +235,13 @@ jobs:
           path: release/release-android
       - name: Zusammenstellen und pruefen (T2, Lizenzliste)
         run: python -I werkzeuge/release/release.py zusammen release release/entwurf
+      # Sammelliste 365: der Release-Text nennt den genommenen Lauf (Nummer, Commit, Tree gleich main)
+      - name: Genommenen CI-Lauf in den Release-Text
+        env:
+          LAUF: ${{ needs.pruefen.outputs.lauf }}
+        run: |
+          if [ -z "$LAUF" ]; then echo "FEHLER: kein genommener CI-Lauf aus dem Job pruefen"; exit 1; fi
+          python -I werkzeuge/release/lauf_waehlen.py text release/release.md "$LAUF"
       - name: Entwuerfe pruefen (hoechstens einer, gleicher Tag)
         env:
           GH_TOKEN: ${{ github.token }}

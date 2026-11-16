@@ -98,6 +98,7 @@ public sealed partial class Hauptansicht
         _werkzeugLeiste.Children.Insert(_werkzeugLeiste.Children.IndexOf(_ebenenHinweis), _waermeChip);
         StadtteileKnopfBauen();
         NamenKnopfBauen();
+        PlaetzeKnopfBauen();
     }
 
     /// <summary>Neben die Kamera-Karte, wenn beide nebeneinander passen, sonst darueber; die Karte haelt unten Platz frei.</summary>

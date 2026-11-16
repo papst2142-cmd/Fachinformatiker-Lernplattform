@@ -46,6 +46,8 @@ public sealed partial class Projekt
     /// </summary>
     internal static long FormatFuer(string aussenText, string verlaufText, (double Breite, double Hoehe)? leer = null) =>
         (leer is { } l && (l.Breite > Stadtteile.AltesFormatBis || l.Hoehe > Stadtteile.AltesFormatBis))
+            // S 0.56.0 (Sammelliste 362): eine vergroesserte Karte ueber 64 (im Stand oder im Verlauf)
+            || GrosseKarteImText(aussenText) || GrosseKarteImText(verlaufText)
             || aussenText.Contains(NamenSchluessel, StringComparison.Ordinal) || verlaufText.Contains(NamenSchluessel, StringComparison.Ordinal) ? 5
         : aussenText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) || verlaufText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) ? 4 : 3;
 
@@ -292,7 +294,7 @@ public sealed partial class Projekt
     /// </summary>
     public T AussenAendern<T>(string was, Func<PyObjekt, T> aenderung) => AussenAendern(StadtOrt, was, aenderung);
 
-    private T AussenAendern<T>(string schrittOrt, string was, Func<PyObjekt, T> aenderung)
+    private T AussenAendern<T>(string schrittOrt, string was, Func<PyObjekt, T> aenderung, bool ohneAutomatik = false)
     {
         if (NurLesen)
         {
@@ -304,7 +306,12 @@ public sealed partial class Projekt
         var ergebnis = aenderung(a);
         // S 0.26.0 (Weisung P12-115, Nico 2a): automatische Laternen im selben Schritt (geloeschte merken, an geaenderten
         // Strassen neu verteilen)
-        LaternenNachziehen(a, vorher, strassenVorher);
+        // S 0.56.0 (Sammelliste 362): Vergroessern und Einsetzen verschieben bzw. bringen die automatischen Laternen mit;
+        // neu verteilen wuerde sie umsetzen (nie still)
+        if (!ohneAutomatik)
+        {
+            LaternenNachziehen(a, vorher, strassenVorher);
+        }
         // S 0.31.0 (Sammelliste 264): Farben eines geloeschten Gebaeudes fallen im selben Schritt weg
         AussenBearbeitung.FarbenAufraeumen(a);
         var nachher = Aussen.TeileText(a);
@@ -969,7 +976,8 @@ public sealed partial class Projekt
 
     /// <summary>Pruefung der Stadt draussen (blockiert, rund eine halbe Sekunde; in der Oberflaeche im Hintergrund).</summary>
     /// <remarks>Welle Q1 (S 0.40.0): dazu die Funde der Quests und Questgeber (<see cref="QuestFunde"/>).</remarks>
-    public List<StadtbauFund> PruefenAussen() => [.. PruefenAussen(Stand(), Daten, Aussen.Bauten(AussenStand)), .. QuestFunde().Select(f => f.FuerStadt)];
+    /// <remarks>S 0.56.0 (Nico 3a): dazu die gelben Hinweise offener Enden an der Grenze zweier Plaetze (<see cref="Plaetze.RandHinweise"/>).</remarks>
+    public List<StadtbauFund> PruefenAussen() => [.. PruefenAussen(Stand(), Daten, Aussen.Bauten(AussenStand)), .. QuestFunde().Select(f => f.FuerStadt), .. Plaetze.RandHinweise(AussenStand)];
 
     /// <summary>
     /// Pruefung draussen zu einem Stand. <paramref name="bauten"/>: Innenraeume neuer Gebaeude (Teil "bauten", steht nicht in

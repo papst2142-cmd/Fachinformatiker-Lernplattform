@@ -599,18 +599,45 @@ public partial class MainView : UserControl
         KopfAnordnen();   // Weisung P11-35: ob die Brotkrumen neben dem X passen, haengt vom Seitentitel ab
     }
 
-    /// <summary>Wartet, bis das naechste Bild fertig gezeichnet ist (zwei Bildaufrufe).</summary>
+    /// <summary>
+    /// Sammelliste 364 (Weisung P12-288): wie <see cref="BildFertigAsync"/> wartet. <see cref="WartenArt.Bild"/> = zwei
+    /// gezeichnete Bilder (wie immer); <see cref="WartenArt.Layout"/> = bis alle Arbeit der Oberflaeche (auch die niedrigste
+    /// Stufe) erledigt ist und das Layout steht, ohne auf ein gezeichnetes Bild zu warten. Nur die Layoutpruefung des
+    /// Start-Tests nutzt Layout: sie liest nur Lage und Groesse, nie Pixel; am Intel-Mac kostete das Warten auf rund 24 000
+    /// Bilder dort 17 bis 21 Minuten (Haenger Lauf 1035). Dass Layout dasselbe ergibt, prueft der Start-Test je Lauf
+    /// (<c>AutoMessung.LayoutGleichAsync</c>). <see cref="WartenArt.Ohne"/> nur fuer dessen Gegenprobe.
+    /// </summary>
+    internal enum WartenArt { Bild, Layout, Ohne }
+
+    /// <summary>Sammelliste 364: Art des Wartens in <see cref="BildFertigAsync"/> (nur der Start-Test setzt sie).</summary>
+    internal WartenArt Warten { get; set; } = WartenArt.Bild;
+
+    /// <summary>Wartet, bis das naechste Bild fertig gezeichnet ist (zwei Bildaufrufe; im Start-Test siehe <see cref="Warten"/>).</summary>
     public Task BildFertigAsync()
     {
         var fertig = new TaskCompletionSource();
         var top = TopLevel.GetTopLevel(this);
-        if (top is null)
+        if (top is null || Warten == WartenArt.Ohne)
         {
             fertig.SetResult();
             return fertig.Task;
         }
+        if (Warten == WartenArt.Layout)
+        {
+            return LayoutFertigAsync(top);
+        }
         top.RequestAnimationFrame(_ => top.RequestAnimationFrame(_ => fertig.TrySetResult()));
         return fertig.Task;
+    }
+
+    /// <summary>Sammelliste 364: zweimal alle Arbeit bis zur niedrigsten Stufe abwarten und das Layout ganz durchrechnen.</summary>
+    private static async Task LayoutFertigAsync(TopLevel top)
+    {
+        for (var i = 0; i < 2; i++)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.SystemIdle);
+            top.UpdateLayout();
+        }
     }
 
     private Control Seite(string id)

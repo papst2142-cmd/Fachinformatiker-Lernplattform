@@ -47,6 +47,7 @@ public sealed partial class KartenFlaeche
                 SetzenBeenden();
                 MassbandAn = false;
                 NamenAn = false;
+                PlaetzeAn = false;
             }
             MehrereGeaendert?.Invoke();
             InvalidateVisual();
