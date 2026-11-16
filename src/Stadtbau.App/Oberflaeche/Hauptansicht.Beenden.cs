@@ -44,6 +44,9 @@ public sealed partial class Hauptansicht
     /// <summary>Laufende Arbeit im Hintergrund (Pruefung, 3D-Teilbau).</summary>
     public int HintergrundOffen => _hintergrund.Count(t => !t.IsCompleted);
 
+    /// <summary>Nur Start-Test (Sammelliste 361): eine Arbeit im Hintergrund nachstellen, die "Werkzeug beenden" abwarten muss.</summary>
+    internal void HintergrundFuerTests(Task<bool> aufgabe) => Hintergrund(aufgabe);
+
     /// <summary>Aufgabe im Hintergrund merken, damit "Werkzeug beenden" sie abwartet.</summary>
     private Task<T> Hintergrund<T>(Task<T> aufgabe)
     {

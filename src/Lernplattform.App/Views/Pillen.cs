@@ -48,6 +48,17 @@ public sealed class Pillen : WrapPanel
 
     public string Wert { get; private set; }
 
+    /// <summary>Beschriftung eines Knopfs aendern (Text und Name fuer den Screenreader), Auswahl bleibt.</summary>
+    public void Beschriften(string wert, string text)
+    {
+        var knopf = _knoepfe[wert];
+        ((TextBlock)knopf.Content!).Text = text;
+        Avalonia.Automation.AutomationProperties.SetName(knopf, text);
+    }
+
+    /// <summary>Aktuelle Beschriftung eines Knopfs.</summary>
+    public string Text(string wert) => ((TextBlock)_knoepfe[wert].Content!).Text ?? "";
+
     /// <summary>Auswahl setzen, ohne zu melden (select_value(notify=False)).</summary>
     public void Waehle(string wert)
     {

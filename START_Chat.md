@@ -15,13 +15,13 @@ Fachinformatiker Lernplattform, Neubau in C# (.NET 10, Avalonia 12.1). Besitzer 
 ## 3. Aktueller Stand
 | Feld | Wert |
 |---|---|
-| Version | Auf `main` **A 0.81.2** / **S 0.53.1** (Patch 346 Tausenderpunkt, PR #199, main 8cdccbe, Nico 346 = b). |
-| Phase | **0–13 abgenommen** (Phase 13 Stadtbau-Werkzeug: Nico 14.11.2026, Bericht `Fi-Austausch/anlagen/P13-Bericht_Phase13.md`). Stadt 1 von Nico ist im Spiel (seit A 0.75.2 Fassung 2). Prüfung im echten Format (A 0.76–0.79), Kamera und Karte (A 0.80), Handy-X, Sitzen/Liegen (A 0.81), Markierung (A 0.81.1), Tausenderpunkt (A 0.81.2) gemergt. |
-| Jetzt | Plan „Stadtteile mit Nachladen“ (Weisung P12-279, nur Plan): Meldung P12-165 mit `anlagen/P12-165_Plan_Nachladen.md` (Raster 16 × 16, Stadtnetz und Kleingrün in Zellen, Nachladen im Ring um die Figur, Fernform immer, Werkzeug bis 256 × 256 mit Testkarte; Wellen A 0.82.0/S 0.54.0, A 0.83.0, S 0.55.0), Fragen 1–5 bei Nico. Danach (nur nach eigener Weisung): Prüfung echt für AE/DPA/DV, Inhaltspakete, Welle 352 Haltungen, Beta. |
+| Version | Auf `main` **A 0.84.0** / **S 0.55.0** (Prüfung im echten Format für AE, PR #203, main 15b64a7). |
+| Phase | **0–13 abgenommen** (Phase 13 Stadtbau-Werkzeug: Nico 14.11.2026, Bericht `Fi-Austausch/anlagen/P13-Bericht_Phase13.md`). Stadt 1 von Nico ist im Spiel (seit A 0.75.2 Fassung 2). Gemergt seitdem: Prüfung im echten Format (A 0.76–0.79, AE ab A 0.84), Kamera und Karte (A 0.80), Handy-X, Sitzen/Liegen (A 0.81), Markierung (A 0.81.1), Tausenderpunkt (A 0.81.2), Nachladen (A 0.82/S 0.54), Werkzeug-Nachladen und Stadtteil-Namen (A 0.83/S 0.55). |
+| Jetzt | Warten auf die nächste Weisung (P12-286). Danach laut Roadmap (je nur nach eigener Weisung): Prüfung echt für DPA und DV, Inhaltspakete („DLC“), Haltungen 352 mit 358, Welle Werkstatt 355–357, Beta. |
 | Messregeln | Ansichtswechsel und erstes Öffnen 400 ms (Abbruch ab 1 000 ms). Start-Test in zwei Teilen (`LERNPLATTFORM_MESSUNG_TEIL=lernen`/`spiel`), im Spielteil je Festzeit Stadt, Park, Kaufhaus und Gesamtansicht (`AutoMessung.P8W6.cs`), Festzeiten-Gestalten `AutoMessung.P8W11.cs`, Vorladen und Gesamtansicht mit allen Orten `AutoMessung.P8W12Bau.cs`. Messwiederholung und Neustart-Regel siehe `CLAUDE.md` Abschnitt CI |
 | Sollwerte | G1–G52, Testdaten, `inhalte/`, fünf Zeichen-Tabellen und `einteilung_bisher.json` fest, dazu seit Phase 13 die Stadt-Fassung 0 (92 Dateien mit Prüfsumme); die CI erzeugt nichts mehr aus Python, nur die drei Live-Proben mit Python 0.63.2 (Sicherungen für die alte App) bleiben bis 1.0. G52 entsteht bei Inhalte-Wellen mit `pruefe_lerninhalte.py` ohne Python-Linie. Fingerabdrücke f2b59ce8, Stadt 03d0a012, Einkauf 185dee1b, Kaufhaus a3ec3cdf unverändert |
-| Letzte/nächste Meldung | **P12-165** (Plan Nachladen) / nächste Meldung P12-166, Weisung P12-280 |
-| Sammelliste | nächste freie Nummer **353** (offene Punkte siehe `CLAUDE.md` „Aktueller Stand“ und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
+| Letzte/nächste Meldung | **P12-171** (Kurzplan 362, Nico 1a 2b 3a 4a 5a in Weisung P12-287) / nächste Meldung P12-172 (Patch A 0.84.1 mit 361/363), dann P12-173 (Werkzeug-Welle S 0.56.0 nach dem Merge), Weisung P12-288, Sammelliste 364, Sollwert-Änderung Nr. 20 |
+| Sammelliste | nächste freie Nummer **364** (offene Punkte siehe `CLAUDE.md` „Aktueller Stand“ und `Fi-Austausch/SAMMELLISTE_NEU.md`) |
 | Stoppgrenzen | siehe `CLAUDE.md` Abschnitt „Stoppgrenzen“ (Regel A und Spiel) |
 
 ## 4. So arbeitet der neue Chat
