@@ -88,6 +88,9 @@ public sealed class Nachlader
     /// <summary>Bauzeiten der Kacheln in ms (Messpunkt „Kachel nachladen“, Hintergrund), in der Reihenfolge des Baus.</summary>
     public List<double> BauZeiten { get; } = [];
 
+    /// <summary>Die Kacheln zu <see cref="BauZeiten"/> (gleiche Stelle), fuer die Wiederholung einer Messung.</summary>
+    public List<Stadtteile.Kachel> BauKacheln { get; } = [];
+
     /// <summary>Wie oft eine noetige Kachel sofort gebaut werden musste (sie war nicht vorbereitet).</summary>
     public int Sofort { get; private set; }
 
@@ -266,6 +269,7 @@ public sealed class Nachlader
     private void Ablegen(Paket p)
     {
         BauZeiten.Add(p.BauMs);
+        BauKacheln.Add(p.Kachel);
         if (!_geladen.ContainsKey(p.Kachel))
         {
             _bereit[p.Kachel] = p;

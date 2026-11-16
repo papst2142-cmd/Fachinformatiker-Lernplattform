@@ -153,6 +153,7 @@ public static partial class AutoMessung
         kamera.Zoomen(kamera.Abstand / SpielKamera.AbstandMax);
         // Schlangenlinie durch alle 16 Viertel (je 64 × 64) mit dreifachem Gehtempo
         var weg = Nachladeprobe.Schlange(spiel.Szene.Breite, spiel.Szene.Tiefe, 64f, 32f);
+        var (bau0, hoch0) = (flaeche.Lader?.BauZeiten.Count ?? 0, flaeche.KachelHochladenZeiten.Count);
         var gang = await Nachladeprobe.GangAsync(flaeche, spiel, weg, 3 * StadtSpiel.Tempo);
         Messwerte.Notiere("Spiel: " + Nachladeprobe.Zeile("Gang (dreifaches Gehtempo)", gang));
         funde += Ergebnis("Spiel: laengstes Bild beim Gehen (Testkarte)", Messwiederholung.Einmal(gang.LaengstesMs, GehenGrenzeMs));
@@ -180,6 +181,64 @@ public static partial class AutoMessung
             funde++;
         }
         funde += Ergebnis("Spiel: laengstes Bild bei der Ankunft (Testkarte)", Messwiederholung.Einmal(ankunft.LaengstesMs, GehenGrenzeMs));
+        funde += await KachelNachladenAsync(flaeche, spiel, bau0, hoch0);
+        return funde;
+    }
+
+    /// <summary>
+    /// Welle A 0.83.0 (Weisung P12-282 Punkt 2, Nico a): Messpunkte „Kachel nachladen“ je Kachel aus Gang und Ankunft:
+    /// Bauen im Hintergrund (Grenze <see cref="StadtLast.KachelBauenGrenzeMs"/>) und Hochladen (Grenze
+    /// <see cref="StadtLast.KachelHochladenGrenzeMs"/>), wiederholbar: liegt die langsamste Kachel ueber der Grenze, wird genau
+    /// sie noch einmal gebaut bzw. hochgeladen (hoechstens 3 Messungen, rot nur, wenn alle darueber). Gegenprobe: die ganze
+    /// Karte als ein Stueck (wie bis A 0.81.2) liegt ueber beiden Grenzen.
+    /// </summary>
+    private static async Task<int> KachelNachladenAsync(StadtFlaeche flaeche, StadtSpiel spiel, int bau0, int hoch0)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var funde = 0;
+        if (flaeche.Lader is not { } lader)
+        {
+            Messwerte.Notiere("  FEHLER: Spiel Testkarte: Kachel nachladen nicht gemessen (kein Nachlader)");
+            return 1;
+        }
+        var bau = lader.BauZeiten.Skip(bau0).Zip(lader.BauKacheln.Skip(bau0)).ToList();
+        var hoch = flaeche.KachelHochladenZeiten.Skip(hoch0).Zip(flaeche.KachelHochladenKacheln.Skip(hoch0)).ToList();
+        if (bau.Count == 0 || hoch.Count == 0)
+        {
+            Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Testkarte: Kachel nachladen ohne Messung ({bau.Count} gebaut, {hoch.Count} hochgeladen)"));
+            return 1;
+        }
+        var (bauMs, bauK) = bau.MaxBy(x => x.First);
+        var (hochMs, hochK) = hoch.MaxBy(x => x.First);
+        Messwerte.Notiere(string.Create(inv, $"Spiel: Kachel nachladen (Testkarte, Gang und Ankunft): {bau.Count} Kacheln gebaut, langsamste {bauK.Name} {bauMs:F1} ms (Grenze {StadtLast.KachelBauenGrenzeMs:F0} ms); {hoch.Count} hochgeladen, langsamste {hochK.Name} {hochMs:F1} ms (Grenze {StadtLast.KachelHochladenGrenzeMs:F0} ms)"));
+        var szene = lader.Szene;
+        funde += Ergebnis("Spiel: Kachel nachladen, Bauen (Testkarte, langsamste Kachel)", await Messwiederholung.MessenAsync(bauMs, StadtLast.KachelBauenGrenzeMs,
+            () => Task.Run<double?>(() => Nachlader.Packen(szene, bauK, lader.MitGruen).BauMs), null, Task.Delay));
+        funde += Ergebnis("Spiel: Kachel nachladen, Hochladen (Testkarte, langsamste Kachel)", await Messwiederholung.MessenAsync(hochMs, StadtLast.KachelHochladenGrenzeMs,
+            async () => await flaeche.HochladenProbeAsync(await Task.Run(() => Nachlader.Packen(szene, hochK, lader.MitGruen))), null, Task.Delay));
+
+        // Gegenprobe: die ganze Karte als EIN Stueck bauen und hochladen (wie ohne Nachladen) liegt ueber beiden Grenzen
+        var (ganzMs, ganz) = await Task.Run(() =>
+        {
+            var neu = StadtSzene.Bauen(spiel.Stadt, spiel.Ablauf.Stand, spiel.Grafik, szene.Fest, spiel.Feste, szene.Jahreszeit);
+            var uhr = Stopwatch.StartNew();
+            var f = neu.Vorbereiten();
+            return (uhr.Elapsed.TotalMilliseconds, f);
+        });
+        // alles, was ohne Nachladen auf einmal hochgeladen wurde: Stadt, Fernform, Haeuser nah und fern, Kleingruen, Paket-Netze
+        var erstes = ganz.Haeuser.Keys.First();
+        var weitere = new[] { ganz.StadtFern, ganz.Gruen, ganz.PaketNah, ganz.PaketFern }.OfType<Netz>()
+            .Concat(ganz.HaeuserFern?.Values ?? []).Select(n => (erstes, n));
+        var ganzPaket = new Nachlader.Paket(new Stadtteile.Kachel(0, 0), ganz.Stadt, [.. ganz.Haeuser.Select(h => (h.Key, h.Value)), .. weitere], 0, ganzMs);
+        var ganzHoch = await flaeche.HochladenProbeAsync(ganzPaket);
+        var gegen = string.Create(inv,
+            $"Spiel: Kachel nachladen Gegenprobe ganze Karte als ein Stueck (wie bis A 0.81.2): Bauen {ganzMs:F0} ms ({(ganzMs > StadtLast.KachelBauenGrenzeMs ? "ueber" : "NICHT ueber")} der Grenze {StadtLast.KachelBauenGrenzeMs:F0} ms), Hochladen {ganzHoch:F1} ms ({(ganzHoch > StadtLast.KachelHochladenGrenzeMs ? "ueber" : "NICHT ueber")} der Grenze {StadtLast.KachelHochladenGrenzeMs:F0} ms)");
+        Messwerte.Notiere(gegen);
+        if (ganzMs <= StadtLast.KachelBauenGrenzeMs || ganzHoch is not double gh || gh <= StadtLast.KachelHochladenGrenzeMs)
+        {
+            Messwerte.Notiere("  FEHLER: " + gegen);
+            funde++;
+        }
         return funde;
     }
 

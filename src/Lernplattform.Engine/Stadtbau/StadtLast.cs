@@ -20,6 +20,19 @@ public static class StadtLast
     /// </summary>
     public const double BauenGrenzeMs = 2000;
 
+    /// <summary>
+    /// Grenze fuer „Kachel nachladen, Bauen“ in ms je Kachel (Nico 16.11.2026, Weisung P12-282 Punkt 2, Antwort a): Bau einer
+    /// Kachel im Hintergrund (<see cref="Spiel.Probe.Nachlader.Packen(Spiel.Probe.StadtSzene, Stadtteile.Kachel, bool)"/>),
+    /// wiederholbarer Messpunkt (<see cref="Diagnose.Messwiederholung"/>).
+    /// </summary>
+    public const double KachelBauenGrenzeMs = 200;
+
+    /// <summary>
+    /// Grenze fuer „Kachel nachladen, Hochladen“ in ms je Kachel (Nico P12-282 Punkt 2, Antwort a: ein Bild bei 60 Bildern je
+    /// Sekunde), wiederholbarer Messpunkt.
+    /// </summary>
+    public const double KachelHochladenGrenzeMs = 16;
+
     /// <summary>Grenze fuer „Netzdaten“ in MB (Vorschlag aus Stadt 1: rund 16 MB, dreifacher Abstand; Grenzwerte = Nico).</summary>
     public const double NetzdatenGrenzeMb = 48;
 

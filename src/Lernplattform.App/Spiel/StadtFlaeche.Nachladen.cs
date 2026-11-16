@@ -64,6 +64,49 @@ public sealed partial class StadtFlaeche
     /// <summary>Alle Hochladezeiten je Kachel in ms (Messpunkt „Kachel nachladen“, Hochladen).</summary>
     public List<double> KachelHochladenZeiten { get; } = [];
 
+    /// <summary>Die Kacheln zu <see cref="KachelHochladenZeiten"/> (gleiche Stelle).</summary>
+    public List<Stadtteile.Kachel> KachelHochladenKacheln { get; } = [];
+
+    private readonly Queue<(Nachlader.Paket Paket, TaskCompletionSource<double?> Fertig)> _hochladeProben = new();
+
+    /// <summary>
+    /// Start-Test (Messpunkt „Kachel nachladen, Hochladen“, Wiederholung und Gegenprobe): ein Paket im naechsten Bild genau wie
+    /// <see cref="KachelHochladen"/> auf die Grafikkarte laden, die Zeit messen und gleich wieder freigeben (es wird nie
+    /// gezeichnet). null, wenn kein Bild kam.
+    /// </summary>
+    public async Task<double?> HochladenProbeAsync(Nachlader.Paket p)
+    {
+        var fertig = new TaskCompletionSource<double?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _hochladeProben.Enqueue((p, fertig));
+        for (var i = 0; i < 60 && !fertig.Task.IsCompleted; i++)
+        {
+            await NaechstesBildAsync();
+        }
+        return fertig.Task.IsCompleted ? await fertig.Task : null;
+    }
+
+    private void HochladeProbenAbarbeiten(GlInterface gl)
+    {
+        while (_hochladeProben.TryDequeue(out var e))
+        {
+            var beginn = Stopwatch.GetTimestamp();
+            var fest = GlNetz.Laden(gl, e.Paket.Fest);
+            var haeuser = new List<GlNetz>();
+            foreach (var (_, netz) in e.Paket.Haeuser)
+            {
+                haeuser.Add(GlNetz.Laden(gl, netz));
+                _ = netz.Kugel();
+            }
+            var ms = MsSeit(beginn);
+            fest.Freigeben(gl);
+            foreach (var h in haeuser)
+            {
+                h.Freigeben(gl);
+            }
+            e.Fertig.TrySetResult(ms);
+        }
+    }
+
     /// <summary>Soll die Szene mit Nachladen geladen werden? Nur draussen relevant; innen bleibt der Zustand.</summary>
     private bool NachladenGewuenscht()
     {
@@ -172,6 +215,7 @@ public sealed partial class StadtFlaeche
         var ms = MsSeit(beginn);
         KachelHochladenMs += ms;
         KachelHochladenZeiten.Add(ms);
+        KachelHochladenKacheln.Add(p.Kachel);
     }
 
     private void KachelFreigeben(GlInterface gl, Stadtteile.Kachel k)
@@ -198,6 +242,7 @@ public sealed partial class StadtFlaeche
     private void NachladenTakt(GlInterface gl, StadtSpiel spiel, Matrix4x4 sichtProj)
     {
         KachelHochladenMs = 0;
+        HochladeProbenAbarbeiten(gl);
         if (_lader is not { } lader)
         {
             return;
