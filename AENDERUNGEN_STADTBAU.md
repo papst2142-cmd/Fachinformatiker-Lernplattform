@@ -5,12 +5,14 @@ Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft u
 
 ## S 0.55.0
 
-Stadtteile benennen und schnellere Prüfung großer Karten.
+Stadtteile benennen, große Karten laden in der 3D-Ansicht nach, und die Prüfung großer Karten ist schneller.
 
 - Der Knopf „Stadtteil-Namen“ (oder die Taste B) in der Stadt von oben: Ziehe mit der Maus oder dem Finger ein Rechteck und gib einen Namen ein. Rechts in der Liste kannst du einen Stadtteil umbenennen, verschieben, größer oder kleiner machen und löschen. „Neuer Stadtteil“ legt einen in der Mitte der Ansicht an, das geht auch nur mit der Tastatur. Jede Änderung lässt sich rückgängig machen.
 - Ein Name darf nicht leer, nicht doppelt und höchstens 24 Zeichen lang sein; zwei Stadtteile dürfen sich nicht überdecken. Ist etwas nicht erlaubt, nennt eine rote Zeile den Grund. Dieselben Regeln prüft auch die Prüfung der Stadt vor dem Export.
 - Städte ohne Namen werden genau wie bisher gespeichert. Mit Namen speichert das Werkzeug in einem neuen Format, das ältere Fassungen nicht öffnen können.
 - Die Prüfung einer sehr großen Karte ist deutlich schneller und findet dieselben Fehler wie vorher.
+- Bei Karten über 64 × 64 Feldern lädt die 3D-Ansicht wie das Spiel nur die Stadtteile um die Mitte der Ansicht. Eine große Karte heißt darum nicht mehr „Stadt zu teuer“.
+- Die Grenzen werden für jeden Stadtteil einzeln gerechnet, so wie das Spiel ihn zeigt. Ist ein Stadtteil zu teuer, nennt eine rote Zeile seinen Namen, zum Beispiel C3.
 
 ## S 0.54.0
 
