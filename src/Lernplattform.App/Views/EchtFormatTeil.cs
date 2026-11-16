@@ -1048,6 +1048,9 @@ public sealed class EchtFormatTeil
         "pruefung/echt-b1-bewertung-aufgabe3", "pruefung/echt-b1-anlagen2-text", "pruefung/echt-diagramm-uml",
         // A 0.78.0: Zeichen-Baukasten (ER im Probesatz, UML ohne Satz, Bewertung mit Zaehlung)
         "pruefung/echt-b1-baukasten-er", "pruefung/echt-baukasten-uml", "pruefung/echt-b1-bewertung-baukasten",
+        // A 0.84.0 (Weisung P12-285): erster Satz der Fachrichtung AE je Bereich (Lauf, Anlagen, Bewertung)
+        "pruefung/echt-ae-b1-lauf-aufgabe1", "pruefung/echt-ae-b1-anlagen1", "pruefung/echt-ae-b1-bewertung-aufgabe1",
+        "pruefung/echt-ae-b2-lauf-aufgabe1", "pruefung/echt-ae-b2-anlagen1", "pruefung/echt-ae-b2-bewertung-aufgabe1",
     ];
 
     /// <summary>Erste Nummer der Ansichten der Welle 2 in <see cref="ProbeNamen"/>.</summary>
@@ -1056,14 +1059,17 @@ public sealed class EchtFormatTeil
     /// <summary>Erste Nummer der Ansichten des Baukastens (A 0.78.0) in <see cref="ProbeNamen"/>.</summary>
     internal const int BaukastenAb = 17;
 
+    /// <summary>Erste Nummer der Ansichten der Fachrichtung AE (A 0.84.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
+    internal const int AeAb = 20;
+
     /// <summary>
     /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung SI), 754 s gelaufen,
     /// Antworten teils richtig, teils falsch, teils leer.
     /// </summary>
-    internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1)
+    internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1, string? fachrichtung = null)
     {
         _probeBestand = null;
-        var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == bereich);
+        var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == bereich && (fachrichtung is null || s.Fachrichtung == fachrichtung));
         var art = bereich == EchtSaetze.Ap1 ? EchtArten.Praefix + EchtSaetze.Ap1 : EchtArten.Art(Fachrichtung.Nach(satz.Fachrichtung), bereich);
         var zustand = EchtAblauf.Neu(satz, art, DateTimeOffset.Now.AddSeconds(-754), TimeZoneInfo.Local);
         var antworten = (JsonObject)zustand["antworten"]!;
@@ -1195,6 +1201,20 @@ public sealed class EchtFormatTeil
                 break;
             case BaukastenAb + 1:
                 UmlBaukastenZeigen();
+                break;
+            case >= AeAb:
+                // A 0.84.0: erster AE-Satz des Bereichs (0-2 Bereich 1, 3-5 Bereich 2), Aufgabe 1 im Lauf, mit Anlagen, bewertet
+                var aeArt = (art - AeAb) % 3;
+                _a.ProbeSetzen(ProbeZustand(bewertet: aeArt == 2, art - AeAb < 3 ? EchtSaetze.B1 : EchtSaetze.B2, "ae"));
+                (_reiter, _anlagen) = ("1", aeArt == 1);
+                if (aeArt == 2)
+                {
+                    BewertungZeigen();
+                }
+                else
+                {
+                    LaufZeigen();
+                }
                 break;
             default:
                 _a.ProbeSetzen(ProbeZustand(bewertet: false, EchtSaetze.B1));

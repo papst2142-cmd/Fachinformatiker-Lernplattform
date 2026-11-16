@@ -56,12 +56,19 @@ public class EchtTausenderpunktTests
         return [ohneKomma.Replace('.', ','), ohneKomma + "0", ohneKomma[..^1]];
     }
 
+    /// <summary>Rechenwerte ab 1000 (Ergebnis und Ersatzergebnis) in den zehn AE-Saetzen (A 0.84.0).</summary>
+    private const int AeRechenwerte = 15;
+
     [Fact]
     public void T346_AlleVierundzwanzigRechenwerte_MitTausenderpunktRichtig_DezimalFalsch()
     {
         var werte = Rechenwerte();
-        Assert.Equal(24, werte.Count);                                      // Kurzplan P12-163: 24 Loesungswerte ab 1000
-        Assert.Equal(18, werte.Count(w => w.Wert == Math.Truncate(w.Wert))); // davon 18 ganze Zahlen
+        // Kurzplan P12-163: 24 Loesungswerte ab 1000 in den Saetzen bis A 0.83.0, davon 18 ganze Zahlen; seit A 0.84.0
+        // kommen die Werte der AE-Saetze dazu und werden genauso geprueft (P12-285)
+        var bisher = werte.Where(w => !w.Wo.StartsWith("ae_", StringComparison.Ordinal)).ToList();
+        Assert.Equal(24, bisher.Count);
+        Assert.Equal(18, bisher.Count(w => w.Wert == Math.Truncate(w.Wert)));
+        Assert.Equal(AeRechenwerte, werte.Count - bisher.Count);
         foreach (var (wo, antwort, wert) in werte)
         {
             var punkt = MitPunkt(wert);

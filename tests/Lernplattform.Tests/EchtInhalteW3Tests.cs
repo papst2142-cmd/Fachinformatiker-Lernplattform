@@ -51,14 +51,17 @@ public class EchtInhalteW3Tests
     {
         var bestand = Bestand;
         Assert.Empty(bestand.Fehler);
-        Assert.Equal(["alle_ap1_01", "si_b1_01", .. Neu], bestand.Saetze.Select(s => s.Kennung));
-        // Antwort 3c: 5 neue Saetze je Bereich (der Probesatz zaehlt nicht mit); 4a: AP1 fuer alle, AP2 nur SI
+        // ab A 0.84.0 folgen die AE-Saetze (EchtInhalteAeTests); die Saetze der W3 stehen unveraendert davor
+        Assert.Equal(["alle_ap1_01", "si_b1_01", .. Neu], bestand.Saetze.Take(2 + Neu.Length).Select(s => s.Kennung));
+        // Antwort 3c: 5 neue Saetze je Bereich (der Probesatz zaehlt nicht mit); 4a: AP1 fuer alle, AP2 der W3 nur SI
         foreach (var f in Fachrichtung.Alle)
         {
             Assert.Equal(6, bestand.Fuer(EchtSaetze.Ap1, f.Id).Count);
-            Assert.Equal(f.Id == "si" ? 6 : 0, bestand.Fuer(EchtSaetze.B1, f.Id).Count);
-            Assert.Equal(f.Id == "si" ? 5 : 0, bestand.Fuer(EchtSaetze.B2, f.Id).Count);
+            Assert.Equal(f.Id == "si" ? 6 : 0, bestand.Fuer(EchtSaetze.B1, f.Id).Count(s => s.Kennung == "si_b1_01" || Neu.Contains(s.Kennung)));
+            Assert.Equal(f.Id == "si" ? 5 : 0, bestand.Fuer(EchtSaetze.B2, f.Id).Count(s => Neu.Contains(s.Kennung)));
         }
+        Assert.Equal(6, bestand.Fuer(EchtSaetze.B1, "si").Count);
+        Assert.Equal(5, bestand.Fuer(EchtSaetze.B2, "si").Count);
         // nur angehaengt: die Probesaetze sind unveraendert (Kopf und Punkte wie vor der Welle)
         Assert.Equal("Velowerk Tannau GmbH", bestand.Satz("alle_ap1_01")!.Firma);
         Assert.Equal("Lindgrün Pflegedienst GmbH", bestand.Satz("si_b1_01")!.Firma);
@@ -194,9 +197,10 @@ public class EchtInhalteW3Tests
     {
         var wurzel = JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
         var liste = wurzel["saetze"]!.AsArray();
+        var letzter = (string)liste[liste.Count - 1]!["kennung"]!;
         liste[liste.Count - 1]!["aufgaben"]![0]!["punkte"] = 27;
         var bestand = EchtSaetze.Laden(System.Text.Encoding.UTF8.GetBytes(wurzel.ToJsonString()));
-        Assert.Equal(Neu[^1], Assert.Single(bestand.Fehler).Kennung);
+        Assert.Equal(letzter, Assert.Single(bestand.Fehler).Kennung);
         var soll = VergleichsHilfe.Lade("lerninhalte_pruefung.json").GetProperty("pruefungssaetze").GetProperty("fehler");
         Assert.Equal(0, soll.GetArrayLength());
     }

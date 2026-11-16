@@ -92,6 +92,7 @@ public static partial class AutoMessung
         }
         funde += await EchtWelle2Async(ansicht, k, e, MesspunktW2);
         funde += await EchtBaukastenAsync(ansicht, k, e, MesspunktW2);
+        funde += await EchtAeAsync(ansicht, k, e, bestand, MesspunktW2);
         k.Probe(-1);
         trainer.ArtWaehlen(TrainerTexte.Uebung);
         await ansicht.BildFertigAsync();
