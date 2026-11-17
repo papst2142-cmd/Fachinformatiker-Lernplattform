@@ -2,12 +2,6 @@ using Lernplattform.Core.Texte;
 
 namespace Lernplattform.Core.Spiel.Probe;
 
-/// <summary>Eine Stadt im Fahrplan am Bahnhof (Welle A 0.88.0). Kennung null = Stadt 1.</summary>
-/// <param name="Fahrbar">Paket geladen und in Ordnung: der Zug faehrt hin.</param>
-/// <param name="Knopf">Zusaetzlicher Knopf (Aktion, Beschriftung), z. B. „Paket fehlt (0,51 MB) – Laden“; null = keiner.</param>
-/// <param name="Hinweis">Zeile unter dem Fahrplan (z. B. Paket fehlerhaft); null = keine.</param>
-public sealed record FahrplanStadt(string? Kennung, string Name, bool Fahrbar, (string Aktion, string Name)? Knopf = null, string? Hinweis = null);
-
 /// <summary>
 /// Welle A 0.88.0 (Inhaltspakete W2, Weisung P12-296, Plan P12-175 Abschnitt 3, Nico 1a): am Bahnhof steht draussen der Fahrplan
 /// mit allen Staedten (<see cref="Fahrplan"/> liefert die Oberflaeche aus der Liste der Pakete). Fahrbar = Knopf „Zug nach …“

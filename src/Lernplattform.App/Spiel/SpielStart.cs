@@ -170,7 +170,8 @@ public static class SpielStart
         {
             Spielschlange.AlleLeeren();
             _optionenInhalt ??= OptionenInhalt();
-            var ablauf = new Spielverwaltung(Programm.Zustand.Schreiber, Pc ? "PC" : "Handy", _optionenInhalt).Ablauf;
+            var geraet = Pc ? "PC" : "Handy";
+            var ablauf = new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt).Ablauf;
             if (ablauf is null || ablauf.Stand.Profil is null)
             {
                 return null;
