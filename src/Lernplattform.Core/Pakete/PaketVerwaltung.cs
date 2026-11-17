@@ -106,7 +106,8 @@ public sealed class PaketVerwaltung
             if (fehler is not null)
             {
                 var knoepfe = new List<PaketKnopf>();
-                if (a is not null)
+                // Sammelliste 374: „Neu laden“ nur, wenn ein neues Laden den Grund loesen kann (sonst hilft nur ein App-Update)
+                if (a is not null && PaketTexte.NeuLadenHilft(fehler))
                 {
                     knoepfe.Add(PaketKnopf.NeuLaden);
                 }

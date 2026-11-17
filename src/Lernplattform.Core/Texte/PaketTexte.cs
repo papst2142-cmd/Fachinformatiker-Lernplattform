@@ -63,8 +63,49 @@ public static class PaketTexte
     public const string Netz = "Laden fehlgeschlagen: {0}";
     public const string QuelleFehlt = "Die Testquelle der Pakete wurde nicht gefunden.";
 
-    /// <summary>Groesse in MB mit einer Nachkommastelle und Komma (12,1).</summary>
-    public static string Mb(long bytes) => (bytes / (1024.0 * 1024.0)).ToString("0.0", CultureInfo.GetCultureInfo("de-DE"));
+    /// <summary>
+    /// Groesse in MB mit Komma: ab 1 MB eine Nachkommastelle (12,1), darunter zwei (0,05), damit kleine Pakete nie „0,0 MB“
+    /// zeigen (Welle A 0.88.0, Sammelliste 374, Nico a). Gegenprobe <see cref="MbAltFuerTests"/> (AsyncLocal): wie bis A 0.87.0.
+    /// </summary>
+    public static string Mb(long bytes)
+    {
+        var mb = bytes / (1024.0 * 1024.0);
+        var muster = !MbAlt.Value && Math.Round(mb, 1, MidpointRounding.AwayFromZero) < 1.0 ? "0.00" : "0.0";
+        return mb.ToString(muster, CultureInfo.GetCultureInfo("de-DE"));
+    }
+
+    /// <summary>Gegenprobe Sammelliste 374: Groesse immer mit einer Nachkommastelle (wie bis A 0.87.0).</summary>
+    public static bool MbAltFuerTests
+    {
+        get => MbAlt.Value;
+        set => MbAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> MbAlt = new();
+
+    /// <summary>
+    /// Welle A 0.88.0 (Sammelliste 374, Nico a): kann ein neues Laden diesen Grund loesen? Nein bei Gruenden, die nur ein
+    /// App-Update loest (unbekannte Art, Format zu neu, App zu alt) und bei einer Kennung der App; dort bietet die Liste kein
+    /// „Neu laden“ an, der Grund nennt das App-Update. Gegenprobe <see cref="NeuLadenAltFuerTests"/> (AsyncLocal).
+    /// </summary>
+    public static bool NeuLadenHilft(string grund) =>
+        NeuLadenAlt.Value
+        || !(grund == ArtUnbekannt || Beginnt(grund, FormatNeu) || Beginnt(grund, AppAlt) || Beginnt(grund, KennungReserviert));
+
+    /// <summary>Gegenprobe Sammelliste 374: „Neu laden“ bei jedem Grund (wie bis A 0.87.0).</summary>
+    public static bool NeuLadenAltFuerTests
+    {
+        get => NeuLadenAlt.Value;
+        set => NeuLadenAlt.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool> NeuLadenAlt = new();
+
+    private static bool Beginnt(string grund, string vorlage)
+    {
+        var fest = vorlage[..vorlage.IndexOf('{', StringComparison.Ordinal)];
+        return grund.StartsWith(fest, StringComparison.Ordinal);
+    }
 
     public static string Format(string vorlage, params object?[] werte) => string.Format(CultureInfo.InvariantCulture, vorlage, werte);
 }

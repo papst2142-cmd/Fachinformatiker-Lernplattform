@@ -89,9 +89,9 @@ public static partial class StadtbauMessung
         Waehlen(a, Texte.HeutigeStadtAuf, 1);
         await BildAsync(a);
         var schritte = p.SchritteZurueck;
-        if (!Aufrufen(a, Texte.KarteVergroessernKnopf))
+        if (!Aufrufen(a, Texte.StadtUebernehmenKnopf))
         {
-            Fund("Plätze: Knopf „Vergrößern“ für den Screenreader fehlt oder gesperrt");
+            Fund("Plätze: Knopf „Übernehmen und speichern“ für den Screenreader fehlt oder gesperrt");
         }
         await BildAsync(a);
         Messwerte.Notiere(string.Create(Inv, $"Plätze: nach Vergrößern {Aussen.Groesse(p.AussenStand)}, Plätze gezeichnet {karte.PlaetzeGezeichnet.Plaetze}"));

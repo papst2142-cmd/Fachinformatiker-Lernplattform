@@ -43,6 +43,33 @@ public static partial class Texte
     public const string PlaetzeFertig = "Plätze fertig";
     public const string PlaetzeFertigTipp = "Beendet „Plätze“ (Esc).";
 
+    // Welle S 0.56.2 (Fund Nico 373, Weisungen P12-295/P12-295b): Stadt setzen mit Vorschau und Bestaetigung
+    public const string StadtSetzenTitel = "Heutige Stadt auf einen Platz setzen";
+    public const string StadtSetzenErklaerung = "Wähle die Größe der Karte und den Platz für die heutige Stadt (hier rechts oder durch Tippen auf die Karte). Die Karte zeigt blau, wo die Stadt landet. Erst „Übernehmen und speichern“ setzt sie dorthin und speichert das Projekt.";
+    public const string StadtSetzenTipp = "Setzt die heutige Stadt (alles auf der Karte) auf den gewählten Platz, vergrößert die Karte dabei, wenn nötig, und speichert das Projekt. Ein Schritt, Rückgängig geht.";
+    public const string StadtUebernehmenKnopf = "Übernehmen und speichern";
+    public const string StadtVorschauName = "Stadt";
+    public const string PlaetzeErklaerungStadt = "Tippe auf einen Platz: dort landet die heutige Stadt (blau). Mit „Übernehmen und speichern“ rechts wird es gesetzt und gespeichert. Mit der Tastatur: Pfeiltasten wählen den Platz.";
+    public const string PlaetzeErklaerungEinsetzen = "Tippe auf einen Platz: dort kommt der gewählte Stadtteil hin (grün = frei, rot = geht nicht). Mit der Tastatur: Pfeiltasten wählen den Platz.";
+
+    public static string StadtVorschau(int platz, int breite, int tiefe) =>
+        string.Create(DePlaetze, $"Vorschau: Die heutige Stadt kommt auf Platz {platz} der Karte {breite} × {tiefe}. Noch nicht übernommen.");
+
+    public static string StadtUebernommen(int platz, int breite, int tiefe) =>
+        string.Create(DePlaetze, $"Übernommen und gespeichert: Die heutige Stadt liegt jetzt auf Platz {platz}, die Karte ist {breite} × {tiefe} groß.");
+
+    public static string StadtUebernommenOhneSpeichern(int platz, int breite, int tiefe, string fehler) =>
+        string.Create(DePlaetze, $"Übernommen: Die heutige Stadt liegt jetzt auf Platz {platz} (Karte {breite} × {tiefe}). Speichern ging nicht: {fehler}");
+
+    public static string StadtUeberRand(int platz, int spalten, int reihen) =>
+        string.Create(DePlaetze, $"Auf Platz {platz} ragt die heutige Stadt ({spalten} × {reihen} Plätze) über den Rand der Karte. Wähle einen Platz weiter oben oder links oder eine größere Karte.");
+
+    public static string StadtSchonDort(int platz) =>
+        string.Create(DePlaetze, $"Die heutige Stadt liegt schon auf Platz {platz}, und die Karte hat schon diese Größe. Wähle einen anderen Platz oder eine größere Karte.");
+
+    public static string StadtVerschobenSchritt(int platz) =>
+        string.Create(DePlaetze, $"Heutige Stadt auf Platz {platz} gesetzt");
+
     public static string PlatzNummer(int platz) => string.Create(DePlaetze, $"Platz {platz}");
 
     public static string PlatzGewaehlt(int platz) => string.Create(DePlaetze, $"Platz {platz} gewählt.");

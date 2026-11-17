@@ -242,11 +242,19 @@ public sealed class PaketTests : IDisposable
         var zeilen = v.Zeilen().ToDictionary(z => z.Kennung);
         Assert.Equal(PaketTexte.Format(PaketTexte.ZustandFehler, PaketTexte.KeinArchiv), zeilen["probe_klein"].ZustandText);
         Assert.Equal(PaketTexte.Format(PaketTexte.ZustandFehler, PaketTexte.ArtUnbekannt), zeilen["probe_lernen"].ZustandText);
-        Assert.All(zeilen.Values, z =>
+        Assert.All(zeilen.Values, z => Assert.Equal(PaketZustand.Fehlerhaft, z.Zustand));
+        // Sammelliste 374: ein abgeschnittenes Archiv kann ein neues Laden loesen, eine unbekannte Art nur ein App-Update
+        Assert.Equal([PaketKnopf.NeuLaden], zeilen["probe_klein"].Knoepfe);
+        Assert.Empty(zeilen["probe_lernen"].Knoepfe);
+        PaketTexte.NeuLadenAltFuerTests = true;
+        try
         {
-            Assert.Equal(PaketZustand.Fehlerhaft, z.Zustand);
-            Assert.Equal([PaketKnopf.NeuLaden], z.Knoepfe);
-        });
+            Assert.Equal([PaketKnopf.NeuLaden], v.Zeilen().First(z => z.Kennung == "probe_lernen").Knoepfe);
+        }
+        finally
+        {
+            PaketTexte.NeuLadenAltFuerTests = false;
+        }
         Assert.False(Directory.Exists(Path.Combine(daten, "pakete")));
         // Gegenprobe: die gute Datei laedt
         File.Copy(Path.Combine(Echt, "probe_klein_1.fipaket"), Path.Combine(quelle, "probe_klein_1.fipaket"), true);
@@ -273,6 +281,58 @@ public sealed class PaketTests : IDisposable
         Assert.Equal([PaketKnopf.NeuLaden, PaketKnopf.Entfernen], zeile.Knoepfe);
         Assert.Null(await v.LadenAsync(zeile.Angebot!, null, TestContext.Current.CancellationToken));
         Assert.Equal(PaketZustand.Geladen, Assert.Single(v.Zeilen()).Zustand);
+    }
+
+    [Fact]
+    public void S374_Groesse_UnterEinemMb_ZweiNachkommastellen_Gegenprobe()
+    {
+        Assert.Equal("0,05", PaketTexte.Mb(51_200));
+        Assert.Equal("0,00", PaketTexte.Mb(0));
+        Assert.Equal("0,94", PaketTexte.Mb(985_000));
+        Assert.Equal("1,0", PaketTexte.Mb(1_047_527));
+        Assert.Equal("1,0", PaketTexte.Mb(1_048_576));
+        Assert.Equal("12,1", PaketTexte.Mb(12_687_769));
+        // das echte kleine Probe-Paket (10 396 Bytes) zeigte „0,0 MB“
+        Assert.Equal("0,01", PaketTexte.Mb(new FileInfo(Path.Combine(Echt, "probe_klein_1.fipaket")).Length));
+        PaketTexte.MbAltFuerTests = true;
+        try
+        {
+            Assert.Equal("0,0", PaketTexte.Mb(51_200));
+            Assert.Equal("12,1", PaketTexte.Mb(12_687_769));
+        }
+        finally
+        {
+            PaketTexte.MbAltFuerTests = false;
+        }
+    }
+
+    [Fact]
+    public void S374_NeuLaden_NurBeiGruendenDieLadenLoest_Gegenprobe()
+    {
+        string[] nein =
+        [
+            PaketTexte.ArtUnbekannt, PaketTexte.Format(PaketTexte.FormatNeu, 2, 1), PaketTexte.Format(PaketTexte.AppAlt, "A 0.99.0"),
+            PaketTexte.Format(PaketTexte.KennungReserviert, "stadt1"),
+        ];
+        string[] ja =
+        [
+            PaketTexte.KeinArchiv, PaketTexte.KopfFehlt, PaketTexte.KopfKaputt, PaketTexte.Format(PaketTexte.Pruefsumme, Paket.StadtDatei),
+            PaketTexte.Format(PaketTexte.DateiFehlt, Paket.StadtDatei), PaketTexte.Format(PaketTexte.Netz, "Zeit"), PaketTexte.Abgebrochen,
+            PaketTexte.Format(PaketTexte.Speichern, "voll"),
+        ];
+        Assert.All(nein, g => Assert.False(PaketTexte.NeuLadenHilft(g), g));
+        Assert.All(ja, g => Assert.True(PaketTexte.NeuLadenHilft(g), g));
+        // jeder Grund ohne „Neu laden“ nennt das App-Update (ausser der Kennung der App, die kein Update loest)
+        Assert.All(nein[..3], g => Assert.Contains("App aktualisieren", g, StringComparison.Ordinal));
+        PaketTexte.NeuLadenAltFuerTests = true;
+        try
+        {
+            Assert.All(nein, g => Assert.True(PaketTexte.NeuLadenHilft(g), g));
+        }
+        finally
+        {
+            PaketTexte.NeuLadenAltFuerTests = false;
+        }
     }
 
     [Fact]

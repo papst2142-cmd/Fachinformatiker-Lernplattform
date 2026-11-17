@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Lernplattform.Core.Stadtbau;
 using Lernplattform.Design;
 using Lernplattform.Views;
@@ -33,6 +34,8 @@ public sealed partial class Hauptansicht
     private int? _einsetzenPlatz;
     private Projekt.EinsetzenErgebnis? _einsetzenVorschau;
     private string? _plaetzeFehler;
+    private Projekt.StadtSetzenPlan? _stadtPlan;
+    private string? _stadtBestaetigt;
 
     internal Button PlaetzeKnopf => _plaetzeChip;
 
@@ -40,6 +43,112 @@ public sealed partial class Hauptansicht
     internal Projekt.EinsetzenErgebnis? EinsetzenVorschau => _einsetzenVorschau;
 
     internal string? PlaetzeFehler => _plaetzeFehler;
+
+    /// <summary>Start-Test (Sammelliste 373): die Wahl fuer „Heutige Stadt auf einen Platz setzen“ (Breite, Tiefe, Platz).</summary>
+    internal (int Breite, int Tiefe, int Platz) VergroessernWahl => (_vergroessernBreite, _vergroessernTiefe, _vergroessernPlatz);
+
+    /// <summary>Start-Test (Sammelliste 373): Vorschau (gleiche Rechnung wie der Schritt) und die gruene Bestaetigung.</summary>
+    internal Projekt.StadtSetzenPlan? StadtPlan => _stadtPlan;
+
+    internal string? StadtBestaetigt => _stadtBestaetigt;
+
+    /// <summary>
+    /// Gegenprobe Sammelliste 373: „Plätze“ wie bis S 0.56.1 (Tippen waehlt nur den Platz fuer „Stadtteil einsetzen“, keine
+    /// Vorschau der Stadt, kein Speichern beim Vergroessern). Nur Start-Test.
+    /// </summary>
+    internal static bool PlaetzeAltFuerTests { get; set; }
+
+    /// <summary>
+    /// Welle S 0.56.2 (Fund Nico 373): Vorschau der heutigen Stadt rechnen (gleiche Rechnung wie „Übernehmen“) und auf der Karte
+    /// zeigen; ohne gewaehlten Stadtteil tippt man auf dem Raster der neuen Groesse den Platz der Stadt.
+    /// </summary>
+    private void StadtVorschauRechnen()
+    {
+        if (_projekt is null || !Karte.PlaetzeAn || PlaetzeAltFuerTests)
+        {
+            _stadtPlan = null;
+            Karte.StadtVorschauZeigen(null, false);
+            Karte.PlaetzeRaster = null;
+            return;
+        }
+        _stadtPlan = _projekt.StadtSetzenPruefen(_vergroessernBreite, _vergroessernTiefe, _vergroessernPlatz);
+        Karte.PlaetzeRaster = _einsetzenQuelle is null ? (_vergroessernBreite, _vergroessernTiefe) : null;
+        Karte.StadtVorschauZeigen(_einsetzenQuelle is null ? _stadtPlan.Nachher : null, _stadtPlan.Geht);
+    }
+
+    /// <summary>Nach einer Wahl rechts: erst nach dem Ereignis der Auswahl neu aufbauen (die Auswahl entfernt sich nie selbst).</summary>
+    private void NachWahlNeu()
+    {
+        _stadtBestaetigt = null;
+        _plaetzeFehler = null;
+        if (PlaetzeAltFuerTests)
+        {
+            AussenAuswahlZeigen();
+            return;
+        }
+        StadtVorschauRechnen();
+        Dispatcher.UIThread.Post(AussenAuswahlZeigen, DispatcherPriority.Background);
+    }
+
+    /// <summary>Platz der heutigen Stadt waehlen (Tippen, Pfeile, Auswahl; auch Start-Test).</summary>
+    internal void StadtPlatzWaehlen(int nummer)
+    {
+        if (_projekt is null)
+        {
+            return;
+        }
+        if (!Plaetze.Gibt(nummer, _vergroessernBreite, _vergroessernTiefe))
+        {
+            Melden(Texte.PlatzDaneben);
+            return;
+        }
+        _vergroessernPlatz = nummer;
+        _stadtBestaetigt = null;
+        _plaetzeFehler = null;
+        StadtVorschauRechnen();
+        AussenAuswahlZeigen();
+        Melden(_stadtPlan is { Grund: { } g } ? g : Texte.StadtVorschau(nummer, _vergroessernBreite, _vergroessernTiefe));
+    }
+
+    /// <summary>
+    /// „Übernehmen und speichern“ (auch Start-Test): die Stadt setzen (ein Schritt), das Projekt speichern und gruen bestaetigen;
+    /// geht es nicht, steht der Grund rot da. Null = uebernommen, sonst der Grund.
+    /// </summary>
+    internal string? StadtUebernehmenMitWahl()
+    {
+        if (_projekt is null)
+        {
+            return null;
+        }
+        var plan = _projekt.StadtSetzen(_vergroessernBreite, _vergroessernTiefe, _vergroessernPlatz);
+        if (plan.Grund is { } grund)
+        {
+            _plaetzeFehler = grund;
+            _stadtBestaetigt = null;
+            StadtVorschauRechnen();
+            AussenAuswahlZeigen();
+            Melden(grund);
+            return grund;
+        }
+        _plaetzeFehler = null;
+        _einsetzenPlatz = null;
+        try
+        {
+            _projekt.Speichern(vonHand: true);
+            _stadtBestaetigt = Texte.StadtUebernommen(plan.Platz, plan.Breite, plan.Tiefe);
+        }
+        catch (Exception f) when (f is IOException or UnauthorizedAccessException)
+        {
+            _stadtBestaetigt = Texte.StadtUebernommenOhneSpeichern(plan.Platz, plan.Breite, plan.Tiefe, f.Message);
+        }
+        EinsetzenVorschauRechnen();
+        StadtVorschauRechnen();
+        _aussenStand++;
+        Karte.Einpassen();
+        AussenAuswahlZeigen();
+        Melden(_stadtBestaetigt);
+        return null;
+    }
 
     /// <summary>Start-Test: Knopf oder Auswahl rechts mit diesem Namen fuer den Screenreader, sonst null.</summary>
     internal Control? PlaetzeElement(string name) =>
@@ -86,14 +195,16 @@ public sealed partial class Hauptansicht
             var (b, h) = Aussen.Groesse(_projekt.AussenStand);
             _vergroessernBreite = Plaetze.Seiten.FirstOrDefault(s => s >= b - 1e-9, Plaetze.Seiten[^1]);
             _vergroessernTiefe = Plaetze.Seiten.FirstOrDefault(s => s >= h - 1e-9, Plaetze.Seiten[^1]);
-            _vergroessernPlatz = 1;
+            _vergroessernPlatz = PlaetzeAltFuerTests ? 1 : _projekt.StadtPlatz();
             _einsetzenPlatz = null;
             _einsetzenVorschau = null;
+            _stadtBestaetigt = null;
         }
         Karte.PlaetzeAn = an;
+        StadtVorschauRechnen();
         if (an)
         {
-            Melden(Texte.PlaetzeErklaerung);
+            Melden(PlaetzeAltFuerTests ? Texte.PlaetzeErklaerung : _einsetzenQuelle is null ? Texte.PlaetzeErklaerungStadt : Texte.PlaetzeErklaerungEinsetzen);
         }
     }
 
@@ -102,6 +213,12 @@ public sealed partial class Hauptansicht
     {
         if (_projekt is null)
         {
+            return;
+        }
+        if (_einsetzenQuelle is null && !PlaetzeAltFuerTests)
+        {
+            // Welle S 0.56.2 (Fund Nico 373): ohne gewaehlten Stadtteil waehlt Tippen den Platz der heutigen Stadt
+            StadtPlatzWaehlen(nummer);
             return;
         }
         var (b, h) = Aussen.Groesse(_projekt.AussenStand);
@@ -148,6 +265,7 @@ public sealed partial class Hauptansicht
             }
         }
         EinsetzenVorschauRechnen();
+        StadtVorschauRechnen();
         AussenAuswahlZeigen();
         if (_plaetzeFehler is { } fehler)
         {
@@ -163,6 +281,10 @@ public sealed partial class Hauptansicht
         if (_projekt is null)
         {
             return null;
+        }
+        if (!PlaetzeAltFuerTests)
+        {
+            return StadtUebernehmenMitWahl();
         }
         if (_projekt.KarteVergroessern(_vergroessernBreite, _vergroessernTiefe, _vergroessernPlatz) is { } grund)
         {
@@ -218,9 +340,10 @@ public sealed partial class Hauptansicht
         {
             return false;
         }
-        var (b, h) = Aussen.Groesse(_projekt.AussenStand);
+        var stadt = _einsetzenQuelle is null && !PlaetzeAltFuerTests;
+        var (b, h) = stadt ? (_vergroessernBreite, _vergroessernTiefe) : Aussen.Groesse(_projekt.AussenStand);
         var spalten = Plaetze.Spalten(b);
-        var jetzt = _einsetzenPlatz ?? 1;
+        var jetzt = stadt ? _vergroessernPlatz : _einsetzenPlatz ?? 1;
         switch (taste)
         {
             case Key.Escape:
@@ -230,7 +353,7 @@ public sealed partial class Hauptansicht
             {
                 var neu = jetzt + (taste == Key.Left ? -1 : taste == Key.Right ? 1 : taste == Key.Up ? -spalten : spalten);
                 var gleicheReihe = taste is Key.Up or Key.Down || (neu - 1) / spalten == (jetzt - 1) / spalten;
-                PlatzWaehlen(_einsetzenPlatz is null ? 1 : Plaetze.Gibt(neu, b, h) && gleicheReihe ? neu : jetzt);
+                PlatzWaehlen(!stadt && _einsetzenPlatz is null ? 1 : Plaetze.Gibt(neu, b, h) && gleicheReihe ? neu : jetzt);
                 return true;
             }
             default:
@@ -238,23 +361,9 @@ public sealed partial class Hauptansicht
         }
     }
 
-    /// <summary>Karte rechts bei „Plätze“.</summary>
-    private bool PlaetzeTeil()
+    /// <summary>Gegenprobe Sammelliste 373: der Teil „Karte vergrößern“ wie bis S 0.56.1.</summary>
+    private void PlaetzeVergroessernAlt(bool lesen, double b, double h)
     {
-        if (!Karte.PlaetzeAn || _projekt is null)
-        {
-            return false;
-        }
-        var lesen = _projekt.NurLesen;
-        var (b, h) = Aussen.Groesse(_projekt.AussenStand);
-        _aussenAuswahl.Children.Add(Schrift.Text(Texte.Plaetze, "Mittel", FontWeight.Bold));
-        _aussenAuswahl.Children.Add(Schrift.Text(Texte.PlatzErklaerung, "Klein"));
-        if (_plaetzeFehler is { } f)
-        {
-            _aussenAuswahl.Children.Add(Schrift.Text(f, "Klein", FontWeight.Bold, "Pinsel.red"));
-        }
-
-        // Karte vergroessern
         _aussenAuswahl.Children.Add(Schrift.Text(Texte.KarteVergroessern, "Normal", FontWeight.Bold));
         _aussenAuswahl.Children.Add(Schrift.Text(Texte.KarteGroesseJetzt(b, h), "Klein"));
         var seiten = Plaetze.Seiten.Select(s => (Texte.Felder(s), (object?)s)).ToList();
@@ -280,7 +389,7 @@ public sealed partial class Hauptansicht
                 _vergroessernPlatz = (int)t!;
                 AussenAuswahlZeigen();
             }));
-        var warum = _projekt.VergroessernNicht(_vergroessernBreite, _vergroessernTiefe, _vergroessernPlatz);
+        var warum = _projekt!.VergroessernNicht(_vergroessernBreite, _vergroessernTiefe, _vergroessernPlatz);
         if (warum is not null && !lesen)
         {
             _aussenAuswahl.Children.Add(Schrift.Text(warum, "Klein", farbe: "Pinsel.muted"));
@@ -288,6 +397,80 @@ public sealed partial class Hauptansicht
         var vergroessern = Knopf(Texte.KarteVergroessernKnopf, Texte.KarteVergroessernTipp, () => KarteVergroessernMitWahl(), betont: true).Vorlese(Texte.KarteVergroessernKnopf);
         vergroessern.IsEnabled = !lesen && warum is null;
         _aussenAuswahl.Children.Add(vergroessern);
+    }
+
+    /// <summary>
+    /// Welle S 0.56.2 (Fund Nico 373, Nicos Wunsch woertlich): „Heutige Stadt auf einen Platz setzen“: Breite, Tiefe und Platz
+    /// waehlen (rechts oder Tippen auf die Karte), die Karte zeigt blau, wo die Stadt landet, die Zeile darunter sagt es in Worten;
+    /// geht es nicht, steht der Grund rot da (nie grau). Erst „Übernehmen und speichern“ setzt die Stadt (ein Schritt), speichert
+    /// das Projekt und bestaetigt gruen.
+    /// </summary>
+    private void StadtSetzenTeil(bool lesen, double b, double h)
+    {
+        _aussenAuswahl.Children.Add(Schrift.Text(Texte.StadtSetzenTitel, "Normal", FontWeight.Bold));
+        _aussenAuswahl.Children.Add(Schrift.Text(Texte.KarteGroesseJetzt(b, h) + " " + Texte.StadtSetzenErklaerung, "Klein"));
+        var seiten = Plaetze.Seiten.Select(s => (Texte.Felder(s), (object?)s)).ToList();
+        _aussenAuswahl.Children.Add(Schrift.Text(Texte.NeueBreite, "Klein"));
+        _aussenAuswahl.Children.Add(Wahl(Texte.NeueBreite, Texte.KarteVergroessernTipp, seiten, _vergroessernBreite, t =>
+        {
+            _vergroessernBreite = (int)t!;
+            _vergroessernPlatz = Math.Min(_vergroessernPlatz, Math.Max(1, Plaetze.Anzahl(_vergroessernBreite, _vergroessernTiefe)));
+            NachWahlNeu();
+        }));
+        _aussenAuswahl.Children.Add(Schrift.Text(Texte.NeueTiefe, "Klein"));
+        _aussenAuswahl.Children.Add(Wahl(Texte.NeueTiefe, Texte.KarteVergroessernTipp, seiten, _vergroessernTiefe, t =>
+        {
+            _vergroessernTiefe = (int)t!;
+            _vergroessernPlatz = Math.Min(_vergroessernPlatz, Math.Max(1, Plaetze.Anzahl(_vergroessernBreite, _vergroessernTiefe)));
+            NachWahlNeu();
+        }));
+        var anzahlNeu = Math.Max(1, Plaetze.Anzahl(_vergroessernBreite, _vergroessernTiefe));
+        _aussenAuswahl.Children.Add(Schrift.Text(Texte.HeutigeStadtAuf, "Klein"));
+        _aussenAuswahl.Children.Add(Wahl(Texte.HeutigeStadtAuf, Texte.StadtSetzenTipp,
+            Enumerable.Range(1, anzahlNeu).Select(p => (Texte.PlatzNummer(p), (object?)p)), _vergroessernPlatz, t =>
+            {
+                _vergroessernPlatz = (int)t!;
+                NachWahlNeu();
+            }));
+        if (_stadtBestaetigt is { } ok)
+        {
+            _aussenAuswahl.Children.Add(Schrift.Text(ok, "Klein", FontWeight.Bold, "Pinsel.green"));
+        }
+        else if (_stadtPlan is { } plan && !lesen)
+        {
+            _aussenAuswahl.Children.Add(Schrift.Text(plan.Grund ?? Texte.StadtVorschau(plan.Platz, plan.Breite, plan.Tiefe), "Klein", FontWeight.Bold,
+                plan.Geht ? "Pinsel.accent" : "Pinsel.red"));
+        }
+        var uebernehmen = Knopf(Texte.StadtUebernehmenKnopf, Texte.StadtSetzenTipp, () => StadtUebernehmenMitWahl(), betont: true).Vorlese(Texte.StadtUebernehmenKnopf);
+        // nur „nur lesen“ sperrt; jeder andere Grund steht rot da, sobald man drueckt (nie still, nie nur grau)
+        uebernehmen.IsEnabled = !lesen;
+        _aussenAuswahl.Children.Add(uebernehmen);
+    }
+
+    /// <summary>Karte rechts bei „Plätze“.</summary>
+    private bool PlaetzeTeil()
+    {
+        if (!Karte.PlaetzeAn || _projekt is null)
+        {
+            return false;
+        }
+        var lesen = _projekt.NurLesen;
+        var (b, h) = Aussen.Groesse(_projekt.AussenStand);
+        _aussenAuswahl.Children.Add(Schrift.Text(Texte.Plaetze, "Mittel", FontWeight.Bold));
+        _aussenAuswahl.Children.Add(Schrift.Text(Texte.PlatzErklaerung, "Klein"));
+        if (_plaetzeFehler is { } f)
+        {
+            _aussenAuswahl.Children.Add(Schrift.Text(f, "Klein", FontWeight.Bold, "Pinsel.red"));
+        }
+
+        if (PlaetzeAltFuerTests)
+        {
+            PlaetzeVergroessernAlt(lesen, b, h);
+        }
+        else
+        {
+            StadtSetzenTeil(lesen, b, h);
+        }
 
         // Stadtteil einsetzen
         _aussenAuswahl.Children.Add(Schrift.Text(Texte.StadtteilEinsetzen, "Normal", FontWeight.Bold));
