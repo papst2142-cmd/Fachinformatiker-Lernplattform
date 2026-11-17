@@ -105,6 +105,13 @@ public sealed partial class StadtSpiel
     /// </summary>
     public void PaketFehlt(string kennung, string name, string? zusatz = null)
     {
+        // nur Darstellung: die Figur steht hier am Bahnhof (dort kaeme sie mit dem Zug an), nicht an einer leeren Stelle der Karte;
+        // ihr Ort bleibt der in der anderen Stadt (kein Schritt moeglich)
+        if (Szene.Ort(Stadt.Bahnhof) is { } bahnhof && !Geht)
+        {
+            FigurX = bahnhof.StehX;
+            FigurZ = bahnhof.StehZ;
+        }
         Zeile = (zusatz is null ? "" : zusatz + "\n") + ZugTexte.Format(ZugTexte.PaketFehltHier, name);
         Knoepfe = [(AktionPaketLaden + kennung, ZugTexte.PaketLaden)];
         Geaendert?.Invoke();

@@ -252,8 +252,14 @@ public sealed class SpielPaketStaedteTests
         Assert.False(s2.KannBetreten);
         Assert.Contains((StadtSpiel.AktionZug + StadtSpiel.ZugStadt1, ZugTexte.Format(ZugTexte.ZugNach, ZugTexte.Stadt1)), s2.Knoepfe);
         Assert.DoesNotContain(s2.Knoepfe, k => k.Aktion == StadtSpiel.AktionZug + Kennung);
-        // die alte Stadt-1-Ansicht sieht die Figur in der anderen Stadt
-        Assert.True(new StadtSpiel(stadt1, spiel).InAndererStadt);
+        // die alte Stadt-1-Ansicht sieht die Figur in der anderen Stadt; fehlt das Paket, steht sie (nur gezeichnet) am Bahnhof
+        var s3 = new StadtSpiel(stadt1, spiel);
+        Assert.True(s3.InAndererStadt);
+        s3.PaketFehlt(Kennung, Name);
+        var bahnhof = s3.Szene.Ort(Stadt.Bahnhof)!;
+        Assert.Equal((bahnhof.StehX, bahnhof.StehZ), (s3.FigurX, s3.FigurZ));
+        Assert.Equal([(StadtSpiel.AktionPaketLaden + Kennung, ZugTexte.PaketLaden)], s3.Knoepfe);
+        Assert.Equal(StadtGrund.AndereStadt, s3.GeheZu("moebelhaus"));
     }
 }
 
