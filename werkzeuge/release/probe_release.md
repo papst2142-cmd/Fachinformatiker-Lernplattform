@@ -1,24 +1,24 @@
-In den Optionen gibt es eine neue Karte „Inhaltspakete“. Damit lassen sich später zusätzliche Inhalte, zum Beispiel neue Städte, laden, ohne die App neu zu installieren. Heute ist sie die Grundlage; spielbare Pakete kommen mit einer der nächsten Versionen.
+Im Spiel fährt jetzt ein Zug in andere Städte. Eine Stadt aus einem Inhaltspaket ist damit zum ersten Mal spielbar.
 
-- Die Karte steht in der Gruppe „Programm“ unter „Updates“. „Nach Paketen suchen“ fragt im Internet nach, welche Pakete es gibt. Jedes Paket zeigt seinen Namen, eine kurze Beschreibung, seine Größe und ob es geladen ist, ob es einen neueren Stand gibt oder ob es fehlerhaft ist.
-- Geladen wird nur, wenn du auf „Laden“ tippst; nichts lädt von allein. Ein Balken zeigt den Fortschritt, „Abbrechen“ hört jederzeit auf. Bricht das Laden ab, bleibt alles, wie es vorher war.
-- Am Handy ohne WLAN fragt die App vor dem Laden nach und nennt die Größe des Pakets.
-- Jedes Paket wird vor dem Einsetzen ganz geprüft. Ist es beschädigt, unvollständig oder für eine neuere App gedacht, steht der Grund in Rot dabei, und nichts wird halb geladen. „Entfernen“ löscht ein Paket nach einer Rückfrage wieder ganz.
-- Ohne Internet geht alles, was schon geladen ist, weiter; die Karte sagt dann „Keine Verbindung“.
-- Im Spiel verschwindet jetzt auch der Knopf „Spiel verlassen“, wenn du die untere Leiste mit dem Dreieck zuklappst. Aufgeklappt ist er wie bisher da.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und die Stadt bleiben, wie sie sind.
+- Am Bahnhof steht draußen ein Fahrplan mit allen Städten. Ist eine Stadt geladen, bringt dich „Zug nach …“ hin; die Fahrt kostet nichts und dauert 20 Spielminuten. Zurück geht es genauso vom Bahnhof der anderen Stadt.
+- Fehlt das Paket einer Stadt, steht im Fahrplan „Paket fehlt (Größe) – Laden“. Geladen wird nur, wenn du darauf tippst, über denselben Weg wie in den Optionen; nichts lädt von allein.
+- In der neuen Stadt kannst du gehen, laufen, warten, Bus fahren und die Geschäfte und Schalter betreten. Deine Wohnung, die Arbeit, die Kunden und deine Firma bleiben in deiner Heimatstadt. Ein neuer Tag beginnt wie immer zu Hause.
+- Solange deine Figur in einer anderen Stadt ist, lässt sich deren Paket nicht entfernen; die Karte in den Optionen sagt dir, dass du erst mit dem Zug zurückfahren sollst.
+- Spielst du auf einem zweiten Gerät, auf dem das Paket fehlt, sagt das Spiel, in welcher Stadt dein Spielstand gerade ist, und bietet an, das Paket zu laden. Bis dahin passiert kein Spielschritt und nichts geht verloren.
+- Die Karte „Inhaltspakete“ zeigt kleine Pakete jetzt mit zwei Nachkommastellen (zum Beispiel 0,05 MB statt 0,0 MB). „Neu laden“ erscheint nur noch, wenn ein neues Laden den Fehler auch beheben kann; sonst nennt der Grund das nötige App-Update.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Heimatstadt bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.87.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.88.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.87.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.87.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.87.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.87.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.88.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.88.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.88.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.88.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

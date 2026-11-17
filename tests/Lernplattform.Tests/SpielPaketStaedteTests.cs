@@ -236,13 +236,13 @@ public sealed class SpielPaketStaedteTests
         {
             new(null, ZugTexte.Stadt1, true),
             new(Kennung, Name, true),
-            new("probe_fehlt", "Lindenau", false, (StadtSpiel.AktionPaketLaden + "probe_fehlt", ZugTexte.Format(ZugTexte.PaketFehlt, "0,51 MB"))),
+            new("probe_fehlt", "Lindenau", false, (StadtSpiel.AktionPaketLaden + "probe_fehlt", ZugTexte.Format(ZugTexte.PaketFehlt, "Lindenau", "0,51"))),
         };
         var s1 = new StadtSpiel(stadt1, spiel) { Fahrplan = () => plan };
         s1.FahrplanNeu();
         Assert.True(s1.AmBahnhof);
         Assert.Contains((StadtSpiel.AktionZug + Kennung, ZugTexte.Format(ZugTexte.ZugNach, Name)), s1.Knoepfe);
-        Assert.Contains((StadtSpiel.AktionPaketLaden + "probe_fehlt", "Paket fehlt (0,51 MB) – Laden"), s1.Knoepfe);
+        Assert.Contains((StadtSpiel.AktionPaketLaden + "probe_fehlt", "Lindenau: Paket fehlt (0,51 MB) – Laden"), s1.Knoepfe);
         Assert.DoesNotContain(s1.Knoepfe, k => k.Aktion == StadtSpiel.AktionZug + StadtSpiel.ZugStadt1);
         Assert.Contains("Lindenau", s1.Zeile, StringComparison.Ordinal);
         Assert.Equal(StadtGrund.Ok, s1.ZugFahren(Kennung, Name));
@@ -254,5 +254,135 @@ public sealed class SpielPaketStaedteTests
         Assert.DoesNotContain(s2.Knoepfe, k => k.Aktion == StadtSpiel.AktionZug + Kennung);
         // die alte Stadt-1-Ansicht sieht die Figur in der anderen Stadt
         Assert.True(new StadtSpiel(stadt1, spiel).InAndererStadt);
+    }
+}
+
+/// <summary>
+/// Welle A 0.88.0 (Weisung P12-296, Belastungsproben): jede Aktion der Liste <see cref="Aktionen"/> (darunter „Zug hin“ und
+/// „Zug zurueck“) fuer jeden Ort der Probe-Stadt, an den Spieltagen 1 bis 3. Kein Absturz, nach jeder Aktion sehen beide Staedte
+/// dieselbe Uhr und denselben Tag, ein gesperrter Schritt schreibt keine Zeile. Am Ende jedes Tages Feierabend in der Paket-Stadt:
+/// der neue Tag beginnt zu Hause in Stadt 1. Gegenprobe: ohne Vorsatz meldet die Probe einen Fund.
+/// </summary>
+public sealed class SpielZugBelastungTests
+{
+    internal sealed record Lage(Stadt Stadt1, Stadt Paket, Spielablauf Spiel, string Ort);
+
+    private const string Kennung = "probe_klein";
+
+    /// <summary>Die Aktionen der Probe in ihrer Reihenfolge; jede gibt einen Fund zurueck oder null.</summary>
+    internal static readonly (string Name, Func<Lage, string?> Tun)[] Aktionen =
+    [
+        ("Zum Bahnhof", l => l.Stadt1.Gehen(l.Spiel, Stadt.Bahnhof) is { Ok: true } || l.Stadt1.Stand(l.Spiel.Stand).Ort == Stadt.Bahnhof ? null : "nicht am Bahnhof"),
+        ("Zug hin", l => l.Stadt1.Zug(l.Spiel, Stadt.BahnhofVon(Kennung), "Probe") is { Ok: true } ? null : "Zug faehrt nicht"),
+        ("Stadt 1 gesperrt", l =>
+        {
+            var zeilen = l.Spiel.Stand.Verlauf.Count;
+            var gruende = new[]
+            {
+                l.Stadt1.GehenPruefen(l.Spiel.Stand, "moebelhaus").Grund, l.Stadt1.LaufenPruefen(l.Spiel.Stand, 2).Grund,
+                l.Stadt1.WartenPruefen(l.Spiel.Stand).Grund, l.Stadt1.Betreten(l.Spiel.Stand),
+                l.Stadt1.ZugPruefen(l.Spiel.Stand, Stadt.BahnhofVon(Kennung), "Probe").Grund,
+            };
+            return gruende.All(g => g == StadtGrund.AndereStadt) && l.Spiel.Stand.Verlauf.Count == zeilen ? null : "Stadt 1: " + string.Join(",", gruende);
+        }),
+        ("Gehen", l => l.Ort == Stadt.Bahnhof || l.Paket.Gehen(l.Spiel, l.Ort) is { Ok: true } ? null : "geht nicht zu " + l.Ort),
+        ("Betreten", l => l.Ort == Stadt.Bahnhof ? (l.Paket.OhneInnenraum(l.Ort) ? null : "Bahnhof mit Innenraum")
+            : l.Paket.Betreten(l.Spiel.Stand) is StadtGrund.Ok or StadtGrund.Geschlossen or StadtGrund.OeffnetNichtMehr ? null : "Betreten " + l.Paket.Betreten(l.Spiel.Stand)),
+        ("Laufen", l => l.Paket.Laufen(l.Spiel, 3) is { Ok: true } ? null : "laeuft nicht"),
+        ("Mitfahrt", l => l.Paket.Mitfahrt(l.Spiel, 6, 0, 1) is { Ok: true } && l.Spiel.Stand.Verlauf[^1].Daten["ort"] as string == l.Paket.Global(l.Paket.Stand(l.Spiel.Stand).Ort) ? null : "Mitfahrt geht nicht"),
+        ("Bus", l => l.Paket.Stand(l.Spiel.Stand).Ort == Stadt.Bahnhof || l.Paket.Bus(l.Spiel, Stadt.Bahnhof, 40, 12) is { Ok: true } ? null : "Bus zum Bahnhof geht nicht"),
+        ("Warten", l => l.Paket.WartenPruefen(l.Spiel.Stand).Grund is var g && (g == StadtGrund.Ok ? l.Paket.Warten(l.Spiel).Ok : g != StadtGrund.AndereStadt) ? null : "Warten " + g),
+        ("Zurueck zum Bahnhof", l => l.Paket.Stand(l.Spiel.Stand).Ort == Stadt.Bahnhof || l.Paket.Gehen(l.Spiel, Stadt.Bahnhof) is { Ok: true } ? null : "nicht am Bahnhof"),
+        ("Zug zurueck", l => l.Paket.Zug(l.Spiel, Stadt.Bahnhof, ZugTexte.Stadt1) is { Ok: true } && l.Stadt1.Stand(l.Spiel.Stand).Ort == Stadt.Bahnhof ? null : "nicht in Stadt 1"),
+        ("Paket-Stadt gesperrt", l =>
+        {
+            var zeilen = l.Spiel.Stand.Verlauf.Count;
+            return l.Paket.GehenPruefen(l.Spiel.Stand, Stadt.Bahnhof).Grund == StadtGrund.AndereStadt && l.Spiel.Stand.Verlauf.Count == zeilen ? null : "Paket-Stadt nicht gesperrt";
+        }),
+    ];
+
+    internal static List<string> Probe(long[] tage, bool mitVorsatz = true)
+    {
+        var funde = new List<string>();
+        var stadt1 = SpielPaketStaedteTests.Stadt1();
+        var paket = SpielPaketStaedteTests.PaketStadt(stadt1, mitVorsatz);
+        var spiel = SpielPaketStaedteTestsNeu(stadt1);
+        var orte = paket.Orte(spiel.Stand).Select(o => (string)o["id"]!).ToList();
+        foreach (var tag in tage)
+        {
+            foreach (var ort in orte)
+            {
+                var lage = new Lage(stadt1, paket, spiel, ort);
+                foreach (var (name, tun) in Aktionen)
+                {
+                    try
+                    {
+                        var fund = tun(lage);
+                        var a = stadt1.Stand(spiel.Stand);
+                        var b = paket.Stand(spiel.Stand);
+                        fund ??= a.Uhr != b.Uhr || a.Tag != b.Tag || a.Tag != tag ? $"Staedte uneins: {a} / {b}" : null;
+                        if (fund is not null)
+                        {
+                            funde.Add($"Tag {tag}, {ort}, {name}: {fund}");
+                            Zurueck(stadt1, paket, spiel);
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        funde.Add($"Tag {tag}, {ort}, {name}: {e.GetType().Name} {e.Message}");
+                        Zurueck(stadt1, paket, spiel);
+                        break;
+                    }
+                }
+            }
+            // Feierabend in der Paket-Stadt: der naechste Tag beginnt zu Hause in Stadt 1
+            if ((stadt1.Stand(spiel.Stand).Ort == Stadt.Bahnhof || stadt1.Gehen(spiel, Stadt.Bahnhof).Ok) && stadt1.Zug(spiel, Stadt.BahnhofVon(Kennung), "Probe").Ok)
+            {
+                spiel.Log(Ereignisse.Feierabend, new PyObjekt { { "tag", tag }, { "gehalt", 0L } });
+                var neu = stadt1.Stand(spiel.Stand);
+                if (neu != new StadtStand(tag + 1, stadt1.Heim, stadt1.Beginn))
+                {
+                    funde.Add($"Tag {tag}, Feierabend: neuer Tag beginnt nicht zu Hause in Stadt 1 ({neu})");
+                }
+            }
+            else
+            {
+                funde.Add($"Tag {tag}, Feierabend: Zug faehrt nicht");
+            }
+        }
+        return funde;
+    }
+
+    /// <summary>Nach einem Fund zurueck nach Stadt 1, damit die naechsten Orte eigene Funde zeigen (nicht nur Folgefunde).</summary>
+    private static void Zurueck(Stadt stadt1, Stadt paket, Spielablauf spiel)
+    {
+        if (stadt1.Fremd(stadt1.Stand(spiel.Stand).Ort) && !paket.Fremd(paket.Stand(spiel.Stand).Ort))
+        {
+            paket.Gehen(spiel, Stadt.Bahnhof);
+            paket.Zug(spiel, Stadt.Bahnhof, ZugTexte.Stadt1);
+        }
+    }
+
+    private static Spielablauf SpielPaketStaedteTestsNeu(Stadt stadt1)
+    {
+        var spiel = new Spielablauf(stadt1.Inhalt, new SpielSpeicher(() => "2026-10-01 08:00:00"));
+        spiel.Profil("Probe", new PyObjekt { { "haut", "hell" }, { "frisur", "kurz" }, { "haarfarbe", "braun" }, { "oberteil", "cyan" }, { "kreis", "cyan" } }, Ereignisse.Normal);
+        return spiel;
+    }
+
+    [Fact]
+    public void JedeAktion_JederOrt_DreiTage_OhneFund()
+    {
+        Assert.Contains(Aktionen, a => a.Name == "Zug hin");
+        Assert.Contains(Aktionen, a => a.Name == "Zug zurueck");
+        var funde = Probe([1, 2, 3]);
+        Assert.True(funde.Count == 0, string.Join("\n", funde));
+    }
+
+    [Fact]
+    public void Gegenprobe_OhneVorsatz_WirdGemeldet()
+    {
+        Assert.NotEmpty(Probe([1], mitVorsatz: false));
     }
 }

@@ -47,7 +47,7 @@ public static class SpielStart
         var feste = Py.Lesen(Muss("inhalte_csharp/spiel/festzeiten.json")) as PyObjekt;
         var sitzung = new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte, feste);
         // Welle A 0.88.0: Staedte aus Paketen (Datenordner) und der Fahrplan am Bahnhof; Spielstand und Stadt passen sich an
-        sitzung.PaketStaedte = Programm.PaketDienst.Verwaltung.Staedte;
+        sitzung.PaketStaedte = () => Programm.PaketDienst.Verwaltung.Staedte();
         sitzung.Fahrplan = () => SpielZug.Fahrplan(sitzung);
         sitzung.Abgleichen();
         Aktiv = sitzung;

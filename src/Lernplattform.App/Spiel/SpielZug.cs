@@ -36,7 +36,7 @@ public static class SpielZug
                     break;
                 case PaketZustand.NichtGeladen:
                     liste.Add(new(z.Kennung, z.Name, false,
-                        Laedt ? null : (StadtSpiel.AktionPaketLaden + z.Kennung, ZugTexte.Format(ZugTexte.PaketFehlt, PaketTexte.Mb(z.Groesse)))));
+                        Laedt ? null : (StadtSpiel.AktionPaketLaden + z.Kennung, ZugTexte.Format(ZugTexte.PaketFehlt, z.Name, PaketTexte.Mb(z.Groesse)))));
                     break;
                 default:
                     // fehlerhaft: nur Staedte (ein Paket unbekannter Art faehrt nie), Grund steht in den Optionen

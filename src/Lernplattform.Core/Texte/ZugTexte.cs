@@ -19,8 +19,11 @@ public static class ZugTexte
     /// <summary>Knopf am Bahnhof: mit dem Zug in eine Stadt.</summary>
     public const string ZugNach = "Zug nach {0}";
 
-    /// <summary>Plan Abschnitt 3 (woertlich): Paket der Stadt fehlt.</summary>
-    public const string PaketFehlt = "Paket fehlt ({0}) – Laden";
+    /// <summary>
+    /// Plan Abschnitt 3 (woertlich „Paket fehlt (&lt;Groesse&gt;) – Laden“), davor der Name der Stadt: am Bahnhof koennen mehrere
+    /// Pakete fehlen, jeder Knopf muss sagen, welche Stadt er laedt (auch fuer den Screenreader). {0} = Name, {1} = Groesse in MB.
+    /// </summary>
+    public const string PaketFehlt = "{0}: Paket fehlt ({1} MB) – Laden";
 
     /// <summary>Plan Abschnitt 3: ein neuer Stand wird nie von allein geladen.</summary>
     public const string NeuerStand = "{0}: neuer Stand da – Aktualisieren";

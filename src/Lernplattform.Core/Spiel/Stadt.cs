@@ -776,6 +776,10 @@ public sealed partial class Stadt : Probe.IStadtSicht
             return StadtGrund.KeinProfil;
         }
         var jetzt = Stand(stand);
+        if (Fremd(jetzt.Ort))
+        {
+            return StadtGrund.AndereStadt;
+        }
         if (Regel(jetzt.Ort) is not { } regel)
         {
             return StadtGrund.Unbekannt;
