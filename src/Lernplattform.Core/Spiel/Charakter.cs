@@ -168,11 +168,11 @@ public static class Charakter
     public static bool SchrankAufgestellt(Spielstand stand) => Wohnung.AufgestellteMoebel(stand).Any(m => m.Typ == SchrankTyp);
 
     /// <summary>Aufgestellter Kleiderschrank in Reichweite der Figur (wie furniture_near, nur dieser Typ).</summary>
-    public static Wohnung.Aufgestellt? SchrankNahe(Spielstand stand, double x, double y)
+    public static Wohnung.Aufgestellt? SchrankNahe(Spielstand stand, double x, double y, Func<Wohnung.Aufgestellt, bool>? nutzbar = null)
     {
         Wohnung.Aufgestellt? beste = null;
         var besteWeite = double.MaxValue;
-        foreach (var m in Wohnung.AufgestellteMoebel(stand).Where(m => m.Typ == SchrankTyp))
+        foreach (var m in Wohnung.AufgestellteMoebel(stand).Where(m => m.Typ == SchrankTyp && (nutzbar is null || nutzbar(m))))
         {
             var dx = Math.Max(Math.Max(m.X - x, 0), x - m.X - Py.F(m.W));
             var dy = Math.Max(Math.Max(m.Y - y, 0), y - m.Y - Py.F(m.H));

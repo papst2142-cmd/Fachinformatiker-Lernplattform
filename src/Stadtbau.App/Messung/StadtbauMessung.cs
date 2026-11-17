@@ -396,6 +396,7 @@ public static partial class StadtbauMessung
         await StrassenzugAsync(a, f);
         await WerkzeugKleinAsync(a, f);
         await MehrfachAsync(a, f);
+        await Leiste379Async(a, f);
         await FarbeAsync(a, f);
         await IndustrieAsync(a, f);
         await AlsGebaeudeAsync(a, f);

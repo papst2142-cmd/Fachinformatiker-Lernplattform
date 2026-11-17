@@ -235,7 +235,7 @@ public sealed partial class Hauptansicht
         _geschichteFilterTag.SelectedItem = _geschichteFilterTag.Items.OfType<ComboBoxItem>().FirstOrDefault(i => Equals(i.Tag, ab)) ?? _geschichteFilterTag.Items[0];
         _geschichteFilterSetzen = false;
         GeschichteListeZeigen();
-        _inhalt.Content = _geschichteAnsicht;
+        SpielSeiteSetzen(_geschichteAnsicht);
         KnoepfeFreigeben();
     }
 

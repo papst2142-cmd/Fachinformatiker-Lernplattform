@@ -67,6 +67,9 @@ public static partial class StadtbauMessung
 
         async Task DrueckenAsync(PointerType art)
         {
+            // Welle S 0.58.0 (Sammelliste 379): der Knopf steht im Menue „Anzeigen“; erst das Menue oeffnen
+            a.LeisteMenueFuer(knopf);
+            await AntippbarAsync(a, knopf);
             var zeiger = new Pointer(Pointer.GetNextFreeId(), art, true);
             var mitte = new Point(knopf.Bounds.Width / 2, knopf.Bounds.Height / 2);
             var wurzel = Wurzel(knopf);

@@ -324,6 +324,19 @@ public sealed partial class StadtSpiel
         // auf eine Person getippt: bis auf Reichweite heran (walk_path mit REACH), sonst zum Punkt
         var person = innen.PersonBei(x, z);
         var (zx, zz, reichweite) = person is not null ? (person.X, person.Z, Wege.Reichweite) : (x, z, 0d);
+        if (person is null && RaumRegel && Wohnung.MoebelBei(Ablauf.Stand, x, z) is { } mr
+            && WegInDenRaum(innen, mr.X, mr.Y, Py.F(mr.W), Py.F(mr.H), Wohnung.Vorn(mr.Dreh), Wohnung.Begehbar.Contains(mr.Typ)) is { } raumWeg)
+        {
+            // Sammelliste 383: durch die Tuer vor die Vorderseite (nie ueber die Wand), erst dort oeffnet es sich
+            WegLeeren();
+            _weg.AddRange(raumWeg);
+            if (raumWeg.Count == 0)
+            {
+                InnenText();
+            }
+            Geaendert?.Invoke();
+            return raumWeg.Count > 0;
+        }
         if (person is null && Ort == SpielDaten.OrtZuhause && Wohnung.MoebelBei(Ablauf.Stand, x, z) is { } m)
         {
             // auf ein Moebel: bis neben das Moebel (furniture_near prueft 0,9 vom Rand)
@@ -943,7 +956,8 @@ public sealed partial class StadtSpiel
         }
         // Welle A 0.81.0: sitzend oder liegend gilt der Platz (am PC-Stuhl: direkt am Tisch)
         var (fx, fz) = MeinPlatz is { } platz && ReferenceEquals(innen, _platzInnen) ? (platz.Ort.X, platz.Ort.Z) : (FigurX, FigurZ);
-        var (titel, text, knoepfe) = innen.Nachricht(fx, fz, Sicht(Ablauf.Stand));
+        // Sammelliste 383: zu Hause nur Moebel aus dem Raum der Figur (Filter Nutzbar), sonst wie bisher
+        var (titel, text, knoepfe) = RaumRegel ? Wohnung.Nachricht(fx, fz, Ablauf.Stand, Nutzbar(fx, fz)) : innen.Nachricht(fx, fz, Sicht(Ablauf.Stand));
         Zeile = text.Length > 0 ? titel + "\n" + text : titel;
         if (_notiz is { } notiz)
         {
@@ -952,7 +966,7 @@ public sealed partial class StadtSpiel
             _notiz = null;
         }
         // Phase 12 Welle 1 (Nico 3b): am aufgestellten Kleiderschrank Text und Knopf (Name und Aussehen aendern)
-        if (Ort == SpielDaten.OrtZuhause && Charakter.SchrankNahe(Ablauf.Stand, fx, fz) is not null)
+        if (Ort == SpielDaten.OrtZuhause && Charakter.SchrankNahe(Ablauf.Stand, fx, fz, Nutzbar(fx, fz)) is not null)
         {
             if (knoepfe.Count == 0)
             {
@@ -973,11 +987,11 @@ public sealed partial class StadtSpiel
         var stand = Ablauf.Stand;
         if (Ort == SpielDaten.OrtZuhause)
         {
-            if (Spielwelt.Nahe(stand, Spielwelt.PcTyp, fx, fz) is not null)
+            if (Spielwelt.Nahe(stand, Spielwelt.PcTyp, fx, fz, Nutzbar(fx, fz)) is not null)
             {
                 knoepfe = [.. knoepfe, (Spielwelt.AktionComputer, Spielwelt.KnopfComputer)];
             }
-            if (Spielwelt.Nahe(stand, Spielwelt.RegalTyp, fx, fz) is not null)
+            if (Spielwelt.Nahe(stand, Spielwelt.RegalTyp, fx, fz, Nutzbar(fx, fz)) is not null)
             {
                 if (knoepfe.Count == 0)
                 {
@@ -1453,6 +1467,34 @@ public sealed partial class StadtSpiel
         }
         return ok;
     }
+
+    /// <summary>
+    /// Sammelliste 382 (Weisung P12-298, Nico): „Übernehmen“ gibt es, wenn das gewaehlte Moebel aufgestellt ist und keine
+    /// Vorschau offen ist.
+    /// </summary>
+    public bool KannUebernehmen => Einrichten && Ausgewaehlt is not null && AusgewaehltSteht && Vorschau is null;
+
+    /// <summary>
+    /// Sammelliste 382: „Übernehmen“ bestaetigt den Platz: die Auswahl ist aufgehoben, das Einrichten bleibt offen („Fertig“
+    /// verlaesst es erst). Nur Bedienung: der Platz ist schon mit „Aufstellen“ gespeichert, es entsteht kein Ereignis.
+    /// </summary>
+    public bool Uebernehmen()
+    {
+        if (!KannUebernehmen || UebernehmenAltFuerTests.Value)
+        {
+            return false;
+        }
+        var name = AusgewaehltName ?? Ausgewaehlt!;
+        Ausgewaehlt = null;
+        Vorschau = null;
+        _vorschauPunkt = null;
+        Zeile = PyFormat.Prozent(SpielProbeTexte.Uebernommen, name);
+        Geaendert?.Invoke();
+        return true;
+    }
+
+    /// <summary>Gegenprobe Sammelliste 382 (AsyncLocal): wie bis A 0.89.0, es gibt kein „Übernehmen“.</summary>
+    public static readonly AsyncLocal<bool> UebernehmenAltFuerTests = new();
 
     /// <summary>"In den Karton" (box_furniture).</summary>
     public bool InDenKarton()

@@ -185,7 +185,7 @@ public sealed partial class Hauptansicht
         _notizChip.IsVisible = !_drei;
         if (_einfuegenChip is not null)
         {
-            _einfuegenChip.IsVisible = !_drei;
+            _einfuegenChip.IsVisible = !_drei && !LeisteEingeklappt;
         }
         if (_waermeChip is not null)
         {
@@ -195,10 +195,18 @@ public sealed partial class Hauptansicht
         _ebenenKarte.IsVisible &= !_drei;
         var aus = Karte.EbenenAus.Count;
         _ebenenHinweis.Text = Texte.EbenenAusHinweis(aus);
-        _ebenenHinweis.IsVisible = aus > 0 && !_drei;
+        _ebenenHinweis.IsVisible = aus > 0 && !_drei && !LeisteEingeklappt;
+        LeisteZeigen();
     }
 
-    private static void ChipMarkieren(Button k, bool an)
+    private void ChipMarkieren(Button k, bool an)
+    {
+        ChipFarbe(k, an);
+        // Sammelliste 379: der aktive Modus steht im Knopf der schmalen Zeile
+        LeisteZeigen();
+    }
+
+    private static void ChipFarbe(Button k, bool an)
     {
         if (an)
         {

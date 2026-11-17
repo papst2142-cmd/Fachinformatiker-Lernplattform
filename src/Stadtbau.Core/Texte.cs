@@ -656,6 +656,7 @@ public static partial class Texte
         [Spielgeschichte] = TippSpielgeschichte,
         [Quests] = TippQuests,
         [Questgeber] = TippQuestgeber,
+        [SpielMenue] = TippSpielMenue,
         [GebaeudeEntwerfen] = "Baut ein eigenes Gebäude aus Wänden, Dächern und Fenstern und speichert es als Blueprint.",
         [MenueProjekt] = TippMenueProjekt,
         [MenueEinstellungen] = TippMenueEinstellungen,
@@ -1165,6 +1166,13 @@ public static partial class Texte
     // ---- Spielgeschichte ansehen (Welle S 0.22.0, Weisung P12-91, Kurzplan Meldung P12-59) ----
     /// <summary>Reiter und Ueberschrift.</summary>
     public const string Spielgeschichte = "Spielgeschichte";
+
+    // Sammelliste 378 (Weisung P12-298): ein Reiter „Spiel ▾“ fuer Spielgeschichte, Quests und Questgeber
+    public const string SpielMenue = "Spiel";
+    public const string SpielMenueName = "Spiel: Spielgeschichte, Quests und Questgeber";
+    public const string SpielMenueAuf = "Seitenleiste Spiel ausgeklappt";
+    public const string SpielMenueZu = "Seitenleiste Spiel eingeklappt";
+    public const string TippSpielMenue = "Öffnet die Spielgeschichte, die Quests oder die Questgeber; links stehen die drei Seiten zum Wählen. Ein zweiter Tipp klappt die Seitenleiste ein.";
     public const string TippSpielgeschichte = "Zeigt nur zum Ansehen, welche Aufgaben der Spielgeschichte an welchem Ort der Stadt spielen und ab welchem Tag.";
     public const string GeschichteAnOrt = "Spielgeschichte an diesem Ort";
 
@@ -1485,6 +1493,37 @@ public static partial class Texte
     public const string KameraEinklappen = "Einklappen";
     public const string KameraEinklappenTipp = "Klappt die Kamera-Karte ein, damit sie nichts von der Ansicht verdeckt. Ein Tipp auf „Kamera“ zeigt sie wieder.";
     public const string KameraAufklappen = "Kamera";
+
+    // Sammelliste 377 (Weisung P12-298): Karte „Grenzen live“ einklappbar wie die Kamera-Karte
+    // Sammelliste 379 (Weisung P12-298, Nico a): eine schmale Knopfleiste mit vier Knoepfen und Menues
+    public const string LeisteWaehlen = "Wählen";
+    public const string LeisteWerkzeuge = "Werkzeuge";
+    public const string LeisteAnzeigen = "Anzeigen";
+    public const string LeisteEinzeln = "Einzeln";
+    public const string LeisteMehrere = "Mehrere";
+    public const string LeisteEbenen = "Ebenen";
+    public const string LeisteEinklappen = "Knopfleiste einklappen";
+    public const string LeisteAufklappen = "Knopfleiste aufklappen";
+    public const string LeisteAufklappenText = "Knöpfe ›";
+    public const string LeisteEingeklapptAnsage = "Knopfleiste eingeklappt";
+    public const string LeisteAufgeklapptAnsage = "Knopfleiste aufgeklappt";
+    public const string LeisteEinklappenTipp = "Klappt die Knopfleiste ein, damit sie nichts von der Karte verdeckt. Die Tastenkürzel wirken weiter.";
+    public const string LeisteAufklappenTipp = "Zeigt die Knopfleiste wieder: Wählen, Einfügen, Werkzeuge und Anzeigen.";
+
+    /// <summary>Tipp je Knopf der schmalen Zeile (Sammelliste 379).</summary>
+    public static readonly IReadOnlyDictionary<string, string> LeisteTipps = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        [LeisteWaehlen] = "Wählt, ob ein Tipp ein Stück wählt (Einzeln) oder mehrere zusammen (Mehrere, Taste U).",
+        [LeisteWerkzeuge] = "Maßband (L), Notiz (N), Plätze (P) und Stadtteil-Namen (B). Das aktive Werkzeug steht im Knopf.",
+        [Einfuegen] = "Fügt das Kopierte aus der Zwischenablage ein (auch aus einem anderen Projekt).",
+        [LeisteAnzeigen] = "Ebenen ein- und ausblenden, Wärmekarte (W) und Stadtteile (T); ein Häkchen zeigt, was an ist.",
+    };
+
+    public const string GrenzenAufklappen = "Grenzen";
+    public const string GrenzenEinklappenName = "Grenzen live einklappen";
+    public const string GrenzenAufklappenName = "Grenzen live aufklappen";
+    public const string GrenzenEinklappenTipp = "Klappt die Karte „Grenzen live“ ein. Die Zeile mit dem größten Anteil bleibt stehen, über der Grenze rot.";
+    public const string GrenzenAufklappenTipp = "Zeigt die Karte „Grenzen live“ wieder mit Balken, Gesamtansicht und teuerster Nahansicht.";
     public const string KameraAufklappenTipp = "Zeigt die Kamera-Karte wieder mit allen Knöpfen und Schaltern.";
 
     // S 0.52.0 Alle beheben, die sicher gehen (Weisung P12-231 Punkt 5)

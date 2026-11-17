@@ -295,6 +295,55 @@ public class SpielInnenraumTests
         Assert.Null(spiel.Ausgewaehlt);
     }
 
+    /// <summary>
+    /// Sammelliste 382 (Weisung P12-298, Nico): nach dem Aufstellen „Übernehmen“: Auswahl weg, Einrichten bleibt offen, kein
+    /// Ereignis (gleiche Speicherung wie mit „Aufstellen“); erst „Fertig“ verlaesst das Einrichten. Gegenprobe wie bis A 0.89.0.
+    /// </summary>
+    [Fact]
+    public void Einrichten_Uebernehmen_HebtAuswahlAufUndBleibtImMenue()
+    {
+        var spiel = NeuesSpiel();
+        Assert.True(spiel.Betreten());
+        spiel.EinrichtenUmschalten();
+        Assert.True(spiel.GeheZu(1.0, 1.0));
+        Assert.Equal("start-matratze", spiel.Ausgewaehlt);
+        Assert.True(spiel.InDenKarton());
+        Assert.False(spiel.KannUebernehmen);
+        Assert.True(spiel.GeheZu(5.0, 3.0));
+        Assert.False(spiel.KannUebernehmen);
+        var v = spiel.Vorschau!;
+        Assert.True(spiel.GeheZu(Py.F(v["x"]) + 0.1, Py.F(v["y"]) + 0.1));
+        Assert.True(spiel.AusgewaehltSteht);
+        Assert.True(spiel.KannUebernehmen);
+        var ereignisse = spiel.Ablauf.Stand.Verlauf.Count;
+        var platz = Wohnung.AufgestellteMoebel(spiel.Ablauf.Stand).Single(m => m.Stueck == "start-matratze");
+        Assert.True(spiel.Uebernehmen());
+        Assert.Null(spiel.Ausgewaehlt);
+        Assert.Null(spiel.Vorschau);
+        Assert.True(spiel.Einrichten);
+        Assert.Equal(ereignisse, spiel.Ablauf.Stand.Verlauf.Count);
+        Assert.Equal(platz, Wohnung.AufgestellteMoebel(spiel.Ablauf.Stand).Single(m => m.Stueck == "start-matratze"));
+        Assert.Contains("Fertig", spiel.Zeile);
+        // danach waehlt ein Tippen wieder ein Moebel
+        Assert.True(spiel.GeheZu(Py.F(v["x"]) + 0.1, Py.F(v["y"]) + 0.1));
+        Assert.Equal("start-matratze", spiel.Ausgewaehlt);
+        spiel.EinrichtenUmschalten();
+        Assert.False(spiel.Einrichten);
+        // Gegenprobe: wie bis A 0.89.0 gibt es kein „Übernehmen“, die Auswahl bliebe
+        spiel.EinrichtenUmschalten();
+        spiel.Waehlen("start-matratze");
+        StadtSpiel.UebernehmenAltFuerTests.Value = true;
+        try
+        {
+            Assert.False(spiel.Uebernehmen());
+            Assert.Equal("start-matratze", spiel.Ausgewaehlt);
+        }
+        finally
+        {
+            StadtSpiel.UebernehmenAltFuerTests.Value = false;
+        }
+    }
+
     /// <summary>Laeuft ein anderer Vorgang, schreibt Einrichten nichts und die Zeile sagt AbgleichTexte.Belegt.</summary>
     [Fact]
     public void BelegtZeigtDenHinweis()

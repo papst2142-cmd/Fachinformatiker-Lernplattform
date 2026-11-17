@@ -173,6 +173,9 @@ public static partial class StadtbauMessung
         await a.AussenGeprueft;
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         var knopf = a.PlaetzeKnopf;
+        // Welle S 0.58.0 (Sammelliste 379): der Knopf steht im Menue der schmalen Knopfleiste; erst das Menue oeffnen
+        a.LeisteMenueFuer(knopf);
+        await AntippbarAsync(a, knopf);
         var zeiger = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, true);
         var m = new Point(knopf.Bounds.Width / 2, knopf.Bounds.Height / 2);
         Maus(knopf, zeiger, m, RawInputModifiers.LeftMouseButton, PointerUpdateKind.LeftButtonPressed);
@@ -254,7 +257,8 @@ public static partial class StadtbauMessung
             await BildAsync(a);
             if (a.StadtPlan?.Platz != platz || a.Karte.StadtVorschauGezeichnet is not { } sv2 || sv2.Bereich.X1 != ox || sv2.Bereich.Y1 != oy)
             {
-                Fund("373 " + fall + ": nach 3D zeigt „Plätze“ die Stadt nicht auf Platz " + platz + " (" + a.StadtPlan + ")");
+                Fund("373 " + fall + ": nach 3D zeigt „Plätze“ die Stadt nicht auf Platz " + platz + " (" + a.StadtPlan + ", Vorschau "
+                    + a.Karte.StadtVorschauGezeichnet + ", Plaetze an " + a.Karte.PlaetzeAn + ")");
             }
         }
         var neu = Projekt.Oeffnen(p.Datei, a.Daten!, a.Ablage);

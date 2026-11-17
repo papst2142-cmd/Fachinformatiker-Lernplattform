@@ -100,7 +100,7 @@ public sealed partial class Hauptansicht
         if (seite == Texte.Quests)
         {
             _questAnsicht ??= QuestBauen();
-            _inhalt.Content = _questAnsicht;
+            SpielSeiteSetzen(_questAnsicht);
             QuestFilterFuellen();
             QuestListeZeigen();
             QuestEditorZeigen();
@@ -108,7 +108,7 @@ public sealed partial class Hauptansicht
         else
         {
             _qgAnsicht ??= QgBauen();
-            _inhalt.Content = _qgAnsicht;
+            SpielSeiteSetzen(_qgAnsicht);
             QgListeZeigen();
             QgEditorZeigen();
         }

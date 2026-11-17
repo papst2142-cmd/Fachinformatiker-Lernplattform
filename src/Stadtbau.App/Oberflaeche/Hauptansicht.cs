@@ -513,6 +513,10 @@ public sealed partial class Hauptansicht : UserControl
         _kopf[Texte.Spielgeschichte].IsEnabled = mit;
         _kopf[Texte.Quests].IsEnabled = mit;
         _kopf[Texte.Questgeber].IsEnabled = mit;
+        if (_kopf.TryGetValue(Texte.SpielMenue, out var spielMenue))
+        {
+            spielMenue.IsEnabled = mit;
+        }
         _kopf[Texte.Neu].IsEnabled = _daten is not null;
         _kopf[Texte.Oeffnen].IsEnabled = _daten is not null;
         _kopf[Texte.Speichern].IsEnabled = schreiben;
@@ -528,13 +532,20 @@ public sealed partial class Hauptansicht : UserControl
             {
                 _kopf[name].IsEnabled = false;
             }
+            if (spielMenue is not null)
+            {
+                spielMenue.IsEnabled = false;
+            }
             _kopf[Texte.Rueckgaengig].IsEnabled = entwurf.Entwurf.KannZurueck;
             _kopf[Texte.Wiederholen].IsEnabled = entwurf.Entwurf.KannWiederholen;
         }
-        foreach (var name in Reiter)
+        foreach (var name in Reiter.Append(Texte.SpielMenue))
         {
-            var k = _kopf[name];
-            var aktiv = name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei && !_geschichteOffen) || (name == Texte.Ansicht3D && _drei) || (name == Texte.Spielgeschichte && _geschichteOffen && _seite is null)
+            if (!_kopf.TryGetValue(name, out var k))
+            {
+                continue;
+            }
+            var aktiv = name == Texte.SpielMenue ? _entwurf is null && mit && _geschichteOffen : name == Texte.GebaeudeEntwerfen ? _entwurf is not null : _entwurf is null && mit && ((name == Texte.Innenraeume && _innen) || (name == Texte.Draufsicht && !_innen && !_drei && !_geschichteOffen) || (name == Texte.Ansicht3D && _drei) || (name == Texte.Spielgeschichte && _geschichteOffen && _seite is null)
                 || (name == Texte.Quests && _geschichteOffen && _seite == Texte.Quests) || (name == Texte.Questgeber && _geschichteOffen && _seite == Texte.Questgeber));
             // Welle Q (Punkt 1): der gewaehlte Reiter farbig, die anderen auf dem Grund der Leiste
             if (aktiv)
@@ -549,8 +560,10 @@ public sealed partial class Hauptansicht : UserControl
             {
                 t.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.on_accent" : "Pinsel.text");
             }
-            AutomationProperties.SetName(k, aktiv ? name + ", " + Texte.SetzenGewaehlt : name);
+            var vorlesen = name == Texte.SpielMenue ? Texte.SpielMenueName : name;
+            AutomationProperties.SetName(k, aktiv ? vorlesen + ", " + Texte.SetzenGewaehlt : vorlesen);
         }
+        SpielMenueBeschriften();
         foreach (var name in new[] { Texte.Rueckgaengig, Texte.Wiederholen })
         {
             _kopf[name].Opacity = _kopf[name].IsEnabled ? 1 : 0.4;

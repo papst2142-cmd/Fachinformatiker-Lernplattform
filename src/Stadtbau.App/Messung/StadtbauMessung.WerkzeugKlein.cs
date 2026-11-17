@@ -37,9 +37,11 @@ public static partial class StadtbauMessung
         var k = a.Karte;
         foreach (var knopf in new[] { a.MassbandKnopf, a.EbenenKnopf, a.NotizKnopf })
         {
-            if (!knopf.IsEffectivelyVisible || a.KlicksBis(knopf) is not 0)
+            // Welle S 0.58.0 (Sammelliste 379): die Knoepfe stehen in den Menues der schmalen Knopfleiste, ein Tippen weit
+            if (!knopf.IsVisible || a.KlicksBis(knopf) is not 1)
             {
-                Fund("Werkzeug klein: Knopf \"" + Avalonia.Automation.AutomationProperties.GetName(knopf) + "\" nicht sichtbar oben in der Draufsicht");
+                Fund("Werkzeug klein: Knopf \"" + Avalonia.Automation.AutomationProperties.GetName(knopf) + "\" nicht mit einem Tippen in der Knopfleiste oben in der Draufsicht ("
+                    + a.KlicksBis(knopf).ToString(Inv) + ")");
                 return;
             }
         }

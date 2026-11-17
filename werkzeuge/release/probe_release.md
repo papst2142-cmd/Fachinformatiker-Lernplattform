@@ -1,23 +1,22 @@
-Inhaltspakete lassen sich jetzt wirklich aus dem Internet laden, und Städte aus Paketen können eigene Aufträge haben.
+Im Spiel wird das Wohnen und Einkaufen bequemer: Betten, Möbel und das Geld in den Läden verhalten sich jetzt so, wie man es erwartet.
 
-- „Nach Paketen suchen“ fragt jetzt bei GitHub nach, wo die Pakete der Lernplattform liegen. Gezeigt werden nur fertige Pakete; Entwürfe, Vorabversionen und Programm-Updates erscheinen dort nie.
-- Jede geladene Datei wird mit der Prüfsumme verglichen, die GitHub zu ihr nennt. Passt sie nicht oder fehlt sie, steht der Grund in Rot dabei und nichts wird geladen. Ein Update der App lädt nie ein Paket, und ein Paket ersetzt nie die App.
-- Eine Stadt aus einem Paket kann jetzt Aufträge haben. Personen vor den Geschäften bieten sie mit „Auftrag annehmen“ an, gelöst werden sie wie die Tickets zu Hause. Sie zählen nicht zu den Tickets des Tages und warten, bis du sie löst.
-- Fehlt das Paket auf einem Gerät, ruhen seine Aufträge; nichts geht verloren, und nach dem Laden geht es genau dort weiter. Gelöste Aufträge zählen auf jedem Gerät gleich.
-- Der Fahrplan am Bahnhof nennt nur noch Städte. Pakete anderer Art stehen nur in den Optionen.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Heimatstadt bleiben, wie sie sind.
+- Deine Figur liegt jetzt immer längs im Bett, mit dem Kopf am Kopfteil, egal wie das Bett gedreht ist oder an welcher Wand es steht. Das gilt auch für die Betten im Möbelhaus.
+- In jedem Laden (Kaufhaus, Möbelhaus, Elektromarkt) und im Online-Shop am PC steht dein Kontostand fest oben neben „Zurück“. Er bleibt dort, auch wenn du in einer langen Liste nach unten rollst.
+- Beim Einrichten der Wohnung gibt es nach dem Aufstellen eines Möbelstücks den Knopf „Übernehmen“: das Stück bleibt an seinem Platz, die Auswahl wird aufgehoben, und du kannst gleich das nächste Stück anfassen. „Fertig“ beendet das Einrichten wie bisher.
+- Ein Möbelstück lässt sich nur noch aus seinem eigenen Raum benutzen. Stehst du auf der anderen Seite der Wand und tippst es an, geht deine Figur durch die Tür vor das Möbel; durch die Wand hindurch bietet es nichts mehr an.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.89.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.90.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.89.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.89.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.89.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.89.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.90.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.90.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.90.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.90.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

@@ -66,6 +66,12 @@ public sealed partial class SpielSeite : Grid
     /// <summary>Knoepfe des Ortes je Aktion (Start-Test, Welle A 0.81.0: Hinsetzen, Hinlegen, Aufstehen).</summary>
     public IReadOnlyDictionary<string, Button> OrtKnoepfe => _ortKnoepfeJeAktion;
 
+    /// <summary>Sammelliste 382 (Start-Test): Knoepfe der Einrichten-Tafel nach Beschriftung (heute „Übernehmen“).</summary>
+    internal Dictionary<string, Button> EinrichtenKnoepfe { get; } = [];
+
+    /// <summary>Sammelliste 382 (Start-Test): Knopf „Einrichten“/„Fertig“.</summary>
+    internal Button EinrichtenKnopf => _einrichten;
+
     private readonly Dictionary<string, Button> _ortKnoepfeJeAktion = new(StringComparer.Ordinal);
     // Phase 12 Welle 2: ohne 3D die Knoepfe der Moebel am Ort oben in der Ortsliste (sie rollt; unten in der Karte
     // passten sie bei grosser Schrift am Handy nicht mehr ins Bild)
@@ -1242,6 +1248,7 @@ public sealed partial class SpielSeite : Grid
         _zeileRolle.MaxHeight = ZeileHoehe;
         KnoepfeVoll();
         _einrichtenTafel.Children.Clear();
+        EinrichtenKnoepfe.Clear();
         _einrichtenTafel.IsVisible = spiel.Einrichten;
         if (!spiel.Einrichten)
         {
@@ -1260,6 +1267,14 @@ public sealed partial class SpielSeite : Grid
                 var aufstellen = Schrift.Knopf(SpielProbeTexte.Aufstellen, true);
                 aufstellen.Click += (_, _) => spiel.Aufstellen();
                 reihe.Children.Add(aufstellen);
+            }
+            if (spiel.KannUebernehmen)
+            {
+                // Sammelliste 382 (Weisung P12-298, Nico): Platz bestaetigen, Auswahl aufheben, im Einrichten bleiben
+                var uebernehmen = Schrift.Knopf(SpielProbeTexte.Uebernehmen, true);
+                uebernehmen.Click += (_, _) => spiel.Uebernehmen();
+                reihe.Children.Add(uebernehmen);
+                EinrichtenKnoepfe[SpielProbeTexte.Uebernehmen] = uebernehmen;
             }
             if (spiel.AusgewaehltSteht)
             {

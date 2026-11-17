@@ -51,6 +51,9 @@ public static partial class StadtbauMessung
 
         // Maus: Knopf an
         var knopf = a.NamenKnopf;
+        // Welle S 0.58.0 (Sammelliste 379): der Knopf steht im Menue der schmalen Knopfleiste; erst das Menue oeffnen
+        a.LeisteMenueFuer(knopf);
+        await AntippbarAsync(a, knopf);
         var zeigerMaus = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, true);
         var mitte = new Point(knopf.Bounds.Width / 2, knopf.Bounds.Height / 2);
         Maus(knopf, zeigerMaus, mitte, RawInputModifiers.LeftMouseButton, PointerUpdateKind.LeftButtonPressed);
