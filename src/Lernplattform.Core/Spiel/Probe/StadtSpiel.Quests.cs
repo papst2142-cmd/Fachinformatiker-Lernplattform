@@ -52,10 +52,21 @@ public sealed partial class StadtSpiel
         return Szene.Laufraster.KannStehen(vorn.X, vorn.Z) ? vorn : (q.X, q.Z);
     }
 
+    /// <summary>
+    /// Welle A 0.89.0 (Weisung P12-297 B): die Sicht der Engine auf den Spielstand; in einer Paket-Stadt mit ihren Personen und
+    /// Quests (<see cref="PaketSicht"/>), in Stadt 1 der Spielstand selbst (unveraendert).
+    /// </summary>
+    private ISpielSicht Sicht(Spielstand stand) => Stadt.Vorsatz is null ? stand : new PaketSicht(stand, Stadt);
+
+    /// <summary>Offene Auftraege je Questgeber an einem Ort (Paket-Stadt: ihre Quests, <see cref="PaketQuests"/>).</summary>
+    private PyDict AuftraegeAm(object? ort) => Stadt.Vorsatz is null ? Ablauf.Stand.Auftraege(ort) : PaketQuests.Auftraege(Stadt, Ablauf.Stand, ort);
+
     /// <summary>Text und Knopf eines Questgebers draussen (wie eine Person im Buero).</summary>
     private (string Zeile, List<(string Aktion, string Name)> Knoepfe) QuestgeberText(Questebene.Draussen q)
     {
-        var (titel, text, knoepfe) = SpielOrte.Nachricht(Questebene.OrtDraussen, q.X, q.Z, q.Daten, Ablauf.Stand, new PyObjekt { { "raeume", new List<object?>() } });
+        var (titel, text, knoepfe) = Stadt.Vorsatz is not null
+            ? PaketQuests.Nachricht(Stadt, Ablauf.Stand, q.Daten, Questebene.OrtDraussen)
+            : SpielOrte.Nachricht(Questebene.OrtDraussen, q.X, q.Z, q.Daten, Ablauf.Stand, new PyObjekt { { "raeume", new List<object?>() } });
         return (text.Length > 0 ? titel + "\n" + text : titel, knoepfe);
     }
 
@@ -82,7 +93,7 @@ public sealed partial class StadtSpiel
         {
             return;
         }
-        var auftraege = Ablauf.Stand.Auftraege(Questebene.OrtDraussen);
+        var auftraege = AuftraegeAm(Questebene.OrtDraussen);
         var knoepfe = Knoepfe.ToList();
         foreach (var q in QuestgeberDraussen)
         {

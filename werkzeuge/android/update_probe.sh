@@ -10,7 +10,8 @@
 # Fragt Android zurueck ("Aktualisieren?", Status -1), tippt die Probe auf den Knopf und haelt das fest
 # (Rueckfrage ja/nein je Schritt, Nico 1a: das Programm laedt selbst, Android darf nachfragen).
 # Rot (Rueckgabe 1) wenn: eine Version kommt nicht an, update.log nennt das Update nicht "abgeschlossen" oder es gibt
-# keine Kopie vor_update_*, oder (Schritt 4, A 0.41.1) das Vollbild nach Neustart/Rueckkehr fehlt. Aufruf: update_probe.sh <apk_n> <apk_n1> <apk_n2> <ergebnisdatei>
+# keine Kopie vor_update_*, oder (Schritt 3b, A 0.89.0) das Inhaltspaket laedt nicht richtig, oder (Schritt 4, A 0.41.1)
+# das Vollbild nach Neustart/Rueckkehr fehlt. Aufruf: update_probe.sh <apk_n> <apk_n1> <apk_n2> <ergebnisdatei>
 set -u
 APK0=$1; APK1=$2; APK2=$3; ERGEBNIS=$4
 PORT=8765
@@ -30,6 +31,11 @@ zeile "Paket $PAKET, Versionscodes $C0 -> $C1 -> $C2"
 case "$PAKET" in io.github.papst2142cmd.lernplattform) ;; *) zeile "FEHLER: Paketname nicht gelesen ($PAKET)"; exit 1;; esac
 [ -n "$C0" ] && [ -n "$C1" ] && [ -n "$C2" ] && [ "$C0" -lt "$C1" ] && [ "$C1" -lt "$C2" ] || { zeile "FEHLER: Versionscodes nicht gelesen"; exit 1; }
 
+# Welle A 0.89.0 (Weisung P12-297 W3-4): dazu die Paketliste releases.json im Format von GitHub (paket_release.py github-probe,
+# Adressen auf diesen Server) und die Paketdateien; die App laedt sie in Schritt 3 mit der echten Verwaltung (UpdateProbe.PaketeAsync)
+ECHT=tests/Lernplattform.Tests/Testdaten/pakete_echt
+sed "s#http://PAKETPROBE#http://10.0.2.2:$PORT#g" "$ECHT/github_releases.json" > "$SERVER/releases.json" || { zeile "FEHLER: Paketliste fehlt"; exit 1; }
+cp "$ECHT"/*.fipaket "$SERVER/"
 # Testserver: latest.json wie die GitHub-API, APK unter ihrem Namen
 python3 -I -m http.server "$PORT" --bind 0.0.0.0 --directory "$SERVER" > "$SERVER/../server_$PORT.log" 2>&1 &
 SERVER_PID=$!
@@ -157,6 +163,17 @@ until grep -q "UPDATEPROBE: VOLLBILD MERKER" "$LOG" || [ $t -ge 30 ]; do
 done
 grep "UPDATEPROBE: VOLLBILD MERKER" "$LOG" | sed 's/^.*UPDATEPROBE: /  /' | tee -a "$ERGEBNIS"
 grep -q "UPDATEPROBE: VOLLBILD MERKER an" "$LOG" || { zeile "FEHLER: Merker vollbild nicht gespeichert"; rc=1; }
+# Schritt 3b (Welle A 0.89.0, W3-4): Inhaltspaket vom nachgestellten GitHub laden; nur Pakete (kein Entwurf, kein Vorab,
+# kein Programm-Release), falsche Pruefsumme rot, probe_quests gegen den digest geladen
+t=0
+until grep -q "UPDATEPROBE: PAKET ENDE" "$LOG" || [ $t -ge 90 ]; do
+  sleep 3; t=$((t + 3)); adb logcat -d -s UPDATEPROBE:I > "$LOG" 2>/dev/null || true
+done
+grep "UPDATEPROBE: PAKET" "$LOG" | sed 's/^.*UPDATEPROBE: /  /' | tee -a "$ERGEBNIS"
+grep -qE "UPDATEPROBE: PAKET LISTE probe_kaputt,probe_quests[[:space:]]*$" "$LOG" || { zeile "FEHLER: Paketliste nicht genau probe_kaputt,probe_quests"; rc=1; }
+grep -q "UPDATEPROBE: PAKET KAPUTT .*probe_kaputt_1.fipaket" "$LOG" || { zeile "FEHLER: falsche Pruefsumme nicht abgelehnt"; rc=1; }
+grep -q "UPDATEPROBE: PAKET GELADEN probe_quests 1 digest [0-9a-f]\{64\}" "$LOG" || { zeile "FEHLER: Paket probe_quests nicht geladen"; rc=1; }
+grep -q "/probe_quests_1.fipaket" "$SERVER/../server_$PORT.log" || { zeile "FEHLER: Paketdatei nie vom Testserver geholt"; rc=1; }
 KOMP=$(adb shell cmd package resolve-activity --brief "$PAKET" | tr -d '\r' | tail -n 1)
 leisten() {   # $1 Beschreibung, $2 erwartet "ja"/"nein" (Statusleiste sichtbar)
   local t=0 z=""
@@ -185,5 +202,5 @@ if [ $rc -ne 0 ]; then
   echo "===== Absturz-Puffer (logcat -b crash) ====="
   adb logcat -d -b crash | tail -n 80 || true
 fi
-if [ $rc -eq 0 ]; then zeile "ERGEBNIS: gruen (n -> n+1 -> n+2, update.log und Kopien da, Vollbild nach Neustart und Rueckkehr)"; else zeile "ERGEBNIS: rot"; fi
+if [ $rc -eq 0 ]; then zeile "ERGEBNIS: gruen (n -> n+1 -> n+2, update.log und Kopien da, Paket geladen, Vollbild nach Neustart und Rueckkehr)"; else zeile "ERGEBNIS: rot"; fi
 exit $rc

@@ -22,7 +22,8 @@ public static class SpielZug
         {
             new(null, ZugTexte.Stadt1, true, verwaltung.Gesucht is null && !Laedt ? (StadtSpiel.AktionPaketSuchen, ZugTexte.Suchen) : null),
         };
-        foreach (var z in verwaltung.Zeilen())
+        // Sammelliste 376: nur Pakete, deren Art als Stadt bekannt ist (sonst nur in den Optionen)
+        foreach (var z in verwaltung.Zeilen().Where(z => z.ImFahrplan))
         {
             switch (z.Zustand)
             {
@@ -39,11 +40,8 @@ public static class SpielZug
                         Laedt ? null : (StadtSpiel.AktionPaketLaden + z.Kennung, ZugTexte.Format(ZugTexte.PaketFehlt, z.Name, PaketTexte.Mb(z.Groesse)))));
                     break;
                 default:
-                    // fehlerhaft: nur Staedte (ein Paket unbekannter Art faehrt nie), Grund steht in den Optionen
-                    if (!z.ZustandText.Contains(PaketTexte.ArtUnbekannt, StringComparison.Ordinal))
-                    {
-                        liste.Add(new(z.Kennung, z.Name, false, null, ZugTexte.Format(ZugTexte.Fehlerhaft, z.Name)));
-                    }
+                    // fehlerhaft: Grund steht in den Optionen
+                    liste.Add(new(z.Kennung, z.Name, false, null, ZugTexte.Format(ZugTexte.Fehlerhaft, z.Name)));
                     break;
             }
         }

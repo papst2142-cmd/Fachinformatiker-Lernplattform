@@ -25,7 +25,8 @@ public sealed class SpielKernRegeln : ISpielRegeln
 
     private static readonly SpielKernRegeln Einmal = new();
 
-    private static Spielstand S(ISpielSicht stand) => (Spielstand)stand;
+    /// <summary>Der Spielstand hinter einer Sicht (in einer Paket-Stadt der Spielstand hinter <see cref="PaketSicht"/>).</summary>
+    private static Spielstand S(ISpielSicht stand) => stand is PaketSicht p ? p.Stand : (Spielstand)stand;
 
     /// <inheritdoc/>
     public ISpielSicht Probestand(PyObjekt inhalt) => StadtbauSpiel.Probestand(inhalt).Stand;
@@ -40,7 +41,7 @@ public sealed class SpielKernRegeln : ISpielRegeln
     public PyObjekt FarmInhalt(PyObjekt inhalt) => Betrieb.FarmInhalt(inhalt);
 
     /// <inheritdoc/>
-    public string FarmOrtText(ISpielSicht? stand, PyObjekt inhalt) => Betrieb.FarmOrtText((Spielstand?)stand, inhalt);
+    public string FarmOrtText(ISpielSicht? stand, PyObjekt inhalt) => Betrieb.FarmOrtText(stand is null ? null : S(stand), inhalt);
 
     /// <inheritdoc/>
     public PyObjekt? FilialGebaeude(ISpielSicht stand) => Betrieb.FilialGebaeude(S(stand));
@@ -67,11 +68,13 @@ public sealed class SpielKernRegeln : ISpielRegeln
     public PyObjekt OrtGebaeude(string ort, ISpielSicht stand) => SpielOrte.Gebaeude(ort, S(stand));
 
     /// <inheritdoc/>
-    public List<PyObjekt> OrtPersonen(string ort, ISpielSicht stand) => SpielOrte.Personen(ort, S(stand));
+    public List<PyObjekt> OrtPersonen(string ort, ISpielSicht stand) =>
+        stand is PaketSicht p ? SpielOrte.Personen(ort, p.Stand, p.Inhalt, p.Offene) : SpielOrte.Personen(ort, S(stand));
 
     /// <inheritdoc/>
     public (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) OrtNachricht(string ort, double x, double y,
-        PyObjekt? person, ISpielSicht stand, PyObjekt? gebaeude) => SpielOrte.Nachricht(ort, x, y, person, S(stand), gebaeude);
+        PyObjekt? person, ISpielSicht stand, PyObjekt? gebaeude) =>
+        SpielOrte.Nachricht(ort, x, y, person, S(stand), gebaeude, stand is PaketSicht p ? p.Auftraege(ort) : null);
 
     /// <inheritdoc/>
     public string TeilName(string typ, PyObjekt inhalt) => Geschaefte.TypName(typ, inhalt);

@@ -261,6 +261,7 @@ public sealed partial class Hauptansicht
         _innen = false;
         _geschichteOffen = false;
         QgSetzenBeenden();
+        EinsetzenWahlZuruecksetzen();
         _projekt.Geaendert -= ProjektGeaendert;
         _projekt = null;
         _ort = null;

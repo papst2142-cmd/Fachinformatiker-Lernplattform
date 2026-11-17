@@ -369,7 +369,9 @@ public sealed partial class Projekt
         foreach (var (k, _) in qsd)
         {
             if (k is "fusswege" or "haltestellen" or "parkplaetze" or "ampeln" or "zebrastreifen" or "katalog" or "wasser" or "uhr" or "raster" or "darstellung" or "_hinweis"
-                or Gelaende.Abschnitt or Stadtteile.AbschnittNamen or Questebene.AbschnittQuests or Questebene.AbschnittQuestgeber || HausAbschnitte.Contains(k))
+                or Gelaende.Abschnitt or Stadtteile.AbschnittNamen or Questebene.AbschnittQuests or Questebene.AbschnittQuestgeber
+                // S 0.57.0: Kennung und Name eines Pakets bleiben die des Ziels (kein Teil der Haeuser)
+                or StadtPaket.Abschnitt || HausAbschnitte.Contains(k))
             {
                 continue;
             }

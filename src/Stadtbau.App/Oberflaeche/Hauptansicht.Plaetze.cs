@@ -59,6 +59,33 @@ public sealed partial class Hauptansicht
     internal static bool PlaetzeAltFuerTests { get; set; }
 
     /// <summary>
+    /// Gegenprobe Sammelliste 375: die Wahl „Stadtteil einsetzen: Projekt“ bleibt beim Projektwechsel und nach dem Einsetzen
+    /// stehen (wie bis S 0.56.2). Nur Start-Test.
+    /// </summary>
+    internal static bool EinsetzenWahlAltFuerTests { get; set; }
+
+    /// <summary>Start-Test (Sammelliste 375): Datei des gewaehlten Stadtteils (null = „Kein Projekt“).</summary>
+    internal string? EinsetzenDatei => _einsetzenDatei;
+
+    /// <summary>
+    /// Sammelliste 375 (S 0.57.0, Weisung P12-297 C): die Wahl „Stadtteil einsetzen“ gehoert zum Projekt und zu einem Einsetzen.
+    /// Beim Oeffnen eines anderen Projekts, beim Schliessen und nach einem gelungenen Einsetzen geht sie auf „Kein Projekt“
+    /// zurueck; Tippen waehlt dann wieder den Platz der heutigen Stadt (Sammelliste 373).
+    /// </summary>
+    private void EinsetzenWahlZuruecksetzen()
+    {
+        if (EinsetzenWahlAltFuerTests)
+        {
+            return;
+        }
+        _einsetzenDatei = null;
+        _einsetzenQuelle = null;
+        _einsetzenPlatz = null;
+        _einsetzenVorschau = null;
+        Karte.PlatzZeigen(null, null);
+    }
+
+    /// <summary>
     /// Welle S 0.56.2 (Fund Nico 373): Vorschau der heutigen Stadt rechnen (gleiche Rechnung wie „Übernehmen“) und auf der Karte
     /// zeigen; ohne gewaehlten Stadtteil tippt man auf dem Raster der neuen Groesse den Platz der Stadt.
     /// </summary>
@@ -323,6 +350,9 @@ public sealed partial class Hauptansicht
         // damit rechts nicht „Platz … liegt schon etwas“ rot stehen bleibt, als waere es schiefgegangen
         _einsetzenPlatz = null;
         EinsetzenVorschauRechnen();
+        // Sammelliste 375: danach waehlt Tippen wieder den Platz der heutigen Stadt
+        EinsetzenWahlZuruecksetzen();
+        StadtVorschauRechnen();
         _aussenStand++;
         AussenAuswahlZeigen();
         Melden(Texte.EinsetzenSchritt(q.Name, p) + (e.Hinweise.Count > 0 ? " " + Texte.EinsetzenHinweise(e.Hinweise.Count) : ""));

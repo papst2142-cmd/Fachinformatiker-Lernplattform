@@ -87,7 +87,8 @@ public sealed partial class Spielstand
             return [];       // Bitweiche-Tickets gibt es nach der Gruendung nicht mehr
         }
         var jeTag = TicketsHeute;
-        var regulaer = Bearbeitet.Keys.Count(k => !IstZwischenfall(k, Inhalt));
+        // Welle A 0.89.0 (Weisung P12-297 B): Quests aus Paket-Staedten (Vorsatz kennung:) zaehlen nicht zu den Tickets des Tages
+        var regulaer = Bearbeitet.Keys.Count(k => !IstZwischenfall(k, Inhalt) && !PaketQuests.NichtImTag(k));
         var ergebnis = Vorrat().Take((int)Math.Max(0, checked(jeTag - regulaer))).ToList();
         var fall = ZwischenfallHeute();
         if (fall is not null && !Bearbeitet.ContainsKey(fall["id"]))

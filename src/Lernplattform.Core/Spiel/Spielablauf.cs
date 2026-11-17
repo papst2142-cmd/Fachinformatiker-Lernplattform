@@ -585,6 +585,10 @@ public sealed class Spielablauf
     public PyObjekt Loesen(object? aufgabe, object? antwort, bool hilfe) =>
         Ausfuehren(SpielAktionen.Loesen(Stand, aufgabe, antwort, hilfe, ThemenWissen()));
 
+    /// <summary>Welle A 0.89.0 (Weisung P12-297 B): eine Quest der Paket-Stadt <paramref name="stadt"/> loesen (Ereignis erledigt).</summary>
+    public PyObjekt PaketLoesen(Stadt stadt, object? aufgabe, object? antwort, bool hilfe) =>
+        Ausfuehren(PaketQuests.Loesen(stadt, Stand, aufgabe, antwort, hilfe, ThemenWissen()));
+
     public PyObjekt Ersatzteil(object? aufgabe, object? teil) => Ausfuehren(SpielAktionen.Ersatzteil(Stand, aufgabe, teil));
 
     public PyObjekt Verschieben(object? aufgabe) => Ausfuehren(SpielAktionen.Verschieben(Stand, aufgabe));

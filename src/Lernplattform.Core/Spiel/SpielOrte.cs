@@ -75,7 +75,13 @@ public static class SpielOrte
     }
 
     /// <summary>people_at_site: Personen am Ort mit ihrem Platz; wer einen offenen Auftrag mit "stelle" hat, wartet dort.</summary>
-    public static List<PyObjekt> Personen(string ort, Spielstand stand)
+    public static List<PyObjekt> Personen(string ort, Spielstand stand) => Personen(ort, stand, null, null);
+
+    /// <summary>
+    /// Welle A 0.89.0 (Weisung P12-297 B): wie <see cref="Personen(string, Spielstand)"/>, mit den Personen einer Paket-Stadt
+    /// (<paramref name="inhalt"/>) und ihren offenen Quests (<paramref name="offene"/>); null = die des Spielstands.
+    /// </summary>
+    public static List<PyObjekt> Personen(string ort, Spielstand stand, PyObjekt? inhalt, IReadOnlyList<PyObjekt>? offene)
     {
         if (ort == OrtBuero && Py.Wahr(stand.Firma))
         {
@@ -86,15 +92,16 @@ public static class SpielOrte
             return FirmenPersonen(stand, OrtFiliale);
         }
         var wartet = new Dictionary<string, (object? Ort, object? Stelle, PyObjekt Auftrag)>();
-        foreach (var auftrag in stand.OffeneTickets())
+        inhalt ??= stand.Inhalt;
+        foreach (var auftrag in offene ?? stand.OffeneTickets())
         {
             if (Py.Wahr(Get(auftrag, "stelle")) && !wartet.ContainsKey(Py.Str(auftrag["auftraggeber"])))
             {
-                wartet[Py.Str(auftrag["auftraggeber"])] = (AuftragOrt(auftrag, stand.Inhalt), auftrag["stelle"], auftrag);
+                wartet[Py.Str(auftrag["auftraggeber"])] = (AuftragOrt(auftrag, inhalt), auftrag["stelle"], auftrag);
             }
         }
         var ergebnis = new List<PyObjekt>();
-        foreach (var person in AllePersonen(stand.Inhalt))
+        foreach (var person in AllePersonen(inhalt))
         {
             if (!PersonDa(person, stand.Tag))
             {
@@ -290,14 +297,18 @@ public static class SpielOrte
     /// place_message: Text und Knoepfe unter der Ansicht eines Ortes (Ueberschrift, Text, [(aktion, Beschriftung)]).
     /// Aktionen: "auftrag:&lt;id&gt;", "feierabend", "buero", "zuhause", "kunde", "lernen", "schlafen", "personal".
     /// </summary>
-    public static (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(string ort, double x, double y, PyObjekt? person, Spielstand stand, PyObjekt? gebaeude = null)
+    public static (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(string ort, double x, double y, PyObjekt? person, Spielstand stand, PyObjekt? gebaeude = null) =>
+        Nachricht(ort, x, y, person, stand, gebaeude, null);
+
+    /// <summary>Welle A 0.89.0: wie oben, mit den offenen Quests einer Paket-Stadt (<paramref name="auftraege"/>; null = die des Spielstands).</summary>
+    public static (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(string ort, double x, double y, PyObjekt? person, Spielstand stand, PyObjekt? gebaeude, PyDict? auftraege)
     {
         if (ort == OrtZuhause)
         {
             return Wohnung.Nachricht(x, y, stand);
         }
         gebaeude ??= Gebaeude(ort, stand);
-        var auftraege = stand.Auftraege(ort);
+        auftraege ??= stand.Auftraege(ort);
         var knoepfe = new List<(string, string)>();
         if (person is not null)
         {

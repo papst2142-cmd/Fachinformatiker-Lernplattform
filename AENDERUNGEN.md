@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.89.0
+Inhaltspakete lassen sich jetzt wirklich aus dem Internet laden, und Städte aus Paketen können eigene Aufträge haben.
+
+- „Nach Paketen suchen“ fragt jetzt bei GitHub nach, wo die Pakete der Lernplattform liegen. Gezeigt werden nur fertige Pakete; Entwürfe, Vorabversionen und Programm-Updates erscheinen dort nie.
+- Jede geladene Datei wird mit der Prüfsumme verglichen, die GitHub zu ihr nennt. Passt sie nicht oder fehlt sie, steht der Grund in Rot dabei und nichts wird geladen. Ein Update der App lädt nie ein Paket, und ein Paket ersetzt nie die App.
+- Eine Stadt aus einem Paket kann jetzt Aufträge haben. Personen vor den Geschäften bieten sie mit „Auftrag annehmen“ an, gelöst werden sie wie die Tickets zu Hause. Sie zählen nicht zu den Tickets des Tages und warten, bis du sie löst.
+- Fehlt das Paket auf einem Gerät, ruhen seine Aufträge; nichts geht verloren, und nach dem Laden geht es genau dort weiter. Gelöste Aufträge zählen auf jedem Gerät gleich.
+- Der Fahrplan am Bahnhof nennt nur noch Städte. Pakete anderer Art stehen nur in den Optionen.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Heimatstadt bleiben, wie sie sind.
+
 ## A 0.88.0
 Im Spiel fährt jetzt ein Zug in andere Städte. Eine Stadt aus einem Inhaltspaket ist damit zum ersten Mal spielbar.
 

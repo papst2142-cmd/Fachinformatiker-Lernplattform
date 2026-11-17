@@ -122,6 +122,8 @@ public sealed class PaketTests : IDisposable
         Assert.Equal(PaketTexte.Format(PaketTexte.AppAlt, "A 0.87.0"), Grund(Klein, "A 0.86.0"));
         Assert.Null(Grund(Klein, "B 0.1.0"));
         Assert.Equal(PaketTexte.Format(PaketTexte.KennungReserviert, "stadt1"), Grund(MitKopf(k => k["kennung"] = "stadt1")));
+        // Welle A 0.89.0 (Weisung P12-297 B): falsch gelieferte Ware traegt den Vorsatz falschlieferung: (kein Paket)
+        Assert.Equal(PaketTexte.Format(PaketTexte.KennungReserviert, "falschlieferung"), Grund(MitKopf(k => k["kennung"] = "falschlieferung")));
         Assert.Equal(PaketTexte.Format(PaketTexte.FeldFehlt, "kennung"), Grund(MitKopf(k => k["kennung"] = "Gross")));
         Assert.Equal(PaketTexte.Format(PaketTexte.FeldFehlt, "stand"), Grund(MitKopf(k => k["stand"] = 0)));
         Assert.StartsWith(PaketTexte.Format(PaketTexte.StadtFehler, ""), Grund(MitKopf(k =>
@@ -432,5 +434,60 @@ public sealed class PaketTests : IDisposable
         var d = Dateien(File.ReadAllBytes(Path.Combine(Probe, "probe_testkarte_1.fipaket")));
         Assert.Equal(File.ReadAllBytes(Path.Combine(Pfade.Wurzel, "tests/Lernplattform.Tests/Testdaten/testkarte_256.fistadt")), d[Paket.StadtDatei]);
         Assert.Equal(["paket.json", "stadt.fistadt"], d.Keys.Order(StringComparer.Ordinal));
+    }
+
+    // ---- Sammelliste 376 (A 0.89.0, Weisung P12-297 D): im Fahrplan nur Pakete der Art stadt -------------------------------
+
+    [Fact]
+    public async Task S376_Fahrplan_NurStaedte_ArtAusDemAngebot_Gegenprobe()
+    {
+        var quelle = Path.Combine(_tmp, "quelle376");
+        Directory.CreateDirectory(quelle);
+        File.Copy(Path.Combine(Echt, "probe_klein_1.fipaket"), Path.Combine(quelle, "probe_klein_1.fipaket"));
+        File.Copy(Path.Combine(Echt, "probe_lernen_1.fipaket"), Path.Combine(quelle, "probe_lernen_1.fipaket"));
+        var v = Verwaltung(quelle);
+        await v.SuchenAsync(TestContext.Current.CancellationToken);
+        // vor dem Laden: die Art steht im Angebot (Kopf paket.json)
+        Assert.Equal(["probe_klein stadt", "probe_lernen lernen"], v.Angebote.Select(a => a.Kennung + " " + a.Art));
+        var zeilen = v.Zeilen().ToDictionary(z => z.Kennung);
+        Assert.True(zeilen["probe_klein"].ImFahrplan);
+        Assert.False(zeilen["probe_lernen"].ImFahrplan);
+        // Angebot ohne Art (Release-Text nennt keine): nicht im Fahrplan, aber in den Optionen
+        var ohneArt = zeilen["probe_klein"] with { Art = null };
+        Assert.False(ohneArt.ImFahrplan);
+        // geladen und als unbekannte Art erkannt: weiter nicht im Fahrplan
+        Assert.Equal(PaketTexte.ArtUnbekannt, await v.LadenAsync(v.Angebote.Single(a => a.Kennung == "probe_lernen"), null, TestContext.Current.CancellationToken));
+        Assert.False(v.Zeilen().Single(z => z.Kennung == "probe_lernen").ImFahrplan);
+        Assert.Null(await v.LadenAsync(v.Angebote.Single(a => a.Kennung == "probe_klein"), null, TestContext.Current.CancellationToken));
+        Assert.True(v.Zeilen().Single(z => z.Kennung == "probe_klein").ImFahrplan);
+        // Gegenprobe Stand A 0.88.0: das Lern-Paket stand vor dem Laden im Fahrplan
+        PaketZeile.ArtAltFuerTests = true;
+        try
+        {
+            Assert.True(zeilen["probe_lernen"].ImFahrplan);
+            Assert.True(ohneArt.ImFahrplan);
+        }
+        finally
+        {
+            PaketZeile.ArtAltFuerTests = false;
+        }
+    }
+
+    [Fact]
+    public void S376_Github_ArtAusDemReleaseText()
+    {
+        static string Mit(string tag, string datei, string body) =>
+            $$"""{"tag_name":"{{tag}}","name":"N","body":{{System.Text.Json.JsonSerializer.Serialize(body)}},"draft":false,"prerelease":false,"assets":[{"name":"{{datei}}","size":1,"browser_download_url":"https://x/{{datei}}","digest":"sha256:abc"}]}""";
+        var liste = PaketQuelle.Auswerten("[" + string.Join(",",
+            Mit("vPhafen.1", "hafen_1.fipaket", "Art: stadt\r\nEine Stadt am Meer.\nzweite"),
+            Mit("vPlernsi.1", "lernsi_1.fipaket", "Lernkarten SI\nArt: lernen"),
+            Mit("vPohne.1", "ohne_1.fipaket", "Kein Hinweis auf die Art"),
+            Mit("vPfalsch.1", "falsch_1.fipaket", "Art: Stadt")) + "]");
+        Assert.Equal(["falsch -", "hafen stadt", "lernsi lernen", "ohne -"], liste.Select(a => a.Kennung + " " + (a.Art ?? "-")));
+        // die Zeile mit der Art zaehlt nicht als Text
+        Assert.Equal("Eine Stadt am Meer.", liste[1].Text);
+        Assert.Equal("Lernkarten SI", liste[2].Text);
+        Assert.Equal("stadt", PaketQuelle.ArtAusText("x\nArt: stadt\n"));
+        Assert.Null(PaketQuelle.ArtAusText("Art:stadt"));
     }
 }

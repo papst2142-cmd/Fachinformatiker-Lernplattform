@@ -3,6 +3,7 @@ using Avalonia.Automation.Peers;
 using Avalonia.Automation.Provider;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Lernplattform.Messung;
 using Stadtbau.Core;
 using Stadtbau.Oberflaeche;
@@ -26,6 +27,11 @@ public static partial class StadtbauMessung
     /// <summary>Wie ein Mensch: Auswahl aufklappen, Eintrag antippen (Maus, Finger) oder mit Pfeiltasten waehlen.</summary>
     private static async Task WieMenschWaehlenAsync(Hauptansicht a, string name, object? tag, string art)
     {
+        // Lauf 1056 (Windows): nach einer Wahl baut die Ansicht die Auswahlen rechts erst mit Prioritaet „Background“ neu
+        // (NachWahlNeu); zwei Bilder reichen auf einem vollen Rechner nicht immer, dann griff die Probe die alte Auswahl (ohne
+        // die Plaetze der neuen Groesse). Ein Mensch waehlt nie, bevor die Ansicht neu steht: erst die wartende Arbeit abwarten.
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        await BildAsync(a);
         if (a.PlaetzeElement(name) is not ComboBox c)
         {
             Fund("373: Auswahl „" + name + "“ fehlt");

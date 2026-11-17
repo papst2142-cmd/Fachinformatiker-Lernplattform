@@ -25,6 +25,7 @@ public static class KarteVerschieben
     {
         "karte/modelle", "stadtdaten/neue_modelle", "stadtdaten/bauteile", "bauten", "stadtdaten/" + Questebene.AbschnittQuests,
         "stadtdaten/oeffnungszeiten", "stadtdaten/uhr", "stadtdaten/raster", "stadtdaten/farben", "karte/_hinweis", "stadtdaten/_hinweis",
+        "stadtdaten/" + StadtPaket.Abschnitt,
     };
 
     /// <summary>Teile mit Lage (werden verschoben).</summary>

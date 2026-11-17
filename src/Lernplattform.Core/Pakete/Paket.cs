@@ -41,8 +41,11 @@ public static partial class Paket
     /// <summary>Pflichtdateien je Art.</summary>
     public static IReadOnlyList<string> Pflicht(string art) => art == ArtStadt ? [StadtDatei] : [];
 
-    /// <summary>Kennungen, die zur App gehoeren (Stadt 1 bleibt immer in der App, Nico 4a).</summary>
-    public static readonly IReadOnlyList<string> Reserviert = [AktiveFassung.Stadt1];
+    /// <summary>
+    /// Kennungen, die zur App gehoeren (Stadt 1 bleibt immer in der App, Nico 4a). Seit A 0.89.0 auch <c>falschlieferung</c>:
+    /// so heisst der Vorsatz der falsch gelieferten Ware im Spielstand (<see cref="Spiel.PaketQuests.IstPaketAufgabe"/>).
+    /// </summary>
+    public static readonly IReadOnlyList<string> Reserviert = [AktiveFassung.Stadt1, Spiel.SpielDaten.Falschlieferung[..^1]];
 
     /// <summary>Hoechste Groesse eines Pakets (alle Dateien zusammen); schuetzt vor zu grossen oder gefaelschten Archiven.</summary>
     public const long HoechstGroesse = 512L * 1024 * 1024;
@@ -216,7 +219,12 @@ public static partial class Paket
         {
             try
             {
-                _ = StadtFassung.Lesen(dateien[StadtDatei]);
+                var stadt = StadtFassung.Lesen(dateien[StadtDatei]);
+                // Welle A 0.89.0 (Weisung P12-297 W3-2): traegt die Stadt Kennung und Name eines Pakets, muss es dieses sein
+                if (StadtPaket.Von(stadt.Stadtdaten) is { } sp && sp.Kennung != kennung)
+                {
+                    return new(null, PaketTexte.Format(PaketTexte.StadtAnderesPaket, sp.Kennung));
+                }
             }
             catch (StadtbauFehler f)
             {

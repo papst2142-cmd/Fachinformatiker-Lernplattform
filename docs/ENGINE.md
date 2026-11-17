@@ -229,3 +229,17 @@ Ersetzt „kein Streaming“ (Nico 11.11.2026; Nachladen fest vor der Beta seit 
   Bild, Gegenprobe zu teure Kachel C3).
 - **Namen der Stadtteile (A 0.83.0 / S 0.55.0):** Rechtecke `stadtdaten.stadtteile`; Schild beim Betreten, Rahmen auf der
   Handy-Karte; nur Anzeige (keine Spielzeit, kein Ereignis). Werkzeug Knopf „Stadtteil-Namen“ (Taste B).
+
+## 10. Paket-Städte (A 0.89.0 / S 0.57.0, Weisung P12-297 W3)
+
+- **Abschnitt `paket`** in den Stadtdaten (`Stadtbau/StadtPaket.cs`): `{"kennung": …, "name": …}`, genau diese zwei Felder.
+  Nur eine neue Stadt (Kennung `neu_…`) darf ihn tragen, Stadt 1 nie (Fund der Prüfung `StadtbauPruefung.Format`). Regeln der
+  Kennung gleich dem Paket (`^[a-z][a-z0-9_]{1,31}$`, reserviert `stadt1`, `falschlieferung`), Name 1–40 Zeichen.
+- **Format:** eine Stadt-Datei mit dem Abschnitt bekommt Format 4 (`StadtFassung.FormatFuer`), ein Projekt Format 6
+  (`Projekt.FormatFuer`); jede Datei ohne Abschnitt bleibt bitgleich wie vorher. Neue Formatnummer = echte Testdatei der alten.
+- **Werkzeug:** „Neue Stadt (Paket)“ setzt den Abschnitt nur beim Anlegen (kein Schritt); „Karte vergrößern“ und „Stadtteil
+  einsetzen“ lassen ihn stehen (`KarteVerschieben.OhneLage`). Geschätzte Paketgröße `Projekt.PaketGroesseVon` (Packen wie
+  `paket_bauen.py`, höchstens 5 % daneben, Test gegen das gebaute Probe-Paket).
+- **Spiel:** das Spiel rechnet nichts mit dem Abschnitt; die App lehnt ein Paket ab, dessen Stadt den Abschnitt eines anderen
+  Pakets trägt (`PaketTexte.StadtAnderesPaket`). Pakete im Repo unter `pakete/<kennung>/`, geprüft wie Stadt 1 (beide
+  Fundlisten 0 rot, Grenzen je Kachel, jeder Ort erreichbar; `Stadtbau.Tests/PaketeImRepoTests`).

@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.57.0
+
+Eine neue Stadt lässt sich jetzt gleich als Inhaltspaket anlegen.
+
+- Im Fenster „Neues Projekt“ gibt es die Art „Neue Stadt (Paket)“. Dazu gibst du die Kennung des Pakets (kleine Buchstaben, Ziffern und _) und den Namen ein, unter dem die Stadt im Spiel erscheint. Beides wird aus dem Projektnamen vorgeschlagen.
+- Die Stadt beginnt leer wie „Leere Stadt“. Neben dem Titel steht nach dem Speichern, wie groß das Paket ungefähr wird.
+- Exportieren und „An CC senden“ gehen wie bei jeder Stadt; die Datei nennt dann Kennung und Name des Pakets. Die heutige Stadt kann nie ein Paket werden, sie bleibt geschützt.
+- Unter „Plätze“ geht die Wahl „Stadtteil einsetzen: Projekt“ nach dem Einsetzen und beim Öffnen eines anderen Projekts wieder auf „Kein Projekt“. Ein Tippen auf die Karte wählt danach wieder den Platz der heutigen Stadt.
+- Alle Prüfungen bleiben, wie sie sind; Projekte ohne Paket werden wie bisher gespeichert.
+
 ## S 0.56.2
 
 Die heutige Stadt lässt sich jetzt sicher auf einen anderen Platz einer größeren Karte setzen.

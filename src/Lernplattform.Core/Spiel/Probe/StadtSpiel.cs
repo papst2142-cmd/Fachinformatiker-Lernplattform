@@ -762,7 +762,7 @@ public sealed partial class StadtSpiel
         var ansicht = Szene.Ort(Jetzt.Ort)?.Ansicht;
         var fest = FestJetzt();
         var innen = Vorbereitet(ansicht, fest);
-        if (innen is null && Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, fest, Feste, Szene.Jahreszeit) is { } gebaut)
+        if (innen is null && Probe.Innenraum.Bauen(ansicht, Sicht(Ablauf.Stand), Innenraeume, Grafik, GeschaefteDaten, fest, Feste, Szene.Jahreszeit) is { } gebaut)
         {
             innen = gebaut;
             InDenVorrat(gebaut);
@@ -796,7 +796,7 @@ public sealed partial class StadtSpiel
     /// <summary>Inhalts-Signatur des Innenraums zur Ansicht beim jetzigen Spielstand, Festzeit und Jahreszeit (null = keiner).</summary>
     private string? InnenSignatur(string? ansicht, string? fest) =>
         Probe.Innenraum.OrtFuer(ansicht) is null ? null
-        : Probe.Innenraum.InhaltSignatur(ansicht, Ablauf.Stand, Innenraeume, GeschaefteDaten, fest, Szene.Jahreszeit);
+        : Probe.Innenraum.InhaltSignatur(ansicht, Sicht(Ablauf.Stand), Innenraeume, GeschaefteDaten, fest, Szene.Jahreszeit);
 
     /// <summary>
     /// Weisung P7-16: den Innenraum eines Orts ausserhalb des Oberflaechen-Threads vorbereiten (Grundriss,
@@ -817,7 +817,7 @@ public sealed partial class StadtSpiel
         var (innenraeume, grafik, geschaefte, feste, jahreszeit) = (Innenraeume, Grafik, GeschaefteDaten, Feste, Szene.Jahreszeit);
         var aufgabe = Task.Run(() =>
         {
-            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
+            var innen = Probe.Innenraum.Bauen(ansicht, Sicht(kopie), innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
             innen?.Vorbereiten();
             return innen;
         });
@@ -864,7 +864,7 @@ public sealed partial class StadtSpiel
                 {
                     try
                     {
-                        var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
+                        var innen = Probe.Innenraum.Bauen(ansicht, Sicht(kopie), innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
                         innen?.Vorbereiten();
                         fertig.TrySetResult(innen);
                     }
@@ -922,7 +922,7 @@ public sealed partial class StadtSpiel
     /// <summary>Weisung P8-55 (W12): einen eben gebauten Innenraum in den Vorrat legen (Betreten ohne Vorbereitung, Einrichten).</summary>
     private void InDenVorrat(Innenraum innen)
     {
-        if (Probe.Innenraum.InhaltSignatur(innen.Ansicht, Ablauf.Stand, Innenraeume, GeschaefteDaten, innen.Fest, innen.Jahreszeit) is { } signatur)
+        if (Probe.Innenraum.InhaltSignatur(innen.Ansicht, Sicht(Ablauf.Stand), Innenraeume, GeschaefteDaten, innen.Fest, innen.Jahreszeit) is { } signatur)
         {
             lock (_vorrat)
             {
@@ -943,7 +943,7 @@ public sealed partial class StadtSpiel
         }
         // Welle A 0.81.0: sitzend oder liegend gilt der Platz (am PC-Stuhl: direkt am Tisch)
         var (fx, fz) = MeinPlatz is { } platz && ReferenceEquals(innen, _platzInnen) ? (platz.Ort.X, platz.Ort.Z) : (FigurX, FigurZ);
-        var (titel, text, knoepfe) = innen.Nachricht(fx, fz, Ablauf.Stand);
+        var (titel, text, knoepfe) = innen.Nachricht(fx, fz, Sicht(Ablauf.Stand));
         Zeile = text.Length > 0 ? titel + "\n" + text : titel;
         if (_notiz is { } notiz)
         {
@@ -1600,7 +1600,7 @@ public sealed partial class StadtSpiel
             return;
         }
         // Phase 8 W6: dieselbe Festzeit wie beim Betreten (nie mitten in einer Ansicht wechseln)
-        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, alt.Fest, Feste, alt.Jahreszeit) ?? alt;
+        Innen = Probe.Innenraum.Bauen(alt.Ansicht, Sicht(Ablauf.Stand), Innenraeume, Grafik, GeschaefteDaten, alt.Fest, Feste, alt.Jahreszeit) ?? alt;
         if (!ReferenceEquals(Innen, alt))
         {
             InDenVorrat(Innen);

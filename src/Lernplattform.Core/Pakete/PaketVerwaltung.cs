@@ -21,9 +21,26 @@ public enum PaketKnopf
 }
 
 /// <summary>Eine Zeile der Liste (geladen und/oder angeboten).</summary>
+/// <param name="Art">Sammelliste 376: Art des Pakets (geladen: aus dem Kopf, sonst laut Angebot; null = unbekannt).</param>
 public sealed record PaketZeile(string Kennung, string Name, string Text, long Groesse, PaketZustand Zustand, string ZustandText,
-    IReadOnlyList<PaketKnopf> Knoepfe, PaketAngebot? Angebot)
+    IReadOnlyList<PaketKnopf> Knoepfe, PaketAngebot? Angebot, string? Art = null)
 {
+    /// <summary>
+    /// Sammelliste 376 (A 0.89.0, Weisung P12-297 D): steht die Zeile im Fahrplan am Bahnhof? Nur Pakete, deren Art vor dem
+    /// Laden als <see cref="Paket.ArtStadt"/> bekannt ist (Kopf eines geladenen Pakets oder Angebot); ein Paket unbekannter
+    /// Art oder ein Angebot ohne Art steht nur in den Optionen. Gegenprobe <see cref="ArtAltFuerTests"/> (Stand A 0.88.0).
+    /// </summary>
+    public bool ImFahrplan => ArtAlt.Value ? !ZustandText.Contains(PaketTexte.ArtUnbekannt, StringComparison.Ordinal) : Art == Paket.ArtStadt;
+
+    private static readonly AsyncLocal<bool> ArtAlt = new();
+
+    /// <summary>Nur Gegenprobe Sammelliste 376: Fahrplan wie bis A 0.88.0 (jede Zeile ausser „unbekannte Art“).</summary>
+    public static bool ArtAltFuerTests
+    {
+        get => ArtAlt.Value;
+        set => ArtAlt.Value = value;
+    }
+
     public static string KnopfText(PaketKnopf knopf) => knopf switch
     {
         PaketKnopf.Laden => PaketTexte.Laden,
@@ -102,7 +119,8 @@ public sealed class PaketVerwaltung
             var text = g?.Kopf?.Text ?? a?.Text ?? "";
             var groesse = g?.Kopf?.Dateien.Values.Sum(d => d.Groesse) ?? a?.Groesse ?? 0;
             var fehler = _fehler.GetValueOrDefault(kennung) ?? g?.Grund;
-            PaketZeile Zeile(PaketZustand z, string zText, params PaketKnopf[] knoepfe) => new(kennung, name, text, groesse, z, zText, knoepfe, a);
+            var art = g?.Kopf?.Art ?? a?.Art;
+            PaketZeile Zeile(PaketZustand z, string zText, params PaketKnopf[] knoepfe) => new(kennung, name, text, groesse, z, zText, knoepfe, a, art);
             if (fehler is not null)
             {
                 var knoepfe = new List<PaketKnopf>();

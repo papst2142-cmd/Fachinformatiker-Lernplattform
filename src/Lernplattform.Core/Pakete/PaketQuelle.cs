@@ -8,7 +8,9 @@ using Lernplattform.Core.Update;
 namespace Lernplattform.Core.Pakete;
 
 /// <summary>Ein Paket, das die Quelle anbietet (Name und Text nur zur Anzeige; gilt erst nach der Pruefung).</summary>
-public sealed record PaketAngebot(string Kennung, long Stand, string Name, string Text, long Groesse, string Adresse, string? Sha256);
+/// <param name="Art">Sammelliste 376 (A 0.89.0): Art laut Angebot (Ordner: Kopf <c>paket.json</c>, GitHub: Zeile
+/// <see cref="PaketQuelle.ArtZeile"/> im Release-Text); null = das Angebot nennt keine Art (dann nur in den Optionen).</param>
+public sealed record PaketAngebot(string Kennung, long Stand, string Name, string Text, long Groesse, string Adresse, string? Sha256, string? Art = null);
 
 /// <summary>Fehler einer Paket-Quelle (kein Netz, Stoerung, Antwort unlesbar); Text fuer die Anzeige.</summary>
 public sealed class PaketFehler(string text, bool keineVerbindung) : Exception(text)
@@ -40,13 +42,36 @@ public static partial class PaketQuelle
     [GeneratedRegex(@"^vP([a-z][a-z0-9_]{1,31})\.([1-9][0-9]{0,8})\z", RegexOptions.CultureInvariant)]
     public static partial Regex TagMuster();
 
+    /// <summary>
+    /// Sammelliste 376: Zeile im Release-Text eines Pakets, die seine Art nennt (<c>Art: stadt</c>); <c>paket_release.yml</c>
+    /// schreibt sie aus <c>paket.json</c>. Sie zaehlt nicht als Text des Angebots.
+    /// </summary>
+    public const string ArtZeile = "Art: ";
+
+    [GeneratedRegex(@"^Art: ([a-z][a-z0-9_]{0,31})\z", RegexOptions.CultureInvariant)]
+    private static partial Regex ArtMuster();
+
+    /// <summary>Art aus dem Release-Text (Zeile <see cref="ArtZeile"/>), sonst null.</summary>
+    public static string? ArtAusText(string? text) =>
+        (text ?? "").Replace("\r", "").Split('\n').Select(z => ArtMuster().Match(z.Trim())).FirstOrDefault(m => m.Success)?.Groups[1].Value;
+
     /// <summary>Probe-APK: Ordner, den der Android-Start setzt (dort liegt das eingebettete Probe-Paket).</summary>
     public static string? ProbeOrdner { get; set; }
 
+    /// <summary>
+    /// Die Quelle: <see cref="Umgebung"/> mit einem Ordner = Testquelle, mit einer Adresse <c>http://</c> oder <c>https://</c> =
+    /// eine Release-Liste im Format von GitHub an dieser Adresse (Welle A 0.89.0, W3-4: Start-Test und Emulator-Probe mit
+    /// einem nachgestellten GitHub, derselbe Weg wie das echte Laden); sonst Probe-APK-Ordner; sonst GitHub.
+    /// </summary>
     public static IPaketQuelle Fuer(HttpClient http, Action<string> melden) =>
-        Environment.GetEnvironmentVariable(Umgebung) is { Length: > 0 } ordner ? new OrdnerQuelle(ordner)
+        Environment.GetEnvironmentVariable(Umgebung) is { Length: > 0 } wert
+            ? IstAdresse(wert) ? new GithubQuelle(http, melden, wert) : new OrdnerQuelle(wert)
         : ProbeOrdner is { } probe ? new OrdnerQuelle(probe)
         : new GithubQuelle(http, melden);
+
+    /// <summary>Ist der Wert eine Adresse (http oder https) statt eines Ordners?</summary>
+    public static bool IstAdresse(string wert) =>
+        wert.StartsWith("http://", StringComparison.Ordinal) || wert.StartsWith("https://", StringComparison.Ordinal);
 
     /// <summary>Je Kennung nur das Angebot mit dem hoechsten Stand, nach Kennung geordnet.</summary>
     internal static IReadOnlyList<PaketAngebot> Neueste(IEnumerable<PaketAngebot> alle) =>
@@ -83,8 +108,10 @@ public static partial class PaketQuelle
             var groesse = datei["size"] is JsonValue g && g.TryGetValue<long>(out var s) ? s : 0;
             var sha = Zeichen(datei["digest"]) is { } d && d.StartsWith("sha256:", StringComparison.Ordinal) ? d[7..] : null;
             var titel = Zeichen(release["name"]) is { Length: > 0 } t ? t : kennung;
-            var text = (Zeichen(release["body"]) ?? "").Replace("\r", "").Split('\n').FirstOrDefault(z => z.Trim().Length > 0)?.Trim() ?? "";
-            angebote.Add(new PaketAngebot(kennung, stand, titel, text, groesse, adresse, sha));
+            var koerper = Zeichen(release["body"]);
+            var text = (koerper ?? "").Replace("\r", "").Split('\n')
+                .FirstOrDefault(z => z.Trim().Length > 0 && !ArtMuster().IsMatch(z.Trim()))?.Trim() ?? "";
+            angebote.Add(new PaketAngebot(kennung, stand, titel, text, groesse, adresse, sha, ArtAusText(koerper)));
         }
         return Neueste(angebote);
     }
@@ -135,6 +162,7 @@ public sealed class OrdnerQuelle(string ordner) : IPaketQuelle
                 continue;
             }
             var (name, text) = (kennungStand.Kennung, "");
+            string? art = null;
             try
             {
                 using var strom = File.OpenRead(datei);
@@ -146,6 +174,7 @@ public sealed class OrdnerQuelle(string ordner) : IPaketQuelle
                     {
                         name = o["name"] is JsonValue n && n.GetValueKind() == JsonValueKind.String ? n.GetValue<string>() : name;
                         text = o["text"] is JsonValue t && t.GetValueKind() == JsonValueKind.String ? t.GetValue<string>() : "";
+                        art = o["art"] is JsonValue a && a.GetValueKind() == JsonValueKind.String ? a.GetValue<string>() : null;
                     }
                 }
             }
@@ -153,7 +182,7 @@ public sealed class OrdnerQuelle(string ordner) : IPaketQuelle
             {
                 // unlesbar: bleibt im Angebot, die Pruefung beim Laden nennt den Grund
             }
-            angebote.Add(new PaketAngebot(kennungStand.Kennung, kennungStand.Stand, name, text, new FileInfo(datei).Length, datei, null));
+            angebote.Add(new PaketAngebot(kennungStand.Kennung, kennungStand.Stand, name, text, new FileInfo(datei).Length, datei, null, art));
         }
         return Task.FromResult(PaketQuelle.Neueste(angebote));
     }
@@ -226,14 +255,12 @@ public sealed class GithubQuelle(HttpClient http, Action<string> melden, string 
         {
             throw new PaketFehler(PaketTexte.Format(PaketTexte.Netz, x.Message), true);
         }
-        if (angebot.Sha256 is { } soll)
+        // Welle A 0.89.0 (W3-4): von GitHub nie ohne Pruefsumme; ohne digest im Angebot gilt die Datei als falsch (nie still angenommen)
+        await using var datei = File.OpenRead(ziel);
+        var ist = Convert.ToHexStringLower(await SHA256.HashDataAsync(datei, abbruch).ConfigureAwait(false));
+        if (angebot.Sha256 is not { } soll || !string.Equals(ist, soll, StringComparison.OrdinalIgnoreCase))
         {
-            await using var datei = File.OpenRead(ziel);
-            var ist = Convert.ToHexStringLower(await SHA256.HashDataAsync(datei, abbruch).ConfigureAwait(false));
-            if (!string.Equals(ist, soll, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new PaketFehler(PaketTexte.Format(PaketTexte.Pruefsumme, Paket.Dateiname(angebot.Kennung, angebot.Stand)), false);
-            }
+            throw new PaketFehler(PaketTexte.Format(PaketTexte.Pruefsumme, Paket.Dateiname(angebot.Kennung, angebot.Stand)), false);
         }
     }
 }

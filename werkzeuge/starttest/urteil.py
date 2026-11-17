@@ -528,7 +528,7 @@ def hilfsjob_gegenprobe(release=".github/workflows/release.yml"):
     return 0
 
 
-def lauf_waehlen(releases=(".github/workflows/release.yml", ".github/workflows/stadtbau_release.yml"), texte=None):
+def lauf_waehlen(releases=(".github/workflows/release.yml", ".github/workflows/stadtbau_release.yml", ".github/workflows/paket_release.yml"), texte=None):
     """Sammelliste 365 (Weisung P12-289): beide Release-Workflows waehlen den Lauf nur ueber lauf_waehlen.py (gruener
     Lauf auf main oder gleicher Tree) und schreiben ihn in den Release-Text; dazu dessen Selbsttest mit Gegenproben."""
     rot = 0
@@ -556,6 +556,82 @@ def lauf_waehlen(releases=(".github/workflows/release.yml", ".github/workflows/s
             if lauf_waehlen(releases[:1], {releases[0]: alt}) != 1:
                 print("FEHLER: Selbsttest Lauf waehlen: Gegenprobe ohne lauf_waehlen.py nicht rot")
                 rot = 1
+    return rot
+
+
+PAKET_RELEASE = ".github/workflows/paket_release.yml"
+# Welle A 0.89.0 (Weisung P12-297 W3-3): Regeln von paket_release.yml, je (Text, Grund); jeder Text muss vorkommen
+PAKET_REGELN = [
+    ("on:\n  workflow_dispatch:\n", "startet nur von Hand (workflow_dispatch)"),
+    ("permissions: {}", "ohne Rechte ausser in den Jobs"),
+    ('if [ "$GITHUB_REF" != "refs/heads/main" ]', "nur von main"),
+    ("KENNUNG: ${{ inputs.kennung }}", "Kennung nur als Umgebung"),
+    ("re.fullmatch(r'[a-z][a-z0-9_]{1,31}'", "Kennung nach dem Muster der App"),
+    ("paket_bauen.py selbsttest pakete", "Selbsttest des Paketbaus"),
+    ("paket_release.py selbsttest pakete", "Selbsttest der Release-Hilfen"),
+    ("paket_bauen.py ordner", "Bau nur mit paket_bauen.py"),
+    ('case "$tag" in "vP$KENNUNG".*)', "Tag vP<kennung>.<stand>"),
+    ("pruefe_tag.sh fehlt", "Tag gibt es noch nicht"),
+    ("gh release create \"$TAG\" paket/entwurf/* --draft --latest=false", "Entwurf, nie latest"),
+    ("pruefe_entwuerfe.sh entwurf", "hoechstens ein Paket-Entwurf"),
+    ("release.py digest paket/entwurf assets.json", "Pruefsummen gegen den digest von GitHub"),
+    ("release.py digest-text assets.json release.md", "vor dem Veroeffentlichen Pruefsummen-Tabelle"),
+    ("-F draft=false -F prerelease=false -f make_latest=false", "veroeffentlicht nie als latest oder Vorab"),
+    ('case "$latest_nachher" in vP*)', "latest danach kein Paket"),
+    ("pruefe_tag.sh zeigt-auf", "Tag zeigt auf den Commit"),
+]
+
+
+def paket_release_regeln(text=None, pfad=PAKET_RELEASE):
+    """Welle A 0.89.0 (Weisung P12-297 W3-3): paket_release.yml haelt die Regeln (nur Dispatch, nur main, Tag vP, nie
+    latest, nie Vorab, Pruefsummen, Lauf 18/18 wie release.yml); dazu dieselbe Jobliste und derselbe Filter."""
+    if text is None:
+        if not os.path.exists(pfad):
+            print("FEHLER: Selbsttest Paket-Release: " + pfad + " fehlt")
+            return 1
+        with open(pfad, encoding="utf-8") as f:
+            text = f.read()
+    rot = 0
+    for noetig, grund in PAKET_REGELN:
+        if noetig not in text:
+            print("FEHLER: Selbsttest Paket-Release: %s (fehlt: %s)" % (grund, noetig))
+            rot = 1
+    for verboten in ("make_latest=true", "--latest=true", "--prerelease", "pull_request", "push:", "schedule:", "secrets."):
+        if verboten in text:
+            print("FEHLER: Selbsttest Paket-Release: verboten: " + verboten)
+            rot = 1
+    if "soll_werkzeug=" in text:
+        print("FEHLER: Selbsttest Paket-Release: nur der volle Lauf 18/18 zaehlt, kein Lauf werkzeug")
+        rot = 1
+    if not rot:
+        print("Selbsttest Paket-Release: %d Regeln in %s" % (len(PAKET_REGELN), os.path.basename(pfad)))
+    return rot
+
+
+def paket_release_gegenprobe(pfad=PAKET_RELEASE):
+    """Gegenproben: paket_release.yml mit latest, ohne Entwurf, mit Lauf werkzeug, mit fremdem Tag ist rot."""
+    if not os.path.exists(pfad):
+        return 0
+    with open(pfad, encoding="utf-8") as f:
+        text = f.read()
+    faelle = [("latest", text.replace("make_latest=false", "make_latest=true")),
+              ("ohne Entwurf", text.replace(" --draft --latest=false", " --latest=false")),
+              ("Lauf werkzeug", text.replace("          export SOLL=", "          soll_werkzeug='tests (ubuntu-latest)'\n          export SOLL=")),
+              ("Tag vS", text.replace('"vP$KENNUNG".*)', '"vS$KENNUNG".*)')),
+              ("Vorab", text.replace("-F prerelease=false", "-F prerelease=true")),
+              ("Push", text.replace("on:\n  workflow_dispatch:\n", "on:\n  push:\n  workflow_dispatch:\n"))]
+    rot = 0
+    for name, falsch in faelle:
+        if falsch == text:
+            print("FEHLER: Selbsttest Paket-Release: Gegenprobe %s aendert nichts" % name)
+            rot = 1
+            continue
+        with contextlib.redirect_stdout(io.StringIO()):
+            if paket_release_regeln(falsch) != 1:
+                print("FEHLER: Selbsttest Paket-Release: Gegenprobe %s nicht rot" % name)
+                rot = 1
+    if not rot:
+        print("Selbsttest Paket-Release: %d Gegenproben rot" % len(faelle))
     return rot
 
 
@@ -649,6 +725,12 @@ def selbsttest():
     rot |= urteil_github.selbsttest()
     # Sammelliste 365 (Weisung P12-289): Release nimmt einen gruenen Lauf auf main oder mit gleichem Tree
     rot |= lauf_waehlen()
+    # Welle A 0.89.0 (Weisung P12-297 W3-3): Paket-Release mit derselben Jobliste 18/18, Hinweis-Filter und eigenen Regeln
+    rot |= tests_jobs_gleich_release(release=PAKET_RELEASE)
+    rot |= feste_jobs_gleich_release(release=PAKET_RELEASE)
+    rot |= hilfsjob_zaehlt_nicht(PAKET_RELEASE)
+    rot |= paket_release_regeln()
+    rot |= paket_release_gegenprobe()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
     else:
