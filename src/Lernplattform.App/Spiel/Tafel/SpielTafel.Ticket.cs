@@ -33,6 +33,9 @@ public sealed partial class SpielTafel
         public required Brett Brett { get; init; }
         public required List<object?> Verfuegbar { get; init; }
         public required bool VonOrt { get; init; }
+
+        /// <summary>Welle A 0.89.0: Quest einer Paket-Stadt (geloest ueber <see cref="Spielablauf.PaketLoesen"/>), sonst null.</summary>
+        public Stadt? Paket { get; init; }
         public bool Hilfe { get; set; }
         public bool Beantwortet { get; set; }
         public StackPanel HilfeKasten { get; } = new() { Spacing = 10 };
@@ -52,11 +55,18 @@ public sealed partial class SpielTafel
     public void TicketOeffnen(string kennung, bool vonOrt = false)
     {
         var stand = Stand;
-        if (stand.Vorbereitet(Auftrag(kennung, I)) is not { } auftrag)
+        // Welle A 0.89.0 (Weisung P12-297 B): Quest einer Paket-Stadt (Vorsatz kennung:), nur in ihrer Stadt und nur offen
+        var paket = PaketQuests.IstPaketAufgabe(kennung) && _s.Spiel.Stadt.Kennung == PaketQuests.PaketVon(kennung) ? _s.Spiel.Stadt : null;
+        if (PaketQuests.IstPaketAufgabe(kennung) && paket is null)
         {
             return;
         }
-        var person = Person(auftrag["auftraggeber"], I);
+        var gefunden = paket is not null ? PaketQuests.Offen(paket, stand).FirstOrDefault(a => Py.Gleich(a["id"], kennung)) : stand.Vorbereitet(Auftrag(kennung, I));
+        if (gefunden is not { } auftrag)
+        {
+            return;
+        }
+        var person = Person(auftrag["auftraggeber"], paket?.Inhalt ?? I);
         var luecken = Bewertung.Luecken(auftrag, _s.Themenwissen());
         var verfuegbar = stand.VerfuegbareTeile(auftrag);
         var typ = Py.Str(auftrag["typ"]);
@@ -72,7 +82,7 @@ public sealed partial class SpielTafel
             "wartung" => new WartungBrett(auftrag, I),
             _ => new ZuordnungBrett(auftrag, I),
         };
-        var seite = new TicketSeite { Auftrag = auftrag, Brett = brett, Verfuegbar = verfuegbar, VonOrt = vonOrt };
+        var seite = new TicketSeite { Auftrag = auftrag, Brett = brett, Verfuegbar = verfuegbar, VonOrt = vonOrt, Paket = paket };
         _ticket = seite;
         var prioritaet = Py.Str(auftrag["prioritaet"]);
         var farbe = PrioritaetFarbe.GetValueOrDefault(prioritaet, "cyan");
@@ -96,7 +106,11 @@ public sealed partial class SpielTafel
         seite.HilfeKnopf = Knopf("Hilfe", HilfeZeigen, "ghost");
         var verschieben = Knopf("Verschieben", () => _ = VerschiebenAsync(), "ghost");
         seite.Knoepfe.Children.Add(Schrift.Gross ? Stapel(10, [einreichen, seite.HilfeKnopf]) : Zeile(einreichen, seite.HilfeKnopf));
-        seite.Knoepfe.Children.Add(verschieben);
+        if (paket is null)
+        {
+            // eine Quest einer Paket-Stadt wartet ohne Verschieben (sie zaehlt nicht zu den Tickets des Tages)
+            seite.Knoepfe.Children.Add(verschieben);
+        }
         seite.Knoepfe.Children.Add(T(PyFormat.Prozent("Ohne Hilfe gibt es %d %% Bonus.",
             Core.Mathe.PythonRunden.Runde(Py.F(Objekt(I["balancing"])["bonus_ohne_hilfe"]) * 100)), 12, "muted"));
         seite.Teile.Add(seite.Knoepfe);
@@ -135,7 +149,7 @@ public sealed partial class SpielTafel
             return;
         }
         var antwort = t.Brett.Antwort;
-        if (Tun(a => a.Loesen(t.Auftrag["id"], antwort, t.Hilfe)) is not { } daten)
+        if (Tun(a => t.Paket is { } p ? a.PaketLoesen(p, t.Auftrag["id"], antwort, t.Hilfe) : a.Loesen(t.Auftrag["id"], antwort, t.Hilfe)) is not { } daten)
         {
             return;
         }

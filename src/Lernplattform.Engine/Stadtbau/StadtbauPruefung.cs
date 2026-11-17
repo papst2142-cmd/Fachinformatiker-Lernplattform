@@ -69,7 +69,7 @@ public static partial class StadtbauPruefung
         {
             // Welle E4: Formatnummer 2 genau dann, wenn eine Quest einen Arbeitsort hat (sonst laese ein aelteres Programm
             // den Arbeitsort still nicht oder lehnte eine Datei ohne Arbeitsort ab)
-            funde.Add(string.Create(CultureInfo.InvariantCulture, $"Feld „formatversion“ ist {Py.Int(d["formatversion"])}, passt aber nicht zum Inhalt (Karte groesser als 64 oder mit Stadtteil-Namen 3, sonst mit Arbeitsort einer Quest 2, sonst 1)."));
+            funde.Add(string.Create(CultureInfo.InvariantCulture, $"Feld „formatversion“ ist {Py.Int(d["formatversion"])}, passt aber nicht zum Inhalt (Paket-Stadt 4, sonst Karte groesser als 64 oder mit Stadtteil-Namen 3, sonst mit Arbeitsort einer Quest 2, sonst 1)."));
         }
         if (d["stadt"] is not PyObjekt stadt)
         {
@@ -87,6 +87,11 @@ public static partial class StadtbauPruefung
             if (stadt["id"] is not string id || !StadtIdMuster().IsMatch(id))
             {
                 funde.Add("„stadt.id“ fehlt oder ist nicht aus Kleinbuchstaben, Ziffern und _ (höchstens 32 Zeichen).");
+            }
+            else
+            {
+                // Welle A 0.89.0 / S 0.57.0 (Weisung P12-297 W3-1): Abschnitt "paket" einer Paket-Stadt
+                funde.AddRange(StadtPaket.Fehler(d["stadtdaten"] as PyObjekt, id));
             }
             if (!Py.IstNurInt(stadt["fassung"]) || Py.Int(stadt["fassung"]) < 0)
             {

@@ -77,6 +77,7 @@ internal static class UpdateProbe
                     var gemerkt = await Dispatcher.UIThread.InvokeAsync(() =>
                         Lernplattform.Programm.Zustand.Aendere(w => Lernplattform.Core.Spiel.Ton.VollbildWahl.Wert(w, true)));
                     Log("VOLLBILD MERKER " + (gemerkt ? "an" : "FEHLER"));
+                    await PaketeAsync();
                     return;
                 }
                 Log("ANGEBOT " + angebot.Version + " " + angebot.DateiName + " " + angebot.Groesse);
@@ -88,6 +89,45 @@ internal static class UpdateProbe
                 Log("FEHLER " + e.GetType().Name + ": " + e.Message);
             }
         });
+    }
+
+    /// <summary>
+    /// Welle A 0.89.0 (Inhaltspakete W3, Weisung P12-297 W3-4): echtes Laden eines Inhaltspakets am Handy. Der Testserver von
+    /// update_probe.sh liefert die Release-Liste im Format von GitHub (<c>releases.json</c>, erzeugt von
+    /// <c>paket_release.py github-probe</c>) und die Paketdateien. Die Verwaltung ist dieselbe wie in der App (Quelle ueber
+    /// <see cref="Lernplattform.Core.Pakete.PaketQuelle.Fuer"/>, Ablage im Datenordner, Pruefung gegen den digest); nur die Adresse
+    /// der Liste ist die des Testservers. Zeilen "PAKET ..." liest update_probe.sh.
+    /// </summary>
+    private static async Task PaketeAsync()
+    {
+        try
+        {
+            var (url, _) = Ziel();
+            var liste = url[..(url.LastIndexOf('/') + 1)] + "releases.json";
+            Environment.SetEnvironmentVariable(Lernplattform.Core.Pakete.PaketQuelle.Umgebung, liste);
+            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
+            var verwaltung = new Lernplattform.Core.Pakete.PaketVerwaltung(new Lernplattform.Core.Pakete.PaketAblage(Lernplattform.Core.Daten.Ablage.Datenordner()),
+                () => Lernplattform.Core.Pakete.PaketQuelle.Fuer(http, z => Log("PAKET STOERUNG " + z)), Aktuell.Anzeige);
+            Log("PAKET QUELLE " + liste);
+            await verwaltung.SuchenAsync();
+            Log("PAKET LISTE " + string.Join(",", verwaltung.Angebote.Select(a => a.Kennung)) + (verwaltung.SuchFehler is { } f ? " FEHLER " + f : ""));
+            if (verwaltung.Angebote.FirstOrDefault(a => a.Kennung == "probe_kaputt") is { } kaputt)
+            {
+                Log("PAKET KAPUTT " + (await verwaltung.LadenAsync(kaputt, null, CancellationToken.None) ?? "ANGENOMMEN"));
+            }
+            if (verwaltung.Angebote.FirstOrDefault(a => a.Kennung == "probe_quests") is { } quests)
+            {
+                var grund = await verwaltung.LadenAsync(quests, null, CancellationToken.None);
+                var staende = verwaltung.Staedte().Where(s => s.Kopf.Kennung == "probe_quests").Select(s => s.Kopf.Stand).ToList();
+                Log(grund is null && staende.Count == 1 ? "PAKET GELADEN probe_quests " + staende[0] + " digest " + quests.Sha256 : "PAKET NICHT GELADEN " + grund);
+                verwaltung.Entfernen("probe_quests");
+            }
+        }
+        catch (Exception e)
+        {
+            Log("PAKET FEHLER " + e.GetType().Name + ": " + e.Message);
+        }
+        Log("PAKET ENDE");
     }
 }
 #endif

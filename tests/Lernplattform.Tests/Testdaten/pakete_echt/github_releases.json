@@ -1,0 +1,70 @@
+[
+ {
+  "tag_name": "vA0.89.0",
+  "name": "Fachinformatiker Lernplattform A 0.89.0",
+  "draft": false,
+  "prerelease": false,
+  "body": "Programm-Release (die Paketliste nimmt es nie).",
+  "assets": []
+ },
+ {
+  "tag_name": "vPprobe_quests.1",
+  "name": "Probe: Stadt mit Aufträgen",
+  "draft": false,
+  "prerelease": false,
+  "body": "Art: stadt\nProbe-Stadt für Tests: Stadt 1 (Fassung 2) mit zwei Aufträgen von Greta Sommer.\n\nInhaltspaket „Probe: Stadt mit Aufträgen“ (Kennung probe_quests, Stand 1). Es braucht die Lernplattform ab A 0.89.0 und wird in der App unter Optionen, Inhaltspakete geladen; ein Programm-Update nimmt es nie.\n\n| Datei | Größe (Bytes) | SHA-256 |\n|---|---|---|\n| `probe_quests_1.fipaket` | 13778 | `16842f2f5c6c5481172bbc572cfdea0cd9335e5786366e67d9d325dde9a3d461` |\n\nRelease-Seite: https://github.com/papst2142-cmd/Fachinformatiker-Lernplattform/releases/tag/vPprobe_quests.1\n",
+  "assets": [
+   {
+    "name": "probe_quests_1.fipaket",
+    "size": 13778,
+    "digest": "sha256:16842f2f5c6c5481172bbc572cfdea0cd9335e5786366e67d9d325dde9a3d461",
+    "browser_download_url": "http://PAKETPROBE/probe_quests_1.fipaket"
+   }
+  ]
+ },
+ {
+  "tag_name": "vPprobe_kaputt.1",
+  "name": "Probe: falsche Prüfsumme",
+  "draft": false,
+  "prerelease": false,
+  "body": "Art: stadt\nProbe: die Prüfsumme passt nicht zur Datei.\n",
+  "assets": [
+   {
+    "name": "probe_kaputt_1.fipaket",
+    "size": 13778,
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "browser_download_url": "http://PAKETPROBE/probe_quests_1.fipaket"
+   }
+  ]
+ },
+ {
+  "tag_name": "vPprobe_entwurf.1",
+  "name": "Probe: draft",
+  "draft": true,
+  "prerelease": false,
+  "body": "Art: stadt\nDarf die App nie zeigen.\n",
+  "assets": [
+   {
+    "name": "probe_entwurf_1.fipaket",
+    "size": 13778,
+    "digest": "sha256:16842f2f5c6c5481172bbc572cfdea0cd9335e5786366e67d9d325dde9a3d461",
+    "browser_download_url": "http://PAKETPROBE/probe_quests_1.fipaket"
+   }
+  ]
+ },
+ {
+  "tag_name": "vPprobe_vorab.1",
+  "name": "Probe: prerelease",
+  "draft": false,
+  "prerelease": true,
+  "body": "Art: stadt\nDarf die App nie zeigen.\n",
+  "assets": [
+   {
+    "name": "probe_vorab_1.fipaket",
+    "size": 13778,
+    "digest": "sha256:16842f2f5c6c5481172bbc572cfdea0cd9335e5786366e67d9d325dde9a3d461",
+    "browser_download_url": "http://PAKETPROBE/probe_quests_1.fipaket"
+   }
+  ]
+ }
+]

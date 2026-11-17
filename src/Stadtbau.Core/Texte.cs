@@ -57,6 +57,18 @@ public static partial class Texte
     public const string Abbrechen = "Abbrechen";
     public const string VorschlagLeer = "Neue Stadt";
 
+    // ---- Neue Stadt (Paket), S 0.57.0 (Weisung P12-297 W3-1) ----
+    public const string NeuPaket = "Neue Stadt (Paket)";
+    public const string VorschlagPaket = "Neue Paket-Stadt";
+    public const string PaketKennung = "Kennung des Pakets";
+    public const string PaketKennungHinweis = "Kleine Buchstaben a bis z, Ziffern und _ (2 bis 32 Zeichen). Die Kennung bleibt für immer.";
+    public const string PaketName = "Name der Stadt im Spiel";
+    public const string PaketNameHinweis = "So steht die Stadt im Fahrplan am Bahnhof (höchstens 40 Zeichen).";
+    public const string PaketNurNeueStadt = "Nur eine neue Stadt kann ein Paket sein; Stadt 1 bleibt geschützt.";
+
+    /// <summary>Zeile neben dem Titel einer Paket-Stadt: Kennung und geschaetzte Paketgroesse.</summary>
+    public static string PaketZeile(string kennung, string? mb) => "· Paket „" + kennung + "“" + (mb is null ? "" : ", geschätzt " + mb + " MB");
+
     /// <summary>
     /// Vorgegebener Projektname im Fenster "Neues Projekt" (Sammelliste 219 Punkt 3, mit Umlauten; die Datei heisst in ASCII,
     /// <see cref="Projekt.DateiName"/>): Stadt 1 = "Stadt 1 überarbeiten", Innenraum = "&lt;Ort&gt; umbauen", leer = "Neue Stadt".
@@ -65,6 +77,7 @@ public static partial class Texte
     {
         NeuInnenraum => (ortName ?? "Innenraum") + " umbauen",
         NeuLeer => VorschlagLeer,
+        NeuPaket => VorschlagPaket,
         _ => NeuStadt,
     };
 

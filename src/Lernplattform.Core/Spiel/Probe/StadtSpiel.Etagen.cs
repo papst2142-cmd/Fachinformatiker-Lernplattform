@@ -141,7 +141,7 @@ public sealed partial class StadtSpiel
         {
             EtageVorbereitetGenommen++;
         }
-        else if (Probe.Innenraum.Bauen(ansicht, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, innen.Fest, Feste, innen.Jahreszeit) is { } gebaut)
+        else if (Probe.Innenraum.Bauen(ansicht, Sicht(Ablauf.Stand), Innenraeume, Grafik, GeschaefteDaten, innen.Fest, Feste, innen.Jahreszeit) is { } gebaut)
         {
             neu = gebaut;
             InDenVorrat(gebaut);
@@ -213,7 +213,7 @@ public sealed partial class StadtSpiel
         var (innenraeume, grafik, geschaefte, feste, jahreszeit) = (Innenraeume, Grafik, GeschaefteDaten, Feste, Szene.Jahreszeit);
         var aufgabe = Task.Run(() =>
         {
-            var innen = Probe.Innenraum.Bauen(ansicht, kopie, innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
+            var innen = Probe.Innenraum.Bauen(ansicht, Sicht(kopie), innenraeume, grafik, geschaefte, fest, feste, jahreszeit);
             innen?.Vorbereiten();
             return innen;
         });
@@ -286,7 +286,7 @@ public sealed partial class StadtSpiel
             return;
         }
         var innen = Innen!;
-        if (halt is null || Probe.Innenraum.Bauen(ziel, Ablauf.Stand, Innenraeume, Grafik, GeschaefteDaten, innen.Fest, Feste, innen.Jahreszeit) is not { } neu)
+        if (halt is null || Probe.Innenraum.Bauen(ziel, Sicht(Ablauf.Stand), Innenraeume, Grafik, GeschaefteDaten, innen.Fest, Feste, innen.Jahreszeit) is not { } neu)
         {
             FehlerMerken(string.Create(CultureInfo.InvariantCulture,
                 $"Spiel: die Etage {zuletzt.Etage} in {ort} laesst sich nicht betreten; die Figur steht im Erdgeschoss."));

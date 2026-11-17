@@ -76,7 +76,8 @@ public sealed partial class Hauptansicht
         _titel.VerticalAlignment = VerticalAlignment.Center;
         _titel.TextTrimming = TextTrimming.CharacterEllipsis;
         _speicherStand.VerticalAlignment = VerticalAlignment.Center;
-        var titelLinks = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Children = { _titel, _speicherStand } };
+        _paketZeile.VerticalAlignment = VerticalAlignment.Center;
+        var titelLinks = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Children = { _titel, _speicherStand, _paketZeile } };
         var projekt = MenueKnopf(Texte.MenueProjekt, Texte.MenueProjekt + " ▾", _projektMenue);
         var einstellungen = MenueKnopf(Texte.MenueEinstellungen, "⚙ " + Texte.MenueEinstellungen + " ▾", _einstellungenMenue);
         _beenden.Margin = new Thickness(0);
@@ -332,6 +333,7 @@ public sealed partial class Hauptansicht
         var offen = Ungespeichert;
         _speicherStand.Text = "· " + (offen ? Texte.NichtGespeichert : Texte.SpeicherStand);
         _speicherStand.Farbe(TextBlock.ForegroundProperty, offen ? "Pinsel.red" : "Pinsel.green");
+        PaketZeileZeigen(offen);
     }
 
     // ---- Tastenkuerzel (Punkt 9) --------------------------------------------------------------------

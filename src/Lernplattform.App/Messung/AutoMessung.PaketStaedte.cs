@@ -82,6 +82,11 @@ public static partial class AutoMessung
                 && PaketDienst.Verwaltung.Staedte().Count == 0,
                 spiel.Zeile.Replace('\n', ' ') + " | Knopf: " + (KnopfName(laden) ?? "FEHLT") + " (soll " + fehltText + "), geladen: " + PaketDienst.Verwaltung.Staedte().Count);
             Pruefe("Knoepfe im Bild", KnoepfeImBild(seite, "fahrplan").Count == 0, string.Join("; ", KnoepfeImBild(seite, "fahrplan")));
+            // Sammelliste 376: das Lern-Paket (Art nicht stadt) steht schon vor dem Laden nicht im Fahrplan, nur in den Optionen
+            Pruefe("376 Lern-Paket vor dem Laden nicht im Fahrplan", !spiel.Zeile.Contains("Lern-Paket", StringComparison.Ordinal)
+                && !seite.OrtKnoepfe.Keys.Any(k => k.EndsWith("probe_lernen", StringComparison.Ordinal))
+                && PaketDienst.Verwaltung.Zeilen().Any(z => z.Kennung == "probe_lernen"),
+                spiel.Zeile.Replace('\n', ' ') + " | Knoepfe: " + string.Join(", ", seite.OrtKnoepfe.Keys));
             if (laden is not null)
             {
                 await BedienenAsync(ansicht, laden, "Finger");
@@ -92,8 +97,7 @@ public static partial class AutoMessung
                 && PaketDienst.Verwaltung.Staedte().Any(s => s.Kopf.Kennung == ZugPaket),
                 (KnopfName(zugKnopf) ?? "kein Knopf Zug") + " | " + spiel.Zeile.Replace('\n', ' '));
 
-            // ein Paket unbekannter Art (Lern-Paket) steht vor dem Laden im Fahrplan (das Angebot nennt die Art nicht); ist es
-            // geladen und als „unbekannte Art“ erkannt, faehrt kein Zug dorthin und es verschwindet aus dem Fahrplan
+            // ein Paket unbekannter Art (Lern-Paket): auch geladen und als „unbekannte Art“ erkannt faehrt kein Zug dorthin
             var lern = await SpielZug.LadenAsync(sitzung, "probe_lernen");
             spiel.FahrplanNeu();
             await ansicht.BildFertigAsync();

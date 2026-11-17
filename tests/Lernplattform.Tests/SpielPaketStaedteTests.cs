@@ -295,6 +295,20 @@ public sealed class SpielZugBelastungTests
         ("Betreten", l => l.Ort == Stadt.Bahnhof ? (l.Paket.OhneInnenraum(l.Ort) ? null : "Bahnhof mit Innenraum")
             : l.Paket.Betreten(l.Spiel.Stand) is StadtGrund.Ok or StadtGrund.Geschlossen or StadtGrund.OeffnetNichtMehr ? null : "Betreten " + l.Paket.Betreten(l.Spiel.Stand)),
         ("Laufen", l => l.Paket.Laufen(l.Spiel, 3) is { Ok: true } ? null : "laeuft nicht"),
+        ("Quest", l =>
+        {
+            // Welle A 0.89.0 (Weisung P12-297 B): eine offene Quest der Paket-Stadt loesen; die Tickets von Stadt 1 bleiben gleich
+            if (PaketQuests.Offen(l.Paket, l.Spiel.Stand) is not [var q, ..])
+            {
+                return null;
+            }
+            var tickets = string.Join(",", l.Spiel.Stand.OffeneTickets().Select(a => Py.Str(a["id"])));
+            var id = Py.Str(q["id"]);
+            l.Spiel.PaketLoesen(l.Paket, id, Bewertung.Loesung(q, null, l.Paket.Inhalt), false);
+            var e = l.Spiel.Stand.Verlauf[^1];
+            return e.Art != Ereignisse.Erledigt || !Py.Gleich(e.Daten["aufgabe"], id) || !l.Spiel.Stand.Geloest.Contains(id) ? "Quest " + id + " nicht geloest"
+                : tickets != string.Join(",", l.Spiel.Stand.OffeneTickets().Select(a => Py.Str(a["id"]))) ? "Quest " + id + " nimmt Stadt 1 einen Platz" : null;
+        }),
         ("Mitfahrt", l => l.Paket.Mitfahrt(l.Spiel, 6, 0, 1) is { Ok: true } && l.Spiel.Stand.Verlauf[^1].Daten["ort"] as string == l.Paket.Global(l.Paket.Stand(l.Spiel.Stand).Ort) ? null : "Mitfahrt geht nicht"),
         ("Bus", l => l.Paket.Stand(l.Spiel.Stand).Ort == Stadt.Bahnhof || l.Paket.Bus(l.Spiel, Stadt.Bahnhof, 40, 12) is { Ok: true } ? null : "Bus zum Bahnhof geht nicht"),
         ("Warten", l => l.Paket.WartenPruefen(l.Spiel.Stand).Grund is var g && (g == StadtGrund.Ok ? l.Paket.Warten(l.Spiel).Ok : g != StadtGrund.AndereStadt) ? null : "Warten " + g),
@@ -303,7 +317,19 @@ public sealed class SpielZugBelastungTests
         ("Paket-Stadt gesperrt", l =>
         {
             var zeilen = l.Spiel.Stand.Verlauf.Count;
-            return l.Paket.GehenPruefen(l.Spiel.Stand, Stadt.Bahnhof).Grund == StadtGrund.AndereStadt && l.Spiel.Stand.Verlauf.Count == zeilen ? null : "Paket-Stadt nicht gesperrt";
+            var questGesperrt = l.Paket.Vorsatz is null || PaketQuests.Alle(l.Paket).All(q =>
+            {
+                try
+                {
+                    l.Spiel.PaketLoesen(l.Paket, q["id"], null, false);
+                    return false;
+                }
+                catch (SpielFehler)
+                {
+                    return true;
+                }
+            });
+            return l.Paket.GehenPruefen(l.Spiel.Stand, Stadt.Bahnhof).Grund == StadtGrund.AndereStadt && questGesperrt && l.Spiel.Stand.Verlauf.Count == zeilen ? null : "Paket-Stadt nicht gesperrt";
         }),
     ];
 
@@ -311,7 +337,7 @@ public sealed class SpielZugBelastungTests
     {
         var funde = new List<string>();
         var stadt1 = SpielPaketStaedteTests.Stadt1();
-        var paket = SpielPaketStaedteTests.PaketStadt(stadt1, mitVorsatz);
+        var paket = mitVorsatz ? SpielPaketQuestsTests.PaketStadtMitQuests(stadt1) : SpielPaketStaedteTests.PaketStadt(stadt1, mitVorsatz);
         var spiel = SpielPaketStaedteTestsNeu(stadt1);
         var orte = paket.Orte(spiel.Stand).Select(o => (string)o["id"]!).ToList();
         foreach (var tag in tage)
@@ -382,6 +408,7 @@ public sealed class SpielZugBelastungTests
     {
         Assert.Contains(Aktionen, a => a.Name == "Zug hin");
         Assert.Contains(Aktionen, a => a.Name == "Zug zurueck");
+        Assert.Contains(Aktionen, a => a.Name == "Quest");
         var funde = Probe([1, 2, 3]);
         Assert.True(funde.Count == 0, string.Join("\n", funde));
     }

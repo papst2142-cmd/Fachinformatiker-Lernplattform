@@ -237,6 +237,8 @@ public static partial class AutoMessung
             funde += await LeisteUebersichtAsync(ansicht);     // Welle A 0.81.0: Uebersicht im Handy, Leiste schlank (Sammelliste 350)
             Zeitplan("PaketStaedteAsync");
             funde += await PaketStaedteAsync(ansicht);         // Welle A 0.88.0: Paket-Staedte, Zugfahrt, Sperre, zweites Geraet
+            Zeitplan("PaketGithubAsync");
+            funde += await PaketGithubAsync(ansicht);          // Welle A 0.89.0: echtes Laden ueber das GitHub-Format, Quest in der Paket-Stadt
             if (Teil is null)
             {
                 // lokal (ohne Teil) auch der Teil der Testkarte; die CI misst ihn als eigenen Schritt

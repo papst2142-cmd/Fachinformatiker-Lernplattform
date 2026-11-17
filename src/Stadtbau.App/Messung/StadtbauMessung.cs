@@ -404,6 +404,8 @@ public static partial class StadtbauMessung
         await NamenAsync(a, f);
         await PlaetzeAsync(a, f);
         await Platz373Async(a, f);
+        await Platz375Async(a, f);
+        await PaketStadtAsync(a);
         await TestkarteAsync(a, f);
         await NachtwelleAsync(a, f);
         await AlleBehebenAsync(a, f);

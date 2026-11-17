@@ -34,12 +34,16 @@ public class EngineFormateTests
     /// <summary>
     /// Stadt-Datei <c>.fistadt</c>: heute hoechstens Format 3 (nur Karten ueber 64 oder mit Stadtteil-Namen, Welle Nachladen;
     /// 2 nur mit Arbeitsort, Welle E4, Einzelheiten in <c>ArbeitsortFormatTests</c>); beide echten Dateien der Nummer 1 und die
-    /// echte Datei der Nummer 2 (S 0.53.0) lesbar, Format 4 ist ein Fehler.
+    /// echte Datei der Nummer 2 (S 0.53.0) lesbar. Seit S 0.57.0 (Weisung P12-297) Format 4 nur fuer eine Paket-Stadt; die echte
+    /// Datei der Nummer 3 (S 0.55.0) bleibt lesbar, Format 5 ist ein Fehler.
     /// </summary>
     [Fact]
     public void Fistadt_NeuereNummerFehler_EchteDateienLesbar()
     {
-        Assert.Equal(3, StadtFassung.FormatVersion);
+        Assert.Equal(4, StadtFassung.FormatVersion);
+        var drei = Testdatei("stadt_S0.55.0_namen.fistadt");
+        Assert.Contains("\"formatversion\": 3,", Encoding.UTF8.GetString(drei), StringComparison.Ordinal);
+        Assert.Equal(3, StadtFassung.FormatFuer(StadtFassung.Lesen(drei).Stadtdaten, StadtFassung.Lesen(drei).Karte));
         var f0 = Daten.Lesen(AktiveFassung.Ordner + StadtFassung.Dateiname(AktiveFassung.Stadt1, 0))!;
         foreach (var echt in new[] { f0, Testdatei("stadt1_fassung1.fistadt") })
         {
@@ -49,7 +53,7 @@ public class EngineFormateTests
         var zwei = Testdatei("stadt_S0.53.0_arbeitsort.fistadt");
         Assert.Contains("\"formatversion\": 2,", Encoding.UTF8.GetString(zwei), StringComparison.Ordinal);
         Assert.Equal(2, StadtFassung.FormatFuer(StadtFassung.Lesen(zwei).Stadtdaten, StadtFassung.Lesen(zwei).Karte));
-        var neuer = Ersetzt(Encoding.UTF8.GetString(f0), "\"formatversion\": 1,", "\"formatversion\": 4,");
+        var neuer = Ersetzt(Encoding.UTF8.GetString(f0), "\"formatversion\": 1,", "\"formatversion\": 5,");
         var fehler = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(neuer)));
         Assert.Contains(fehler.Funde, t => t.Contains("neueren Fassung des Formats", StringComparison.Ordinal));
     }
@@ -63,7 +67,7 @@ public class EngineFormateTests
     [Fact]
     public void Fisbau_NeuereNummerNurLesen_EchteDateienLesbar()
     {
-        Assert.Equal(5, Projekt.FormatVersion);
+        Assert.Equal(6, Projekt.FormatVersion);
         var ablage = Daten.NeueAblage();
         Directory.CreateDirectory(ablage.Projekte);
         Projekt Oeffnen(string name, byte[] daten)
@@ -94,6 +98,10 @@ public class EngineFormateTests
         var v4 = Testdatei("projekt_S0.53.0_arbeitsort.fisbau");
         Assert.Contains("\"formatversion\": 4,", Encoding.UTF8.GetString(v4), StringComparison.Ordinal);
         Assert.False(Oeffnen("Projekt aus S 0530", v4).NurLesen);
+
+        var v5 = Testdatei("projekt_S0.55.0_namen.fisbau");
+        Assert.Contains("\"formatversion\": 5,", Encoding.UTF8.GetString(v5), StringComparison.Ordinal);
+        Assert.False(Oeffnen("Projekt aus S 0550", v5).NurLesen);
 
         var neuText = Ersetzt(Encoding.UTF8.GetString(v1), "\"formatversion\": 1,", "\"formatversion\": " + (Projekt.FormatVersion + 1) + ",");
         var neu = Encoding.UTF8.GetBytes(neuText);

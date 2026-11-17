@@ -34,9 +34,10 @@ public sealed partial class Projekt
     /// lassen sich weiter oeffnen. 4 seit Welle E4 (S 0.53.0, Weisung P12-247): nur eine Datei, in der eine Quest einen
     /// Arbeitsort hat (im Stand oder im Verlauf), bekommt 4 (<see cref="FormatFuer"/>); jede andere bleibt bei 3 und bitgleich.
     /// 5 seit Welle Nachladen (S 0.54.0, Weisung P12-280, Nico 2b): nur eine leere Stadt groesser als 64 je Seite (bis 256);
-    /// seit S 0.55.0 (Weisung P12-282) auch eine Datei mit Stadtteil-Namen (im Stand oder im Verlauf).
+    /// seit S 0.55.0 (Weisung P12-282) auch eine Datei mit Stadtteil-Namen (im Stand oder im Verlauf). 6 seit Inhaltspakete W3
+    /// (S 0.57.0, Weisung P12-297): nur eine Paket-Stadt (Teil "stadtdaten/paket", <see cref="StadtPaket"/>).
     /// </summary>
-    public const long FormatVersion = 5;
+    public const long FormatVersion = 6;
 
     /// <summary>
     /// Formatnummer beim Schreiben: 5 fuer eine leere Stadt groesser als 64 je Seite oder mit dem Teil "stadtdaten/stadtteile"
@@ -45,11 +46,15 @@ public sealed partial class Projekt
     /// Frage) steht dort maskiert (<c>\"arbeitsort\": </c>) und zaehlt darum nicht.
     /// </summary>
     internal static long FormatFuer(string aussenText, string verlaufText, (double Breite, double Hoehe)? leer = null) =>
-        (leer is { } l && (l.Breite > Stadtteile.AltesFormatBis || l.Hoehe > Stadtteile.AltesFormatBis))
+        aussenText.Contains(PaketSchluessel, StringComparison.Ordinal) || verlaufText.Contains(PaketSchluessel, StringComparison.Ordinal) ? 6
+        : (leer is { } l && (l.Breite > Stadtteile.AltesFormatBis || l.Hoehe > Stadtteile.AltesFormatBis))
             // S 0.56.0 (Sammelliste 362): eine vergroesserte Karte ueber 64 (im Stand oder im Verlauf)
             || GrosseKarteImText(aussenText) || GrosseKarteImText(verlaufText)
             || aussenText.Contains(NamenSchluessel, StringComparison.Ordinal) || verlaufText.Contains(NamenSchluessel, StringComparison.Ordinal) ? 5
         : aussenText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) || verlaufText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) ? 4 : 3;
+
+    /// <summary>Teil einer Paket-Stadt in "aussen" und im Verlauf (S 0.57.0).</summary>
+    private const string PaketSchluessel = "\"stadtdaten/" + StadtPaket.Abschnitt + "\": ";
 
     private const string ArbeitsortSchluessel = "\"" + Questebene.FeldArbeitsort + "\": ";
 
@@ -212,7 +217,12 @@ public sealed partial class Projekt
     public static bool NameGueltig(string name) =>
         name.Trim().Length is > 0 and <= 40 && name.Trim() == name && name.All(c => char.IsLetterOrDigit(c) || c is ' ' or '-' or '_');
 
-    public static Projekt Neu(string name, Spieldaten daten, Werkzeugordner ablage, string? ort = null, (double Breite, double Hoehe)? leer = null)
+    /// <param name="paket">
+    /// S 0.57.0 (Weisung P12-297 W3-1, „Neue Stadt (Paket)“): Kennung und Name des Pakets; nur mit <paramref name="leer"/>
+    /// (Stadt 1 bleibt geschuetzt). Setzt den Abschnitt <see cref="StadtPaket.Abschnitt"/> der Stadtdaten (kein Schritt).
+    /// </param>
+    public static Projekt Neu(string name, Spieldaten daten, Werkzeugordner ablage, string? ort = null, (double Breite, double Hoehe)? leer = null,
+        (string Kennung, string Name)? paket = null)
     {
         if (!NameGueltig(name))
         {
@@ -222,7 +232,15 @@ public sealed partial class Projekt
         {
             throw new ArgumentException("Größe ungültig", nameof(leer));
         }
+        if (paket is { } pk && (leer is null || StadtPaket.KennungFehler(pk.Kennung) is not null || StadtPaket.NameFehler(pk.Name) is not null))
+        {
+            throw new ArgumentException(leer is null ? Texte.PaketNurNeueStadt : StadtPaket.KennungFehler(pk.Kennung) ?? StadtPaket.NameFehler(pk.Name), nameof(paket));
+        }
         var p = new Projekt(name, daten, ablage.Anlegen(), leer, frei: true);
+        if (paket is { } pa)
+        {
+            Py.Setzen(Aussen.Stadtdaten(p.AussenStand), StadtPaket.Abschnitt, StadtPaket.Neu(pa.Kennung, pa.Name));
+        }
         if (ort is not null && p.Orte.Contains(ort))
         {
             p.Ort = ort;

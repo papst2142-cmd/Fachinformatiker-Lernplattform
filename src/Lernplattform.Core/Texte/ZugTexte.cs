@@ -54,5 +54,8 @@ public static class ZugTexte
     /// <summary>Kein Spielschritt, solange das Paket der Stadt fehlt, in der die Figur ist.</summary>
     public const string KeinSchritt = "Erst das Paket laden: Dein Spielstand ist gerade in {0}.";
 
+    /// <summary>Welle A 0.89.0 (Weisung P12-297 B): eine Quest einer Paket-Stadt loest man nur in dieser Stadt.</summary>
+    public const string QuestAndereStadt = "Diesen Auftrag gibt es nur in seiner Stadt. Fahre erst mit dem Zug dorthin.";
+
     public static string Format(string text, params object?[] werte) => string.Format(CultureInfo.InvariantCulture, text, werte);
 }

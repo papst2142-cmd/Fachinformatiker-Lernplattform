@@ -645,6 +645,8 @@ public sealed partial class Hauptansicht : UserControl
         _projekt.Geaendert += ProjektGeaendert;
         // S 0.47.0 (Weisung P12-226): Einfuegen und Laternen-Vorschlag gehoeren zum vorigen Projekt
         EinfuegenEnde();
+        // Sammelliste 375: die Wahl „Stadtteil einsetzen“ gehoert zum vorigen Projekt
+        EinsetzenWahlZuruecksetzen();
         _laterneSuche?.Cancel();
         Karte.LaterneVorschlag = null;
         EinfuegenKnopfZeigen();
@@ -2884,6 +2886,13 @@ public sealed partial class Hauptansicht : UserControl
         var stadt = new RadioButton { Content = Schrift.Text(Texte.NeuStadt), GroupName = "art", IsChecked = true };
         var innen = new RadioButton { Content = Schrift.Text(Texte.NeuInnenraum), GroupName = "art" };
         var leer = new RadioButton { Content = Schrift.Text(Texte.NeuLeer), GroupName = "art" };
+        // S 0.57.0 (Weisung P12-297 W3-1): „Neue Stadt (Paket)“ = leere Stadt mit Kennung und Name des Pakets
+        var paket = new RadioButton { Content = Schrift.Text(Texte.NeuPaket), GroupName = "art" };
+        var kennung = new TextBox { Text = "", MaxLength = 32, IsEnabled = false, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var paketName = new TextBox { Text = "", MaxLength = StadtPaket.NameHoechstens, IsEnabled = false, HorizontalAlignment = HorizontalAlignment.Stretch };
+        NeuPaketKnopf = paket;
+        NeuKennungFeld = kennung;
+        NeuPaketNameFeld = paketName;
         var ort = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch, IsEnabled = false };
         foreach (var o in _daten.Orte)
         {
@@ -2896,7 +2905,7 @@ public sealed partial class Hauptansicht : UserControl
         var vorschlag = "";
         void Vorschlagen()
         {
-            var art = innen.IsChecked == true ? Texte.NeuInnenraum : leer.IsChecked == true ? Texte.NeuLeer : Texte.NeuStadt;
+            var art = innen.IsChecked == true ? Texte.NeuInnenraum : leer.IsChecked == true ? Texte.NeuLeer : paket.IsChecked == true ? Texte.NeuPaket : Texte.NeuStadt;
             var ortName = ort.SelectedItem is ComboBoxItem { Content: string on } ? on : null;
             var v = Texte.Vorschlag(art, ortName);
             if ((name.Text ?? "") == vorschlag)
@@ -2904,13 +2913,35 @@ public sealed partial class Hauptansicht : UserControl
                 name.Text = v;
             }
             vorschlag = v;
+            PaketVorschlagen();
+        }
+        // Kennung und Name des Pakets folgen dem Projektnamen, solange sie nicht selbst getippt wurden
+        var kennungVorschlag = "";
+        var nameVorschlag = "";
+        void PaketVorschlagen()
+        {
+            var n = (name.Text ?? "").Trim();
+            var k = KennungVorschlag(n);
+            if ((kennung.Text ?? "") == kennungVorschlag)
+            {
+                kennung.Text = k;
+            }
+            kennungVorschlag = k;
+            if ((paketName.Text ?? "") == nameVorschlag)
+            {
+                paketName.Text = n;
+            }
+            nameVorschlag = n;
         }
         void Umschalten()
         {
             ort.IsEnabled = innen.IsChecked == true;
-            breite.IsEnabled = hoehe.IsEnabled = leer.IsChecked == true;
+            breite.IsEnabled = hoehe.IsEnabled = leer.IsChecked == true || paket.IsChecked == true;
+            kennung.IsEnabled = paketName.IsEnabled = paket.IsChecked == true;
             Vorschlagen();
         }
+        name.TextChanged += (_, _) => PaketVorschlagen();
+        paket.IsCheckedChanged += (_, _) => Umschalten();
         innen.IsCheckedChanged += (_, _) => Umschalten();
         leer.IsCheckedChanged += (_, _) => Umschalten();
         stadt.IsCheckedChanged += (_, _) => Umschalten();
@@ -2924,10 +2955,14 @@ public sealed partial class Hauptansicht : UserControl
             {
                 Schrift.Text(Texte.NeuName, gewicht: FontWeight.Bold).Fuer(name), name,
                 Schrift.Text(Texte.NeuNameHinweis, "Klein", farbe: "Pinsel.muted"),
-                Schrift.Text(Texte.NeuArt, gewicht: FontWeight.Bold), stadt, innen, leer,
+                Schrift.Text(Texte.NeuArt, gewicht: FontWeight.Bold), stadt, innen, leer, paket,
                 Schrift.Text(Texte.NeuOrt, "Klein").Fuer(ort), ort,
                 Schrift.Text(Texte.LeerBreite, "Klein").Fuer(breite), breite,
                 Schrift.Text(Texte.LeerHoehe, "Klein").Fuer(hoehe), hoehe,
+                Schrift.Text(Texte.PaketKennung, "Klein").Fuer(kennung), kennung,
+                Schrift.Text(Texte.PaketKennungHinweis, "Klein", farbe: "Pinsel.muted"),
+                Schrift.Text(Texte.PaketName, "Klein").Fuer(paketName), paketName,
+                Schrift.Text(Texte.PaketNameHinweis, "Klein", farbe: "Pinsel.muted"),
                 fehler,
             },
         };
@@ -2945,7 +2980,19 @@ public sealed partial class Hauptansicht : UserControl
                 continue;
             }
             (double, double)? groesse = null;
-            if (leer.IsChecked == true)
+            (string, string)? alsPaket = null;
+            if (paket.IsChecked == true)
+            {
+                var k = (kennung.Text ?? "").Trim();
+                var pn = paketName.Text ?? "";
+                if ((StadtPaket.KennungFehler(k) ?? StadtPaket.NameFehler(pn)) is { } grund)
+                {
+                    fehler.Text = grund;
+                    continue;
+                }
+                alsPaket = (k, pn);
+            }
+            if (leer.IsChecked == true || paket.IsChecked == true)
             {
                 if (!Zahl(breite, out var bw) || !Zahl(hoehe, out var hw) || !Aussen.GroesseGueltig(bw, hw))
                 {
@@ -2957,7 +3004,7 @@ public sealed partial class Hauptansicht : UserControl
             try
             {
                 var gewaehlt = innen.IsChecked == true && ort.SelectedItem is ComboBoxItem { Tag: string o } ? o : null;
-                NeuAnlegen(n, gewaehlt, groesse);
+                NeuAnlegen(n, gewaehlt, groesse, alsPaket);
                 return;
             }
             catch (IOException e)
@@ -2968,9 +3015,9 @@ public sealed partial class Hauptansicht : UserControl
     }
 
     /// <summary>Neues Projekt anlegen und zeigen (Ort gesetzt: gleich im Innenraum, sonst Draufsicht).</summary>
-    public void NeuAnlegen(string name, string? ort, (double Breite, double Hoehe)? leer = null)
+    public void NeuAnlegen(string name, string? ort, (double Breite, double Hoehe)? leer = null, (string Kennung, string Name)? paket = null)
     {
-        var p = Projekt.Neu(name, _daten!, _ordner, ort, leer);
+        var p = Projekt.Neu(name, _daten!, _ordner, ort, leer, paket);
         ProjektSetzen(p, ort ?? p.Orte.FirstOrDefault(), innen: ort is not null);
         Melden("Projekt „" + name + "“ angelegt");
     }

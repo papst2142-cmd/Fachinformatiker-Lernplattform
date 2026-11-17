@@ -103,6 +103,10 @@ public static class Dialog
         }
         vorbereiten?.Invoke([.. reihe.Children.OfType<Button>()]);
         var titelText = Schrift.Text(titel, "Gross", FontWeight.Bold);
+        // Welle S 0.57.0 (Weisung P12-297 W3-1): ein Fenster, das nach einem Fehler mit demselben Inhalt neu oeffnet
+        // („Neues Projekt“, Blueprint speichern/umbenennen), loest den Inhalt erst vom alten Fenster; sonst wirft Avalonia
+        // („hat schon einen Eltern-Knoten“), das Fenster bleibt zu und der Grund erscheint nie
+        (inhalt.Parent as Panel)?.Children.Remove(inhalt);
         var koerper = new StackPanel { Spacing = 10 };
         if (kreuzName is null)
         {

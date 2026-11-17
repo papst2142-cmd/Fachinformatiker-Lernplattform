@@ -30,15 +30,16 @@ public sealed class StadtFassung
     /// Hoechste Formatnummer, die dieses Programm liest (eine neuere Datei wird abgelehnt, nie umgeschrieben). 2 seit Welle E4
     /// (A 0.75.0 / S 0.53.0, Weisung P12-247): nur eine Datei mit Arbeitsort einer Quest bekommt 2 (<see cref="FormatFuer"/>),
     /// jede andere bleibt bitgleich bei 1, damit ein aelteres Programm sie weiter liest. 3 seit Welle Nachladen (A 0.82.0 /
-    /// S 0.54.0, Weisung P12-280): nur eine Karte groesser als 64 oder mit Stadtteil-Namen (<see cref="Stadtteile"/>).
+    /// S 0.54.0, Weisung P12-280): nur eine Karte groesser als 64 oder mit Stadtteil-Namen (<see cref="Stadtteile"/>). 4 seit
+    /// Inhaltspakete W3 (A 0.89.0 / S 0.57.0, Weisung P12-297): nur eine Paket-Stadt (Abschnitt <see cref="StadtPaket.Abschnitt"/>).
     /// </summary>
-    public const long FormatVersion = 3;
+    public const long FormatVersion = 4;
 
     /// <summary>
-    /// Formatnummer, die eine Datei bekommt: 3 bei einer Karte groesser als 64 oder mit Stadtteil-Namen, sonst 2 mit
-    /// Arbeitsort, sonst 1 (bitgleich wie vorher).
+    /// Formatnummer, die eine Datei bekommt: 4 bei einer Paket-Stadt, sonst 3 bei einer Karte groesser als 64 oder mit
+    /// Stadtteil-Namen, sonst 2 mit Arbeitsort, sonst 1 (bitgleich wie vorher).
     /// </summary>
-    public static long FormatFuer(PyObjekt? stadtdaten, PyObjekt? karte) =>
+    public static long FormatFuer(PyObjekt? stadtdaten, PyObjekt? karte) => StadtPaket.Hat(stadtdaten) ? 4 :
         Stadtteile.GrosseKarte(karte) || Stadtteile.HatNamen(stadtdaten) ? 3 : Questebene.HatArbeitsort(stadtdaten) ? 2 : 1;
 
     /// <summary>Dateiendung der Fassungen und Exporte.</summary>

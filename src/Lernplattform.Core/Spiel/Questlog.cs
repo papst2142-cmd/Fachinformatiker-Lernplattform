@@ -30,7 +30,9 @@ public static class Questlog
     public static List<Eintrag> Offen(StadtSpiel spiel)
     {
         var stand = spiel.Ablauf.Stand;
-        return [.. stand.OffeneTickets().Select(a => Bauen(spiel, a, erledigt: false))];
+        // Welle A 0.89.0 (Weisung P12-297 B): in einer Paket-Stadt dazu ihre offenen Quests (nur dort, ruhen ohne Paket)
+        var paket = spiel.Stadt.Vorsatz is null ? [] : PaketQuests.Offen(spiel.Stadt, stand).Select(a => Bauen(spiel, a, erledigt: false));
+        return [.. stand.OffeneTickets().Select(a => Bauen(spiel, a, erledigt: false)), .. paket];
     }
 
     /// <summary>Geloeste Auftraege, zuletzt geloeste zuerst (jeder einmal).</summary>
@@ -46,7 +48,7 @@ public static class Questlog
             {
                 continue;
             }
-            if (SpielDaten.Auftrag(id, stand.Inhalt) is { } auftrag)
+            if ((PaketQuests.IstPaketAufgabe(id) ? PaketQuests.Auftrag(spiel.Stadt, id) : SpielDaten.Auftrag(id, stand.Inhalt)) is { } auftrag)
             {
                 liste.Add(Bauen(spiel, auftrag, erledigt: true));
             }
@@ -55,7 +57,8 @@ public static class Questlog
     }
 
     /// <summary>Zahl der offenen Auftraege (gruene Zahl am Handy-Knopf).</summary>
-    public static int ZahlOffen(StadtSpiel spiel) => spiel.Ablauf.Stand.OffeneTickets().Count;
+    public static int ZahlOffen(StadtSpiel spiel) => spiel.Ablauf.Stand.OffeneTickets().Count
+        + (spiel.Stadt.Vorsatz is null ? 0 : PaketQuests.Offen(spiel.Stadt, spiel.Ablauf.Stand).Count);
 
     /// <summary>Text eines leeren Reiters (mit eigener Firma: die Auftraege laufen dort ueber die Firma).</summary>
     public static string LeerText(StadtSpiel spiel, bool erledigt) => erledigt ? QuestlogTexte.KeineErledigten
@@ -64,24 +67,24 @@ public static class Questlog
     private static Eintrag Bauen(StadtSpiel spiel, PyObjekt auftrag, bool erledigt)
     {
         var stand = spiel.Ablauf.Stand;
-        var inhalt = stand.Inhalt;
         var id = Py.Str(auftrag["id"]);
+        var paket = PaketQuests.IstPaketAufgabe(id) ? spiel.Stadt : null;
+        var inhalt = paket?.Inhalt ?? stand.Inhalt;
         var titel = Py.Str(SpielDaten.Get(auftrag, "titel", id));
         var person = SpielDaten.Person(auftrag["auftraggeber"], inhalt);
         var questgeber = person is not null ? Py.Str(SpielDaten.Get(person, "name", auftrag["auftraggeber"])) : Py.Str(auftrag["auftraggeber"] ?? "");
-        var (ziel, ortText) = OrtVon(spiel, auftrag);
+        var (ziel, ortText) = OrtVon(spiel, auftrag, inhalt);
         var ticket = ErsterSatz(auftrag["ticket"]);
         var neu = !erledigt && (Py.F(SpielDaten.Get(auftrag, "ab_tag", 1L)) == stand.Tag || id.StartsWith(SpielDaten.Falschlieferung, StringComparison.Ordinal));
         var wartet = !erledigt && Py.Wahr(SpielDaten.Get(auftrag, Questebene.Merkmal)) && Py.Wahr(SpielDaten.Get(auftrag, "stelle"))
             && Py.Hat(auftrag, "etage")
             ? string.Format(CultureInfo.InvariantCulture, QuestlogTexte.WartetDort, questgeber) : "";
-        return new Eintrag(id, titel, questgeber, ortText, ticket, neu, Kette(stand, auftrag, erledigt), erledigt, ziel, wartet);
+        return new Eintrag(id, titel, questgeber, ortText, ticket, neu, Kette(stand, auftrag, erledigt, paket), erledigt, ziel, wartet);
     }
 
     /// <summary>Ort eines Auftrags (Ort-Kennung und Text mit Etage und Oeffnungszeit); Questgeber draussen: der Ort ihres Platzes.</summary>
-    private static (string? Ziel, string Text) OrtVon(StadtSpiel spiel, PyObjekt auftrag)
+    private static (string? Ziel, string Text) OrtVon(StadtSpiel spiel, PyObjekt auftrag, PyObjekt inhalt)
     {
-        var inhalt = spiel.Ablauf.Stand.Inhalt;
         var ort = Py.Str(SpielDaten.AuftragOrt(auftrag, inhalt) ?? "");
         if (ort == Questebene.OrtDraussen)
         {
@@ -157,13 +160,15 @@ public static class Questlog
     }
 
     /// <summary>Kette ueber „nach“: zuerst zum Anfang zurueck, dann vorwaerts (je Schritt der erste Auftrag mit nach = diesem).</summary>
-    private static List<(string Titel, Stufe Stufe)> Kette(Spielstand stand, PyObjekt auftrag, bool erledigt)
+    private static List<(string Titel, Stufe Stufe)> Kette(Spielstand stand, PyObjekt auftrag, bool erledigt, Stadt? paket = null)
     {
         var inhalt = stand.Inhalt;
-        var alle = SpielDaten.Liste(inhalt["aufgaben"]).Select(SpielDaten.Objekt).ToList();
+        // Welle A 0.89.0: Kette einer Quest der Paket-Stadt nur ueber ihre Quests (Kennungen mit Vorsatz)
+        var alle = paket is not null ? [.. PaketQuests.Alle(paket)] : SpielDaten.Liste(inhalt["aufgaben"]).Select(SpielDaten.Objekt).ToList();
+        PyObjekt? Finden(object? kennung) => paket is not null ? PaketQuests.Auftrag(paket, kennung) : SpielDaten.Auftrag(kennung, inhalt);
         var anfang = auftrag;
         var gesehen = new HashSet<string>(StringComparer.Ordinal) { Py.Str(auftrag["id"]) };
-        while (Py.Wahr(anfang["nach"]) && SpielDaten.Auftrag(anfang["nach"], inhalt) is { } vorher && gesehen.Add(Py.Str(vorher["id"])))
+        while (Py.Wahr(anfang["nach"]) && Finden(anfang["nach"]) is { } vorher && gesehen.Add(Py.Str(vorher["id"])))
         {
             anfang = vorher;
         }
@@ -177,7 +182,7 @@ public static class Questlog
         {
             return [];
         }
-        var offen = stand.OffeneTickets().Select(a => Py.Str(a["id"])).ToHashSet(StringComparer.Ordinal);
+        var offen = (paket is not null ? PaketQuests.Offen(paket, stand) : stand.OffeneTickets()).Select(a => Py.Str(a["id"])).ToHashSet(StringComparer.Ordinal);
         return [.. kette.Select(a =>
         {
             var aid = Py.Str(a["id"]);

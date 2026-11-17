@@ -59,6 +59,9 @@ public static class PaketTexte
     public const string ZuGross = "Das Paket ist größer als erlaubt.";
     public const string Anders = "Das geladene Paket passt nicht zum Angebot (erwartet {0}, Stand {1}).";
     public const string StadtFehler = "Die Stadt im Paket ist fehlerhaft: {0}";
+
+    /// <summary>Welle A 0.89.0 (Weisung P12-297 W3-2): die Stadt traegt die Kennung eines anderen Pakets.</summary>
+    public const string StadtAnderesPaket = "Die Stadt im Paket gehört zum Paket „{0}“.";
     public const string Speichern = "Das Paket konnte nicht gespeichert werden: {0}";
     public const string Netz = "Laden fehlgeschlagen: {0}";
     public const string QuelleFehlt = "Die Testquelle der Pakete wurde nicht gefunden.";

@@ -125,7 +125,10 @@ public class ArbeitsortFormatTests
         // die naechste Nummer (4) ist eine neuere Fassung
         var drei = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(neu.Replace("\"formatversion\": 2,", "\"formatversion\": 3,", StringComparison.Ordinal))));
         Assert.Contains(drei.Funde, t => t.Contains("passt aber nicht zum Inhalt", StringComparison.Ordinal));
+        // seit S 0.57.0 gibt es Format 4 (Paket-Stadt): ohne Abschnitt „paket“ passt die Nummer nicht zum Inhalt, die naechste (5) ist neuer
         var vier = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(neu.Replace("\"formatversion\": 2,", "\"formatversion\": 4,", StringComparison.Ordinal))));
-        Assert.Contains(vier.Funde, t => t.Contains("neueren Fassung des Formats", StringComparison.Ordinal));
+        Assert.Contains(vier.Funde, t => t.Contains("passt aber nicht zum Inhalt", StringComparison.Ordinal));
+        var fuenf = Assert.Throws<StadtbauFehler>(() => StadtFassung.Lesen(Encoding.UTF8.GetBytes(neu.Replace("\"formatversion\": 2,", "\"formatversion\": 5,", StringComparison.Ordinal))));
+        Assert.Contains(fuenf.Funde, t => t.Contains("neueren Fassung des Formats", StringComparison.Ordinal));
     }
 }
