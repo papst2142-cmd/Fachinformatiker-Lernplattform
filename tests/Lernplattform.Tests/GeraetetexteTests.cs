@@ -290,6 +290,7 @@ public partial class GeraetetexteTests
         ("Views/UpdateFenster.cs", "if (Aktuell.Handy is { } geraet && !await ErlaubnisAsync(geraet))", "Verhalten: Erlaubnis \"Unbekannte Apps installieren\" gibt es nur auf Android"),
         ("Views/UpdateFenster.cs", "if (Aktuell.Handy is not null)", "Verhalten: am Handy schliesst Android die App (Nico 3a), Fehler fuehren zur Download-Seite (Nico 4a)"),
         ("Views/UpdateFenster.cs", "return Aktuell.Handy?.ImWlan == false;", "Verhalten: Hinweis auf mobile Daten nur am Handy (Nico 2a)"),
+        ("Views/OptionenSeite.Pakete.cs", "if (!PaketMobilFuerTests && Aktualisierung.Aktualisierung.Handy?.ImWlan != false)", "Verhalten: Rueckfrage mit Groesse vor dem Laden eines Pakets nur am Handy ohne WLAN (Weisung P12-294 A3)"),
         ("Views/UpdateFenster.cs", "if (Aktuell.Handy is not null && geladen >= gesamt)", "Verhalten: Zeile \"Update wird geprüft\" nur am Handy (Pruefung nach dem Laden)"),
         ("Views/UpdateFenster.cs", "return Pc;", "Verhalten: PC-Fenster bleibt nach \"Zur Download-Seite\" offen (app_gui 9416), Handy schliesst nach \"Herunterladen\" (main.py 6163)"),
     ];

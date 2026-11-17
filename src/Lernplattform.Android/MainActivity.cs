@@ -52,6 +52,8 @@ public class MainActivity : AvaloniaMainActivity
             strom.CopyTo(puffer);
             return puffer.ToArray();
         };
+        // A 0.87.0: Testquelle der Inhaltspakete = Cache-Ordner mit dem eingebetteten Probe-Paket (nie der Datenordner)
+        PaketProbeEinrichten();
         Lernplattform.Spiel.Leistungsprobe.BildschirmAn = an => RunOnUiThread(() =>
         {
             if (an)
@@ -107,6 +109,32 @@ public class MainActivity : AvaloniaMainActivity
         UpdateEinrichten();
 #endif
     }
+
+#if PROBE
+    private void PaketProbeEinrichten()
+    {
+        try
+        {
+            var ordner = System.IO.Path.Combine(CacheDir!.AbsolutePath, "paketquelle");
+            System.IO.Directory.CreateDirectory(ordner);
+            var datei = System.IO.Path.Combine(ordner, "probe_testkarte_1.fipaket");
+            using (var strom = typeof(MainActivity).Assembly.GetManifestResourceStream("probe_testkarte_1.fipaket"))
+            {
+                if (strom is null)
+                {
+                    return;
+                }
+                using var ziel = System.IO.File.Create(datei);
+                strom.CopyTo(ziel);
+            }
+            Lernplattform.Core.Pakete.PaketQuelle.ProbeOrdner = ordner;
+        }
+        catch (System.IO.IOException)
+        {
+            // ohne Probe-Paket zeigt die Karte "Quelle fehlt"; nie ein Absturz
+        }
+    }
+#endif
 
 #if !PROBE
     private static readonly Lazy<System.Net.Http.HttpClient> Netz = new(() => new System.Net.Http.HttpClient());

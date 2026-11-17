@@ -290,13 +290,15 @@ public sealed partial class SpielSeite
         // Schrift), steht er in einer eigenen Zeile ganz unten (sonst ragte der Pfeil ueber den Rand, Layoutpruefung)
         // Breite ohne den eigenen Rand (der wechselt mit der Lage) auf Bildpunkte gerundet, plus Rand in der Zeile (4)
         var skala = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-        var verlassenBreite = (Math.Ceiling((VerlassenKnopf.DesiredSize.Width - VerlassenKnopf.Margin.Left - VerlassenKnopf.Margin.Right) * skala) / skala) + 4;
+        // Sammelliste 371: zugeklappt ist der Knopf weg und braucht keinen Platz
+        var verlassenBreite = !VerlassenKnopf.IsVisible ? 0
+            : (Math.Ceiling((VerlassenKnopf.DesiredSize.Width - VerlassenKnopf.Margin.Left - VerlassenKnopf.Margin.Right) * skala) / skala) + 4;
         // gemessen am groessten Platz der Leiste (ihre Breite haengt vom Inhalt ab: sonst bliebe der Knopf nach einem schmalen
         // Fenster unten und die Leiste schmal)
         var hoechstens = Math.Min(_unten.MaxWidth, Ebene.Bounds.Width) - _unten.Padding.Left - _unten.Padding.Right
             - _unten.BorderThickness.Left - _unten.BorderThickness.Right - zeile.Margin.Left - zeile.Margin.Right;
         var nebenan = zeile.Bounds.Width - frei;   // Handy-Knopf und Pfeil
-        var verlassenUnten = verlassenBreite > hoechstens - nebenan;
+        var verlassenUnten = VerlassenKnopf.IsVisible && verlassenBreite > hoechstens - nebenan;
         Grid.SetRow(VerlassenKnopf, verlassenUnten ? 2 : 0);
         Grid.SetColumn(VerlassenKnopf, verlassenUnten ? 0 : 2);
         Grid.SetColumnSpan(VerlassenKnopf, verlassenUnten ? 4 : 1);

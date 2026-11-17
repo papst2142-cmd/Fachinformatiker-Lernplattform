@@ -304,6 +304,7 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
         Optionen.Ton => Ton(),
         Optionen.Vollbild => VollbildKarte(),
         Optionen.Grafik => GrafikKarte(),
+        Optionen.Pakete => PaketeKarte(),
         Optionen.Tasten => Tasten(),
         Optionen.Beenden => BeendenKarte(),
         _ => Platzhalterzeile(),

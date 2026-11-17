@@ -201,8 +201,8 @@ public class SucheTests
 
     /// <summary>Phase 8 W8: "Musik und Geräusche", "Vollbild" und "Tastenbelegung" gibt es nur in C# (wie "Ausbildung").
     /// Patch A 0.37.0 (Sammelliste 206): "Programm beenden" (nur Handy) gibt es ebenfalls nur in C#.
-    /// Welle Grafik G1 (A 0.64.0): "Grafik" gibt es nur in C#.</summary>
-    private static readonly OptionenBereich[] W8Bereiche = [Optionen.TonBereich, Optionen.VollbildBereich, Optionen.GrafikBereich, Optionen.TastenBereich, Optionen.BeendenBereich];
+    /// Welle Grafik G1 (A 0.64.0): "Grafik" gibt es nur in C#. A 0.87.0: "Inhaltspakete" gibt es nur in C#.</summary>
+    private static readonly OptionenBereich[] W8Bereiche = [Optionen.TonBereich, Optionen.VollbildBereich, Optionen.GrafikBereich, Optionen.TastenBereich, Optionen.BeendenBereich, Optionen.PaketeBereich];
 
     private static bool IstW8(SuchTreffer t) => t.Art == Optionen.SucheArt && W8Bereiche.Any(b => b.Titel == t.Titel);
 

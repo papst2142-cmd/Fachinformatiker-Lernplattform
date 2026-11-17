@@ -789,6 +789,12 @@ public sealed partial class SpielSeite : Grid
     /// </summary>
     internal bool OrtslisteAltFuerTests { get; set; }
 
+    /// <summary>
+    /// Gegenprobe Sammelliste 371 (nur Start-Test, je Seite wie <see cref="OrtslisteAltFuerTests"/>: die Leiste setzt sich aus
+    /// Rueckrufen des Dispatchers neu): „Spiel verlassen“ bleibt zugeklappt sichtbar wie bis A 0.86.0.
+    /// </summary>
+    internal bool VerlassenZuAltFuerTests { get; set; }
+
     /// <summary>Patch A 0.75.1 (Start-Test 343): ist der Knopf „Orte“ zum Oeffnen und Schliessen der Ortsliste zu sehen?</summary>
     public bool OrteKnopfSichtbar => _orteKnopf.IsVisible;
 
@@ -1083,7 +1089,7 @@ public sealed partial class SpielSeite : Grid
         return wahl;
     }
 
-    private void Beschriften()
+    internal void Beschriften()
     {
         var inv = CultureInfo.InvariantCulture;
         var teile = new List<string>();
@@ -1175,6 +1181,9 @@ public sealed partial class SpielSeite : Grid
         }
         _zeileRolle.IsVisible = !zu;
         _knoepfe.IsVisible = !zu;
+        // Sammelliste 371 (Nico 17.11.2026: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
+        // zugeklappt ist „Spiel verlassen“ mit den anderen Knoepfen weg, aufgeklappt wie seit A 0.81.0
+        VerlassenKnopf.IsVisible = !zu || VerlassenZuAltFuerTests;
         _kurz.Text = meldung;
         _kurz.IsVisible = zu && meldung.Length > 0 && Stopwatch.GetTimestamp() < _kurzBis;
         QuestZeileSetzen();
