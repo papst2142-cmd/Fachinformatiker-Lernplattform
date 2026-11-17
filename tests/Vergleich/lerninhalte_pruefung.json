@@ -1511,6 +1511,464 @@
     },
     "punkte_selbst": 62,
     "punkte_programm": 38
+   },
+   "dpa_b1_01": {
+    "fachrichtung": "dpa",
+    "bereich": "b1",
+    "firma": "Lastenradbau Kranichfurt GmbH",
+    "punkte": [
+     25,
+     24,
+     26,
+     25
+    ],
+    "teile": [
+     6,
+     7,
+     7,
+     8
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "tabelle",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 8,
+     "auswahl": 3,
+     "rechnen": 7,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 7,
+     "beschreiben": 3,
+     "ergaenzen": 1,
+     "erlaeutern": 5,
+     "ermitteln": 3,
+     "erstellen": 1,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 72,
+    "punkte_programm": 28
+   },
+   "dpa_b1_02": {
+    "fachrichtung": "dpa",
+    "bereich": "b1",
+    "firma": "Großbäckerei Ährengold GmbH & Co. KG",
+    "punkte": [
+     26,
+     25,
+     24,
+     25
+    ],
+    "teile": [
+     8,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "text",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 8,
+     "auswahl": 1,
+     "luecke": 3,
+     "rechnen": 7,
+     "tabelle": 2,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 7,
+     "beschreiben": 4,
+     "ergaenzen": 2,
+     "erlaeutern": 3,
+     "ermitteln": 4,
+     "nennen": 4,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 62,
+    "punkte_programm": 38
+   },
+   "dpa_b1_03": {
+    "fachrichtung": "dpa",
+    "bereich": "b1",
+    "firma": "Autohaus Mühlenkamp GmbH",
+    "punkte": [
+     26,
+     25,
+     25,
+     24
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "monitor",
+     "tabelle",
+     "englisch",
+     "code"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 1,
+     "luecke": 4,
+     "rechnen": 6,
+     "tabelle": 2,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 6,
+     "beschreiben": 3,
+     "ergaenzen": 2,
+     "erlaeutern": 2,
+     "ermitteln": 5,
+     "nennen": 4,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 62,
+    "punkte_programm": 38
+   },
+   "dpa_b1_04": {
+    "fachrichtung": "dpa",
+    "bereich": "b1",
+    "firma": "Versicherungsmakler Hanseblick GmbH",
+    "punkte": [
+     26,
+     25,
+     25,
+     24
+    ],
+    "teile": [
+     6,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 1,
+     "luecke": 1,
+     "rechnen": 7,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 7,
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 5,
+     "ermitteln": 2,
+     "erstellen": 1,
+     "nennen": 4
+    },
+    "punkte_selbst": 69,
+    "punkte_programm": 31
+   },
+   "dpa_b1_05": {
+    "fachrichtung": "dpa",
+    "bereich": "b1",
+    "firma": "Gebäudereinigung Kristallweiß GmbH",
+    "punkte": [
+     24,
+     26,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "text",
+     "tabelle",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 4,
+     "auswahl": 2,
+     "luecke": 2,
+     "rechnen": 7,
+     "tabelle": 3,
+     "zeilen": 10
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 7,
+     "beschreiben": 1,
+     "ergaenzen": 3,
+     "erlaeutern": 4,
+     "ermitteln": 4,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 59,
+    "punkte_programm": 41
+   },
+   "dpa_b2_01": {
+    "fachrichtung": "dpa",
+    "bereich": "b2",
+    "firma": "Hörakustik Ohrwerk GmbH",
+    "punkte": [
+     24,
+     25,
+     26,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "tabelle",
+     "code",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 4,
+     "auswahl": 2,
+     "luecke": 4,
+     "rechnen": 2,
+     "tabelle": 3,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 1,
+     "beschreiben": 2,
+     "ergaenzen": 5,
+     "erlaeutern": 3,
+     "ermitteln": 6,
+     "korrigieren": 2,
+     "nennen": 4,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 58,
+    "punkte_programm": 42
+   },
+   "dpa_b2_02": {
+    "fachrichtung": "dpa",
+    "bereich": "b2",
+    "firma": "Bürgerwindpark Heidekamm GmbH & Co. KG",
+    "punkte": [
+     24,
+     26,
+     25,
+     25
+    ],
+    "teile": [
+     8,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "code",
+     "text",
+     "englisch",
+     "monitor",
+     "text",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 4,
+     "auswahl": 1,
+     "luecke": 2,
+     "rechnen": 10,
+     "tabelle": 2,
+     "zeilen": 10
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 7,
+     "beschreiben": 1,
+     "ergaenzen": 2,
+     "erlaeutern": 2,
+     "ermitteln": 7,
+     "korrigieren": 1,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 63,
+    "punkte_programm": 37
+   },
+   "dpa_b2_03": {
+    "fachrichtung": "dpa",
+    "bereich": "b2",
+    "firma": "Gartenversand Rosenbogen GmbH",
+    "punkte": [
+     24,
+     25,
+     26,
+     25
+    ],
+    "teile": [
+     7,
+     8,
+     8,
+     6
+    ],
+    "anlagen": [
+     "tabelle",
+     "tabelle",
+     "englisch",
+     "code",
+     "text"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 1,
+     "luecke": 4,
+     "rechnen": 5,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 10
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 5,
+     "beschreiben": 4,
+     "ergaenzen": 1,
+     "erlaeutern": 4,
+     "ermitteln": 3,
+     "erstellen": 1,
+     "korrigieren": 2,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 72,
+    "punkte_programm": 28
+   },
+   "dpa_b2_04": {
+    "fachrichtung": "dpa",
+    "bereich": "b2",
+    "firma": "Fitnessstudio-Kette Kraftquelle GmbH",
+    "punkte": [
+     24,
+     26,
+     24,
+     26
+    ],
+    "teile": [
+     7,
+     7,
+     8,
+     8
+    ],
+    "anlagen": [
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "englisch",
+     "text",
+     "text"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 1,
+     "luecke": 3,
+     "rechnen": 6,
+     "tabelle": 2,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 5,
+     "beschreiben": 4,
+     "ergaenzen": 3,
+     "erlaeutern": 5,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "korrigieren": 1,
+     "nennen": 4,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 66,
+    "punkte_programm": 34
+   },
+   "dpa_b2_05": {
+    "fachrichtung": "dpa",
+    "bereich": "b2",
+    "firma": "Saatgut-Großhandel Keimling AG",
+    "punkte": [
+     26,
+     24,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     8,
+     8
+    ],
+    "anlagen": [
+     "text",
+     "englisch",
+     "code",
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "text"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 3,
+     "luecke": 3,
+     "rechnen": 7,
+     "tabelle": 4,
+     "zeilen": 8
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 7,
+     "beschreiben": 2,
+     "ergaenzen": 4,
+     "erlaeutern": 4,
+     "ermitteln": 5,
+     "korrigieren": 1,
+     "nennen": 4
+    },
+    "punkte_selbst": 51,
+    "punkte_programm": 49
    }
   },
   "sichten": {
@@ -1572,8 +2030,20 @@
      "alle_ap1_05",
      "alle_ap1_06"
     ],
-    "b1": [],
-    "b2": []
+    "b1": [
+     "dpa_b1_01",
+     "dpa_b1_02",
+     "dpa_b1_03",
+     "dpa_b1_04",
+     "dpa_b1_05"
+    ],
+    "b2": [
+     "dpa_b2_01",
+     "dpa_b2_02",
+     "dpa_b2_03",
+     "dpa_b2_04",
+     "dpa_b2_05"
+    ]
    },
    "dv": {
     "ap1": [

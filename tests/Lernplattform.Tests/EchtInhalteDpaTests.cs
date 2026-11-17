@@ -132,6 +132,34 @@ public class EchtInhalteDpaTests
     }
 
     /// <summary>Zeichnung ohne Baukasten: Operator erstellen/zeichnen, keine Zeichenform, Text verlangt ein Diagramm oder Struktogramm.</summary>
+    /// <summary>
+    /// Selbst gefunden (A 0.85.0): jedes Zahlenfeld ab 1000 (Rechenergebnis, Ersatzergebnis, Lueckenfeld Art zahl) traegt
+    /// woertlich den Satz "Geben Sie die Zahl ohne Tausenderpunkt an." (Regel seit A 0.79.0). Gegenprobe: ohne den Satz ein Fund.
+    /// </summary>
+    [Fact]
+    public void DPA_ZahlenfelderAb1000_NennenDenTausenderpunkt()
+    {
+        Assert.Empty(DpaSaetze.SelectMany(TausenderFunde));
+        var satz = DpaSaetze.First(s => s.Aufgaben.SelectMany(a => a.Teile).Any(Ab1000));
+        var a = satz.Aufgaben.First(x => x.Teile.Any(Ab1000));
+        var ohne = a with { Teile = [.. a.Teile.Select(t => Ab1000(t) ? t with { Text = [.. t.Text.Select(z => z.Replace(Tausender, "", StringComparison.Ordinal))] } : t)] };
+        Assert.NotEmpty(TausenderFunde(satz with { Aufgaben = [.. satz.Aufgaben.Select(x => x == a ? ohne : x)] }));
+    }
+
+    private const string Tausender = "Geben Sie die Zahl ohne Tausenderpunkt an.";
+
+    private static bool Ab1000(EchtTeil t) => t.Antwort.Form switch
+    {
+        EchtSaetze.FormRechnen => Math.Abs(t.Antwort.Ergebnis) >= 1000 || Math.Abs(t.Antwort.ErsatzErgebnis ?? 0) >= 1000,
+        _ => t.Antwort.Felder.Any(f => f.Art == "zahl" && f.Loesung.Any(l =>
+            double.TryParse(l.Replace(",", ".", StringComparison.Ordinal), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var w) && Math.Abs(w) >= 1000)),
+    };
+
+    private static IEnumerable<string> TausenderFunde(EchtSatz s) => s.Aufgaben.SelectMany(a => a.Teile)
+        .Where(t => Ab1000(t) && !string.Join(" ", t.Text).Contains(Tausender, StringComparison.Ordinal))
+        .Select(t => s.Kennung + " " + t.Nr);
+
     private static bool Papier(EchtTeil t) => t.Operator is "erstellen" or "zeichnen" && t.Antwort.Form != EchtSaetze.FormZeichnen
         && System.Text.RegularExpressions.Regex.IsMatch(string.Join(" ", t.Text), "[Dd]iagramm|Struktogramm");
 
