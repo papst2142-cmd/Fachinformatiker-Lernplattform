@@ -75,7 +75,7 @@ public static partial class AutoMessung
             {
                 Fund(name + ": Reiter \"Aufgabe 3\" antippen wechselt nicht (Reiter " + e.ProbeStand.Reiter + ")");
             }
-            if (!await TippenAsync(ansicht, e.ProbeUmschalter, Beschriftungen.Einsetzen(EchtTexte.Anlagen, bestand.Saetze[0].Anlagen.Count), art)
+            if (!await TippenAsync(ansicht, e.ProbeUmschalter, EchtFormatTeil.UmschalterText(e.ProbeSatz!, e.ProbeSatz!.Aufgaben[2]), art)
                 || !e.ProbeStand.Anlagen)
             {
                 Fund(name + ": Umschalter \"Anlagen\" antippen zeigt die Anlagen nicht");
@@ -90,12 +90,75 @@ public static partial class AutoMessung
             }
             Messwerte.Notiere("Pruefung im echten Format Bedienprobe " + name + ": Reiter, Anlagen, Haekchen (" + vorher + " -> " + e.ProbeStand.Summe + ")");
         }
+        k.Probe(ab + 1);
+        await ansicht.BildFertigAsync();
+        funde += await AnlagenZahl363Async(ansicht, e, "SI/AP1");
         funde += await EchtWelle2Async(ansicht, k, e, MesspunktW2);
         funde += await EchtBaukastenAsync(ansicht, k, e, MesspunktW2);
         funde += await EchtAeAsync(ansicht, k, e, bestand, MesspunktW2);
         k.Probe(-1);
         trainer.ArtWaehlen(TrainerTexte.Uebung);
         await ansicht.BildFertigAsync();
+        return funde;
+    }
+
+    /// <summary>
+    /// Patch A 0.84.1 (Sammelliste 363): fuer jede Aufgabe des gezeigten Satzes nennt der Umschalter "Anlagen (n)" genau so
+    /// viele Anlagen, wie mit "Anlagen" (oder daneben in zwei Spalten) gezeigt werden. Gegenprobe: mit der alten Zahl (alle
+    /// Anlagen des Satzes) muss die Pruefung bei einer Aufgabe mit weniger Anlagen anschlagen.
+    /// </summary>
+    internal static async Task<int> AnlagenZahl363Async(MainView ansicht, EchtFormatTeil e, string name)
+    {
+        var funde = 0;
+        var satz = e.ProbeSatz;
+        if (satz is null)
+        {
+            Messwerte.Notiere("  FEHLER: Pruefung im echten Format (363) " + name + ": kein Satz gezeigt");
+            return 1;
+        }
+        async Task<bool> Passt(int n)
+        {
+            e.ProbeReiter((n + 1).ToString(System.Globalization.CultureInfo.InvariantCulture), true);
+            await ansicht.BildFertigAsync();
+            var soll = EchtAnlagenAnzeige.Von(satz, satz.Aufgaben[n]).Count;
+            var (text, karten) = e.ProbeAnlagenZahl;
+            return text == Beschriftungen.Einsetzen(EchtTexte.Anlagen, soll) && karten == soll;
+        }
+        var zahlen = new List<string>();
+        for (var n = 0; n < satz.Aufgaben.Count; n++)
+        {
+            if (!await Passt(n))
+            {
+                Messwerte.Notiere("  FEHLER: Pruefung im echten Format (363) " + satz.Kennung + " Aufgabe " + (n + 1) + ": Umschalter \""
+                    + e.ProbeAnlagenZahl.Text + "\", gezeigt " + e.ProbeAnlagenZahl.Karten + " Anlagen");
+                funde++;
+            }
+            zahlen.Add(e.ProbeAnlagenZahl.Karten.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+        // Gegenprobe: erste Aufgabe mit weniger Anlagen als der Satz hat
+        var weniger = Enumerable.Range(0, satz.Aufgaben.Count).FirstOrDefault(n => EchtAnlagenAnzeige.Von(satz, satz.Aufgaben[n]).Count < satz.Anlagen.Count, -1);
+        var gegenprobe = "keine Aufgabe mit weniger Anlagen";
+        if (weniger >= 0)
+        {
+            EchtAnlagenAnzeige.ZahlAltFuerTests = true;
+            try
+            {
+                if (await Passt(weniger))
+                {
+                    Messwerte.Notiere("  FEHLER: Pruefung im echten Format (363) " + satz.Kennung + ": Gegenprobe alte Zahl schlaegt nicht an");
+                    funde++;
+                }
+                gegenprobe = "alte Zahl rot bei Aufgabe " + (weniger + 1) + " (\"" + e.ProbeAnlagenZahl.Text + "\")";
+            }
+            finally
+            {
+                EchtAnlagenAnzeige.ZahlAltFuerTests = false;
+            }
+        }
+        e.ProbeReiter("1", false);
+        await ansicht.BildFertigAsync();
+        Messwerte.Notiere("Pruefung im echten Format Anlagen-Zahl (363) " + name + " " + satz.Kennung + ": " + string.Join("/", zahlen)
+            + (e.ProbeZweiSpalten.Gezeigt ? " (zwei Spalten)" : "") + ", Gegenprobe " + gegenprobe);
         return funde;
     }
 

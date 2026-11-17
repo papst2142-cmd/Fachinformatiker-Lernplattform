@@ -297,7 +297,7 @@ public sealed class EchtFormatTeil
             _koerper.Children[0].BringIntoView();
         });
         _koerper.Children.Add(_reiterPillen);
-        _umschalter = new Pillen([("a", EchtTexte.AufgabeUmschalter), ("n", Beschriftungen.Einsetzen(EchtTexte.Anlagen, satz.Anlagen.Count))],
+        _umschalter = new Pillen([("a", EchtTexte.AufgabeUmschalter), ("n", UmschalterText(satz, satz.Aufgaben[0]))],
             _anlagen ? "n" : "a", w =>
             {
                 Festhalten();
@@ -375,6 +375,8 @@ public sealed class EchtFormatTeil
         {
             var n = int.Parse(_reiter, CultureInfo.InvariantCulture);
             var aufgabe = satz.Aufgaben[n - 1];
+            // Sammelliste 363: die Zahl im Umschalter geht mit der Aufgabe mit
+            _umschalter.Beschriften("n", UmschalterText(satz, aufgabe));
             Border AufgabeKarte()
             {
                 var inhalt = new StackPanel { Spacing = 6 };
@@ -419,12 +421,12 @@ public sealed class EchtFormatTeil
         FortschrittZeigen();
     }
 
-    /// <summary>Anlagen, auf die die Aufgabe verweist (alle, wenn sie auf keine verweist).</summary>
-    private static IEnumerable<EchtAnlage> AnlagenVon(EchtSatz satz, EchtAufgabe aufgabe)
-    {
-        var nr = aufgabe.Teile.SelectMany(t => t.Anlagen).ToHashSet(StringComparer.Ordinal);
-        return nr.Count == 0 ? satz.Anlagen : satz.Anlagen.Where(a => nr.Contains(a.Nr));
-    }
+    /// <summary>Anlagen, auf die die Aufgabe verweist (alle, wenn sie auf keine verweist); Rechnung in <see cref="EchtAnlagenAnzeige.Von"/>.</summary>
+    private static IReadOnlyList<EchtAnlage> AnlagenVon(EchtSatz satz, EchtAufgabe aufgabe) => EchtAnlagenAnzeige.Von(satz, aufgabe);
+
+    /// <summary>Beschriftung des Umschalters "Anlagen (n)" fuer eine Aufgabe (Sammelliste 363: Zahl der gezeigten Anlagen).</summary>
+    internal static string UmschalterText(EchtSatz satz, EchtAufgabe aufgabe) =>
+        Beschriftungen.Einsetzen(EchtTexte.Anlagen, EchtAnlagenAnzeige.UmschalterZahl(satz, aufgabe));
 
     private static Border AnlageKarte(EchtAnlage anlage, bool alsText)
     {
@@ -1357,6 +1359,15 @@ public sealed class EchtFormatTeil
     internal Pillen? ProbeReiterPillen => _reiterPillen;
 
     internal Pillen? ProbeUmschalter => _umschalter;
+
+    /// <summary>Probe 363: Beschriftung des Umschalters und Zahl der gezeigten Anlagen-Karten (nur mit Umschalter auf "Anlagen").</summary>
+    internal (string Text, int Karten) ProbeAnlagenZahl => (_umschalter?.Text("n") ?? "",
+        _inhalt?.Children.OfType<Grid>().FirstOrDefault() is { } spalten
+            ? spalten.Children.OfType<StackPanel>().SelectMany(p => p.Children.OfType<Border>()).Count()
+            : _inhalt?.Children.OfType<Border>().Count() ?? 0);
+
+    /// <summary>Probe: der gezeigte Satz (null ohne Lauf).</summary>
+    internal EchtSatz? ProbeSatz => _a.Satz;
 
     internal StackPanel? ProbeInhalt => _inhalt;
 

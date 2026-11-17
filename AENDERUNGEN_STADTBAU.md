@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.56.0
+
+Stadtteile Stück für Stück zu einer großen Stadt zusammensetzen.
+
+- Der neue Knopf „Plätze“ (oder die Taste P) in der Stadt von oben zeigt die Karte in Plätzen von 64 × 64 Feldern, nummeriert ab Platz 1 oben links. Einen Platz wählst du durch Tippen, mit der Maus oder mit den Pfeiltasten.
+- „Karte vergrößern“: Wähle die neue Breite und Tiefe (64, 128, 192 oder 256 Felder) und den Platz, auf dem die heutige Stadt liegen soll. Alles rückt genau dorthin, nichts wird neu gelegt. Die neue Fläche ist Wiese. Das ist ein Schritt und lässt sich rückgängig machen.
+- „Stadtteil einsetzen“: Wähle ein anderes Projekt (höchstens 64 × 64) und einen freien Platz. Ein grüner Rahmen zeigt, dass es passt; ein roter Rahmen nennt den Grund, zum Beispiel wenn auf dem Platz schon etwas liegt oder es zusammen mehr als 16 Hügel wären. Dann wird nichts eingesetzt. Das eingesetzte Projekt selbst bleibt unverändert.
+- Ein Spielort, den die Karte schon hat, kommt als Gebäude ohne Ort mit seinem Innenraum; seine Aufgaben kommen nicht mit. Das und andere Besonderheiten stehen als gelbe Hinweise rechts.
+- Endet eine Straße, Bahn, ein Fluss oder Fußweg genau an der Grenze zweier Plätze und geht drüben nichts weiter, zeigt die Prüfung einen gelben Hinweis mit der Stelle. Verbinden kannst du selbst.
+- Eine vergrößerte Karte über 64 × 64 speichert das Werkzeug im Format für große Karten.
+
 ## S 0.55.0
 
 Stadtteile benennen, große Karten laden in der 3D-Ansicht nach, und die Prüfung großer Karten ist schneller.

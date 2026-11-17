@@ -402,6 +402,7 @@ public static partial class StadtbauMessung
         await GrenzenLiveAsync(a, f);
         await StadtteileAsync(a, f);
         await NamenAsync(a, f);
+        await PlaetzeAsync(a, f);
         await TestkarteAsync(a, f);
         await NachtwelleAsync(a, f);
         await AlleBehebenAsync(a, f);
@@ -1210,11 +1211,28 @@ public static partial class StadtbauMessung
         {
             Fund("Beenden: frisches Projekt gilt als nicht gespeichert");
         }
+        // Sammelliste 361 (Lauf 1026 Windows): lief beim Beenden noch eine Pruefung oder ein 3D-Teilbau im Hintergrund, zeigte
+        // das Werkzeug richtig den Hinweis "wartet" und wartete; die Probe sah das als Rueckfrage, und der zweite Aufruf kam
+        // zurueck, ohne zu fragen (Beenden lief noch). Darum zuerst den Fall mit Arbeit im Hintergrund nachstellen und
+        // pruefen, dann auf das Ende der echten Arbeit warten (nie laenger als "Werkzeug beenden" selbst wartet).
+        var bis = Stopwatch.StartNew();
+        while (a.HintergrundOffen > 0 && bis.Elapsed < Hauptansicht.BeendenWartetHoechstens)
+        {
+            await Task.Delay(50);
+        }
+        Messwerte.Notiere("Beenden: Arbeit im Hintergrund vor der Probe beendet nach " + bis.ElapsedMilliseconds.ToString(Inv) + " ms (offen "
+            + a.HintergrundOffen.ToString(Inv) + ")");
+        if (a.HintergrundOffen > 0)
+        {
+            Fund("Beenden: Arbeit im Hintergrund endet nicht in " + Hauptansicht.BeendenWartetHoechstens.TotalSeconds.ToString(Inv) + " s");
+        }
+        await BeendenMitHintergrundAsync(a);
         var ohneFrage = a.BeendenPruefenAsync();
         await BildAsync(a);
         if (Lernplattform.Views.Dialog.Offen is not null || !ohneFrage.IsCompleted || !await ohneFrage)
         {
-            Fund("Beenden: ohne offene Aenderung kommt eine Rueckfrage oder das Werkzeug bleibt offen");
+            Fund("Beenden: ohne offene Aenderung kommt eine Rueckfrage oder das Werkzeug bleibt offen (Fenster \""
+                + (Lernplattform.Views.Dialog.Offen is { } o ? Avalonia.Automation.AutomationProperties.GetName(o) : "") + "\")");
             Waehle(Texte.Abbrechen);
         }
         Hauptansicht.UngespeichertFuerTests = true;
@@ -1250,6 +1268,41 @@ public static partial class StadtbauMessung
             Hauptansicht.UngespeichertFuerTests = false;
         }
         Messwerte.Notiere("Beenden: Knopf rechts, Rueckfrage nur bei nicht gespeicherter Aenderung, Abbrechen haelt offen");
+
+        // Sammelliste 361: mit Arbeit im Hintergrund zeigt "Werkzeug beenden" nur den Hinweis "wartet" (keine Rueckfrage), ein
+        // zweiter Aufruf kommt sofort mit "nicht beenden" zurueck, und ist die Arbeit fertig, endet es ohne Rueckfrage.
+        async Task BeendenMitHintergrundAsync(Hauptansicht h)
+        {
+            var arbeit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            h.HintergrundFuerTests(arbeit.Task);
+            var beenden = h.BeendenPruefenAsync();
+            await BildAsync(h);
+            var fenster = Lernplattform.Views.Dialog.Offen is { } w ? Avalonia.Automation.AutomationProperties.GetName(w) : null;
+            if (beenden.IsCompleted || fenster != Texte.BeendenWartet || DialogKnoepfe().Count > 0)
+            {
+                Fund("Beenden mit Arbeit im Hintergrund: kein Hinweis \"" + Texte.BeendenWartet + "\" (Fenster \"" + fenster + "\", fertig "
+                    + beenden.IsCompleted + ")");
+            }
+            var zweiter = h.BeendenPruefenAsync();
+            if (!zweiter.IsCompleted || await zweiter)
+            {
+                Fund("Beenden mit Arbeit im Hintergrund: zweiter Aufruf waehrend des Wartens kommt nicht sofort mit \"nicht beenden\" zurueck");
+            }
+            arbeit.SetResult(true);
+            var ende = Stopwatch.StartNew();
+            while (!beenden.IsCompleted && ende.Elapsed < TimeSpan.FromSeconds(5))
+            {
+                await Task.Delay(20);
+            }
+            await BildAsync(h);
+            if (!beenden.IsCompleted || !await beenden || Lernplattform.Views.Dialog.Offen is not null)
+            {
+                Fund("Beenden mit Arbeit im Hintergrund: nach dem Ende der Arbeit kein Beenden ohne Rueckfrage (fertig " + beenden.IsCompleted + ")");
+                Waehle(Texte.Abbrechen);
+            }
+            Messwerte.Notiere("Beenden mit Arbeit im Hintergrund: Hinweis \"" + fenster + "\", zweiter Aufruf sofort nein, nach der Arbeit "
+                + ende.ElapsedMilliseconds.ToString(Inv) + " ms ohne Rueckfrage beendet");
+        }
 
         static List<string> DialogKnoepfe() => Lernplattform.Views.Dialog.Offen is { } d
             ? [.. Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(d).OfType<Button>().Select(k => k.Content is TextBlock t ? t.Text ?? "" : "")]

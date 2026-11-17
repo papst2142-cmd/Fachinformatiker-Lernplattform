@@ -101,7 +101,7 @@ public static partial class AutoMessung
                         Fund(name + ": zwei Spalten ohne Anlagen neben der Aufgabe");
                     }
                 }
-                else if (!await TippenAsync(ansicht, e.ProbeUmschalter, Beschriftungen.Einsetzen(EchtTexte.Anlagen, satz.Anlagen.Count), art)
+                else if (!await TippenAsync(ansicht, e.ProbeUmschalter, EchtFormatTeil.UmschalterText(satz, satz.Aufgaben[1]), art)
                     || !e.ProbeStand.Anlagen)
                 {
                     Fund(name + ": Umschalter \"Anlagen\" antippen zeigt die Anlagen nicht");
@@ -118,6 +118,9 @@ public static partial class AutoMessung
                     + ", Haekchen (" + vorher + " -> "
                     + e.ProbeStand.Summe + ")");
             }
+            k.Probe(start);
+            await ansicht.BildFertigAsync();
+            funde += await AnlagenZahl363Async(ansicht, e, "AE " + rolle);
         }
         return funde;
     }

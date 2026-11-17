@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 0.84.1
+Bei der Prüfung im echten Format nennt der Knopf „Anlagen“ jetzt genau so viele Anlagen, wie zur gewählten Aufgabe gehören.
+
+- Bisher stand auf dem Knopf immer die Zahl aller Anlagen des Prüfungssatzes, zum Beispiel „Anlagen (5)“, auch wenn zur Aufgabe nur eine Anlage gehörte und auch nur diese gezeigt wurde. Jetzt passt die Zahl zur Aufgabe und ändert sich, wenn du zu einer anderen Aufgabe wechselst. Ein Screenreader liest die neue Zahl vor.
+- Die Anlagen selbst, die Aufgaben, die Bewertung und dein Lernstand bleiben, wie sie sind.
+
 ## A 0.84.0
 Die Prüfung im echten Format gibt es jetzt auch für die Fachrichtung Anwendungsentwicklung, mit zehn neuen Prüfungssätzen.
 

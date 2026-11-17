@@ -38,6 +38,7 @@ folgt kein 2. Lauf: diese Messzeiten koennen den Lauf nicht rot machen, der 2. L
 Jeder andere Fund und jedes andere System: 2. Lauf wie bisher.
 """
 import contextlib
+import importlib.util
 import io
 import os
 import tempfile
@@ -527,6 +528,37 @@ def hilfsjob_gegenprobe(release=".github/workflows/release.yml"):
     return 0
 
 
+def lauf_waehlen(releases=(".github/workflows/release.yml", ".github/workflows/stadtbau_release.yml"), texte=None):
+    """Sammelliste 365 (Weisung P12-289): beide Release-Workflows waehlen den Lauf nur ueber lauf_waehlen.py (gruener
+    Lauf auf main oder gleicher Tree) und schreiben ihn in den Release-Text; dazu dessen Selbsttest mit Gegenproben."""
+    rot = 0
+    for pfad in releases:
+        if texte is not None:
+            text = texte[pfad]
+        elif not os.path.exists(pfad):
+            continue
+        else:
+            with open(pfad, encoding="utf-8") as f:
+                text = f.read()
+        for noetig in ("lauf_waehlen.py selbsttest", "lauf_waehlen.py waehlen", "lauf_waehlen.py text", "id: lauf"):
+            if noetig not in text:
+                print("FEHLER: Selbsttest Lauf waehlen: %s ohne \"%s\"" % (os.path.basename(pfad), noetig))
+                rot = 1
+    if texte is None:
+        spec = importlib.util.spec_from_file_location("lauf_waehlen", os.path.join("werkzeuge", "release", "lauf_waehlen.py"))
+        modul = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modul)
+        rot |= modul.selbsttest()
+        # Gegenprobe: ein Workflow mit der alten Schleife (nur derselbe Commit) ist rot
+        with open(releases[0], encoding="utf-8") as f:
+            alt = f.read().replace("lauf_waehlen.py waehlen", "for id in $(gh api ...)")
+        with contextlib.redirect_stdout(io.StringIO()):
+            if lauf_waehlen(releases[:1], {releases[0]: alt}) != 1:
+                print("FEHLER: Selbsttest Lauf waehlen: Gegenprobe ohne lauf_waehlen.py nicht rot")
+                rot = 1
+    return rot
+
+
 def selbsttest():
     """Feste Faelle (Weisung P11-19): Intel-Mac Messzeit-Rot = gruen mit INFO, Layout-Rot = rot; dasselbe
     ohne Ausnahme (macos-15 und alle anderen) bleibt rot."""
@@ -615,6 +647,8 @@ def selbsttest():
     rot |= hilfsjob_zaehlt_nicht(".github/workflows/stadtbau_release.yml")
     rot |= hilfsjob_gegenprobe()
     rot |= urteil_github.selbsttest()
+    # Sammelliste 365 (Weisung P12-289): Release nimmt einen gruenen Lauf auf main oder mit gleichem Tree
+    rot |= lauf_waehlen()
     if alt is None:
         os.environ.pop("LERNPLATTFORM_ZEITEN_NUR_INFO", None)
     else:

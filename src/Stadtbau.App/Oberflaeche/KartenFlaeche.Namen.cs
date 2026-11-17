@@ -36,6 +36,7 @@ public sealed partial class KartenFlaeche
                 SetzenBeenden();
                 MassbandAn = false;
                 MehrereWaehlen = false;
+                PlaetzeAn = false;
                 Waehlen(null);
             }
             InvalidateVisual();
