@@ -118,6 +118,10 @@ public static partial class AutoMessung
 
     private static async Task BedienenAsync(MainView ansicht, Button knopf, string art)
     {
+        // Knoepfe der Karte entstehen nach jedem Schritt neu: erst sichtbar rollen und anordnen, sonst trifft ein Tippen daneben
+        knopf.BringIntoView();
+        await ansicht.BildFertigAsync();
+        await ansicht.BildFertigAsync();
         switch (art)
         {
             case "Maus":
@@ -186,7 +190,8 @@ public static partial class AutoMessung
                     Pruefe(art + " Suchen", false, "Knopf fehlt");
                     break;
                 }
-                Pruefe(art + " Name Suchen", (AutomationProperties.GetName(suchen) is { Length: > 0 } n ? n : (suchen.Content as string) ?? "") == PaketTexte.Suchen, "„" + PaketTexte.Suchen + "“");
+                var nameSuchen = ControlAutomationPeer.CreatePeerForElement(suchen).GetName();
+                Pruefe(art + " Name Suchen", nameSuchen == PaketTexte.Suchen, "„" + nameSuchen + "“");
                 await BedienenAsync(ansicht, suchen, art);
                 for (var i = 0; i < 100 && !suchen.IsEnabled; i++)
                 {
@@ -252,7 +257,7 @@ public static partial class AutoMessung
             }
 
             // A2: Abbruch mitten im Laden laesst den alten Stand (hier: nicht geladen) und keine Reste
-            OrdnerQuelle.Bremse = TimeSpan.FromMilliseconds(25);
+            OrdnerQuelle.Bremse = TimeSpan.FromMilliseconds(250);   // 4 Bloecke je 16 KB: rund 1 s Laden, Zeit fuer den Knopf
             if (optionen.PaketKnoepfe.TryGetValue("probe_testkarte", out var kt) && kt.TryGetValue(PaketKnopf.Laden, out var ladenT))
             {
                 await BedienenAsync(ansicht, ladenT, "Maus");
@@ -278,11 +283,20 @@ public static partial class AutoMessung
             // A3: Rueckfrage ohne WLAN kommt VOR dem Laden (kein Balken), „Später“ laedt nichts, „Jetzt laden“ laedt
             OptionenSeite.PaketMobilFuerTests = true;
             optionen.PaketeNeu();
+            await ansicht.BildFertigAsync();     // neue Knoepfe erst angeordnet, sonst trifft der Finger daneben
+            await ansicht.BildFertigAsync();
             if (optionen.PaketKnoepfe.TryGetValue("probe_testkarte", out var km) && km.TryGetValue(PaketKnopf.Laden, out var ladenM))
             {
-                await BedienenAsync(ansicht, ladenM, "Finger");
+                ladenM.BringIntoView();
                 await ansicht.BildFertigAsync();
+                await BedienenAsync(ansicht, ladenM, "Finger");
                 var spaeter = DialogKnopf(PaketTexte.MobilNein);
+                for (var i = 0; i < 100 && spaeter is null; i++)
+                {
+                    await Task.Delay(20);
+                    await ansicht.BildFertigAsync();
+                    spaeter = DialogKnopf(PaketTexte.MobilNein);
+                }
                 Pruefe("Rueckfrage ohne WLAN vor dem Laden", spaeter is not null && optionen.PaketBalken is null && !optionen.PaketLaedt,
                     (spaeter is null ? "keine Rueckfrage" : "Rueckfrage da") + (optionen.PaketBalken is null ? ", kein Balken" : ", Balken SCHON DA"));
                 spaeter?.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));

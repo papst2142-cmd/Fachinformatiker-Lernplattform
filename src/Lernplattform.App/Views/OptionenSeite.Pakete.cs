@@ -49,6 +49,7 @@ public sealed partial class OptionenSeite
         panel.Children.Add(new LernText(PaketTexte.Satz, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
         _paketSuchen = Schrift.Knopf(PaketTexte.Suchen);
         _paketSuchen.HorizontalAlignment = HorizontalAlignment.Left;
+        AutomationProperties.SetName(_paketSuchen, PaketTexte.Suchen);
         _paketSuchen.Click += async (_, _) => await PaketeSuchenAsync();
         panel.Children.Add(_paketSuchen);
         _paketStatus = new LernText("", "Klein", FontWeight.Normal, "Pinsel.muted") { IsVisible = false };
