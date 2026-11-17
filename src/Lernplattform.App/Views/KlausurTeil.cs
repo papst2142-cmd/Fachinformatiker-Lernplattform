@@ -826,6 +826,19 @@ public sealed class KlausurTeil
         _takt.Stop();
     }
 
+    /// <summary>
+    /// Nur Start-Test (A 0.85.0, Weisung P12-291): Auswahl wie <see cref="Probe"/> 1 (ohne Speichern, ohne Uhr), aber fuer die
+    /// Fachrichtung <paramref name="fachrichtung"/>; keine eigene Layout-Ansicht (dieselbe Auswahl wie AE in Ansicht 1).
+    /// </summary>
+    internal void ProbeAuswahl(string fachrichtung)
+    {
+        _speichern.Stop();
+        _takt.Stop();
+        _a.ProbeSetzen(null);
+        AuswahlZeigen((Fachrichtung.Nach(fachrichtung), ProbeVerlauf(), null));
+        _takt.Stop();
+    }
+
     /// <summary>Zeigt die Probe gerade die Bewertung einer Aufgabe (Aufgabe wechseln messen)?</summary>
     internal void ProbeAufgabe(int nummer)
     {

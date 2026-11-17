@@ -197,6 +197,9 @@ public sealed partial class Hauptansicht
             return grund;
         }
         _plaetzeFehler = null;
+        // Weisung P12-291 Punkt 2 (E1, mit Sammelliste 367): nach dem Einsetzen ist der Platz belegt; die Auswahl geht zurueck,
+        // damit rechts nicht „Platz … liegt schon etwas“ rot stehen bleibt, als waere es schiefgegangen
+        _einsetzenPlatz = null;
         EinsetzenVorschauRechnen();
         _aussenStand++;
         AussenAuswahlZeigen();
