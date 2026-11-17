@@ -252,25 +252,21 @@ public sealed partial class OptionenSeite
         PaketeNeu();
     }
 
-    /// <summary>Rueckfrage vor dem Laden ueber mobile Daten (nur am Handy ohne WLAN, sonst null); true = laden.</summary>
-    private static Task<bool>? PaketMobilFrage(PaketZeile zeile)
-    {
-        if (!PaketMobilFuerTests && Aktualisierung.Aktualisierung.Handy?.ImWlan != false)
-        {
-            return null;
-        }
-        return Frage();
-        async Task<bool> Frage() => await Dialog.Zeigen(PaketTexte.MobilTitel,
-            PaketTexte.Format(PaketTexte.MobilFrage, zeile.Name, PaketTexte.Mb(zeile.Angebot?.Groesse ?? zeile.Groesse)),
-            PaketTexte.MobilJa, PaketTexte.MobilNein) == 0;
-    }
+    /// <summary>Rueckfrage vor dem Laden ueber mobile Daten (nur am Handy ohne WLAN, sonst null); true = laden. Gleich am Bahnhof.</summary>
+    private static Task<bool>? PaketMobilFrage(PaketZeile zeile) => PaketDienst.MobilFrage(zeile);
 
     /// <summary>Start-Test und Fotos: verhaelt sich wie am Handy ohne WLAN (Rueckfrage vor dem Laden).</summary>
-    internal static bool PaketMobilFuerTests { get; set; }
+    internal static bool PaketMobilFuerTests { get => PaketDienst.MobilFuerTests; set => PaketDienst.MobilFuerTests = value; }
 
     /// <summary>Entfernt ein Paket nach Rueckfrage.</summary>
     internal async Task PaketEntfernenAsync(PaketZeile zeile)
     {
+        // Welle A 0.88.0 (Nico 5a): ist die Figur in dieser Stadt, ist Entfernen gesperrt (rot mit Grund, keine Rueckfrage)
+        if (PaketDienst.Verwaltung.EntfernenGesperrt(zeile.Kennung) is { } gesperrt)
+        {
+            PaketStatusSetzen(gesperrt, "Pinsel.red");
+            return;
+        }
         if (PaketLaedt || await Dialog.Zeigen(PaketTexte.EntfernenTitel, PaketTexte.Format(PaketTexte.EntfernenFrage, zeile.Name), TrainerTexte.Ja, TrainerTexte.Nein) != 0)
         {
             return;

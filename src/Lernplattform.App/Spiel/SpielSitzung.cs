@@ -2,6 +2,7 @@ using Lernplattform.Core.Daten;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Stadtbau;
 using Lernplattform.Core.Suche;
 
 namespace Lernplattform.Spiel;
@@ -115,9 +116,133 @@ public sealed class SpielSitzung
         }
     }
 
-    private StadtSpiel Neu() => Verwaltung.Ablauf is { } ablauf && ablauf.Stand.Profil is not null
-        ? new StadtSpiel(Stadt, ablauf, Grafik, Innenraeume, Geschaefte?.Daten, Feste, Festzeit.Heute, Jahreszeiten.Heute)
-        : SpielStart.Neu(Stadt, Grafik, Innenraeume, Geschaefte?.Daten, Feste, Festzeit.Heute, Jahreszeiten.Heute);
+    private StadtSpiel Neu()
+    {
+        if (Verwaltung.Ablauf is not { } ablauf || ablauf.Stand.Profil is null)
+        {
+            return SpielStart.Neu(Stadt, Grafik, Innenraeume, Geschaefte?.Daten, Feste, Festzeit.Heute, Jahreszeiten.Heute);
+        }
+        // Welle A 0.88.0: die Stadt, in der die Figur ist (Stadt 1 oder eine Paket-Stadt); fehlt das Paket, Stadt 1 mit dem Hinweis
+        ablauf.Sperre = SperreGrund;
+        var kennung = StadtDerFigur(ablauf.Stand);
+        _fehlt = null;
+        StadtSpiel spiel;
+        if (kennung is not null && PaketStadt(kennung) is { } paket)
+        {
+            spiel = new StadtSpiel(paket.Stadt, ablauf, Grafik, paket.Innenraeume, Geschaefte?.Daten, Feste, Festzeit.Heute, Jahreszeiten.Heute);
+        }
+        else
+        {
+            spiel = new StadtSpiel(Stadt, ablauf, Grafik, Innenraeume, Geschaefte?.Daten, Feste, Festzeit.Heute, Jahreszeiten.Heute);
+            if (kennung is not null)
+            {
+                _fehlt = (kennung, Core.Spiel.Stadt.StadtName(ablauf.Stand, kennung));
+                spiel.PaketFehlt(_fehlt.Value.Kennung, _fehlt.Value.Name);
+            }
+        }
+        spiel.Fahrplan = Fahrplan;
+        return spiel;
+    }
+
+    // -- Welle A 0.88.0: Paket-Staedte ---------------------------------------------------------------------
+
+    /// <summary>Die geladenen Staedte aus Paketen (Kopf, Pfad der Stadt-Datei); null = keine (Tests).</summary>
+    public Func<IReadOnlyList<(Core.Pakete.PaketKopf Kopf, string Datei)>>? PaketStaedte { get; set; }
+
+    /// <summary>Fahrplan am Bahnhof (von der Oberflaeche aus der Liste der Pakete); null = keiner.</summary>
+    public Func<IReadOnlyList<FahrplanStadt>>? Fahrplan { get; set; }
+
+    private readonly Dictionary<string, (long Stand, Stadt Stadt, PyObjekt Innenraeume)> _paketStaedte = new(StringComparer.Ordinal);
+
+    private (string Kennung, string Name)? _fehlt;
+
+    /// <summary>Warum eine Paket-Stadt nicht gebaut werden konnte (je Kennung), fuer den Fahrplan.</summary>
+    public IReadOnlyDictionary<string, string> PaketFehler => _paketFehler;
+
+    private readonly Dictionary<string, string> _paketFehler = new(StringComparer.Ordinal);
+
+    /// <summary>Kennung der Paket-Stadt, in der die Figur ist (null = Stadt 1).</summary>
+    public string? StadtDerFigur(Spielstand stand) => Core.Spiel.Stadt.StadtVon(Stadt.OrtGlobal(stand));
+
+    /// <summary>Die Figur ist in einer Paket-Stadt, deren Paket hier fehlt (Kennung, Name), sonst null.</summary>
+    public (string Kennung, string Name)? Fehlt => _fehlt;
+
+    /// <summary>Kein Spielschritt, solange das Paket der Stadt fehlt, in der die Figur ist (Plan Abschnitt 5).</summary>
+    private string? SperreGrund() => _fehlt is { } f ? Core.Texte.ZugTexte.Format(Core.Texte.ZugTexte.KeinSchritt, f.Name) : null;
+
+    /// <summary>
+    /// Die Stadt aus dem geladenen Paket <paramref name="kennung"/> (einmal je Stand gebaut, Vorsatz <c>kennung:</c>); null, wenn
+    /// das Paket fehlt oder die Stadt nicht laedt (Grund in <see cref="PaketFehler"/>).
+    /// </summary>
+    public (Stadt Stadt, PyObjekt Innenraeume)? PaketStadt(string kennung)
+    {
+        if (PaketStaedte?.Invoke().FirstOrDefault(p => p.Kopf.Kennung == kennung) is not { Kopf: not null } eintrag)
+        {
+            _paketStaedte.Remove(kennung);
+            return null;
+        }
+        if (_paketStaedte.TryGetValue(kennung, out var fertig) && fertig.Stand == eintrag.Kopf.Stand)
+        {
+            return (fertig.Stadt, fertig.Innenraeume);
+        }
+        try
+        {
+            var (stadt, innen) = SpielStart.AusPaketDatei(File.ReadAllBytes(eintrag.Datei));
+            stadt.AlsPaket(kennung, eintrag.Kopf.Name, Stadt);
+            _paketStaedte[kennung] = (eintrag.Kopf.Stand, stadt, innen);
+            _paketFehler.Remove(kennung);
+            return (stadt, innen);
+        }
+        catch (Exception fehler) when (fehler is IOException or UnauthorizedAccessException or InvalidDataException or StadtbauFehler or SpielFehler or KeyNotFoundException or InvalidCastException)
+        {
+            _paketFehler[kennung] = fehler.Message;
+            Core.Diagnose.Fehlerprotokoll.Schreiben("Spiel: Paket-Stadt " + kennung + " laedt nicht: " + fehler.GetType().Name,
+                Path.Combine(Path.GetDirectoryName(_schreiber.Lernstand.Pfad)!, Core.Diagnose.Fehlerprotokoll.DateiName));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Mit dem Zug in die Stadt <paramref name="kennung"/> (<see cref="StadtSpiel.ZugStadt1"/> = Stadt 1) fahren; danach die andere
+    /// Stadt zeigen. Geht es nicht, steht der Grund in der Zeile.
+    /// </summary>
+    public StadtGrund ZugFahren(string kennung)
+    {
+        var name = kennung == StadtSpiel.ZugStadt1 ? Core.Texte.ZugTexte.Stadt1
+            : PaketStaedte?.Invoke().FirstOrDefault(p => p.Kopf.Kennung == kennung).Kopf?.Name ?? kennung;
+        if (kennung != StadtSpiel.ZugStadt1 && PaketStadt(kennung) is null)
+        {
+            return StadtGrund.Unbekannt;
+        }
+        var grund = Spiel.ZugFahren(kennung, name);
+        if (grund == StadtGrund.Ok)
+        {
+            Abgleichen();
+            Spiel.FahrplanNeu(Core.Texte.ZugTexte.Format(Core.Texte.ZugTexte.Angekommen, name));
+        }
+        return grund;
+    }
+
+    /// <summary>Plan Abschnitt 5 (Nico 5a): Entfernen gesperrt, solange die Figur in dieser Stadt ist (Text mit dem Namen), sonst null.</summary>
+    public string? EntfernenGrund(string kennung) =>
+        Verwaltung.Ablauf is { } ablauf && ablauf.Stand.Profil is not null && StadtDerFigur(ablauf.Stand) == kennung
+            ? Core.Texte.ZugTexte.Format(Core.Texte.ZugTexte.EntfernenGesperrt, Core.Spiel.Stadt.StadtName(ablauf.Stand, kennung))
+            : null;
+
+    /// <summary>Die Stadt, in der die Figur jetzt sein soll (Stadt 1, Paket-Stadt, oder Stadt 1 mit Hinweis, wenn das Paket fehlt).</summary>
+    private bool StadtPasst(Spielablauf ablauf)
+    {
+        var kennung = StadtDerFigur(ablauf.Stand);
+        if (kennung is null)
+        {
+            return _fehlt is null && ReferenceEquals(Spiel.Stadt, Stadt);
+        }
+        if (_fehlt is { } f)
+        {
+            return f.Kennung == kennung && PaketStadt(kennung) is null;
+        }
+        return Spiel.Stadt.Kennung == kennung && PaketStadt(kennung) is { } p && ReferenceEquals(p.Stadt, Spiel.Stadt);
+    }
 
     /// <summary>
     /// Nach jeder Aenderung: gehoert die Stadt noch zum aktiven Durchgang (mit Figur), nur auffrischen,
@@ -126,9 +251,13 @@ public sealed class SpielSitzung
     public bool Abgleichen()
     {
         var soll = Verwaltung.Ablauf is { } ablauf && ablauf.Stand.Profil is not null ? ablauf : null;
-        if (soll is not null && ReferenceEquals(Spiel.Ablauf, soll))
+        if (soll is not null && ReferenceEquals(Spiel.Ablauf, soll) && StadtPasst(soll))
         {
             Spiel.Auffrischen();
+            if (_fehlt is { } f)
+            {
+                Spiel.PaketFehlt(f.Kennung, f.Name);
+            }
             return false;
         }
         if (soll is null && IstProbe)

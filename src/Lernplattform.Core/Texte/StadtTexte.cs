@@ -48,6 +48,8 @@ public static class StadtTexte
         StadtGrund.Geschlossen => string.Format(CultureInfo.InvariantCulture, Geschlossen, oeffnet ?? ""),
         StadtGrund.OeffnetNichtMehr => OeffnetNichtMehr,
         StadtGrund.NichtGeschlossen => NichtGeschlossen,
+        StadtGrund.NichtAmBahnhof => ZugTexte.NichtAmBahnhof,
+        StadtGrund.AndereStadt => ZugTexte.AndereStadt,
         _ => "",
     };
 }

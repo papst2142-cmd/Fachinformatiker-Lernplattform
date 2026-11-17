@@ -16,8 +16,31 @@ public static class PaketDienst
 
     public static PaketVerwaltung Verwaltung => _verwaltung ??= Neu();
 
+    // Welle A 0.88.0 (Nico 5a): Entfernen gesperrt, solange die Figur in der Stadt des Pakets ist
     private static PaketVerwaltung Neu() => new(new PaketAblage(Ablage.Datenordner()),
-        () => PaketQuelle.Fuer(Http, zeile => Updateprotokoll.Schreiben(zeile)), Aktualisierung.Aktualisierung.Anzeige);
+        () => PaketQuelle.Fuer(Http, zeile => Updateprotokoll.Schreiben(zeile)), Aktualisierung.Aktualisierung.Anzeige)
+    {
+        EntfernenSperre = Spiel.SpielStart.EntfernenSperre,
+    };
+
+    /// <summary>
+    /// Rueckfrage vor dem Laden ueber mobile Daten (nur am Handy ohne WLAN, sonst null); true = laden. Ein Weg fuer die Karte in den
+    /// Optionen und den Fahrplan am Bahnhof (Welle A 0.88.0).
+    /// </summary>
+    public static Task<bool>? MobilFrage(PaketZeile zeile)
+    {
+        if (!MobilFuerTests && Aktualisierung.Aktualisierung.Handy?.ImWlan != false)
+        {
+            return null;
+        }
+        return Frage();
+        async Task<bool> Frage() => await Views.Dialog.Zeigen(Core.Texte.PaketTexte.MobilTitel,
+            Core.Texte.PaketTexte.Format(Core.Texte.PaketTexte.MobilFrage, zeile.Name, Core.Texte.PaketTexte.Mb(zeile.Angebot?.Groesse ?? zeile.Groesse)),
+            Core.Texte.PaketTexte.MobilJa, Core.Texte.PaketTexte.MobilNein) == 0;
+    }
+
+    /// <summary>Start-Test und Fotos: verhaelt sich wie am Handy ohne WLAN (Rueckfrage vor dem Laden).</summary>
+    internal static bool MobilFuerTests { get; set; }
 
     /// <summary>Start-Test: eine neue Verwaltung (anderer Datenordner oder andere Quelle).</summary>
     internal static void NeuFuerTests() => _verwaltung = null;

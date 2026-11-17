@@ -99,7 +99,7 @@ public static class Spielstaende
         var (wo, wert) = Bedingung(lauf);
         using var befehl = verbindung.CreateCommand();
         befehl.CommandText = "SELECT timestamp, typ, daten, geraet FROM spiel_ereignisse WHERE (" + wo
-            + ") AND typ IN ($a, $b, $c) ORDER BY timestamp, id";
+            + ") AND typ IN ($a, $b, $c, $d) ORDER BY timestamp, id";
         if (wert is not null)
         {
             befehl.Parameters.AddWithValue("$lauf", wert);
@@ -107,6 +107,8 @@ public static class Spielstaende
         befehl.Parameters.AddWithValue("$a", Stadt.Gegangen);
         befehl.Parameters.AddWithValue("$b", Stadt.Gewartet);
         befehl.Parameters.AddWithValue("$c", Stadt.Gelaufen);
+        // Welle A 0.88.0: die Zugfahrt ist eine Stadt-Zeile (Ort und Uhr), FW8 ordnet sie wie die anderen einem Geraet zu
+        befehl.Parameters.AddWithValue("$d", Ereignisse.ZugGefahren);
         var ergebnis = new List<(string, string, PyObjekt, string)>();
         using var leser = befehl.ExecuteReader();
         while (leser.Read())

@@ -169,9 +169,30 @@ public sealed class PaketVerwaltung
         return grund;
     }
 
-    /// <summary>Entfernt ein Paket aus dem Datenordner (auch ein fehlerhaftes); true bei Erfolg.</summary>
+    /// <summary>
+    /// Welle A 0.88.0 (Plan P12-175 Abschnitt 5, Nico 5a): Grund, warum ein Paket gerade nicht entfernt werden darf (die Figur ist
+    /// in seiner Stadt), sonst null. Setzt das Spiel; ohne Spiel (Tests) nie gesperrt.
+    /// </summary>
+    public Func<string, string?>? EntfernenSperre { get; set; }
+
+    /// <summary>Grund der Sperre fuer <paramref name="kennung"/> (null = Entfernen geht).</summary>
+    public string? EntfernenGesperrt(string kennung) => EntfernenSperre?.Invoke(kennung);
+
+    /// <summary>
+    /// Welle A 0.88.0: die geladenen, gueltigen Staedte (Art <c>stadt</c>) mit dem Pfad ihrer Stadt-Datei im Datenordner.
+    /// Liest nur den Datenordner (geht ohne Netz).
+    /// </summary>
+    public IReadOnlyList<(PaketKopf Kopf, string Datei)> Staedte() =>
+        [.. _ablage.Liste(_app).Where(g => g.Kopf is { Art: Paket.ArtStadt })
+            .Select(g => (g.Kopf!, Path.Combine(_ablage.Ordner, g.Kennung, g.Stand.ToString(System.Globalization.CultureInfo.InvariantCulture), Paket.StadtDatei)))];
+
+    /// <summary>Entfernt ein Paket aus dem Datenordner (auch ein fehlerhaftes); true bei Erfolg. Gesperrt (<see cref="EntfernenGesperrt"/>) = false, nichts geaendert.</summary>
     public bool Entfernen(string kennung)
     {
+        if (EntfernenGesperrt(kennung) is not null)
+        {
+            return false;
+        }
         _fehler.Remove(kennung);
         return _ablage.Entfernen(kennung);
     }
