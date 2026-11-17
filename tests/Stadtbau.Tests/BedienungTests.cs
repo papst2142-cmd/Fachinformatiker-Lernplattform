@@ -72,11 +72,11 @@ public class BedienungTests
 
     /// <summary>
     /// Beschriftungen der Kopfleiste mit ihren Menues (Welle Q: Reiter, Pfeile, Menue Projekt, Menue Einstellungen,
-    /// „Werkzeug beenden“; S 0.22.0 Reiter „Spielgeschichte“).
+    /// „Werkzeug beenden“; S 0.22.0 Reiter „Spielgeschichte“; S 0.58.0 Reiter „Spiel ▾“ fuer Spielgeschichte, Quests und Questgeber).
     /// </summary>
     private static readonly string[] Kopf =
     [
-        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Quests, Texte.Questgeber, Texte.GebaeudeEntwerfen, Texte.Rueckgaengig, Texte.Wiederholen,
+        Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Quests, Texte.Questgeber, Texte.SpielMenue, Texte.GebaeudeEntwerfen, Texte.Rueckgaengig, Texte.Wiederholen,
         Texte.MenueProjekt, Texte.Neu, Texte.Oeffnen, Texte.Speichern, Texte.DateiSpeichern, Texte.AnCcSenden,
         Texte.MenueEinstellungen, Texte.Dunkel, Texte.Vollbild, Texte.VollbildBildschirm, Texte.UpdateSuchen, Texte.Tastenkuerzel, Texte.WerkzeugBeenden,
     ];

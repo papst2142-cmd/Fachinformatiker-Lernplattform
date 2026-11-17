@@ -1172,7 +1172,7 @@ public static partial class Texte
     public const string SpielMenueName = "Spiel: Spielgeschichte, Quests und Questgeber";
     public const string SpielMenueAuf = "Seitenleiste Spiel ausgeklappt";
     public const string SpielMenueZu = "Seitenleiste Spiel eingeklappt";
-    public const string TippSpielMenue = "Öffnet die Spielgeschichte, die Quests oder die Questgeber; links stehen die drei Seiten zum Wählen. Ein zweiter Tipp klappt die Seitenleiste ein.";
+    public const string TippSpielMenue = "Öffnet links eine Leiste mit Spielgeschichte, Quests und Questgeber, die nach der Wahl einer Seite wieder einklappt.";
     public const string TippSpielgeschichte = "Zeigt nur zum Ansehen, welche Aufgaben der Spielgeschichte an welchem Ort der Stadt spielen und ab welchem Tag.";
     public const string GeschichteAnOrt = "Spielgeschichte an diesem Ort";
 
