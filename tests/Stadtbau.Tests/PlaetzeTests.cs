@@ -580,4 +580,126 @@ public class PlaetzeTests
         Linie(klein, "strasse", (10, 32), (64, 32));
         Assert.Empty(Plaetze.RandHinweise(klein.AussenStand));
     }
+
+    // ---- Fund Nico 373 (S 0.56.2): heutige Stadt auf einen Platz setzen ----------------------------------
+
+    private static Projekt NicoStadt1(Werkzeugordner? ablage = null) => Projekt.AusStadtDatei(
+        File.ReadAllBytes(Path.Combine(Daten.Wurzel, "tests", "Stadtbau.Tests", "Testdaten", "nico", "stadt1_S0.53.1.fistadt")),
+        D, ablage ?? Daten.NeueAblage(), "Nico 373");
+
+    [Fact]
+    public void S373_FallA_NicosStadt1_Platz4_GleichVergroessern_VorschauGleichSchritt_RueckgaengigBitgleich()
+    {
+        var p = NicoStadt1();
+        Assert.Equal(1, p.StadtPlatz());
+        Assert.Equal((0, 0, 64, 64), Projekt.StadtBereich(p.AussenStand));
+        var vorher = (PyObjekt)Py.Kopie(p.AussenStand)!;
+        var text = Aussen.TeileText(p.AussenStand);
+        var vorschau = p.StadtSetzenPruefen(128, 128, 4);
+        Assert.Equal(text, Aussen.TeileText(p.AussenStand));
+        Assert.True(vorschau.Geht, vorschau.Grund);
+        Assert.Equal((64, 64), vorschau.Versatz);
+        Assert.Equal((64, 64, 128, 128), vorschau.Nachher);
+        var schritte = p.SchritteZurueck;
+        var plan = p.StadtSetzen(128, 128, 4);
+        Assert.Equal(vorschau, plan);
+        Assert.Equal(schritte + 1, p.SchritteZurueck);
+        Assert.Equal((128d, 128d), Aussen.Groesse(p.AussenStand));
+        Assert.Equal(vorschau.Nachher, Projekt.StadtBereich(p.AussenStand));
+        Assert.Equal(4, p.StadtPlatz());
+        var (fehler, verschoben) = LageVergleich(OhneGroesse(vorher, 128, 128), p.AussenStand, 64, 64);
+        Assert.True(fehler.Count == 0, string.Join("\n", fehler.Take(20)));
+        Assert.True(verschoben > 300, "nur " + verschoben + " Werte verschoben");
+        // gleiche Stadt wie der Kern-Schritt „Karte vergroessern“ (seit S 0.56.0 geprueft)
+        var q = NicoStadt1();
+        Assert.Null(q.KarteVergroessern(128, 128, 4));
+        Assert.Equal(Aussen.TeileText(q.AussenStand), Aussen.TeileText(p.AussenStand));
+        Assert.True(p.Rueckgaengig());
+        Assert.Equal(text, Aussen.TeileText(p.AussenStand));
+    }
+
+    [Fact]
+    public void S373_FallB_KarteSchonGross_StadtAufAnderenPlatz_EinSchritt_RueckgaengigBitgleich()
+    {
+        var p = NicoStadt1();
+        Assert.True(p.StadtSetzen(256, 128, 6).Geht);
+        Assert.Equal((64, 64, 128, 128), Projekt.StadtBereich(p.AussenStand));
+        var vorher = (PyObjekt)Py.Kopie(p.AussenStand)!;
+        var text = Aussen.TeileText(p.AussenStand);
+        var schritte = p.SchritteZurueck;
+        // Karte 256 breit: vier Plaetze je Zeile; Platz 6 liegt bei (64, 64), Platz 3 bei (128, 0)
+        var vorschau = p.StadtSetzenPruefen(256, 128, 3);
+        Assert.True(vorschau.Geht, vorschau.Grund);
+        Assert.Equal((64, -64), vorschau.Versatz);
+        var plan = p.StadtSetzen(256, 128, 3);
+        Assert.Equal(vorschau, plan);
+        Assert.Equal(schritte + 1, p.SchritteZurueck);
+        Assert.Equal((256d, 128d), Aussen.Groesse(p.AussenStand));
+        Assert.Equal((128, 0, 192, 64), Projekt.StadtBereich(p.AussenStand));
+        Assert.Equal(3, p.StadtPlatz());
+        var (fehler, verschoben) = LageVergleich(vorher, p.AussenStand, 64, -64);
+        Assert.True(fehler.Count == 0, string.Join("\n", fehler.Take(20)));
+        Assert.True(verschoben > 300, "nur " + verschoben + " Werte verschoben");
+        Assert.True(p.Rueckgaengig());
+        Assert.Equal(text, Aussen.TeileText(p.AussenStand));
+        Assert.True(p.Wiederholen());
+        Assert.Equal(3, p.StadtPlatz());
+    }
+
+    [Fact]
+    public void S373_NachSpeichernUndOeffnen_StadtAufNeuemPlatz()
+    {
+        var ablage = Daten.NeueAblage();
+        var p = NicoStadt1(ablage);
+        Assert.True(p.StadtSetzen(128, 128, 4).Geht);
+        p.Speichern(true);
+        var neu = Projekt.Oeffnen(p.Datei, D, ablage);
+        Assert.Equal(Aussen.TeileText(p.AussenStand), Aussen.TeileText(neu.AussenStand));
+        Assert.Equal(4, neu.StadtPlatz());
+        Assert.Equal((128d, 128d), Aussen.Groesse(neu.AussenStand));
+        Assert.True(neu.StadtSetzen(128, 128, 2).Geht);
+        neu.Speichern(true);
+        var wieder = Projekt.Oeffnen(neu.Datei, D, ablage);
+        Assert.Equal(2, wieder.StadtPlatz());
+    }
+
+    [Fact]
+    public void S373_Gruende_ImmerMitText_NichtsGeaendert()
+    {
+        var p = NicoStadt1();
+        void Nein(int b, int t, int platz, string grund)
+        {
+            var text = Aussen.TeileText(p.AussenStand);
+            var schritte = p.SchritteZurueck;
+            var vorschau = p.StadtSetzenPruefen(b, t, platz);
+            var plan = p.StadtSetzen(b, t, platz);
+            Assert.Equal(vorschau, plan);
+            Assert.Equal(grund, plan.Grund);
+            Assert.Equal(schritte, p.SchritteZurueck);
+            Assert.Equal(text, Aussen.TeileText(p.AussenStand));
+        }
+        Nein(64, 64, 1, Texte.StadtSchonDort(1));
+        Nein(64, 64, 2, Texte.PlatzFehlt(2, 1));
+        Nein(96, 64, 1, Texte.VergroessernGroesse);
+        Nein(128, 64, 3, Texte.PlatzFehlt(3, 2));
+        Assert.True(p.StadtSetzen(128, 128, 2).Geht);
+        Nein(64, 128, 1, Texte.VergroessernKleiner);
+        Nein(128, 128, 2, Texte.StadtSchonDort(2));
+        // Stadt ueber zwei Plaetze: rechts gibt es keinen Platz mehr fuer sie
+        var breit = Leer("Breit", 128, 64);
+        Setzen(breit, AussenArt.Notiz, 10.5, 10.5);
+        Setzen(breit, AussenArt.Notiz, 70.5, 10.5);
+        Assert.Equal((0, 0, 128, 64), Projekt.StadtBereich(breit.AussenStand));
+        var text = Aussen.TeileText(breit.AussenStand);
+        Assert.Equal(Texte.StadtUeberRand(2, 2, 1), breit.StadtSetzen(128, 64, 2).Grund);
+        Assert.Equal(text, Aussen.TeileText(breit.AussenStand));
+        Assert.True(breit.StadtSetzen(192, 64, 2).Geht);
+        Assert.Equal((64, 0, 192, 64), Projekt.StadtBereich(breit.AussenStand));
+        // unbekannter Teil: Grund, nichts verschoben
+        var u = NicoStadt1();
+        u.AussenAendern("unbekannt", a => { Py.Setzen(Aussen.Stadtdaten(a), "neu_unbekannt", new List<object?> { new PyObjekt { { "x", 1L } } }); });
+        var ut = Aussen.TeileText(u.AussenStand);
+        Assert.Equal(Texte.TeilUnbekannt("stadtdaten/neu_unbekannt"), u.StadtSetzen(128, 64, 2).Grund);
+        Assert.Equal(ut, Aussen.TeileText(u.AussenStand));
+    }
 }

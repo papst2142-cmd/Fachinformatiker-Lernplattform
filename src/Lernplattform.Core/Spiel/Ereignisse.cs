@@ -45,6 +45,13 @@ public static class Ereignisse
     public const string FarmAufgabe = "serverfarm_aufgabe";      // EV_FARM_TASK
     public const string FarmTeam = "serverfarm_team";            // EV_FARM_TEAM
 
+    /// <summary>
+    /// Welle A 0.88.0 (Inhaltspakete W2, Weisung P12-296): Zugfahrt zwischen Stadt 1 und einer Paket-Stadt (nur C#, Python
+    /// kennt sie nicht). Daten <c>tag</c>, <c>von</c>, <c>nach</c> (Bahnhof mit Vorsatz <c>kennung:</c>, Stadt 1 ohne),
+    /// <c>minuten</c>, <c>stadt</c>; kostenlos, zaehlt nur fuer Ort und Uhr der Stadt (<see cref="Stadt"/>).
+    /// </summary>
+    public const string ZugGefahren = "zug_gefahren";
+
     public const string Einfach = "einfach";                     // DIFF_EASY
     public const string Normal = "normal";                       // DIFF_NORMAL
 

@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.56.2
+
+Die heutige Stadt lässt sich jetzt sicher auf einen anderen Platz einer größeren Karte setzen.
+
+- Unter „Plätze“ heißt der erste Teil jetzt „Heutige Stadt auf einen Platz setzen“. Du wählst die Größe der Karte und den Platz, rechts in der Liste oder durch Tippen auf die Karte. Die Karte zeigt blau, wo die Stadt landen wird, und darüber steht „Vorschau … Noch nicht übernommen“.
+- Erst „Übernehmen und speichern“ setzt die Stadt dorthin, vergrößert die Karte, wenn nötig, und speichert das Projekt. Danach steht da, auf welchem Platz die Stadt jetzt liegt. Das ist ein Schritt und lässt sich rückgängig machen.
+- Bisher wählte ein Tippen auf die Karte nur den Platz für „Stadtteil einsetzen“; die Stadt blieb auf Platz 1, obwohl die Karte größer wurde. Das ist behoben.
+- Geht es nicht, zum Beispiel weil die Stadt auf dem gewählten Platz über den Rand ragen würde, steht der Grund da und nichts wird geändert.
+- „Stadtteil einsetzen“ und alle Prüfungen bleiben, wie sie sind.
+
 ## S 0.56.1
 
 Kopierte Häuser mit eigener Modelltür haben jetzt eine gültige Tür, und nach dem Einsetzen ist kein Platz mehr gewählt.

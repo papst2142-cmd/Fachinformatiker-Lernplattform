@@ -729,7 +729,7 @@ public sealed partial class StadtSpiel
 
     /// <summary>Hat der Ort einen Innenraum (W5: Buero, Zuhause, Kunde, Filiale, Serverfarm)?</summary>
     public bool HatInnenraum(string id) =>
-        Szene.Ort(id)?.Ansicht is { } ansicht && Probe.Innenraum.OrtFuer(ansicht) is { } ort
+        !Stadt.OhneInnenraum(id) && Szene.Ort(id)?.Ansicht is { } ansicht && Probe.Innenraum.OrtFuer(ansicht) is { } ort
         && (ort != Probe.Innenraum.Serverfarm || Innenraeume is not null)
         && (ort != SpielDaten.OrtZuhause || Wohnung.Bleibe(Ablauf.Stand.Wohnung, Ablauf.Stand.Inhalt) is not null);
 
@@ -1018,6 +1018,8 @@ public sealed partial class StadtSpiel
         }
         // Welle Q2: Questgeber draussen, die zu diesem Ort gehoeren
         QuestgeberAmOrt(ort);
+        // Welle A 0.88.0: am Bahnhof der Fahrplan
+        FahrplanKnoepfe();
     }
 
     /// <summary>

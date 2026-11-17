@@ -302,6 +302,12 @@ public sealed partial class SpielTafel
     /// <summary>run_action: Knoepfe unter den Orten (Auftrag, Personal, Feierabend, Lernen, Schlafen).</summary>
     public void AktionAusfuehren(string aktion)
     {
+        if (SpielZug.Aktion(_s, aktion))
+        {
+            // Welle A 0.88.0: Zug, Paket laden oder suchen am Bahnhof
+            Geaendert?.Invoke();
+            return;
+        }
         if (aktion.StartsWith(Core.Stadtbau.Etagen.AktionFahrstuhl, StringComparison.Ordinal) || aktion.StartsWith(Core.Stadtbau.Etagen.AktionEtage, StringComparison.Ordinal))
         {
             // Phase 13 Welle 5: Treppe (ohne 3D unter der Ortsliste) und Fahrstuhl mit der Liste der Etagen

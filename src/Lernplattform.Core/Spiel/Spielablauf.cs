@@ -142,6 +142,12 @@ public sealed class Spielablauf
 
     public PyObjekt Inhalt { get; }
 
+    /// <summary>
+    /// Welle A 0.88.0: Grund, warum gerade kein Spielschritt geht (null = es geht). Die Sitzung setzt ihn, solange die Figur in
+    /// einer Paket-Stadt ist, deren Paket auf diesem Geraet fehlt; ohne (Tests, Werkzeug, Fingerabdruecke) wie bisher.
+    /// </summary>
+    public Func<string?>? Sperre { get; set; }
+
     public ISpielSpeicher Speicher { get; }
 
     /// <summary>Wie oft ein Ereignis nicht gespeichert wurde (Python: log_game_event gab False).</summary>
@@ -443,6 +449,11 @@ public sealed class Spielablauf
     /// <summary>Die Ereignisse einer Aktion nacheinander schreiben; Rueckgabe: die Daten des letzten (wie Python).</summary>
     public PyObjekt Ausfuehren(List<(string Art, PyObjekt Daten)> ereignisse)
     {
+        // Welle A 0.88.0 (Plan P12-175 Abschnitt 5): ist die Figur in einer Stadt, deren Paket hier fehlt, geht kein Spielschritt
+        if (Sperre?.Invoke() is { } grund)
+        {
+            throw new SpielFehler(grund);
+        }
         Betreten();
         try
         {

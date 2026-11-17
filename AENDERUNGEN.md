@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.88.0
+Im Spiel fährt jetzt ein Zug in andere Städte. Eine Stadt aus einem Inhaltspaket ist damit zum ersten Mal spielbar.
+
+- Am Bahnhof steht draußen ein Fahrplan mit allen Städten. Ist eine Stadt geladen, bringt dich „Zug nach …“ hin; die Fahrt kostet nichts und dauert 20 Spielminuten. Zurück geht es genauso vom Bahnhof der anderen Stadt.
+- Fehlt das Paket einer Stadt, steht im Fahrplan „Paket fehlt (Größe) – Laden“. Geladen wird nur, wenn du darauf tippst, über denselben Weg wie in den Optionen; nichts lädt von allein.
+- In der neuen Stadt kannst du gehen, laufen, warten, Bus fahren und die Geschäfte und Schalter betreten. Deine Wohnung, die Arbeit, die Kunden und deine Firma bleiben in deiner Heimatstadt. Ein neuer Tag beginnt wie immer zu Hause.
+- Solange deine Figur in einer anderen Stadt ist, lässt sich deren Paket nicht entfernen; die Karte in den Optionen sagt dir, dass du erst mit dem Zug zurückfahren sollst.
+- Spielst du auf einem zweiten Gerät, auf dem das Paket fehlt, sagt das Spiel, in welcher Stadt dein Spielstand gerade ist, und bietet an, das Paket zu laden. Bis dahin passiert kein Spielschritt und nichts geht verloren.
+- Die Karte „Inhaltspakete“ zeigt kleine Pakete jetzt mit zwei Nachkommastellen (zum Beispiel 0,05 MB statt 0,0 MB). „Neu laden“ erscheint nur noch, wenn ein neues Laden den Fehler auch beheben kann; sonst nennt der Grund das nötige App-Update.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Heimatstadt bleiben, wie sie sind.
+
 ## A 0.87.0
 In den Optionen gibt es eine neue Karte „Inhaltspakete“. Damit lassen sich später zusätzliche Inhalte, zum Beispiel neue Städte, laden, ohne die App neu zu installieren. Heute ist sie die Grundlage; spielbare Pakete kommen mit einer der nächsten Versionen.
 

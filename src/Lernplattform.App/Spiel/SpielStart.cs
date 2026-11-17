@@ -46,6 +46,10 @@ public static class SpielStart
         var geschaefte = Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt;
         var feste = Py.Lesen(Muss("inhalte_csharp/spiel/festzeiten.json")) as PyObjekt;
         var sitzung = new SpielSitzung(stadt, GrafikLaden(), innenraeume, lernen, suche, Programm.Zustand.Schreiber, geraet, geschaefte, feste);
+        // Welle A 0.88.0: Staedte aus Paketen (Datenordner) und der Fahrplan am Bahnhof; Spielstand und Stadt passen sich an
+        sitzung.PaketStaedte = () => Programm.PaketDienst.Verwaltung.Staedte();
+        sitzung.Fahrplan = () => SpielZug.Fahrplan(sitzung);
+        sitzung.Abgleichen();
         Aktiv = sitzung;
         return sitzung;
     }
@@ -145,6 +149,46 @@ public static class SpielStart
         var fassung = MitVerbautPruefen(StadtFassung.Lesen(datei));
         return (fassung.StadtFuer(InhaltLaden(fassung).Inhalt), fassung.Innenraeume);
     }
+
+    /// <summary>
+    /// Welle A 0.88.0 (Inhaltspakete W2): Stadt und Innenraeume aus der Stadt-Datei eines geladenen Pakets, mit derselben Pruefung
+    /// wie Stadt 1 (Format, Pruefsumme, verbaute Stuecke); ein Fehler ist eine Ausnahme mit Grund (nie still weg).
+    /// </summary>
+    internal static (Stadt Stadt, PyObjekt Innenraeume) AusPaketDatei(byte[] datei) => AusDateiFuerTests(datei);
+
+    /// <summary>
+    /// Welle A 0.88.0 (Plan P12-175 Abschnitt 5, Nico 5a): Entfernen eines Pakets gesperrt, solange die Figur des aktiven Spielstands
+    /// in seiner Stadt ist (Text mit dem Namen), sonst null. Ohne geladene Sitzung liest es den Spielstand aus der Datenbank.
+    /// </summary>
+    public static string? EntfernenSperre(string kennung)
+    {
+        if (Aktiv is { } sitzung)
+        {
+            return sitzung.EntfernenGrund(kennung);
+        }
+        try
+        {
+            Spielschlange.AlleLeeren();
+            _optionenInhalt ??= OptionenInhalt();
+            var geraet = Pc ? "PC" : "Handy";
+            var ablauf = new Spielverwaltung(Programm.Zustand.Schreiber, geraet, _optionenInhalt).Ablauf;
+            if (ablauf is null || ablauf.Stand.Profil is null)
+            {
+                return null;
+            }
+            _sperrStadt ??= Fassung().StadtFuer(_optionenInhalt);
+            return Stadt.StadtVon(_sperrStadt.OrtGlobal(ablauf.Stand)) == kennung
+                ? Core.Texte.ZugTexte.Format(Core.Texte.ZugTexte.EntfernenGesperrt, Stadt.StadtName(ablauf.Stand, kennung))
+                : null;
+        }
+        catch (Exception fehler) when (fehler is IOException or InvalidDataException or Microsoft.Data.Sqlite.SqliteException or SpielFehler or KeyNotFoundException)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben("Pakete > Entfernen: Spiel nicht gelesen: " + fehler.GetType().Name);
+            return null;
+        }
+    }
+
+    private static Stadt? _sperrStadt;
 
     /// <summary>
     /// Spielinhalte (inhalte/spiel) und die Lerninhalte, aus denen sie die Testprojekte nehmen (laeuft im Hintergrund).

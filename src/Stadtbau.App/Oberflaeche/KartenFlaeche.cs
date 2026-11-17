@@ -281,7 +281,8 @@ public sealed partial class KartenFlaeche : Control
         {
             return;
         }
-        var (b, h) = Welt();
+        // Welle S 0.56.2 (Fund Nico 373): bei „Plätze“ die ganze Karte nach „Übernehmen“ zeigen
+        var (b, h) = RasterGroesse();
         // Welle Q (Weisung P12-76 Punkt 8): unten bleibt der Platz der Kamera-Karte frei, sie verdeckt nie einen Hausnamen
         // S 0.27.0: oben bleibt der Platz der Werkzeugleiste frei
         var oben = UntenFreiAltFuerTests ? 0 : ObenFrei;

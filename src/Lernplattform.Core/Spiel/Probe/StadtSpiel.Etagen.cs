@@ -32,7 +32,7 @@ public sealed partial class StadtSpiel
     public int Etage => Innen is { } innen ? Etagen.Teilen(innen.Ansicht).Etage : 0;
 
     /// <summary>Kennung der Stadt fuer den Aufenthalt (Fassung, sonst „stadt1“ wie die Dateien).</summary>
-    public string StadtKennung => Stadt.Fassung?.StadtId ?? "stadt1";
+    public string StadtKennung => Stadt.Kennung ?? Stadt.Fassung?.StadtId ?? "stadt1";
 
     /// <summary>Grundriss des Erdgeschosses des jetzigen Innenraums, wenn er Etagen hat (sonst null).</summary>
     private PyObjekt? EtagenGrundriss(string? ort) =>
@@ -313,7 +313,7 @@ public sealed partial class StadtSpiel
         SpielEreignis? letzter = null;
         foreach (var e in stand.Verlauf)
         {
-            if (e.Art is not (Etagen.Aufenthalt or Stadt.Gegangen or Stadt.Gelaufen or Stadt.Gewartet))
+            if (e.Art is not (Etagen.Aufenthalt or Stadt.Gegangen or Stadt.Gelaufen or Stadt.Gewartet or Ereignisse.ZugGefahren))
             {
                 continue;
             }

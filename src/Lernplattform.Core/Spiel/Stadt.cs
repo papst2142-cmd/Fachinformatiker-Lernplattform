@@ -17,6 +17,8 @@ public enum StadtGrund
     Geschlossen,       // der Ort hat gerade zu
     OeffnetNichtMehr,  // zu, und er oeffnet heute nicht mehr vor dem Abend
     NichtGeschlossen,  // Warten geht nur vor einem geschlossenen Ort
+    NichtAmBahnhof,    // Welle A 0.88.0: der Zug faehrt nur vom Bahnhof
+    AndereStadt,       // Welle A 0.88.0: die Figur ist in einer anderen Stadt (Paket-Stadt), hier geht kein Schritt
 }
 
 /// <summary>Ergebnis einer Aktion in der Stadt; bei Ok das geschriebene Ereignis (Art, Daten).</summary>
@@ -51,7 +53,7 @@ public sealed record StadtWeg(IReadOnlyList<(long X, long Y)> Zellen)
 /// bis die Figur zu Hause schlafen geht. Betreten geht nur, solange der Ort offen ist; vor einem Ort, der heute
 /// noch (bis zum <see cref="Abend"/>) oeffnet, kann man bis zur Oeffnung warten.
 /// </summary>
-public sealed class Stadt : Probe.IStadtSicht
+public sealed partial class Stadt : Probe.IStadtSicht
 {
     /// <summary>Ereignis: ein Weg in der Stadt {"tag", "von", "nach", "schritte", "minuten"}.</summary>
     public const string Gegangen = "stadt_gegangen";
@@ -307,7 +309,7 @@ public sealed class Stadt : Probe.IStadtSicht
     public string Heim { get; }
 
     /// <summary>Alle Orte: die aus orte.json, danach die neuen aus stadt.json.</summary>
-    public IReadOnlyList<PyObjekt> Regeln { get; }
+    public IReadOnlyList<PyObjekt> Regeln { get; private set; }
 
     public IReadOnlyCollection<(long, long)> Begehbar => begehbar;
 
@@ -512,6 +514,20 @@ public sealed class Stadt : Probe.IStadtSicht
     /// <summary>Der Stand und ob er von einem anderen Geraet als diesem stammt (nur mit Zuordnung der Geraete).</summary>
     private (StadtStand Stand, bool Fremd) StandUndHerkunft(Spielstand stand)
     {
+        var (global, fremd) = GlobalUndHerkunft(stand);
+        return (global with { Ort = Lokal(global.Ort) }, fremd);
+    }
+
+    /// <summary>
+    /// Welle A 0.88.0 (Inhaltspakete W2): der Stand ueber alle Staedte (Ort mit Vorsatz, wenn er in einer Paket-Stadt liegt).
+    /// Jede Stadt rechnet ihn gleich: Stadt 1 und jede Paket-Stadt sehen dieselbe Uhr und denselben Ort. Ein Ort mit Vorsatz
+    /// (<c>kennung:ort</c>) zaehlt immer (auch ohne geladenes Paket: die Figur ist dann dort, nichts geht verloren); ein Ort ohne
+    /// Vorsatz zaehlt wie bisher nur, wenn Stadt 1 ihn kennt. Vor A 0.88.0 gab es weder Vorsatz noch Zugfahrt: alte Verlaeufe
+    /// rechnen bitgleich (Fingerabdruecke).
+    /// </summary>
+    private (StadtStand Stand, bool Fremd) GlobalUndHerkunft(Spielstand stand)
+    {
+        var haupt = Haupt ?? this;
         var tag = stand.Tag;
         var zuordnung = SpielGeraete.Von(stand);
         var geraete = zuordnung?.Durchlauf();
@@ -520,7 +536,7 @@ public sealed class Stadt : Probe.IStadtSicht
         foreach (var e in stand.Verlauf)
         {
             nummer++;
-            if (e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen)
+            if (e.Art != Gegangen && e.Art != Gewartet && e.Art != Gelaufen && e.Art != Ereignisse.ZugGefahren)
             {
                 continue;
             }
@@ -535,17 +551,17 @@ public sealed class Stadt : Probe.IStadtSicht
             {
                 continue;
             }
-            var (ort, uhr, _) = je.TryGetValue(geraet, out var bisher) ? bisher : (Heim, Beginn, 0);
+            var (ort, uhr, _) = je.TryGetValue(geraet, out var bisher) ? bisher : (haupt.Heim, haupt.Beginn, 0);
             // FW8 (Sammelliste 119): vom Stand eines anderen Geraets aus (Merker), sonst ab dem eigenen
-            if (Get(e.Daten, AbUhr) is var ab && Py.IstNurInt(ab) && Py.Int(ab) >= Beginn && Py.Int(ab) <= TagMinuten
+            if (Get(e.Daten, AbUhr) is var ab && Py.IstNurInt(ab) && Py.Int(ab) >= haupt.Beginn && Py.Int(ab) <= TagMinuten
                 && Get(e.Daten, e.Art == Gegangen ? "von" : "ort") is string abOrt)
             {
                 (ort, uhr) = (abOrt, Py.Int(ab));
             }
-            if (e.Art == Gegangen)
+            if (e.Art is Gegangen or Ereignisse.ZugGefahren)
             {
                 // ein Ort, den diese Fassung nicht kennt (z. B. aus einer neueren per Abgleich), zaehlt nicht
-                if (Get(e.Daten, "nach") is not string nach || Tuer(nach) is null)
+                if (Get(e.Daten, "nach") is not string nach || !Kennt(nach))
                 {
                     continue;
                 }
@@ -555,7 +571,7 @@ public sealed class Stadt : Probe.IStadtSicht
         }
         if (je.Count == 0)
         {
-            return (new StadtStand(tag, Heim, Beginn), false);
+            return (new StadtStand(tag, haupt.Heim, haupt.Beginn), false);
         }
         var weitester = je.MaxBy(g => (g.Value.Uhr, g.Value.Letzter));
         return (new StadtStand(tag, weitester.Value.Ort, weitester.Value.Uhr), zuordnung is not null && weitester.Key != zuordnung.Eigenes);
@@ -599,6 +615,10 @@ public sealed class Stadt : Probe.IStadtSicht
         }
         var herkunft = StandUndHerkunft(stand);
         var jetzt = herkunft.Stand;
+        if (Fremd(jetzt.Ort))
+        {
+            return new(StadtGrund.AndereStadt);
+        }
         long anzahl;
         if (schritte is { } frei)
         {
@@ -623,7 +643,7 @@ public sealed class Stadt : Probe.IStadtSicht
         var minuten = Gekappt(jetzt.Uhr, checked(anzahl * MinutenJeSchritt));
         return new(StadtGrund.Ok, Gegangen, MitHerkunft(new PyObjekt
         {
-            { "tag", jetzt.Tag }, { "von", jetzt.Ort }, { "nach", ziel }, { "schritte", anzahl }, { "minuten", minuten },
+            { "tag", jetzt.Tag }, { "von", Global(jetzt.Ort) }, { "nach", Global(ziel) }, { "schritte", anzahl }, { "minuten", minuten },
         }, herkunft));
     }
 
@@ -678,10 +698,14 @@ public sealed class Stadt : Probe.IStadtSicht
         }
         var herkunft = StandUndHerkunft(stand);
         var jetzt = herkunft.Stand;
+        if (Fremd(jetzt.Ort))
+        {
+            return new(StadtGrund.AndereStadt);
+        }
         var minuten = Gekappt(jetzt.Uhr, checked(schritte * MinutenJeSchritt));
         return new(StadtGrund.Ok, Gelaufen, MitHerkunft(new PyObjekt
         {
-            { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "schritte", schritte }, { "minuten", minuten },
+            { "tag", jetzt.Tag }, { "ort", Global(jetzt.Ort) }, { "schritte", schritte }, { "minuten", minuten },
         }, herkunft));
     }
 
@@ -703,9 +727,13 @@ public sealed class Stadt : Probe.IStadtSicht
         }
         var herkunft = StandUndHerkunft(stand);
         var jetzt = herkunft.Stand;
+        if (Fremd(jetzt.Ort))
+        {
+            return new(StadtGrund.AndereStadt);
+        }
         return new(StadtGrund.Ok, Gelaufen, MitHerkunft(new PyObjekt
         {
-            { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "schritte", 0L }, { "minuten", Gekappt(jetzt.Uhr, minuten) },
+            { "tag", jetzt.Tag }, { "ort", Global(jetzt.Ort) }, { "schritte", 0L }, { "minuten", Gekappt(jetzt.Uhr, minuten) },
             { Mit, MitBus }, { "ein", (long)ein }, { "aus", (long)aus },
         }, herkunft));
     }
@@ -723,6 +751,10 @@ public sealed class Stadt : Probe.IStadtSicht
         }
         var herkunft = StandUndHerkunft(stand);
         var jetzt = herkunft.Stand;
+        if (Fremd(jetzt.Ort))
+        {
+            return new(StadtGrund.AndereStadt);
+        }
         if (Offen(jetzt.Ort, jetzt.Uhr))
         {
             return new(StadtGrund.NichtGeschlossen);
@@ -732,7 +764,7 @@ public sealed class Stadt : Probe.IStadtSicht
         {
             return new(StadtGrund.OeffnetNichtMehr);
         }
-        return new(StadtGrund.Ok, Gewartet, MitHerkunft(new PyObjekt { { "tag", jetzt.Tag }, { "ort", jetzt.Ort }, { "minuten", checked(zeit.Auf - jetzt.Uhr) } },
+        return new(StadtGrund.Ok, Gewartet, MitHerkunft(new PyObjekt { { "tag", jetzt.Tag }, { "ort", Global(jetzt.Ort) }, { "minuten", checked(zeit.Auf - jetzt.Uhr) } },
             herkunft));
     }
 
@@ -744,6 +776,10 @@ public sealed class Stadt : Probe.IStadtSicht
             return StadtGrund.KeinProfil;
         }
         var jetzt = Stand(stand);
+        if (Fremd(jetzt.Ort))
+        {
+            return StadtGrund.AndereStadt;
+        }
         if (Regel(jetzt.Ort) is not { } regel)
         {
             return StadtGrund.Unbekannt;
