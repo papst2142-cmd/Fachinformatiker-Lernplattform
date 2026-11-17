@@ -172,6 +172,19 @@ public static partial class StadtbauMessung
         Maus(knopf, zeiger, m, RawInputModifiers.LeftMouseButton, PointerUpdateKind.LeftButtonPressed);
         Maus(knopf, zeiger, m, RawInputModifiers.None, PointerUpdateKind.LeftButtonReleased, los: true);
         await BildAsync(a);
+        // Lauf 1051: der Teil „Plätze“ davor laesst einen Stadtteil zum Einsetzen gewaehlt (die Wahl bleibt beim Wechsel des
+        // Projekts stehen, Sammelliste 375); dann waehlt Tippen den Platz fuer den Stadtteil, nicht fuer die Stadt. Nicos Weg
+        // beginnt ohne Stadtteil: wie ein Mensch „kein Projekt“ waehlen und pruefen, dass danach keiner mehr gewaehlt ist.
+        if (a.PlaetzeElement(Texte.EinsetzenProjekt) is ComboBox { SelectedItem: ComboBoxItem { Tag: { } vorher } })
+        {
+            Messwerte.Notiere("373 " + name + ": Stadtteil zum Einsetzen vom Teil davor noch gewählt (" + Path.GetFileName(vorher as string) + "), wie ein Mensch auf „" + Texte.EinsetzenKeinProjekt + "“ gestellt");
+            await WieMenschWaehlenAsync(a, Texte.EinsetzenProjekt, null, "maus");
+            await BildAsync(a);
+        }
+        if (a.PlaetzeElement(Texte.EinsetzenProjekt) is not ComboBox { SelectedItem: ComboBoxItem { Tag: null } })
+        {
+            Fund("373 " + name + ": Stadtteil zum Einsetzen lässt sich nicht abwählen");
+        }
         return p;
     }
 
