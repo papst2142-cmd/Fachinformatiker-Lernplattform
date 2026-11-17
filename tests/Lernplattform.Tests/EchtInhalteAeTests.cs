@@ -6,8 +6,8 @@ namespace Lernplattform.Tests;
 
 /// <summary>
 /// A 0.84.0, Weisung P12-285: Pruefung im echten Format fuer AE. Zehn neue Saetze (je AP2-Bereich fuenf), nur angehaengt.
-/// Prueft Nicos Ziele: wer AE gewaehlt hat, bekommt in beiden Bereichen fuenf Saetze statt des Platzhalters; DPA und DV
-/// zeigen weiter den Platzhalter; AP1 und SI bleiben genau gleich (die Datei vor den AE-Saetzen ist bytegleich). Dazu der
+/// Prueft Nicos Ziele: wer AE gewaehlt hat, bekommt in beiden Bereichen fuenf Saetze statt des Platzhalters (DPA seit
+/// A 0.85.0 und DV seit A 0.86.0 haben eigene Saetze, eigene Tests); AP1 und SI bleiben genau gleich (die Datei vor den AE-Saetzen ist bytegleich). Dazu der
 /// heutige Stand der App (Punkt 3): Klassen-, Use-Case-Diagramm und Struktogramm nur als Zeilen "auf Papier",
 /// Aktivitaetsdiagramm und ER im Baukasten. Jede Regel mit Gegenprobe.
 /// </summary>
@@ -31,18 +31,18 @@ public class EchtInhalteAeTests
     private static IEnumerable<EchtSatz> AeSaetze => Bestand.Saetze.Where(s => Ae.Contains(s.Kennung));
 
     [Fact]
-    public void AE_ZehnSaetze_JeBereichFuenf_DpaDvPlatzhalter_SiUndAp1Gleich()
+    public void AE_ZehnSaetze_JeBereichFuenf_SiUndAp1Gleich()
     {
         var bestand = Bestand;
         Assert.Empty(bestand.Fehler);
-        // ab A 0.85.0 folgen die DPA-Saetze (EchtInhalteDpaTests); die AE-Saetze stehen unveraendert an Platz 17 bis 26
+        // ab A 0.85.0 folgen die DPA-, ab A 0.86.0 die DV-Saetze (EchtInhalteDpaTests, EchtInhalteDvTests); die AE-Saetze stehen unveraendert an Platz 17 bis 26
         Assert.Equal(Ae, bestand.Saetze.Skip(17).Take(Ae.Length).Select(s => s.Kennung));
         foreach (var f in Fachrichtung.Alle)
         {
-            // AP1 gilt fuer alle (unveraendert 6), AP2: SI 6/5 wie bisher, AE neu 5/5, DV leer = Platzhalter (DPA: eigener Test)
+            // AP1 gilt fuer alle (unveraendert 6), AP2: SI 6/5 wie bisher, AE neu 5/5 (DPA und DV: eigene Tests, je 5/5)
             Assert.Equal(6, bestand.Fuer(EchtSaetze.Ap1, f.Id).Count);
-            Assert.Equal(f.Id switch { "si" => 6, "ae" or "dpa" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B1, f.Id).Count);
-            Assert.Equal(f.Id switch { "si" => 5, "ae" or "dpa" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B2, f.Id).Count);
+            Assert.Equal(f.Id switch { "si" => 6, "ae" or "dpa" or "dv" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B1, f.Id).Count);
+            Assert.Equal(f.Id switch { "si" => 5, "ae" or "dpa" or "dv" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B2, f.Id).Count);
             Assert.Empty(bestand.FehlerFuer(EchtSaetze.B1, f.Id));
             Assert.Empty(bestand.FehlerFuer(EchtSaetze.B2, f.Id));
         }

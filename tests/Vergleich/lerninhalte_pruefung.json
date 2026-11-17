@@ -1969,6 +1969,473 @@
     },
     "punkte_selbst": 51,
     "punkte_programm": 49
+   },
+   "dv_b1_01": {
+    "fachrichtung": "dv",
+    "bereich": "b1",
+    "firma": "Molkerei Weidenhain eG",
+    "punkte": [
+     26,
+     25,
+     25,
+     24
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "text",
+     "code",
+     "code",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 2,
+     "luecke": 2,
+     "rechnen": 3,
+     "tabelle": 2,
+     "zeilen": 12
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 3,
+     "beschreiben": 4,
+     "ergaenzen": 2,
+     "erlaeutern": 5,
+     "ermitteln": 4,
+     "nennen": 4,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 71,
+    "punkte_programm": 29
+   },
+   "dv_b1_02": {
+    "fachrichtung": "dv",
+    "bereich": "b1",
+    "firma": "Spritzgusswerk Kalkbrunnen GmbH",
+    "punkte": [
+     24,
+     25,
+     25,
+     26
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     8
+    ],
+    "anlagen": [
+     "netzplan",
+     "monitor",
+     "code",
+     "code",
+     "text",
+     "tabelle",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 4,
+     "luecke": 3,
+     "rechnen": 6,
+     "tabelle": 2,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 6,
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 5,
+     "ermitteln": 7,
+     "nennen": 2,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 55,
+    "punkte_programm": 45
+   },
+   "dv_b1_03": {
+    "fachrichtung": "dv",
+    "bereich": "b1",
+    "firma": "Logistikzentrum Ankerweide GmbH",
+    "punkte": [
+     25,
+     24,
+     26,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     6,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "code",
+     "code",
+     "tabelle",
+     "text",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 3,
+     "luecke": 2,
+     "rechnen": 6,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 7
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "berechnen": 6,
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 4,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "korrigieren": 1,
+     "nennen": 3,
+     "vergleichen": 1
+    },
+    "punkte_selbst": 61,
+    "punkte_programm": 39
+   },
+   "dv_b1_04": {
+    "fachrichtung": "dv",
+    "bereich": "b1",
+    "firma": "Brauerei Malzquelle GmbH",
+    "punkte": [
+     25,
+     24,
+     26,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "code",
+     "code",
+     "tabelle",
+     "text",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 3,
+     "luecke": 3,
+     "rechnen": 2,
+     "tabelle": 2,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 2,
+     "beschreiben": 5,
+     "ergaenzen": 2,
+     "erlaeutern": 3,
+     "ermitteln": 5,
+     "korrigieren": 1,
+     "nennen": 4,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 64,
+    "punkte_programm": 36
+   },
+   "dv_b1_05": {
+    "fachrichtung": "dv",
+    "bereich": "b1",
+    "firma": "Gewächshausgärtnerei Glasgrund GmbH",
+    "punkte": [
+     24,
+     26,
+     24,
+     26
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "monitor",
+     "code",
+     "code",
+     "englisch",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 1,
+     "luecke": 3,
+     "rechnen": 6,
+     "tabelle": 1,
+     "zeilen": 11
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 6,
+     "beschreiben": 4,
+     "ergaenzen": 1,
+     "erlaeutern": 6,
+     "ermitteln": 3,
+     "korrigieren": 1,
+     "nennen": 3,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 68,
+    "punkte_programm": 32
+   },
+   "dv_b2_01": {
+    "fachrichtung": "dv",
+    "bereich": "b2",
+    "firma": "Möbelfabrik Eichenstamm GmbH",
+    "punkte": [
+     24,
+     26,
+     25,
+     25
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "code",
+     "text",
+     "englisch",
+     "tabelle",
+     "code"
+    ],
+    "formen": {
+     "angaben": 3,
+     "auswahl": 2,
+     "luecke": 3,
+     "rechnen": 3,
+     "tabelle": 3,
+     "zeilen": 14
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 3,
+     "beschreiben": 4,
+     "ergaenzen": 3,
+     "erlaeutern": 5,
+     "ermitteln": 4,
+     "korrigieren": 1,
+     "nennen": 3,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 63,
+    "punkte_programm": 37
+   },
+   "dv_b2_02": {
+    "fachrichtung": "dv",
+    "bereich": "b2",
+    "firma": "Zentralküche Löffelstiel GmbH",
+    "punkte": [
+     24,
+     25,
+     25,
+     26
+    ],
+    "teile": [
+     6,
+     7,
+     8,
+     8
+    ],
+    "anlagen": [
+     "netzplan",
+     "text",
+     "tabelle",
+     "code",
+     "englisch",
+     "monitor",
+     "tabelle",
+     "code"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 1,
+     "luecke": 4,
+     "rechnen": 4,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 4,
+     "beschreiben": 3,
+     "ergaenzen": 1,
+     "erlaeutern": 5,
+     "ermitteln": 5,
+     "erstellen": 1,
+     "nennen": 4,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 70,
+    "punkte_programm": 30
+   },
+   "dv_b2_03": {
+    "fachrichtung": "dv",
+    "bereich": "b2",
+    "firma": "Galvanik Silberglanz GmbH",
+    "punkte": [
+     26,
+     25,
+     25,
+     24
+    ],
+    "teile": [
+     7,
+     7,
+     7,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "monitor",
+     "text",
+     "code",
+     "tabelle",
+     "tabelle",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 6,
+     "auswahl": 3,
+     "luecke": 1,
+     "rechnen": 3,
+     "tabelle": 3,
+     "zeilen": 12
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 3,
+     "beschreiben": 2,
+     "ergaenzen": 3,
+     "erlaeutern": 5,
+     "ermitteln": 4,
+     "nennen": 4,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 64,
+    "punkte_programm": 36
+   },
+   "dv_b2_04": {
+    "fachrichtung": "dv",
+    "bereich": "b2",
+    "firma": "Sägewerk Tannenrund GmbH",
+    "punkte": [
+     24,
+     25,
+     26,
+     25
+    ],
+    "teile": [
+     7,
+     8,
+     8,
+     7
+    ],
+    "anlagen": [
+     "netzplan",
+     "tabelle",
+     "tabelle",
+     "englisch",
+     "code",
+     "text"
+    ],
+    "formen": {
+     "angaben": 5,
+     "auswahl": 3,
+     "luecke": 3,
+     "rechnen": 5,
+     "tabelle": 1,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 4,
+     "berechnen": 5,
+     "beschreiben": 2,
+     "ergaenzen": 1,
+     "erlaeutern": 5,
+     "ermitteln": 6,
+     "nennen": 4,
+     "vergleichen": 3
+    },
+    "punkte_selbst": 67,
+    "punkte_programm": 33
+   },
+   "dv_b2_05": {
+    "fachrichtung": "dv",
+    "bereich": "b2",
+    "firma": "Mineralbrunnen Quellstein GmbH",
+    "punkte": [
+     26,
+     24,
+     25,
+     25
+    ],
+    "teile": [
+     6,
+     7,
+     7,
+     6
+    ],
+    "anlagen": [
+     "netzplan",
+     "text",
+     "tabelle",
+     "tabelle",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 7,
+     "auswahl": 2,
+     "luecke": 3,
+     "rechnen": 5,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 7
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 5,
+     "beschreiben": 2,
+     "ergaenzen": 1,
+     "erlaeutern": 4,
+     "ermitteln": 4,
+     "erstellen": 1,
+     "korrigieren": 1,
+     "nennen": 4,
+     "vergleichen": 2
+    },
+    "punkte_selbst": 67,
+    "punkte_programm": 33
    }
   },
   "sichten": {
@@ -2054,8 +2521,20 @@
      "alle_ap1_05",
      "alle_ap1_06"
     ],
-    "b1": [],
-    "b2": []
+    "b1": [
+     "dv_b1_01",
+     "dv_b1_02",
+     "dv_b1_03",
+     "dv_b1_04",
+     "dv_b1_05"
+    ],
+    "b2": [
+     "dv_b2_01",
+     "dv_b2_02",
+     "dv_b2_03",
+     "dv_b2_04",
+     "dv_b2_05"
+    ]
    }
   }
  }

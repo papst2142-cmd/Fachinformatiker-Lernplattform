@@ -770,9 +770,10 @@ public sealed class KlausurTeil
         }
         if (art == EchtAb)
         {
-            // A 0.76.0: DV mit einer Meldung der Ladepruefung je Bereich (nie still leer, P12-261)
+            // A 0.76.0: DV mit einer Meldung der Ladepruefung je Bereich (nie still leer, P12-261); seit A 0.86.0 hat DV eigene
+            // Saetze, die Probe nimmt sie heraus: ein Bereich ohne Saetze zeigt weiter den Platzhalter mit der Meldung
             _a.ProbeSetzen(null);
-            _echt.ProbeBestand(new EchtBestand(Zustand.EchtBestand.Saetze, [new(EchtSaetze.Datei, ProbeFehler),
+            _echt.ProbeBestand(new EchtBestand([.. Zustand.EchtBestand.Saetze.Where(s => s.Fachrichtung != "dv")], [new(EchtSaetze.Datei, ProbeFehler),
                 new("dv_b2_01", "Aufgabe 3 c): 7 Punkte bei 2 Angabe(n) passen nicht zur Regel (Beschreiben/Erläutern: 1 bis 2 Angaben, 2 bis 3 Punkte je Angabe)")]));
             AuswahlZeigen((Fachrichtung.Nach("dv"), ProbeVerlauf(), null));
             _echt.ProbeBestand(null);

@@ -11,16 +11,18 @@ namespace Lernplattform.Messung;
 
 /// <summary>
 /// A 0.84.0 (Weisung P12-285 Punkt 1 und 6): die Fachrichtung AE hat in beiden AP2-Bereichen eigene Saetze. Der Start-Test
-/// prueft die Auswahl (AE zeigt je Bereich eine Startzeile mit 5 Saetzen, DV weiter nur den Platzhalter), misst Lauf und
+/// prueft die Auswahl (AE zeigt je Bereich eine Startzeile mit 5 Saetzen), misst Lauf und
 /// Bewertung eines AE-Satzes je Bereich (Grenze 400 ms) und bedient sie mit Maus und Finger: Reiter, Anlagen, Haekchen.
 /// Die Ansichten selbst prueft die Layoutpruefung in jeder Groesse ueber <see cref="EchtFormatTeil.ProbeNamen"/> ab
 /// <see cref="EchtFormatTeil.AeAb"/>. A 0.85.0 (Weisung P12-291): dieselbe Pruefung fuer DPA (Ansichten ab
-/// <see cref="EchtFormatTeil.DpaAb"/>, Auswahl ueber <see cref="KlausurTeil.ProbeAuswahl"/>); DV zeigt weiter den Platzhalter.
+/// <see cref="EchtFormatTeil.DpaAb"/>, Auswahl ueber <see cref="KlausurTeil.ProbeAuswahl"/>). A 0.86.0 (Weisung P12-292): dasselbe
+/// fuer DV (Ansichten ab <see cref="EchtFormatTeil.DvAb"/>); danach zeigt keine Fachrichtung mehr den Platzhalter. Gegenprobe:
+/// die Ansicht <see cref="KlausurTeil.EchtAb"/> nimmt die DV-Saetze heraus und zeigt weiter Platzhalter und Meldung ohne Startknopf.
 /// </summary>
 public static partial class AutoMessung
 {
     /// <summary>Fachrichtungen, die heute eigene AP2-Saetze haben (ausser SI); alle anderen zeigen den Platzhalter.</summary>
-    private static readonly string[] EchtMitSaetzen = ["ae", "dpa"];
+    private static readonly string[] EchtMitSaetzen = ["ae", "dpa", "dv"];
 
     private static Task<int> EchtAeAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
         Func<string, Action, Action?, bool, Task> messpunkt) =>
@@ -29,6 +31,10 @@ public static partial class AutoMessung
     private static Task<int> EchtDpaAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
         Func<string, Action, Action?, bool, Task> messpunkt) =>
         EchtFachrichtungAsync(ansicht, k, e, bestand, messpunkt, "dpa", EchtFormatTeil.DpaAb);
+
+    private static Task<int> EchtDvAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
+        Func<string, Action, Action?, bool, Task> messpunkt) =>
+        EchtFachrichtungAsync(ansicht, k, e, bestand, messpunkt, "dv", EchtFormatTeil.DvAb);
 
     private static async Task<int> EchtFachrichtungAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
         Func<string, Action, Action?, bool, Task> messpunkt, string frId, int ansichtAb)
@@ -57,7 +63,8 @@ public static partial class AutoMessung
             }
         }
 
-        // Auswahl: AE mit Startknopf je Bereich, DV (Probe mit Meldungen) ohne Startknopf fuer b1/b2. Die heutige Klausur hat
+        // Auswahl: die Fachrichtung mit Startknopf je Bereich, DV in der Probe mit Meldungen (ohne DV-Saetze, Gegenprobe
+        // Platzhalter) ohne Startknopf fuer b1/b2. Die heutige Klausur hat
         // Knoepfe mit derselben Aufschrift ("Softwareprodukt starten"); gezaehlt wird darum nur ein Knopf, der neben der
         // Angabe des echten Formats steht ("... · Sätze: n, davon bearbeitet: m").
         var angabe = EchtTexte.Angabe.Split("%d")[1];
@@ -83,9 +90,9 @@ public static partial class AutoMessung
         var dvKnoepfe = Startknoepfe(Fachrichtung.Nach("dv"));
         if (aeKnoepfe != 2 || dvKnoepfe != 0)
         {
-            Fund("Auswahl: " + kurz + " zeigt " + aeKnoepfe + " Startknoepfe fuer b1/b2 (soll 2), DV " + dvKnoepfe + " (soll 0)");
+            Fund("Auswahl: " + kurz + " zeigt " + aeKnoepfe + " Startknoepfe fuer b1/b2 (soll 2), DV ohne Saetze (Probe) " + dvKnoepfe + " (soll 0)");
         }
-        Messwerte.Notiere("Pruefung im echten Format " + kurz + ": Auswahl mit " + aeKnoepfe + " Startknoepfen b1/b2, DV " + dvKnoepfe);
+        Messwerte.Notiere("Pruefung im echten Format " + kurz + ": Auswahl mit " + aeKnoepfe + " Startknoepfen b1/b2, DV ohne Saetze (Probe) " + dvKnoepfe);
 
         var ab = KlausurTeil.EchtAb + 1 + ansichtAb;
         await messpunkt("Pruefung im echten Format " + kurz + " Bereich 1 Lauf, Aufgabe 1 (bis zum Bild)", () => k.Probe(ab), null, true);
