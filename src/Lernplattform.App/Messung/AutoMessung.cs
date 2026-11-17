@@ -311,6 +311,8 @@ public static partial class AutoMessung
         funde += await P11SeitenleisteAsync(ansicht, GruppenBeimStart);   // A 0.38.0: Seitenleiste wie Handy, Gruppen zu, nur eine offen
         Zeitplan("P8W8OptionenAsync");
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
+        Zeitplan("PaketeAsync");
+        funde += await PaketeAsync(ansicht);            // A 0.87.0: Inhaltspakete laden, pruefen, entfernen
         Zeitplan("P8W9HoerprobeAsync");
         funde += await P8W9HoerprobeAsync(ansicht);     // Phase 8 W9: Hoerprobe an jedem Ton-Regler
         Zeitplan("P8W10DashboardAsync");
@@ -585,6 +587,14 @@ public static partial class AutoMessung
                         layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
                     }
                 }
+                // A 0.87.0: Optionen "Inhaltspakete" mit allen Zustaenden, ohne Netz, beim Laden mit Balken, Rueckfrage am Handy
+                await foreach (var ansichtName in Gemessen364("PaketeAnsichten", MitLernen ? PaketeAnsichten(ansicht) : Keine<string>()))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
                 // Phase 7, W1: Spiel-Seite (Stadt, Ortsliste, Haus mit Oeffnungszeit, Buero, ohne 3D)
                 ansicht.Warten = MainView.WartenArt.Bild;
                 P7W1AnsichtFehler.Clear();
@@ -775,6 +785,7 @@ public static partial class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"  und {P8W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 8): Optionen \"Über das Programm\" mit der Liste \"Lizenzen\" (alle zu, erster Bestandteil offen)"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W2bAnsichtenAnzahl} Ansichten der Welle W2b (Phase 8): Seitenleiste mit allen Gruppen offen, Optionen mit allen Gruppen und Karten zu"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W8AnsichtenAnzahl} Ansichten der Welle W8 (Phase 8): Optionen \"Musik und Geräusche\" mit einem eigenen Lied, \"Vollbild\", \"Tastenbelegung\" mit Meldung \"schon belegt\""));
+            Messwerte.Notiere(string.Create(inv, $"  und {PaketeAnsichtenAnzahl} Ansichten Inhaltspakete (A 0.87.0, Testquelle): alle Zustaende, ohne Netz, beim Laden mit Balken, Rueckfrage am Handy"));
             Messwerte.Notiere(string.Create(inv, $"  und je Schriftstufe {P8W10DashboardAnsichtenAnzahl} Ansichten der Welle W10 (Phase 8): Dashboard bei 1280 x 720 und 1920 x 1080 (hoechstens Bildschirmgroesse)"));
         }
         if (MitSpiel)

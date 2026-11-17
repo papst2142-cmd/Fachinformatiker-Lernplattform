@@ -30,6 +30,8 @@
   <!-- Welle Nachladen A 0.82.0 (Weisung P12-280): die grosse Testkarte nur in der Probe-APK (Knopf "Testkarte"), nie in der App -->
   <ItemGroup Condition="'$(Probe)' == 'true'">
     <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\testkarte_256.fistadt" LogicalName="testkarte_256.fistadt" />
+    <!-- A 0.87.0: Probe-Paket fuer die Karte "Inhaltspakete" (Testquelle nur in der Probe-APK) -->
+    <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\pakete\probe_testkarte_1.fipaket" LogicalName="probe_testkarte_1.fipaket" />
   </ItemGroup>
 
   <!-- A 0.39.0 (Weisung P11-40 Frage 5a): Emulator-Probe des Updates im Programm, NUR in der CI (-p:UpdateProbe=true),

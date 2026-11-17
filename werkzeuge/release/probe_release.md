@@ -1,22 +1,24 @@
-Die Prüfung im echten Format gibt es jetzt auch für die Fachrichtung Digitale Vernetzung, mit zehn neuen Prüfungssätzen. Damit hat jede Fachrichtung eigene Sätze.
+In den Optionen gibt es eine neue Karte „Inhaltspakete“. Damit lassen sich später zusätzliche Inhalte, zum Beispiel neue Städte, laden, ohne die App neu zu installieren. Heute ist sie die Grundlage; spielbare Pakete kommen mit einer der nächsten Versionen.
 
-- Hast du Digitale Vernetzung gewählt, findest du in beiden Bereichen der AP2, „Diagnose und Störungsbeseitigung in vernetzten Systemen“ und „Betrieb und Erweiterung von vernetzten Systemen“, je fünf Sätze. Bisher stand dort nur ein Hinweis, dass es noch keine Prüfung gibt.
-- Jeder Satz spielt in einer eigenen erfundenen Firma, von der Molkerei über das Logistikzentrum bis zum Mineralbrunnen. Die vier Aufgaben eines Satzes gehören zu dieser Firma und ihren vernetzten Anlagen.
-- Es geht unter anderem um Fehlersuche im Produktionsnetz, VLANs, Adressen und Subnetze, Protokolle der Steuerungen, Funk und Sensoren, Zeitabgleich, Verfügbarkeit, PoE, Ringredundanz, Überwachung und Wartung, Änderungen im laufenden Betrieb, Sicherheit sowie Daten am Edge oder in der Cloud. Jeder Satz hat einen Netzplan; dazu kommen Monitorbilder, Protokollausschnitte, Konfigurationen, Tabellen und ein englischer Text.
-- Abläufe zeichnest du als Aktivitätsdiagramm auf Papier oder mit dem Zeichen-Baukasten; nach dem Abgeben siehst du die Musterlösung und hakst die Punkte selbst ab.
-- Die AP1, die Sätze der Systemintegration, der Anwendungsentwicklung und der Daten- und Prozessanalyse, dein Lernstand und das Spiel bleiben, wie sie sind.
+- Die Karte steht in der Gruppe „Programm“ unter „Updates“. „Nach Paketen suchen“ fragt im Internet nach, welche Pakete es gibt. Jedes Paket zeigt seinen Namen, eine kurze Beschreibung, seine Größe und ob es geladen ist, ob es einen neueren Stand gibt oder ob es fehlerhaft ist.
+- Geladen wird nur, wenn du auf „Laden“ tippst; nichts lädt von allein. Ein Balken zeigt den Fortschritt, „Abbrechen“ hört jederzeit auf. Bricht das Laden ab, bleibt alles, wie es vorher war.
+- Am Handy ohne WLAN fragt die App vor dem Laden nach und nennt die Größe des Pakets.
+- Jedes Paket wird vor dem Einsetzen ganz geprüft. Ist es beschädigt, unvollständig oder für eine neuere App gedacht, steht der Grund in Rot dabei, und nichts wird halb geladen. „Entfernen“ löscht ein Paket nach einer Rückfrage wieder ganz.
+- Ohne Internet geht alles, was schon geladen ist, weiter; die Karte sagt dann „Keine Verbindung“.
+- Im Spiel verschwindet jetzt auch der Knopf „Spiel verlassen“, wenn du die untere Leiste mit dem Dreieck zuklappst. Aufgeklappt ist er wie bisher da.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und die Stadt bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.86.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.87.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.86.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.86.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.86.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.86.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.87.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.87.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.87.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.87.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

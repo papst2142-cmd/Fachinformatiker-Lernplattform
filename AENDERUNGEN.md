@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.87.0
+In den Optionen gibt es eine neue Karte „Inhaltspakete“. Damit lassen sich später zusätzliche Inhalte, zum Beispiel neue Städte, laden, ohne die App neu zu installieren. Heute ist sie die Grundlage; spielbare Pakete kommen mit einer der nächsten Versionen.
+
+- Die Karte steht in der Gruppe „Programm“ unter „Updates“. „Nach Paketen suchen“ fragt im Internet nach, welche Pakete es gibt. Jedes Paket zeigt seinen Namen, eine kurze Beschreibung, seine Größe und ob es geladen ist, ob es einen neueren Stand gibt oder ob es fehlerhaft ist.
+- Geladen wird nur, wenn du auf „Laden“ tippst; nichts lädt von allein. Ein Balken zeigt den Fortschritt, „Abbrechen“ hört jederzeit auf. Bricht das Laden ab, bleibt alles, wie es vorher war.
+- Am Handy ohne WLAN fragt die App vor dem Laden nach und nennt die Größe des Pakets.
+- Jedes Paket wird vor dem Einsetzen ganz geprüft. Ist es beschädigt, unvollständig oder für eine neuere App gedacht, steht der Grund in Rot dabei, und nichts wird halb geladen. „Entfernen“ löscht ein Paket nach einer Rückfrage wieder ganz.
+- Ohne Internet geht alles, was schon geladen ist, weiter; die Karte sagt dann „Keine Verbindung“.
+- Im Spiel verschwindet jetzt auch der Knopf „Spiel verlassen“, wenn du die untere Leiste mit dem Dreieck zuklappst. Aufgeklappt ist er wie bisher da.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und die Stadt bleiben, wie sie sind.
+
 ## A 0.86.0
 Die Prüfung im echten Format gibt es jetzt auch für die Fachrichtung Digitale Vernetzung, mit zehn neuen Prüfungssätzen. Damit hat jede Fachrichtung eigene Sätze.
 

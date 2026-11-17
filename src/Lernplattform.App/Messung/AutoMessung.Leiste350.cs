@@ -19,6 +19,9 @@ namespace Lernplattform.Messung;
 ///    verlassen“ immer zu sehen (auch zugeklappt), ohne 3D bleibt „Orte“. 2. Reiter „Übersicht“ im Handy zeigt dieselben Texte und
 ///    Werte wie die Seite der Spiel-Tafel (Gegenprobe: der Reiter „Offen“ liefert andere Texte; ohne Spielstand kein Reiter).
 /// 3. „Spiel verlassen“ aus der Leiste mit Maus, Finger, Eingabetaste und Screenreader (Name und Aufruf ueber die Automation).
+/// Seit A 0.87.0 (Sammelliste 371, Nico: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
+/// zugeklappt ist „Spiel verlassen“ weg, aufgeklappt da (Gegenprobe <see cref="SpielSeite.VerlassenZuAltFuerTests"/>); vor dem
+/// Verlassen wird darum erst aufgeklappt.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -49,11 +52,12 @@ public static partial class AutoMessung
         {
             var leiste = seite.LeisteKnoepfe;
             var doppelt = leiste.Where(t => t is StadtTexte.Uebersicht or KarteTexte.Karte).ToList();
-            var verlassen = seite.VerlassenKnopf.IsEffectivelyVisible;
+            // Sammelliste 371: „Spiel verlassen“ nur aufgeklappt zu sehen, zugeklappt mit den anderen Knoepfen weg
+            var verlassen = seite.VerlassenKnopf.IsEffectivelyVisible == !seite.HinweisZu;
             var orte = !gl || seite.Spiel?.ImInnenraum == true || !seite.OrteKnopfSichtbar;
             Pruefe(name, doppelt.Count == 0 && verlassen && orte,
                 "Leiste: " + string.Join(", ", leiste) + (doppelt.Count > 0 ? " (DOPPELT: " + string.Join(", ", doppelt) + ")" : "")
-                + (verlassen ? "" : ", Spiel verlassen FEHLT") + (orte ? "" : ", Orte mit 3D da"));
+                + (verlassen ? "" : seite.HinweisZu ? ", Spiel verlassen ZUGEKLAPPT DA" : ", Spiel verlassen FEHLT") + (orte ? "" : ", Orte mit 3D da"));
         }
         var vorher = seite.Spiel;
         try
@@ -71,9 +75,24 @@ public static partial class AutoMessung
             seite.HinweisUmschalten();
             await ansicht.BildFertigAsync();
             var zu = seite.HinweisZu ? "zugeklappt" : "aufgeklappt";
-            Pruefe("Handy und Spiel verlassen " + zu, seite.VerlassenKnopf.IsEffectivelyVisible && seite.QuestKnopf?.IsEffectivelyVisible == true,
-                (seite.VerlassenKnopf.IsEffectivelyVisible ? "Spiel verlassen da" : "Spiel verlassen FEHLT") + (seite.QuestKnopf?.IsEffectivelyVisible == true ? ", Handy da" : ", Handy FEHLT"));
+            var verlassenSoll = !seite.HinweisZu;
+            Pruefe("Handy und Spiel verlassen " + zu, seite.VerlassenKnopf.IsEffectivelyVisible == verlassenSoll && seite.QuestKnopf?.IsEffectivelyVisible == true,
+                (seite.VerlassenKnopf.IsEffectivelyVisible ? "Spiel verlassen da" : "Spiel verlassen weg") + (verlassenSoll ? " (soll da)" : " (soll weg, 371)")
+                + (seite.QuestKnopf?.IsEffectivelyVisible == true ? ", Handy da" : ", Handy FEHLT"));
             Lage(zu);
+            if (seite.HinweisZu)
+            {
+                // Gegenprobe 371: mit dem alten Verhalten bleibt der Knopf zugeklappt da, die Pruefung oben erkennt das
+                seite.VerlassenZuAltFuerTests = true;
+                seite.Beschriften();
+                await ansicht.BildFertigAsync();
+                var altDa = seite.VerlassenKnopf.IsEffectivelyVisible;
+                seite.VerlassenZuAltFuerTests = false;
+                seite.Beschriften();
+                await ansicht.BildFertigAsync();
+                Pruefe("Gegenprobe 371 zugeklappt alt", altDa && !seite.VerlassenKnopf.IsEffectivelyVisible,
+                    (altDa ? "alt: Knopf da (erkannt)" : "alt: Knopf WEG (Gegenprobe wirkt nicht)") + (seite.VerlassenKnopf.IsEffectivelyVisible ? ", neu: Knopf DA" : ", neu: Knopf weg"));
+            }
             seite.HinweisUmschalten();
             await ansicht.BildFertigAsync();
             Pruefe("Pfeil zurueck", seite.HinweisZu == zuVorher, seite.HinweisZu == zuVorher ? "wie vorher" : "Zustand NICHT zurueck");
@@ -212,6 +231,12 @@ public static partial class AutoMessung
             }
             Frisch(s);
             await ansicht.BildFertigAsync();
+            // Sammelliste 371: zugeklappt erst aufklappen (der Weg zum Verlassen bleibt: Pfeil, dann der Knopf)
+            if (s.HinweisZu)
+            {
+                s.HinweisUmschalten();
+                await ansicht.BildFertigAsync();
+            }
             var knopf = s.VerlassenKnopf;
             switch (art)
             {

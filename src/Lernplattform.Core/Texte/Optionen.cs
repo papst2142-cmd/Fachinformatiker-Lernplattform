@@ -169,6 +169,14 @@ public static class Optionen
     public static readonly OptionenBereich BeendenBereich = new(Beenden, Navigation.ProgrammBeenden, null, null,
         false, false, false, [], ["Beenden", "schließen", "Programm beenden"], []);
 
+    /// <summary>
+    /// Welle A 0.87.0 (Weisung P12-294, Nico 1a): Karte „Inhaltspakete“ (neue Staedte zum Nachladen) in der Gruppe Programm nach
+    /// „Updates“, PC und Handy gleich; nur in C#, <see cref="Bereiche"/> bleibt wie G9.
+    /// </summary>
+    public const string Pakete = "pakete";
+    public static readonly OptionenBereich PaketeBereich = new(Pakete, PaketTexte.Titel, null, null,
+        false, false, false, [], PaketTexte.Stichwoerter, []);
+
     /// <summary>Neu in C# (Python hat ihn nicht); <see cref="Bereiche"/> bleibt wie G9.</summary>
     public static readonly OptionenBereich AusbildungBereich = new(Ausbildung, PruefungTexte.AusbildungReiter, null, null,
         false, false, false, [], PruefungTexte.AusbildungSuchwoerter, []);
@@ -182,6 +190,7 @@ public static class Optionen
         liste.Insert(liste.FindIndex(b => b.Id == Ton) + 1, TastenBereich);
         liste.Insert(liste.FindIndex(b => b.Id == Optik) + 1, VollbildBereich);
         liste.Insert(liste.FindIndex(b => b.Id == Vollbild) + 1, GrafikBereich);
+        liste.Insert(liste.FindIndex(b => b.Id == Updates) + 1, PaketeBereich);
         if (!pc)
         {
             liste.Add(BeendenBereich);
@@ -204,7 +213,7 @@ public static class Optionen
         (GruppeAussehen, [Optik, Vollbild, Grafik]),
         (GruppeSpiel, [Spiel, Ton, Tasten]),
         (GruppeDaten, [Abgleich, Sicherung, Datenbank, Loeschen]),
-        (GruppeProgramm, [Updates, Rundgang, Diagnose, Ueber, Beenden]),
+        (GruppeProgramm, [Updates, Pakete, Rundgang, Diagnose, Ueber, Beenden]),
     ];
 
     /// <summary>
@@ -247,6 +256,7 @@ public static class Optionen
         Tasten => TastenKurz,
         Vollbild => VollbildKurz,
         Grafik => Lernplattform.Core.Spiel.Probe.GrafikTexte.Kurz,
+        Pakete => PaketTexte.Kurz,
         Ueber => UeberKurz,
         Beenden => Navigation.BeendenKurz,
         _ => throw new KeyNotFoundException(bereich.Id),
