@@ -14,20 +14,33 @@ namespace Lernplattform.Messung;
 /// prueft die Auswahl (AE zeigt je Bereich eine Startzeile mit 5 Saetzen, DV weiter nur den Platzhalter), misst Lauf und
 /// Bewertung eines AE-Satzes je Bereich (Grenze 400 ms) und bedient sie mit Maus und Finger: Reiter, Anlagen, Haekchen.
 /// Die Ansichten selbst prueft die Layoutpruefung in jeder Groesse ueber <see cref="EchtFormatTeil.ProbeNamen"/> ab
-/// <see cref="EchtFormatTeil.AeAb"/>.
+/// <see cref="EchtFormatTeil.AeAb"/>. A 0.85.0 (Weisung P12-291): dieselbe Pruefung fuer DPA (Ansichten ab
+/// <see cref="EchtFormatTeil.DpaAb"/>, Auswahl ueber <see cref="KlausurTeil.ProbeAuswahl"/>); DV zeigt weiter den Platzhalter.
 /// </summary>
 public static partial class AutoMessung
 {
-    private static async Task<int> EchtAeAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
-        Func<string, Action, Action?, bool, Task> messpunkt)
+    /// <summary>Fachrichtungen, die heute eigene AP2-Saetze haben (ausser SI); alle anderen zeigen den Platzhalter.</summary>
+    private static readonly string[] EchtMitSaetzen = ["ae", "dpa"];
+
+    private static Task<int> EchtAeAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
+        Func<string, Action, Action?, bool, Task> messpunkt) =>
+        EchtFachrichtungAsync(ansicht, k, e, bestand, messpunkt, "ae", EchtFormatTeil.AeAb);
+
+    private static Task<int> EchtDpaAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
+        Func<string, Action, Action?, bool, Task> messpunkt) =>
+        EchtFachrichtungAsync(ansicht, k, e, bestand, messpunkt, "dpa", EchtFormatTeil.DpaAb);
+
+    private static async Task<int> EchtFachrichtungAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
+        Func<string, Action, Action?, bool, Task> messpunkt, string frId, int ansichtAb)
     {
         var funde = 0;
+        var kurz = frId.ToUpperInvariant();
         void Fund(string text)
         {
-            Messwerte.Notiere("  FEHLER: Pruefung im echten Format AE: " + text);
+            Messwerte.Notiere("  FEHLER: Pruefung im echten Format " + kurz + ": " + text);
             funde++;
         }
-        var ae = Fachrichtung.Nach("ae");
+        var ae = Fachrichtung.Nach(frId);
         foreach (var rolle in new[] { EchtSaetze.B1, EchtSaetze.B2 })
         {
             var zahl = bestand.Fuer(rolle, ae.Id).Count;
@@ -36,7 +49,7 @@ public static partial class AutoMessung
                 Fund("Bereich " + ae.Bereich(rolle).Name + ": " + zahl + " Saetze statt 5");
             }
         }
-        foreach (var fr in new[] { "dpa", "dv" })
+        foreach (var fr in Fachrichtung.Alle.Select(f => f.Id).Where(f => f != "si" && !EchtMitSaetzen.Contains(f)))
         {
             if (bestand.Fuer(EchtSaetze.B1, fr).Count + bestand.Fuer(EchtSaetze.B2, fr).Count != 0)
             {
@@ -55,7 +68,14 @@ public static partial class AutoMessung
             && (aufschrift == Beschriftungen.Einsetzen(EchtTexte.Starten, f.Bereich(EchtSaetze.B1).Kurz)
                 || aufschrift == Beschriftungen.Einsetzen(EchtTexte.Starten, f.Bereich(EchtSaetze.B2).Kurz))
             && Echt(b));
-        k.Probe(1);
+        if (frId == "ae")
+        {
+            k.Probe(1);
+        }
+        else
+        {
+            k.ProbeAuswahl(frId);
+        }
         await ansicht.BildFertigAsync();
         var aeKnoepfe = Startknoepfe(ae);
         k.Probe(KlausurTeil.EchtAb);
@@ -63,15 +83,15 @@ public static partial class AutoMessung
         var dvKnoepfe = Startknoepfe(Fachrichtung.Nach("dv"));
         if (aeKnoepfe != 2 || dvKnoepfe != 0)
         {
-            Fund("Auswahl: AE zeigt " + aeKnoepfe + " Startknoepfe fuer b1/b2 (soll 2), DV " + dvKnoepfe + " (soll 0)");
+            Fund("Auswahl: " + kurz + " zeigt " + aeKnoepfe + " Startknoepfe fuer b1/b2 (soll 2), DV " + dvKnoepfe + " (soll 0)");
         }
-        Messwerte.Notiere("Pruefung im echten Format AE: Auswahl mit " + aeKnoepfe + " Startknoepfen b1/b2, DV " + dvKnoepfe);
+        Messwerte.Notiere("Pruefung im echten Format " + kurz + ": Auswahl mit " + aeKnoepfe + " Startknoepfen b1/b2, DV " + dvKnoepfe);
 
-        var ab = KlausurTeil.EchtAb + 1 + EchtFormatTeil.AeAb;
-        await messpunkt("Pruefung im echten Format AE Bereich 1 Lauf, Aufgabe 1 (bis zum Bild)", () => k.Probe(ab), null, true);
-        await messpunkt("Pruefung im echten Format AE Bereich 1 Bewertung (bis zum Bild)", () => k.Probe(ab + 2), null, true);
-        await messpunkt("Pruefung im echten Format AE Bereich 2 Lauf, Aufgabe 1 (bis zum Bild)", () => k.Probe(ab + 3), null, true);
-        await messpunkt("Pruefung im echten Format AE Bereich 2 Bewertung (bis zum Bild)", () => k.Probe(ab + 5), null, true);
+        var ab = KlausurTeil.EchtAb + 1 + ansichtAb;
+        await messpunkt("Pruefung im echten Format " + kurz + " Bereich 1 Lauf, Aufgabe 1 (bis zum Bild)", () => k.Probe(ab), null, true);
+        await messpunkt("Pruefung im echten Format " + kurz + " Bereich 1 Bewertung (bis zum Bild)", () => k.Probe(ab + 2), null, true);
+        await messpunkt("Pruefung im echten Format " + kurz + " Bereich 2 Lauf, Aufgabe 1 (bis zum Bild)", () => k.Probe(ab + 3), null, true);
+        await messpunkt("Pruefung im echten Format " + kurz + " Bereich 2 Bewertung (bis zum Bild)", () => k.Probe(ab + 5), null, true);
 
         // Bedienprobe je Bereich mit Maus und Finger: Reiter "Aufgabe 2", Umschalter "Anlagen", ein Haekchen der Bewertung
         foreach (var (rolle, start) in new[] { (EchtSaetze.B1, ab), (EchtSaetze.B2, ab + 3) })
@@ -114,13 +134,13 @@ public static partial class AutoMessung
                 {
                     Fund(name + ": Haekchen der Bewertung antippen aendert den Zwischenstand nicht (" + vorher + " / " + e.ProbeStand.Summe + ")");
                 }
-                Messwerte.Notiere("Pruefung im echten Format AE Bedienprobe " + name + ": Reiter, Anlagen" + (daneben ? " daneben (zwei Spalten)" : "")
+                Messwerte.Notiere("Pruefung im echten Format " + kurz + " Bedienprobe " + name + ": Reiter, Anlagen" + (daneben ? " daneben (zwei Spalten)" : "")
                     + ", Haekchen (" + vorher + " -> "
                     + e.ProbeStand.Summe + ")");
             }
             k.Probe(start);
             await ansicht.BildFertigAsync();
-            funde += await AnlagenZahl363Async(ansicht, e, "AE " + rolle);
+            funde += await AnlagenZahl363Async(ansicht, e, kurz + " " + rolle);
         }
         return funde;
     }

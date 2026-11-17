@@ -159,6 +159,11 @@ public static partial class StadtbauMessung
         {
             Fund("Plätze: Einsetzen nicht als ein Schritt, nicht genau um 64 verschoben oder Rand-Hinweis bleibt");
         }
+        // Weisung P12-291 Punkt 2: nach dem Einsetzen ist kein Platz mehr gewaehlt (kein roter Rahmen, keine rote Vorschau)
+        if (karte.PlatzGewaehlt is not null || karte.PlaetzeGezeichnet.Rahmen is not null || a.EinsetzenVorschau is not null)
+        {
+            Fund("Plätze: nach dem Einsetzen bleibt der Platz gewählt (" + karte.PlatzGewaehlt + ", " + karte.PlaetzeGezeichnet.Rahmen + ")");
+        }
         a.Rueckgaengig();
         await BildAsync(a);
         if (Rand() != 1 || await RandListe() != 1)

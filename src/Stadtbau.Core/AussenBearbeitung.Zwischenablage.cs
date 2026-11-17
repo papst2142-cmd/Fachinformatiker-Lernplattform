@@ -139,7 +139,7 @@ public static partial class AussenBearbeitung
         {
             return null;
         }
-        return new PyObjekt
+        var stueck = new PyObjekt
         {
             { "art", "haus" },
             { "blueprint", Zwischenablage.BlueprintText(b) },
@@ -147,6 +147,32 @@ public static partial class AussenBearbeitung
             { "winkel", (long)(winkel % 360) },
             { "mitte", new List<object?> { Math.Round(mitte.X, 4), Math.Round(mitte.Y, 4) } },
         };
+        // Sammelliste 367: die eigene Tuer des Modells ist die Tuer (Ort mit darstellung.modell_tuer, Zierweg mit modell_tuer);
+        // der Blueprint legt die Tuer schon ohne Versatz auf sie, die Kopie braucht nur das Merkmal (zusaetzliches Feld,
+        // Format der Zwischenablage bleibt 1: ein aelteres Werkzeug liest es nicht und setzt wie bisher eine Tuer aus Kaesten)
+        if (EigeneModelltuer(kopie, s))
+        {
+            Py.Setzen(stueck, "modell_tuer", true);
+        }
+        return stueck;
+    }
+
+    /// <summary>Gegenprobe Sammelliste 367: Kopien ohne das Merkmal „eigene Modelltuer“ wie bis S 0.56.0 (nur Tests, je Ablauf).</summary>
+    public static bool ModellTuerKopieAltFuerTests { get => ModellTuerKopieAlt.Value; set => ModellTuerKopieAlt.Value = value; }
+    private static readonly AsyncLocal<bool> ModellTuerKopieAlt = new();
+
+    /// <summary>Sammelliste 367: ist die eigene Tuer des Modells die Tuer dieses Hauses (Stand auf Drehung 0 zurueckgedreht)?</summary>
+    private static bool EigeneModelltuer(PyObjekt a, AussenStelle s)
+    {
+        if (ModellTuerKopieAlt.Value)
+        {
+            return false;
+        }
+        if (s.Art == AussenArt.Haus)
+        {
+            return Zugang(a, s.Ort) is not null && Blueprint.TuerVersatz(a, s.Ort) is not null;
+        }
+        return s.Art == AussenArt.Gebaeude && Blueprint.ZierwegVon(a, s) is { } z && Py.Wahr(Get(z, "modell_tuer"));
     }
 
     /// <summary>Gueltiger Name fuer den Blueprint eines Hauses (Zeichen wie ein Projektname, hoechstens 40).</summary>
@@ -382,6 +408,12 @@ public static partial class AussenBearbeitung
             {
                 VerschiebenGenau(k, s, ddx, ddy);
             }
+        }
+        // Sammelliste 367: die Kopie nutzt die eigene Tuer des Modells wie das Original (vor „Als Spielort festlegen“, das
+        // das Merkmal des Zierwegs in darstellung.modell_tuer uebernimmt)
+        if (Py.Wahr(Get(st, "modell_tuer")) && b.Tuer is not null && s.Art == AussenArt.Gebaeude && Blueprint.ZierwegVon(k, s) is { } zier)
+        {
+            Py.Setzen(zier, "modell_tuer", true);
         }
         if (ort == "")
         {

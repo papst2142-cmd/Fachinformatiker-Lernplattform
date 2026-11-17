@@ -10,16 +10,27 @@ letzte Versuch und der Filter fuer den Hinweis-Job bleiben gleich streng. Ein an
                                       SOLL_WERKZEUG (optional), Job-Filter aus JOBFILTER (jq), Commit GITHUB_SHA;
                                       schreibt lauf=<Text> nach GITHUB_OUTPUT, Rueckgabe 1 ohne passenden Lauf.
   lauf_waehlen.py text <release.md> <lauf>   setzt die Zeile "Geprueft mit ..." vor "Release-Seite:" in den Text.
-  lauf_waehlen.py selbsttest          Faelle mit Gegenproben (gleicher Tree an, anderer Tree ab, rot ab, Job fehlt ab).
+  lauf_waehlen.py selbsttest          Faelle mit Gegenproben (gleicher Tree an, anderer Tree ab, rot ab, Job fehlt ab,
+                                      Jobs nur fuer Kandidaten, Wiederholung und FEHLER-Zeile bei GitHub-Abfragen).
+Sammelliste 368 (Weisung P12-291): Jobs werden nur fuer Kandidaten geholt (gleicher Commit oder gleicher Tree; der
+Tree kommt zuerst aus der Laufliste). Jeder `gh api`-Aufruf wird bei einem Fehler bis 3 Mal mit kurzer Pause wiederholt,
+danach steht genau eine Zeile "FEHLER: GitHub-Abfrage ..." (Rueckgabe, Text) da, nie ein Traceback.
 Nichts hier laedt hoch, legt einen Tag an oder loescht etwas.
 """
 import json
 import os
 import subprocess
 import sys
+import time
 
 HILFSJOB = "urteil (GitHub oder echt)"
 ABWEICHUNG = "voller Lauf auf main noetig: Inhalt weicht ab"
+WIEDERHOLUNGEN = 3
+PAUSEN = (5, 10, 20)
+
+
+class GhFehler(Exception):
+    """Eine GitHub-Abfrage scheiterte auch nach allen Wiederholungen; str() ist die fertige FEHLER-Zeile."""
 
 
 def waehlen(main_sha, main_tree, laeufe, listen):
@@ -34,6 +45,11 @@ def waehlen(main_sha, main_tree, laeufe, listen):
         if lauf["fazit"] != "success":
             zeilen.append("%s ist nicht gruen (%s)" % (kennung, lauf["fazit"]))
             continue
+        if lauf["sha"] != main_sha and lauf["tree"] != main_tree:
+            # Sammelliste 368: kein Kandidat (anderer Inhalt), seine Jobs werden gar nicht erst geholt
+            zeilen.append("%s ist gruen, aber Tree %s statt %s (Tree gleich main: nein)" % (kennung, (lauf["tree"] or "?")[:12], main_tree[:12]))
+            abweichend.append(lauf)
+            continue
         ist = sorted(j for j in lauf["jobs"] if j != HILFSJOB)
         treffer = next((name for name, jobs in soll.items() if ist == jobs), None)
         if treffer is None:
@@ -43,11 +59,8 @@ def waehlen(main_sha, main_tree, laeufe, listen):
         if lauf["sha"] == main_sha:
             zeilen.append("%s: %s, %d/%d gruen, gleicher Commit wie main" % (kennung, treffer, len(ist), len(ist)))
             return lauf, treffer, zeilen
-        if lauf["tree"] == main_tree:
-            zeilen.append("%s: %s, %d/%d gruen, Tree gleich main: ja (%s)" % (kennung, treffer, len(ist), len(ist), main_tree[:12]))
-            return lauf, treffer, zeilen
-        zeilen.append("%s ist gruen, aber Tree %s statt %s (Tree gleich main: nein)" % (kennung, (lauf["tree"] or "?")[:12], main_tree[:12]))
-        abweichend.append(lauf)
+        zeilen.append("%s: %s, %d/%d gruen, Tree gleich main: ja (%s)" % (kennung, treffer, len(ist), len(ist), main_tree[:12]))
+        return lauf, treffer, zeilen
     if abweichend:
         zeilen.append("FEHLER: " + ABWEICHUNG + " (kein gruener Lauf auf %s, %d gruene Laeufe mit anderem Inhalt)" % (main_sha[:7], len(abweichend)))
     else:
@@ -67,24 +80,40 @@ def text_einsetzen(text, lauf):
     return text.replace("\nRelease-Seite: ", "\n" + zeile + "\n\nRelease-Seite: ", 1)
 
 
-def gh(pfad, jq):
-    aus = subprocess.run(["gh", "api", pfad, "--jq", jq], check=True, capture_output=True, text=True).stdout
-    return [z for z in aus.splitlines() if z.strip()]
+def gh(pfad, jq, ausfuehren=subprocess.run, schlafen=time.sleep):
+    """Ein `gh api`-Aufruf; bei Fehler bis WIEDERHOLUNGEN Mal mit Pause wiederholt, dann GhFehler (fertige Zeile)."""
+    letzter = None
+    for versuch in range(WIEDERHOLUNGEN + 1):
+        if versuch:
+            schlafen(PAUSEN[min(versuch - 1, len(PAUSEN) - 1)])
+        try:
+            r = ausfuehren(["gh", "api", pfad, "--jq", jq], capture_output=True, text=True)
+        except OSError as e:
+            letzter = ("-", str(e))
+            continue
+        if r.returncode == 0:
+            return [z for z in r.stdout.splitlines() if z.strip()]
+        letzter = (r.returncode, " ".join((r.stderr or r.stdout or "").split())[:300])
+        print("WIEDERHOLUNG: GitHub-Abfrage %s, Versuch %d von %d: Rueckgabe %s" % (pfad, versuch + 1, WIEDERHOLUNGEN + 1, letzter[0]))
+    raise GhFehler("FEHLER: GitHub-Abfrage %s nach %d Versuchen gescheitert (Rueckgabe %s, %s)"
+                   % (pfad, WIEDERHOLUNGEN + 1, letzter[0], letzter[1] or "ohne Text"))
 
 
-def laeufe_holen(repo, main_sha, jobfilter):
+def laeufe_holen(repo, main_sha, main_tree, jobfilter, abfrage=gh):
     basis = "repos/%s/actions/workflows/ci.yml/runs?event=workflow_dispatch&status=success&per_page=50" % repo
-    form = ".workflow_runs[] | {id, run_number, head_sha, conclusion}"
+    form = ".workflow_runs[] | {id, run_number, head_sha, conclusion, tree: .head_commit.tree_id}"
     # Laeufe auf dem main-Kopf (wie bisher) und die 50 neuesten gruenen Laeufe (fuer den Vergleich des Trees)
-    roh = [json.loads(z) for z in gh(basis + "&head_sha=" + main_sha, form)]
+    roh = [json.loads(z) for z in abfrage(basis + "&head_sha=" + main_sha, form)]
     gesehen = {r["id"] for r in roh}
-    roh += [r for r in (json.loads(z) for z in gh(basis, form)) if r["id"] not in gesehen]
+    roh += [r for r in (json.loads(z) for z in abfrage(basis, form)) if r["id"] not in gesehen]
     laeufe, trees = [], {}
     for r in roh:
         sha = r["head_sha"]
         if sha not in trees:
-            trees[sha] = gh("repos/%s/git/commits/%s" % (repo, sha), ".tree.sha")[0]
-        jobs = gh("repos/%s/actions/runs/%s/jobs?per_page=100" % (repo, r["id"]), jobfilter)
+            trees[sha] = r.get("tree") or abfrage("repos/%s/git/commits/%s" % (repo, sha), ".tree.sha")[0]
+        # Sammelliste 368: Jobs nur fuer Kandidaten (gleicher Commit oder gleicher Tree); andere Laeufe brauchen keine Abfrage
+        kandidat = sha == main_sha or trees[sha] == main_tree
+        jobs = abfrage("repos/%s/actions/runs/%s/jobs?per_page=100" % (repo, r["id"]), jobfilter) if kandidat else None
         laeufe.append({"id": r["id"], "nummer": r["run_number"], "sha": sha, "tree": trees[sha],
                        "fazit": r["conclusion"], "jobs": jobs})
     return laeufe
@@ -104,7 +133,14 @@ def waehlen_in_actions():
     listen = {"voll": liste(os.environ["SOLL"])}
     if os.environ.get("SOLL_WERKZEUG", "").strip():
         listen["werkzeug"] = liste(os.environ["SOLL_WERKZEUG"])
-    laeufe = laeufe_holen(os.environ["GITHUB_REPOSITORY"], main_sha, os.environ["JOBFILTER"])
+    try:
+        laeufe = laeufe_holen(os.environ["GITHUB_REPOSITORY"], main_sha, main_tree, os.environ["JOBFILTER"])
+    except GhFehler as e:
+        print(str(e))
+        return 1
+    except (ValueError, KeyError, IndexError) as e:
+        print("FEHLER: GitHub-Abfrage lieferte unerwartete Daten (%s: %s)" % (type(e).__name__, e))
+        return 1
     lauf, _, zeilen = waehlen(main_sha, main_tree, laeufe, listen)
     print("\n".join(zeilen))
     if lauf is None:
@@ -153,7 +189,125 @@ def selbsttest():
     if "\nGeprüft mit CI-Lauf 2, Commit 2222222, Tree gleich main: ja.\n\nRelease-Seite: x\n" not in text:
         print("FEHLER: Selbsttest Lauf waehlen: Zeile im Release-Text fehlt")
         rot = 1
-    print("Selbsttest Lauf waehlen (Sammelliste 365): %d Faelle, %s" % (len(faelle), "rot" if rot else "gruen"))
+    rot |= selbsttest_368(m, t)
+    print("Selbsttest Lauf waehlen (Sammelliste 365, 368): %d Faelle, %s" % (len(faelle), "rot" if rot else "gruen"))
+    return rot
+
+
+def selbsttest_368(m, t):
+    """Sammelliste 368: Jobs nur fuer Kandidaten, Wiederholung voruebergehender Fehler, klare FEHLER-Zeile."""
+    import contextlib
+    import io
+    rot = 0
+
+    def melde(text):
+        nonlocal rot
+        print("FEHLER: Selbsttest Lauf waehlen (368): " + text)
+        rot = 1
+
+    liste_laeufe = [{"id": 1, "run_number": 11, "head_sha": "a" * 40, "conclusion": "success", "tree": "x" * 40},
+                    {"id": 2, "run_number": 12, "head_sha": "b" * 40, "conclusion": "success", "tree": t},
+                    {"id": 3, "run_number": 13, "head_sha": m, "conclusion": "success", "tree": None}]
+
+    def abfrage_von(gegenprobe):
+        gefragt = []
+
+        def abfrage(pfad, jq):
+            gefragt.append(pfad)
+            if pfad.endswith("&head_sha=" + m):
+                return [json.dumps(liste_laeufe[2])]
+            if "/runs?" in pfad:
+                return [json.dumps(r) for r in liste_laeufe]
+            if "/git/commits/" in pfad:
+                return [t]
+            if pfad.endswith("/runs/1/jobs?per_page=100"):
+                raise GhFehler("FEHLER: GitHub-Abfrage %s (Rueckgabe 1, alter Lauf)" % pfad)
+            return ["a", "b", "c"]
+        return abfrage, gefragt
+
+    # (1) Kandidatenfilter: Lauf 1 (anderer Tree) wird nie nach Jobs gefragt, Lauf 2 (gleicher Tree) und 3 (main) schon
+    abfrage, gefragt = abfrage_von(False)
+    try:
+        laeufe = laeufe_holen("o/r", m, t, ".jobs", abfrage)
+    except GhFehler as e:
+        melde("Jobs eines Laufs mit anderem Tree abgefragt: " + str(e))
+        laeufe = []
+    jobs_gefragt = sorted(p.split("/runs/")[1].split("/")[0] for p in gefragt if "/jobs?" in p)
+    if laeufe and jobs_gefragt != ["2", "3"]:
+        melde("Jobs abgefragt fuer Laeufe %s statt 2 und 3" % jobs_gefragt)
+    if laeufe and not any("/git/commits/" + m in p for p in gefragt):
+        melde("fehlender Tree in der Laufliste nicht ueber den Commit geholt")
+    if laeufe:
+        gewaehlt, _, _ = waehlen(m, t, laeufe, {"voll": ["a", "b", "c"]})
+        if not gewaehlt or gewaehlt["nummer"] != 13:
+            melde("mit Kandidatenfilter nicht Lauf 13 gewaehlt")
+    # Gegenprobe: ohne Filter (alle Laeufe wie bis S 0.56.0) bricht der alte Lauf 1 die Wahl ab
+    abfrage, _ = abfrage_von(True)
+    try:
+        for r in liste_laeufe:
+            abfrage("repos/o/r/actions/runs/%s/jobs?per_page=100" % r["id"], ".jobs")
+        melde("Gegenprobe ohne Kandidatenfilter scheiterte nicht")
+    except GhFehler:
+        pass
+
+    # (2) Wiederholung: einmal Rueckgabe 1, dann 200 -> Ergebnis da, eine Pause
+    class Antwort:
+        def __init__(self, rc, aus="", err=""):
+            self.returncode, self.stdout, self.stderr = rc, aus, err
+
+    def ablauf(antworten):
+        pausen = []
+        folge = iter(antworten)
+        return (lambda befehl, **_: next(folge)), pausen.append, pausen
+
+    ausf, schlaf, pausen = ablauf([Antwort(1, err="HTTP 502: Bad Gateway"), Antwort(0, "x\n")])
+    with contextlib.redirect_stdout(io.StringIO()):
+        try:
+            ergebnis = gh("repos/o/r/actions/runs/1/jobs", ".jobs", ausf, schlaf)
+        except GhFehler as e:
+            ergebnis = str(e)
+    if ergebnis != ["x"] or pausen != [PAUSEN[0]]:
+        melde("voruebergehender Fehler nicht wiederholt (Ergebnis %r, Pausen %r)" % (ergebnis, pausen))
+    # (3) dauerhaft rot: 4 Versuche, dann genau eine FEHLER-Zeile mit Rueckgabe und Text, kein Traceback
+    ausf, schlaf, pausen = ablauf([Antwort(1, err="HTTP 404: Not Found")] * (WIEDERHOLUNGEN + 1))
+    with contextlib.redirect_stdout(io.StringIO()):
+        try:
+            gh("repos/o/r/actions/runs/9/jobs", ".jobs", ausf, schlaf)
+            zeile = None
+        except GhFehler as e:
+            zeile = str(e)
+    if not zeile or not zeile.startswith("FEHLER: GitHub-Abfrage repos/o/r/actions/runs/9/jobs") \
+            or "Rueckgabe 1" not in zeile or "HTTP 404" not in zeile or len(pausen) != WIEDERHOLUNGEN:
+        melde("dauerhafter Fehler ohne klare Zeile (%r, %d Pausen)" % (zeile, len(pausen)))
+    # Gegenprobe: der alte Aufruf (check=True) wirft einen Python-Fehler statt der Zeile
+    try:
+        subprocess.run([sys.executable, "-c", "import sys; sys.exit(1)"], check=True, capture_output=True)
+        melde("Gegenprobe check=True warf keinen Python-Fehler")
+    except subprocess.CalledProcessError:
+        pass
+    # (4) waehlen_in_actions macht aus GhFehler eine Zeile und Rueckgabe 1
+    alt_holen = globals()["laeufe_holen"]
+    alt_env = {k: os.environ.get(k) for k in ("GITHUB_SHA", "SOLL", "JOBFILTER", "GITHUB_REPOSITORY")}
+
+    def holen_rot(*_):
+        raise GhFehler("FEHLER: GitHub-Abfrage repos/o/r/x nach 4 Versuchen gescheitert (Rueckgabe 1, kaputt)")
+    try:
+        kopf = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        if kopf:
+            os.environ.update(GITHUB_SHA=kopf, SOLL="a", JOBFILTER=".", GITHUB_REPOSITORY="o/r")
+            globals()["laeufe_holen"] = holen_rot
+            puffer = io.StringIO()
+            with contextlib.redirect_stdout(puffer):
+                rc = waehlen_in_actions()
+            if rc != 1 or puffer.getvalue().strip() != "FEHLER: GitHub-Abfrage repos/o/r/x nach 4 Versuchen gescheitert (Rueckgabe 1, kaputt)":
+                melde("waehlen ohne klare FEHLER-Zeile (rc %s, Ausgabe %r)" % (rc, puffer.getvalue()))
+    finally:
+        globals()["laeufe_holen"] = alt_holen
+        for k, v in alt_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
     return rot
 
 

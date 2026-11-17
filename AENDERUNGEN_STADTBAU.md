@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.56.1
+
+Kopierte Häuser mit eigener Modelltür haben jetzt eine gültige Tür, und nach dem Einsetzen ist kein Platz mehr gewählt.
+
+- Manche Häuser nutzen die Tür ihres Modells als Eingang, zum Beispiel die Betriebswerkstatt mit ihrem Rolltor oder das Stellwerk Talheim-Nord. Wurde so ein Haus kopiert und eingefügt oder mit „Stadtteil einsetzen“ in eine andere Karte gebracht, meldete die Prüfung die Tür rot („sitzt nicht sauber in der Wand“). Jetzt nutzt die Kopie dieselbe Tür wie das Original und die Prüfung bleibt ohne Fund, als Spielort und als Gebäude ohne Ort.
+- Nach einem erfolgreichen „Stadtteil einsetzen“ ist der Platz nicht mehr gewählt. Bisher blieb er gewählt und rechts stand rot „Auf Platz … liegt schon etwas“, obwohl alles geklappt hatte.
+- „Alle beheben“ und alle anderen Prüfungen bleiben, wie sie sind.
+
 ## S 0.56.0
 
 Stadtteile Stück für Stück zu einer großen Stadt zusammensetzen.
