@@ -1056,6 +1056,9 @@ public sealed class EchtFormatTeil
         // A 0.85.0 (Weisung P12-291): erster Satz der Fachrichtung DPA je Bereich (Lauf, Anlagen, Bewertung)
         "pruefung/echt-dpa-b1-lauf-aufgabe1", "pruefung/echt-dpa-b1-anlagen1", "pruefung/echt-dpa-b1-bewertung-aufgabe1",
         "pruefung/echt-dpa-b2-lauf-aufgabe1", "pruefung/echt-dpa-b2-anlagen1", "pruefung/echt-dpa-b2-bewertung-aufgabe1",
+        // A 0.86.0 (Weisung P12-292): erster Satz der Fachrichtung DV je Bereich (Lauf, Anlagen, Bewertung)
+        "pruefung/echt-dv-b1-lauf-aufgabe1", "pruefung/echt-dv-b1-anlagen1", "pruefung/echt-dv-b1-bewertung-aufgabe1",
+        "pruefung/echt-dv-b2-lauf-aufgabe1", "pruefung/echt-dv-b2-anlagen1", "pruefung/echt-dv-b2-bewertung-aufgabe1",
     ];
 
     /// <summary>Erste Nummer der Ansichten der Welle 2 in <see cref="ProbeNamen"/>.</summary>
@@ -1069,6 +1072,9 @@ public sealed class EchtFormatTeil
 
     /// <summary>Erste Nummer der Ansichten der Fachrichtung DPA (A 0.85.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
     internal const int DpaAb = 26;
+
+    /// <summary>Erste Nummer der Ansichten der Fachrichtung DV (A 0.86.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
+    internal const int DvAb = 32;
 
     /// <summary>
     /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung SI), 754 s gelaufen,
@@ -1212,8 +1218,8 @@ public sealed class EchtFormatTeil
                 break;
             case >= AeAb:
                 // A 0.84.0: erster AE-Satz des Bereichs (0-2 Bereich 1, 3-5 Bereich 2), Aufgabe 1 im Lauf, mit Anlagen, bewertet;
-                // A 0.85.0: ab DpaAb dasselbe fuer DPA
-                var (fr, erste) = art >= DpaAb ? ("dpa", DpaAb) : ("ae", AeAb);
+                // A 0.85.0: ab DpaAb dasselbe fuer DPA, A 0.86.0: ab DvAb fuer DV
+                var (fr, erste) = art >= DvAb ? ("dv", DvAb) : art >= DpaAb ? ("dpa", DpaAb) : ("ae", AeAb);
                 var aeArt = (art - erste) % 3;
                 _a.ProbeSetzen(ProbeZustand(bewertet: aeArt == 2, art - erste < 3 ? EchtSaetze.B1 : EchtSaetze.B2, fr));
                 (_reiter, _anlagen) = ("1", aeArt == 1);

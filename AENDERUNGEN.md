@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.86.0
+Die Prüfung im echten Format gibt es jetzt auch für die Fachrichtung Digitale Vernetzung, mit zehn neuen Prüfungssätzen. Damit hat jede Fachrichtung eigene Sätze.
+
+- Hast du Digitale Vernetzung gewählt, findest du in beiden Bereichen der AP2, „Diagnose und Störungsbeseitigung in vernetzten Systemen“ und „Betrieb und Erweiterung von vernetzten Systemen“, je fünf Sätze. Bisher stand dort nur ein Hinweis, dass es noch keine Prüfung gibt.
+- Jeder Satz spielt in einer eigenen erfundenen Firma, von der Molkerei über das Logistikzentrum bis zum Mineralbrunnen. Die vier Aufgaben eines Satzes gehören zu dieser Firma und ihren vernetzten Anlagen.
+- Es geht unter anderem um Fehlersuche im Produktionsnetz, VLANs, Adressen und Subnetze, Protokolle der Steuerungen, Funk und Sensoren, Zeitabgleich, Verfügbarkeit, PoE, Ringredundanz, Überwachung und Wartung, Änderungen im laufenden Betrieb, Sicherheit sowie Daten am Edge oder in der Cloud. Jeder Satz hat einen Netzplan; dazu kommen Monitorbilder, Protokollausschnitte, Konfigurationen, Tabellen und ein englischer Text.
+- Abläufe zeichnest du als Aktivitätsdiagramm auf Papier oder mit dem Zeichen-Baukasten; nach dem Abgeben siehst du die Musterlösung und hakst die Punkte selbst ab.
+- Die AP1, die Sätze der Systemintegration, der Anwendungsentwicklung und der Daten- und Prozessanalyse, dein Lernstand und das Spiel bleiben, wie sie sind.
+
 ## A 0.85.0
 Die Prüfung im echten Format gibt es jetzt auch für die Fachrichtung Daten- und Prozessanalyse, mit zehn neuen Prüfungssätzen.
 
