@@ -30,11 +30,13 @@ public sealed partial class Innenraum
     /// </summary>
     public const float SprungHoch = 0.22f;
 
-    /// <summary>Welle A 0.93.0: ist ueber der Figur an <paramref name="ort"/> Platz fuer den Sprung (der stehende Quader um <see cref="SprungHoch"/> angehoben beruehrt nichts und bleibt unter der Decke)?</summary>
+    /// <summary>Welle A 0.93.0: ist ueber der Figur an <paramref name="ort"/> Platz fuer den Sprung (ueber dem Scheitel bis <see cref="SprungHoch"/> hoeher beruehrt nichts, unter der Decke)?</summary>
     public bool SprungFrei(Vector2 ort, float blick)
     {
         var h = FigurHoehe;
-        IReadOnlyList<(float Halb, float Y1, float Y2, float Z1, float Z2)> quader = [.. KoerperQuader(Koerperhaltung.Stehen).Select(q => (q.Halb, q.Y1 + SprungHoch, q.Y2 + SprungHoch, q.Z1, q.Z2))];
+        // nur der Raum ueber dem Kopf (vom Scheitel bis Scheitel plus Sprunghoehe): was die stehende Figur seitlich beruehrt
+        // (Laufraster erlaubt das dichte Herangehen), sperrt den Sprung nicht
+        IReadOnlyList<(float Halb, float Y1, float Y2, float Z1, float Z2)> quader = [.. KoerperQuader(Koerperhaltung.Stehen).Select(q => (q.Halb, q.Y2, q.Y2 + SprungHoch, q.Z1, q.Z2))];
         if ((quader.Max(q => q.Y2) * h) + 0.02f > IchWandHoehe)
         {
             return false;

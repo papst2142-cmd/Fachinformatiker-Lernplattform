@@ -70,7 +70,7 @@ public static partial class AutoMessung
             // eine Stelle mitten im Raum, an der Ducken und Kriechen Platz haben
             var stelle = Enumerable.Range(0, 900).Select(i => new Vector2(0.6f + (i % 30 * 0.3f), 0.6f + (i / 30 * 0.3f)))
                 .FirstOrDefault(p => p.X < innen.Breite && p.Y < innen.Tiefe && innen.KoerperFrei(p, 0f, Koerperhaltung.Kriechen)
-                    && innen.KoerperFrei(p, 0f, Koerperhaltung.Ducken) && innen.SprungFrei(p, 0f) && spiel.GeheZu(p.X, p.Y));
+                    && innen.KoerperFrei(p, 0f, Koerperhaltung.Ducken) && Enumerable.Range(0, 8).All(r => innen.SprungFrei(p, r * MathF.PI / 4f)) && spiel.GeheZu(p.X, p.Y));
             spiel.SofortAnkommen();
             await ansicht.BildFertigAsync();
             await Bilder(3);
@@ -147,6 +147,7 @@ public static partial class AutoMessung
             // Sofa: Hinsetzen, Zuruecklehnen, Aufrichten (Knoepfe unten, Screenreader)
             var sofa = innen.Sitzgelegenheiten.FirstOrDefault(p => p.Art == SitzArt.Sitzen && innen.ZurueckZu(p) is not null);
             var zurueckOk = false;
+            var sofaText = "kein Sofa";
             if (sofa is not null)
             {
                 var vor = sofa.Ort + (new Vector3(MathF.Sin(sofa.Blick), 0, MathF.Cos(sofa.Blick)) * 0.8f);
@@ -163,10 +164,20 @@ public static partial class AutoMessung
                     await ansicht.BildFertigAsync();
                     return true;
                 }
-                zurueckOk = await Druecken(StadtSpiel.AktionHinsetzen) && await Druecken(StadtSpiel.AktionZuruecklehnen) && spiel.HaltungArt == SitzArt.Zurueck
-                    && !springen.IsVisible && await Druecken(StadtSpiel.AktionAufrichten) && spiel.HaltungArt == SitzArt.Sitzen && await Druecken(StadtSpiel.AktionAufstehen);
+                var schritte = new List<string>();
+                async Task<bool> Schritt(string aktion, Func<bool> danach)
+                {
+                    var ok = await Druecken(aktion) && danach();
+                    schritte.Add($"{aktion} {(ok ? "ok" : "NEIN")} (Haltung {spiel.HaltungArt}, Knoepfe {string.Join(",", spiel.Knoepfe.Select(x => x.Aktion))})");
+                    return ok;
+                }
+                zurueckOk = await Schritt(StadtSpiel.AktionHinsetzen, () => spiel.HaltungArt == SitzArt.Sitzen)
+                    && await Schritt(StadtSpiel.AktionZuruecklehnen, () => spiel.HaltungArt == SitzArt.Zurueck && !springen.IsVisible)
+                    && await Schritt(StadtSpiel.AktionAufrichten, () => spiel.HaltungArt == SitzArt.Sitzen)
+                    && await Schritt(StadtSpiel.AktionAufstehen, () => spiel.HaltungArt is null);
+                sofaText = string.Join("; ", schritte);
             }
-            Pruefe("Sofa zuruecklehnen und aufrichten", zurueckOk, sofa is null ? "kein Sofa" : $"Knoepfe {string.Join(",", spiel.Knoepfe.Select(x => x.Aktion))}, Haltung {spiel.HaltungArt}");
+            Pruefe("Sofa zuruecklehnen und aufrichten", zurueckOk, sofaText);
 
             var neu = spiel.Ablauf.Stand.Verlauf.Count - zeilen;
             Pruefe("nur Darstellung", neu == 0, string.Create(inv, $"{neu} neue Zeilen im Spielstand"));
