@@ -193,8 +193,18 @@ public static class Figur
     /// nebenher: ohne diesen Schalter rund jeder zweite Prozess, mit DOTNET_TC_OnStackReplacement=0 keiner).
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild)
+    public static Netz Netz(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild) =>
+        Bauen(grafik, aussehen, hoehe, kleidung, bewegung, bild, kopfTeile: true, out _);
+
+    /// <summary>
+    /// Wie <see cref="Netz"/>; ohne <paramref name="kopfTeile"/> fehlen Gesicht, Kopfbedeckung, Kapuze, Frisur, Bart und Brille
+    /// (Weisung P12-302, Ich-Sicht). Die Dreiecke liegen fuer jedes Bild einer Bewegung in derselben Reihenfolge wie stehend.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static Netz Bauen(GrafikBibliothek? grafik, PyObjekt? aussehen, float hoehe, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild,
+        bool kopfTeile, out int vorlage, float koerperBis = float.MaxValue)
     {
+        vorlage = 0;
         var a = Aussehen.Normalisieren(aussehen);
         if (grafik?.Modell(Modell) is not { } gm)
         {
@@ -339,35 +349,210 @@ public static class Figur
             fb.AddRange(zusatzFarben);
             netz.Hinzu(new GrafikModell(form.Name, [.. ecken], [.. fb]), lage);
         }
+        vorlage = netz.Indizes.Count / 3;
         if (Kopf(gm, form) is { } kopf)
         {
-            var teile = Gesicht(kopf.Min, kopf.Max, haut);
-            if (kopfStueck is not null)
+            var teile = kopfTeile ? Gesicht(kopf.Min, kopf.Max, haut) : [];
+            if (kopfTeile && kopfStueck is not null)
             {
                 teile.AddRange(Kopfbedeckung(kopf.Min, kopf.Max, gm.Max.Y, kopfStueck));
             }
-            if (oben is { Form: "kapuze" } && kleid is not { Form: "kleid" })
+            if (kopfTeile && oben is { Form: "kapuze" } && kleid is not { Form: "kleid" })
             {
                 teile.AddRange(Kapuze(kopf.Min, kopf.Max, unter));
             }
-            teile.AddRange(Frisur(kopf.Min, kopf.Max, frisur, haar, kopfStueck));
-            teile.AddRange(Bart(kopf.Min, kopf.Max, Aussehen.Wert(a, "bart"), haar));
-            if (kleidung?.FirstOrDefault(k => k.Slot == "brille") is { } brille)
+            if (kopfTeile)
+            {
+                teile.AddRange(Frisur(kopf.Min, kopf.Max, frisur, haar, kopfStueck));
+                teile.AddRange(Bart(kopf.Min, kopf.Max, Aussehen.Wert(a, "bart"), haar));
+            }
+            if (kopfTeile && kleidung?.FirstOrDefault(k => k.Slot == "brille") is { } brille)
             {
                 teile.AddRange(Brille(kopf.Min, kopf.Max, Probe.Netz.Farbe(brille.Farbe)));
             }
             teile.AddRange(Koerper(gm, oben, kleid, jacke, kleidung?.FirstOrDefault(k => k.Slot == "tasche"), unter, hemd));
             foreach (var teil in teile)
             {
+                float y1 = (teil.Y1 - gm.Min.Y) * s, y2 = (teil.Y2 - gm.Min.Y) * s;
+                if (teil.Art == TeilArt.Quader && koerperBis < float.MaxValue)
+                {
+                    // Weisung P12-302 (Ich-Sicht): Teile am Koerper (Kragen) enden als geschlossener Kasten am Schnitt
+                    var schnitt = koerperBis * hoehe;
+                    if (MathF.Min(y1, y2) >= schnitt)
+                    {
+                        continue;
+                    }
+                    (y1, y2) = (MathF.Min(y1, schnitt), MathF.Min(y2, schnitt));
+                }
                 netz.Hinzu(teil with
                 {
-                    X1 = (teil.X1 - mitte.X) * s, Y1 = (teil.Y1 - gm.Min.Y) * s, Z1 = (teil.Z1 - mitte.Z) * s,
-                    X2 = (teil.X2 - mitte.X) * s, Y2 = (teil.Y2 - gm.Min.Y) * s, Z2 = (teil.Z2 - mitte.Z) * s,
+                    X1 = (teil.X1 - mitte.X) * s, Y1 = y1, Z1 = (teil.Z1 - mitte.Z) * s,
+                    X2 = (teil.X2 - mitte.X) * s, Y2 = y2, Z2 = (teil.Z2 - mitte.Z) * s,
                 });
             }
         }
         return netz;
     }
+
+    /// <summary>
+    /// Welle A 0.92.0 (Ich-Sicht, Weisung P12-301 Punkt 3): die Figur der Hoehe 1 ohne Kopf, Haar, Brille, Bart, Kapuze und
+    /// Kopfbedeckung. Weisung P12-302: was zum Kopf gehoert, entscheidet die STEHENDE Figur (jedes Dreieck mit einer Ecke ueber
+    /// <paramref name="bis"/> faellt weg), gezeigt wird es im Bild der Bewegung. Beim Rennen beugt sich die Figur vor, ihr Kopf
+    /// sinkt bis 0,64 und rueckt nach vorn; mit einem Schnitt im Bild selbst blieben Kinn, Nacken und Haar unter dem Auge stehen
+    /// (Fund Bild 04 zu P12-183). Kopfteile (Frisur, Bart, Brille, Kopfbedeckung, Kapuze) kommen gar nicht erst hinein, Teile am
+    /// Koerper (Kragen) enden als geschlossener Kasten am Schnitt. Der Hals bekommt oben einen Deckel ueber seinem ganzen Rand, damit
+    /// man nie in die Figur hineinsieht, und bleibt waagrecht, wo er im Stehen ist (<see cref="HalsVerschiebung"/>).
+    /// </summary>
+    public static Netz OhneKopf(GrafikBibliothek? grafik, PyObjekt? aussehen, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild, float bis) =>
+        OhneKopfAltFuerTests ? OhneKopfAlt(grafik, aussehen, kleidung, bewegung, bild, bis) : OhneKopfMit(grafik, aussehen, kleidung, bewegung, bild, bis, out _);
+
+    /// <summary>
+    /// Weisung P12-302: um so viel (waagrecht) schiebt <see cref="OhneKopf"/> die Figur im Bild <paramref name="bild"/>, damit der Hals
+    /// unter dem Auge an derselben Stelle bleibt wie im Stehen (beim Rennen beugt sich die Figur vor; ohne das laege der Hals genau
+    /// unter dem Auge und fuellte den Blick nach unten). Der Kopf, in dem das Auge sitzt, bleibt so ruhig; die Beine laufen darunter.
+    /// </summary>
+    public static Vector3 HalsVerschiebung(GrafikBibliothek? grafik, PyObjekt? aussehen, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild, float bis)
+    {
+        OhneKopfMit(grafik, aussehen, kleidung, bewegung, bild, bis, out var verschiebung);
+        return verschiebung;
+    }
+
+    private static Netz OhneKopfMit(GrafikBibliothek? grafik, PyObjekt? aussehen, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild, float bis,
+        out Vector3 verschiebung)
+    {
+        var ruhe = Bauen(grafik, aussehen, 1f, kleidung, null, -1, kopfTeile: false, out var vorlage, bis);
+        var gezeigt = bild >= 0 && bewegung is not null ? Bauen(grafik, aussehen, 1f, kleidung, bewegung, bild, kopfTeile: false, out _, bis) : ruhe;
+        if (gezeigt.AnzahlEcken != ruhe.AnzahlEcken || gezeigt.Indizes.Count != ruhe.Indizes.Count)
+        {
+            // gleiche Reihenfolge fehlt (sollte nie sein): stehend zeigen statt etwas vom Kopf
+            gezeigt = ruhe;
+        }
+        var geschnitten = gezeigt.UnterhalbIn(ruhe, bis);
+        // Rand oben am Hals: Kanten nur eines Dreiecks der Vorlage (stehend knapp unter dem Schnitt, nah an der Mitte)
+        var re = ruhe.Ecken;
+        var ge = gezeigt.Ecken;
+        var kanten = new Dictionary<(long, long), int>();
+        long Punkt(uint e)
+        {
+            var j = (int)e * Probe.Netz.Zahlen;
+            return ((long)MathF.Round(re[j] * 1e4f) * 4_000_000_000L) + ((long)MathF.Round(re[j + 1] * 1e4f) * 60_000L) + (long)MathF.Round(re[j + 2] * 1e4f);
+        }
+        // nur die Vorlage selbst (Teile am Koerper wie der Kragen des Mantels sind eigene, geschlossene Kaesten)
+        var ix = geschnitten.Indizes;
+        var bisVorlage = 0;
+        while (bisVorlage + 2 < ix.Count && ix[bisVorlage] < vorlage * 3)
+        {
+            bisVorlage += 3;
+        }
+        for (var i = 0; i + 2 < bisVorlage; i += 3)
+        {
+            for (var k = 0; k < 3; k++)
+            {
+                long p1 = Punkt(ix[i + k]), p2 = Punkt(ix[i + ((k + 1) % 3)]);
+                var kante = p1 < p2 ? (p1, p2) : (p2, p1);
+                kanten[kante] = kanten.GetValueOrDefault(kante) + 1;
+            }
+        }
+        Vector3 min = new(float.MaxValue), max = new(float.MinValue), rMin = new(float.MaxValue), rMax = new(float.MinValue);
+        for (var i = 0; i + 2 < bisVorlage; i += 3)
+        {
+            for (var k = 0; k < 3; k++)
+            {
+                uint e1 = ix[i + k], e2 = ix[i + ((k + 1) % 3)];
+                long p1 = Punkt(e1), p2 = Punkt(e2);
+                if (kanten[p1 < p2 ? (p1, p2) : (p2, p1)] != 1)
+                {
+                    continue;
+                }
+                foreach (var e in (ReadOnlySpan<uint>)[e1, e2])
+                {
+                    var j = (int)e * Probe.Netz.Zahlen;
+                    if (re[j + 1] >= bis - HalsRing && MathF.Abs(re[j]) < HalsSeitlich)
+                    {
+                        var p = new Vector3(ge[j], ge[j + 1], ge[j + 2]);
+                        min = Vector3.Min(min, p);
+                        max = Vector3.Max(max, p);
+                        var r = new Vector3(re[j], re[j + 1], re[j + 2]);
+                        rMin = Vector3.Min(rMin, r);
+                        rMax = Vector3.Max(rMax, r);
+                    }
+                }
+            }
+        }
+        if (min.X > max.X)
+        {
+            // ohne Rand (Probe-Figur ohne Grafik): Deckel wie stehend
+            (min, max) = (new Vector3(-HalsHalb, bis, HalsVon), new Vector3(HalsHalb, bis, HalsBis));
+            (rMin, rMax) = (min, max);
+        }
+        // der Hals bleibt waagrecht, wo er im Stehen ist (Mitte des Rands)
+        verschiebung = ((rMin + rMax) / 2) - ((min + max) / 2);
+        verschiebung.Y = 0f;
+        var netz = new Probe.Netz();
+        netz.Hinzu(geschnitten, Matrix4x4.CreateTranslation(verschiebung));
+        var farbe = Vector3.Zero;
+        var farbZahl = 0;
+        for (var j = 0; j < re.Count; j += Probe.Netz.Zahlen)
+        {
+            if (re[j + 1] >= bis - 0.07f && re[j + 1] <= bis - 0.03f && MathF.Abs(re[j]) < 0.1f)
+            {
+                farbe += new Vector3(re[j + 6], re[j + 7], re[j + 8]);
+                farbZahl++;
+            }
+        }
+        // Deckel in der Farbe des Oberteils (wirkt von oben wie Kragen und Schultern, nicht wie Haut), ueber dem ganzen Rand
+        var deckel = farbZahl > 0 ? farbe / farbZahl : Probe.Netz.Farbe(Haut[Py.Str(Aussehen.Normalisieren(aussehen)["haut"])]);
+        min += verschiebung;
+        max += verschiebung;
+        netz.Hinzu(new Teil(TeilArt.Quader, min.X - HalsRand, MathF.Min(min.Y, max.Y - 0.04f), min.Z - HalsRand, max.X + HalsRand, max.Y, max.Z + HalsRand, deckel));
+        return netz;
+    }
+
+    /// <summary>Weisung P12-302: so weit (Anteil) ragt der Deckel seitlich ueber den Rand des Halses.</summary>
+    public const float HalsRand = 0.004f;
+
+    /// <summary>Weisung P12-302: Ecken bis so weit (Anteil) unter dem Schnitt gehoeren zum Ring oben am Hals.</summary>
+    public const float HalsRing = 0.03f;
+
+    /// <summary>Weisung P12-302: der Rand am Hals liegt hoechstens so weit seitlich (Kopf und Hals; Schultern liegen weiter aussen).</summary>
+    public const float HalsSeitlich = 0.1f;
+
+    /// <summary>Weisung P12-302: Gegenprobe, die Figur ohne Kopf wie A 0.92.0 vor dem Fund (Schnitt im Bild der Bewegung).</summary>
+    public static bool OhneKopfAltFuerTests
+    {
+        get => OhneKopfAltWert.Value;
+        set => OhneKopfAltWert.Value = value;
+    }
+
+    private static readonly System.Threading.AsyncLocal<bool> OhneKopfAltWert = new();
+
+    private static Netz OhneKopfAlt(GrafikBibliothek? grafik, PyObjekt? aussehen, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild, float bis)
+    {
+        var netz = Netz(grafik, aussehen, 1f, kleidung, bewegung, bild).Unterhalb(bis);
+        var e = netz.Ecken;
+        var summe = Vector3.Zero;
+        var zahl = 0;
+        for (var i = 0; i < e.Count; i += Probe.Netz.Zahlen)
+        {
+            if (e[i + 1] >= bis - 0.07f && e[i + 1] <= bis - 0.03f && MathF.Abs(e[i]) < 0.1f)
+            {
+                summe += new Vector3(e[i + 6], e[i + 7], e[i + 8]);
+                zahl++;
+            }
+        }
+        var farbe = zahl > 0 ? summe / zahl : Probe.Netz.Farbe(Haut[Py.Str(Aussehen.Normalisieren(aussehen)["haut"])]);
+        netz.Hinzu(new Teil(TeilArt.Quader, -HalsHalb, bis - 0.04f, HalsVon, HalsHalb, bis, HalsBis, farbe));
+        return netz;
+    }
+
+    /// <summary>Welle A 0.92.0: halbe Breite des Halsdeckels (Anteil der Hoehe).</summary>
+    public const float HalsHalb = 0.04f;
+
+    /// <summary>Welle A 0.92.0: Halsdeckel von hinten bis vorn (Anteil der Hoehe; der Hals liegt leicht vorn).</summary>
+    public const float HalsVon = -0.045f;
+
+    /// <inheritdoc cref="HalsVon"/>
+    public const float HalsBis = 0.085f;
 
     /// <summary>Kasten der Haut am Kopf (Haut-Dreiecke oberhalb von 75 % der Hoehe), null ohne Kopf.</summary>
     public static (Vector3 Min, Vector3 Max)? Kopf(GrafikModell gm) => Kopf(gm, gm);

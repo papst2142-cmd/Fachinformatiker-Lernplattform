@@ -367,6 +367,49 @@ public sealed partial class Netz
         _indizes.AddRange((ReadOnlySpan<uint>)[basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
     }
 
+    /// <summary>
+    /// Welle A 0.92.0 (Ich-Sicht): neues Netz nur mit den Dreiecken, deren Ecken alle hoechstens auf Hoehe <paramref name="hoehe"/>
+    /// liegen (die eigene Figur ohne Kopf, Haar und Kopfbedeckung). Dieses Netz bleibt unveraendert.
+    /// </summary>
+    public Netz Unterhalb(float hoehe)
+    {
+        var neu = new Netz();
+        neu._ecken.AddRange(_ecken);
+        for (var i = 0; i + 2 < _indizes.Count; i += 3)
+        {
+            uint a = _indizes[i], b = _indizes[i + 1], c = _indizes[i + 2];
+            if (_ecken[((int)a * Zahlen) + 1] <= hoehe && _ecken[((int)b * Zahlen) + 1] <= hoehe && _ecken[((int)c * Zahlen) + 1] <= hoehe)
+            {
+                neu._indizes.AddRange((ReadOnlySpan<uint>)[a, b, c]);
+            }
+        }
+        return neu;
+    }
+
+    /// <summary>
+    /// Weisung P12-302: die Dreiecke dieses Netzes, deren Ecken in <paramref name="bezug"/> (gleiche Ecken und Dreiecke, z. B. die
+    /// stehende Figur zu einem Bild der Bewegung) alle hoechstens <paramref name="hoehe"/> hoch liegen; gezeigt an ihrer Lage hier.
+    /// </summary>
+    public Netz UnterhalbIn(Netz bezug, float hoehe)
+    {
+        if (bezug.AnzahlEcken != AnzahlEcken || bezug._indizes.Count != _indizes.Count)
+        {
+            throw new ArgumentException("Bezug hat andere Ecken oder Dreiecke", nameof(bezug));
+        }
+        var neu = new Netz();
+        neu._ecken.AddRange(_ecken);
+        var b = bezug._ecken;
+        for (var i = 0; i + 2 < _indizes.Count; i += 3)
+        {
+            uint x = bezug._indizes[i], y = bezug._indizes[i + 1], z = bezug._indizes[i + 2];
+            if (b[((int)x * Zahlen) + 1] <= hoehe && b[((int)y * Zahlen) + 1] <= hoehe && b[((int)z * Zahlen) + 1] <= hoehe)
+            {
+                neu._indizes.AddRange((ReadOnlySpan<uint>)[_indizes[i], _indizes[i + 1], _indizes[i + 2]]);
+            }
+        }
+        return neu;
+    }
+
     /// <summary>Ein fertiges Netz an seiner Lage einfuegen (Schaufensterpuppe mit Kleidung).</summary>
     public void Hinzu(Netz andere, Matrix4x4 lage)
     {

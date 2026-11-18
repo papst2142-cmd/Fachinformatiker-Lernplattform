@@ -50,6 +50,37 @@ public sealed partial class Innenraum
     /// <summary>Hoehe der Waende (1,8 m): niedriger als echt, damit die schraege Kamera in die Raeume sieht.</summary>
     public const float WandHoehe = 1.8f * Meter;
 
+    /// <summary>
+    /// Welle A 0.92.0 (Weisung P12-301 Punkt 4, Nico 4a): in der Ich-Sicht sind die Waende 2,5 m hoch (die Spielflaeche streckt
+    /// die Wandstuecke senkrecht um <see cref="IchWandStreckung"/>), und eine Decke liegt darauf (<see cref="DeckeNetz"/>).
+    /// Nur Darstellung: Grundriss, Wandlinie und Wege bleiben dieselben.
+    /// </summary>
+    public const float IchWandHoehe = 2.5f * Meter;
+
+    /// <summary>Welle A 0.92.0: Streckung der Wandstuecke in der Ich-Sicht (2,5 m statt 1,8 m).</summary>
+    public const float IchWandStreckung = IchWandHoehe / WandHoehe;
+
+    /// <summary>Welle A 0.92.0: Farbe der Decke (hell, wie die Wand innen).</summary>
+    public static readonly Vector3 DeckeFarbe = Netz.Farbe("#F4F1FA");
+
+    /// <summary>Welle A 0.92.0: Decke ueber dem ganzen Innenraum in Hoehe der gestreckten Waende (nur in der Ich-Sicht gezeichnet).</summary>
+    public Netz DeckeNetz() => Netz.Aus([new Teil(TeilArt.Quader, -0.5f, IchWandHoehe, -0.5f, Breite + 0.5f, IchWandHoehe + 0.05f, Tiefe + 0.5f, DeckeFarbe)]);
+
+    /// <summary>
+    /// Welle A 0.92.0: Huelle der Ich-Sicht in einem Netz (ein Zeichenaufruf): alle Wandstuecke um <see cref="IchWandStreckung"/>
+    /// gestreckt und die Decke. In der Ich-Sicht wird nichts halb durchsichtig, darum braucht es die Waende nicht einzeln.
+    /// </summary>
+    public Netz IchHuelle()
+    {
+        var netz = DeckeNetz();
+        var lage = Matrix4x4.CreateScale(1f, IchWandStreckung, 1f);
+        foreach (var wand in Waende)
+        {
+            netz.Hinzu(WandNetzFertig(wand), lage);
+        }
+        return netz;
+    }
+
     /// <summary>Groesse der Figuren im Innenraum (1,75 m).</summary>
     public const float FigurHoehe = 1.75f * Meter;
 

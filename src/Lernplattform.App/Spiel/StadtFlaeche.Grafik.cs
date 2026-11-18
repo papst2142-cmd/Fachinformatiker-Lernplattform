@@ -172,11 +172,16 @@ public sealed partial class StadtFlaeche
     private unsafe (int Breite, int Hoehe) GrafikBildBeginnen(GlInterface gl, int breite, int hoehe)
     {
         var prozent = _gw.Aufloesung;
-        if (prozent >= 100 || !AufloesungDa || _spiel is null)
+        _bildFbAktiv = false;
+        // Welle A 0.92.0 (Weisung P12-301 Punkt 5): in der Ich-Sicht liegt die nahe Ebene sehr nah; hat das Bild nur 16 Bit Tiefe
+        // (Handy), zeichnet die Flaeche in den eigenen Bildspeicher mit 24 Bit (sonst flimmern ferne Flaechen)
+        var ichTiefe = IchTiefeNoetig;
+        if ((prozent >= 100 && !ichTiefe) || !AufloesungDa || _spiel is null)
         {
             LetzteBildgroesse = (breite, hoehe);
             return (breite, hoehe);
         }
+        prozent = Math.Min(prozent, 100);
         var b = Math.Max(1, (breite * prozent) / 100);
         var h = Math.Max(1, (hoehe * prozent) / 100);
         if (_bildFb == 0 || _bildB != b || _bildH != h)
@@ -213,9 +218,26 @@ public sealed partial class StadtFlaeche
             }
         }
         ((delegate* unmanaged[Stdcall]<int, int, void>)_glBindFb)(GlFramebuffer, _bildFb);
+        _bildFbAktiv = true;
         LetzteBildgroesse = (b, h);
         return (b, h);
     }
+
+    /// <summary>Welle A 0.92.0: in diesem Bild zeichnet die Flaeche in den eigenen Bildspeicher (Aufloesung oder Ich-Sicht).</summary>
+    private bool _bildFbAktiv;
+
+    /// <summary>Welle A 0.92.0: Bits des Tiefenpuffers des Bilds (0 = noch nicht gelesen oder unbekannt).</summary>
+    public int TiefeBits { get; private set; }
+
+    /// <summary>Welle A 0.92.0: nur fuer Tests und Fotos: den eigenen 24-Bit-Bildspeicher auch bei 24 Bit Tiefe nehmen.</summary>
+    public static bool IchTiefeImmerFuerTests { get; set; }
+
+    /// <summary>Welle A 0.92.0: Ich-Sicht (auch auf dem Weg hinein) und weniger als 24 Bit Tiefe im Bild.</summary>
+    private bool IchTiefeNoetig => _spiel is not null && _kameras.TryGetValue(_spiel.FlaecheId, out var k) && k.IchAnteil > 0f
+        && (IchTiefeImmerFuerTests || (TiefeBits is > 0 and < 24));
+
+    /// <summary>Welle A 0.92.0: zeichnete das letzte Bild in den eigenen Bildspeicher mit 24 Bit (Start-Test)?</summary>
+    public bool LetztesBildEigeneTiefe { get; private set; }
 
     /// <summary>Ziel-Bildspeicher von Avalonia fuer dieses Bild.</summary>
     private int _zielFb;
@@ -223,7 +245,8 @@ public sealed partial class StadtFlaeche
     /// <summary>Am Ende eines Bilds: den eigenen Bildspeicher weich auf das ganze Bild strecken.</summary>
     private unsafe void GrafikBildEnde(int breite, int hoehe)
     {
-        if (LetzteBildgroesse == (breite, hoehe) || _bildFb == 0)
+        LetztesBildEigeneTiefe = _bildFbAktiv;
+        if (!_bildFbAktiv || _bildFb == 0)
         {
             return;
         }

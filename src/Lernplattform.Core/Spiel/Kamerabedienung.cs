@@ -14,7 +14,7 @@ public static class Kamerabedienung
     public const float TastenSchritt = 48f;
 
     /// <summary>Mausrad um <paramref name="delta"/> Rasten (positiv = naeher).</summary>
-    public static void Mausrad(Kamera k, double delta) => k.Zoomen(MathF.Pow(1.12f, (float)delta));
+    public static void Mausrad(Kamera k, double delta) => SpielKamera.Zoomen(k, MathF.Pow(1.12f, (float)delta));
 
     /// <summary>Rechte Maustaste: waagrecht drehen, senkrecht (nur fest) neigen; Maus nach oben = steiler.</summary>
     public static bool RechteMaus(Kamera k, bool fest, Kameragriff.Schritt s)
@@ -24,9 +24,9 @@ public static class Kamerabedienung
             return false;
         }
         k.Drehen(s.Grad);
-        if (fest)
+        if (fest || SpielKamera.ImIch(k))
         {
-            k.Neigen((float)-s.Dy * SpielKamera.NeigenJePunkt);
+            SpielKamera.Neigen(k, (float)-s.Dy * SpielKamera.NeigenJePunkt);
         }
         return true;
     }
@@ -34,6 +34,11 @@ public static class Kamerabedienung
     /// <summary>Linke Maustaste oder ein Finger gezogen: drinnen verschieben, draussen (fest) nichts. true = Kamera bewegt.</summary>
     public static bool Ziehen(Kamera k, bool fest, double dx, double dy, double hoehe)
     {
+        if (SpielKamera.ImIch(k))
+        {
+            // Welle A 0.92.0 (Weisung P12-301 Punkt 2): in der Ich-Sicht umsehen wie mit der rechten Maustaste
+            return RechteMaus(k, fest, new Kameragriff.Schritt(Kameragriff.Art.Drehen, Dy: dy, Grad: (float)dx * Kameragriff.GradJePunkt));
+        }
         if (fest)
         {
             return false;
@@ -51,12 +56,12 @@ public static class Kamerabedienung
     {
         if (faktor > 0)
         {
-            k.Zoomen((float)faktor);
+            SpielKamera.Zoomen(k, (float)faktor);
         }
         k.Drehen((float)grad);
-        if (fest)
+        if (fest || SpielKamera.ImIch(k))
         {
-            k.Neigen((float)-dyMitte * SpielKamera.NeigenJeFingerPunkt);
+            SpielKamera.Neigen(k, (float)-dyMitte * SpielKamera.NeigenJeFingerPunkt);
         }
     }
 
@@ -84,17 +89,19 @@ public static class Kamerabedienung
                 k.Drehen(15f);
                 return true;
             case Tastenbelegung.Naeher:
-                k.Zoomen(1.15f);
+                SpielKamera.Zoomen(k, 1.15f);
                 return true;
             case Tastenbelegung.Weiter:
-                k.Zoomen(1 / 1.15f);
+                SpielKamera.Zoomen(k, 1 / 1.15f);
                 return true;
-            case Tastenbelegung.Steiler when fest:
-                k.Neigen(SpielKamera.NeigenJeTaste);
+            case Tastenbelegung.Steiler when fest || SpielKamera.ImIch(k):
+                SpielKamera.Neigen(k, SpielKamera.NeigenJeTaste);
                 return true;
-            case Tastenbelegung.Flacher when fest:
-                k.Neigen(-SpielKamera.NeigenJeTaste);
+            case Tastenbelegung.Flacher when fest || SpielKamera.ImIch(k):
+                SpielKamera.Neigen(k, -SpielKamera.NeigenJeTaste);
                 return true;
+            case Tastenbelegung.IchSicht:
+                return SpielKamera.IchUmschalten(k);
             default:
                 return false;
         }

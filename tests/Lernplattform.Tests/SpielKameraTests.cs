@@ -67,7 +67,12 @@ public sealed class SpielKameraTests
         Assert.Equal(9f, k.Abstand);
         Kamerabedienung.Mausrad(k, 50);
         Assert.Equal(7f, k.Abstand);
+        // Welle A 0.92.0: ganz heran fuehrt in die Ich-Sicht; heraus geht derselbe Weg zurueck (erst Schulterblick, dann bis 9)
+        Assert.Equal(1f, k.IchZiel);
         Kamerabedienung.ZweiFinger(k, true, 0.01, 0, 0);
+        Assert.Equal(SpielKamera.SchulterAnteil, k.IchZiel);
+        Kamerabedienung.ZweiFinger(k, true, 0.01, 0, 0);
+        Assert.Equal(0f, k.IchZiel);
         Assert.Equal(9f, k.Abstand);
         for (var i = 0; i < 10; i++)
         {

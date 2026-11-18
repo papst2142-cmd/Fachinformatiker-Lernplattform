@@ -170,7 +170,19 @@ public sealed partial class SpielSeite : Grid
         _einrichten.Click += (_, _) => Spiel?.EinrichtenUmschalten();
         // Welle A 0.81.0 (Sammelliste 350, Weisung P12-274): „Übersicht“ und „Karte“ gibt es nur noch als Reiter im Spiel-Handy;
         // ohne 3D bleibt „Orte“ (die Ortsliste ist dort die Bedienung)
-        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf } };
+        // Welle A 0.92.0 (Weisung P12-301 Punkt 1): Eintrag „Ich-Sicht“ im aufgeklappten Menue (an/aus, Screenreader hoert es)
+        _ichKnopf = Schrift.Knopf(SpielProbeTexte.IchSichtKnopf);
+        _ichKnopf.Click += (_, _) =>
+        {
+            Flaeche.IchUmschalten();
+            IchKnopfSetzen();
+        };
+        Flaeche.IchAnsage += (_, text) => Dispatcher.UIThread.Post(() =>
+        {
+            Views.Ansage.Sagen(text);
+            IchKnopfSetzen();
+        });
+        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf, _ichKnopf } };
         if (Leistungsprobe.An)
         {
             // Weisung P8-52: nur in der Probe-APK; waehrend der Probe nicht antippbar
@@ -1141,6 +1153,7 @@ public sealed partial class SpielSeite : Grid
             OrtslisteZeigen(false);
         }
         _einrichten.IsVisible = spiel.KannEinrichten;
+        IchKnopfSetzen();
         if (_einrichten.Content is TextBlock einrichtenText)
         {
             einrichtenText.Text = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
@@ -1154,6 +1167,27 @@ public sealed partial class SpielSeite : Grid
         QuestKnopfSetzen(spiel);
         QuestZeileSetzen();
     }
+
+    private readonly Button _ichKnopf;
+
+    /// <summary>Welle A 0.92.0: Knopf „Ich-Sicht“ (nur mit 3D, nicht beim Einrichten) mit dem Text nach dem Zustand.</summary>
+    private void IchKnopfSetzen()
+    {
+        _ichKnopf.IsVisible = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { Einrichten: false };
+        var text = Flaeche.IchAn ? SpielProbeTexte.IchSichtBeenden : SpielProbeTexte.IchSichtKnopf;
+        if (_ichKnopf.Content is TextBlock block)
+        {
+            block.Text = text;
+        }
+        else
+        {
+            _ichKnopf.Content = text;
+        }
+        Avalonia.Automation.AutomationProperties.SetName(_ichKnopf, text);
+    }
+
+    /// <summary>Welle A 0.92.0: Start-Test: der Knopf „Ich-Sicht“ (Name, sichtbar, Klick).</summary>
+    public Button IchKnopf => _ichKnopf;
 
     /// <summary>Hinweisfeld zugeklappt (beim Einrichten immer offen, sonst fehlen Auswahl und Karton).</summary>
     public bool HinweisZu => _hinweisZu && Spiel is not { Einrichten: true };
