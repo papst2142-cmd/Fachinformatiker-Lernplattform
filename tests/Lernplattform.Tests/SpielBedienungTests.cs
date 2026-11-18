@@ -74,6 +74,26 @@ public sealed class SpielBedienungTests
     }
 
     [Fact]
+    public void FruehereLeertaste_GewinntGegenSpringen_DuckenUndKriechenFreiBelegbar()
+    {
+        // Welle A 0.93.0: wer vorher die Leertaste (oder C, X) einer Aufgabe gegeben hatte, behaelt sie; die neue Aufgabe hat dann keine Taste
+        var gelesen = Tastenbelegung.Lesen(JsonNode.Parse("{\"tasten\":{\"hinein\":\"Space\",\"naeher\":\"C\"}}")!.AsObject());
+        Assert.Equal(Tastenbelegung.Hinein, gelesen.AufgabeFuer("Space"));
+        Assert.Equal(Tastenbelegung.Naeher, gelesen.AufgabeFuer("C"));
+        Assert.Equal("keine Taste", gelesen.AnzeigeFuer(Tastenbelegung.Springen));
+        Assert.Equal("keine Taste", gelesen.AnzeigeFuer(Tastenbelegung.Ducken));
+        Assert.Equal(Tastenbelegung.Kriechen, gelesen.AufgabeFuer("X"));
+        // Standard: Leertaste, C, X; frei belegbar
+        var tasten = new Tastenbelegung();
+        Assert.Equal(Tastenbelegung.Springen, tasten.AufgabeFuer("Space"));
+        Assert.Equal(Tastenbelegung.Ducken, tasten.AufgabeFuer("C"));
+        Assert.Equal(Tastenbelegung.Kriechen, tasten.AufgabeFuer("X"));
+        Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.Ducken, "V", out _));
+        Assert.Equal(Tastenbelegung.Ducken, tasten.AufgabeFuer("V"));
+        Assert.Null(tasten.AufgabeFuer("C"));
+    }
+
+    [Fact]
     public void FruehereEigeneTaste_GewinntGegenNeueStandardtaste()
     {
         // Welle A 0.80.0: wer vorher F fuer Vollbild gewaehlt hatte, behaelt das; „Kamera flacher“ hat dann keine Taste
@@ -102,14 +122,16 @@ public sealed class SpielBedienungTests
         {
             var einstellungen = new Einstellungen(ordner);
             var tasten = new Tastenbelegung();
-            tasten.Setzen(Tastenbelegung.Hinein, "Space", out _);
+            // seit A 0.93.0 ist die Leertaste der Standard fuer „Springen“ (B ist frei)
+            tasten.Setzen(Tastenbelegung.Hinein, "B", out _);
             tasten.Setzen(Tastenbelegung.Vollbild, "G", out _);    // A 0.80.0: F ist Standard fuer „Kamera flacher“
             Assert.True(tasten.Speichern(einstellungen));
             var werte = JsonNode.Parse(File.ReadAllText(einstellungen.Pfad))!.AsObject();
-            Assert.Equal("{\"hinein\":\"Space\",\"vollbild\":\"G\"}", werte[Tastenbelegung.Schluessel]!.ToJsonString());
+            Assert.Equal("{\"hinein\":\"B\",\"vollbild\":\"G\"}", werte[Tastenbelegung.Schluessel]!.ToJsonString());
             var gelesen = Tastenbelegung.Lesen(werte);
             Assert.Equal(tasten.Eigen, gelesen.Eigen);
-            Assert.Equal("Leertaste", gelesen.AnzeigeFuer(Tastenbelegung.Hinein));
+            Assert.Equal("B", gelesen.AnzeigeFuer(Tastenbelegung.Hinein));
+            Assert.Equal("Leertaste", gelesen.AnzeigeFuer(Tastenbelegung.Springen));
             // Standard = Schluessel weg
             Assert.True(new Tastenbelegung().Speichern(einstellungen));
             Assert.Null(JsonNode.Parse(File.ReadAllText(einstellungen.Pfad))!.AsObject()[Tastenbelegung.Schluessel]);

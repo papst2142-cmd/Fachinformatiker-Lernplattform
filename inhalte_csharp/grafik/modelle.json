@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "f284c217c5094f25755308edce5417133e62ba2a9710b0de8e8b9004dac91060",
- "bytes": 10146328,
+ "sha256": "03673b1adfe9617373d25d555d3e62eec0ca725efd2768b953da973507b30f51",
+ "bytes": 10480052,
  "modelle": [
   {
    "name": "building-e",
@@ -2698,6 +2698,74 @@
    "max": [
     0.4552,
     3.697,
+    1.0876
+   ]
+  },
+  {
+   "name": "figur-springen00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.622,
+    0.0007,
+    -0.5339
+   ],
+   "max": [
+    0.6224,
+    3.5809,
+    0.5142
+   ]
+  },
+  {
+   "name": "figur-ducken00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.4606,
+    0.0007,
+    -0.576
+   ],
+   "max": [
+    0.4611,
+    2.9046,
+    1.0266
+   ]
+  },
+  {
+   "name": "figur-kriechen00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.4606,
+    0.0007,
+    -1.8038
+   ],
+   "max": [
+    0.4611,
+    2.9008,
+    0.5142
+   ]
+  },
+  {
+   "name": "figur-sitzen-zurueck00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.4547,
+    0.4267,
+    -0.8911
+   ],
+   "max": [
+    0.4552,
+    3.589,
     1.0876
    ]
   }

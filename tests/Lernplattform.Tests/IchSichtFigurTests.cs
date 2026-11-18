@@ -20,6 +20,10 @@ public class IchSichtFigurTests
         (null, -1),
         .. Enumerable.Range(0, Figur.Bilder).Select(i => ((string?)Figur.Gehen, i)),
         .. Enumerable.Range(0, Figur.Bilder).Select(i => ((string?)Figur.Rennen, i)),
+        // Welle A 0.93.0 (Weisung P12-303): geduckt, kriechend und im Sprung (das Auge sinkt bzw. steigt mit dem Kopf)
+        (Figur.Ducken, 0),
+        (Figur.Kriechen, 0),
+        (Figur.Springen, 0),
     ];
 
     /// <summary>
@@ -113,17 +117,24 @@ public class IchSichtFigurTests
     /// <summary>Auge in der Figur (Hoehe 1, Blick der Figur nach +Z) wie <see cref="IchSicht.Auge"/>.</summary>
     private static readonly Vector3 AugeImModell = new(0f, IchSicht.AugeAnteil, IchSicht.AugeVor);
 
+    /// <summary>Welle A 0.93.0: Auge in der Figur in der Haltung des Bildes (gesenkt um die Senkung des Kopfes, wie <see cref="IchSicht.AugeHoehe"/>; der Sprung hebt Figur und Auge gleich).</summary>
+    private static Vector3 AugeIn(GrafikBibliothek g, string? bewegung) =>
+        AugeImModell - new Vector3(0f, AugeGesenkt ? Figur.KopfSenkung(g, bewegung) : 0f, 0f);
+
+    /// <summary>Gegenprobe (nur in diesem Test): false = Auge in jeder Haltung in Stehhoehe.</summary>
+    private static bool AugeGesenkt = true;
+
     /// <summary>
     /// Liegt <paramref name="p"/> (Figur, Hoehe 1) im Sichtkegel des Auges bei <paramref name="neigung"/> Grad nach unten? Sichtfeld
     /// 40 Grad hoch, Bildseiten bis 2,5:1 (breiter als PC und Handy), ohne nahe und ferne Ebene (strenger: auch was die nahe Ebene
     /// abschneiden wuerde, zaehlt).
     /// </summary>
-    private static bool ImKegel(Vector3 p, float neigung)
+    private static bool ImKegel(Vector3 p, float neigung, Vector3? auge = null)
     {
         var n = neigung * MathF.PI / 180f;
         var vor = new Vector3(0f, -MathF.Sin(n), MathF.Cos(n));
         var hoch = new Vector3(0f, MathF.Cos(n), MathF.Sin(n));
-        var v = p - AugeImModell;
+        var v = p - (auge ?? AugeImModell);
         var tiefe = Vector3.Dot(v, vor);
         if (tiefe <= 0f)
         {
@@ -155,12 +166,13 @@ public class IchSichtFigurTests
                 continue;
             }
             drin++;
-            if (p.Any(q => Enumerable.Range(0, 18).Any(i => ImKegel(q, i * 5f))))
+            if (p.Any(q => Enumerable.Range(0, 18).Any(i => ImKegel(q, i * 5f, AugeIn(g, bewegung)))))
             {
                 imKegel++;
             }
         }
-        var naechste = ohne.Indizes.Distinct().Min(e => Vector3.Distance(ohne.Ort((int)e), AugeImModell));
+        var auge = AugeIn(g, bewegung);
+        var naechste = ohne.Indizes.Distinct().Min(e => Vector3.Distance(ohne.Ort((int)e), auge));
         return new Fund($"{name} {bewegung ?? "stehend"} {bild}", imKegel, drin, naechste, HalsOffen(ohne));
     }
 
@@ -234,7 +246,7 @@ public class IchSichtFigurTests
                 }
             }
         }
-        Assert.True(zahl == aussehen.Count * ((2 * Figur.Bilder) + 1));
+        Assert.True(zahl == aussehen.Count * ((2 * Figur.Bilder) + 4));
         Assert.True(funde.Count == 0, string.Join("\n", funde.Take(20)));
         Assert.True(naechste >= grenze, $"naechste Ecke {naechste}");
     }
@@ -327,4 +339,37 @@ public class IchSichtFigurTests
     }
 
     private static bool Sichtbar(Vector4 c) => c.W > 0f && MathF.Abs(c.X) <= c.W && MathF.Abs(c.Y) <= c.W;
+
+    /// <summary>
+    /// Welle A 0.93.0 (Weisung P12-303: „in der Ich-Sicht sinkt das Auge mit“): geduckt und kriechend sinkt der Kopf um gut ein
+    /// Fuenftel der Figur, das Auge mit ihm. Gegenprobe: bliebe das Auge in Stehhoehe, saesse es ueber dem gesenkten Kopf, und der
+    /// Kopf laege im Blick nach unten (Weisung: kein Kopf im Bild).
+    /// </summary>
+    [Fact]
+    public void Haltungen_AugeSinktMit_Gegenprobe_StehhoeheSiehtDenKopf()
+    {
+        var g = SpielGrafikTests.Bibliothek.Value;
+        Assert.InRange(Figur.KopfSenkung(g, Figur.Ducken), 0.15f, 0.35f);
+        Assert.InRange(Figur.KopfSenkung(g, Figur.Kriechen), 0.15f, 0.35f);
+        var lang = new PyObjekt { { "frisur", "lang" }, { "bart", "vollbart" }, { "haarfarbe", "blond" } };
+        foreach (var bew in new[] { Figur.Ducken, Figur.Kriechen })
+        {
+            var f = Pruefen(g, "lang", lang, null, bew, 0);
+            Assert.True(f.KopfImKegel == 0 && f.KopfDrin == 0, f.ToString());
+            AugeGesenkt = false;
+            try
+            {
+                // das Auge in Stehhoehe: der Rest des Koerpers (Hals, Kragen) steht unter ihm, aber es waere nicht im Kopf
+                var stehend = AugeIn(g, bew);
+                Assert.True(stehend.Y - Figur.KopfSenkung(g, bew) < IchSicht.AugeAnteil - 0.15f);
+                var ganz = Figur.Netz(g, lang, 1f, null, bew, 0);
+                var kopfOben = Enumerable.Range(0, ganz.AnzahlEcken).Max(e => ganz.Ort(e).Y);
+                Assert.True(stehend.Y > kopfOben, $"Gegenprobe: Auge {stehend.Y:0.000} nicht ueber dem gesenkten Kopf {kopfOben:0.000}");
+            }
+            finally
+            {
+                AugeGesenkt = true;
+            }
+        }
+    }
 }

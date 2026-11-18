@@ -15,7 +15,7 @@ public class SpielHaltungBedienungTests
 {
     private static PyObjekt Inhalt => SpielCharakterTests.InhaltMitNeuen.Value;
 
-    private static Spielablauf NeuesSpiel()
+    internal static Spielablauf NeuesSpiel()
     {
         var zaehler = 0;
         var spiel = new Spielablauf(Inhalt, new SpielSpeicher(() =>
@@ -28,7 +28,7 @@ public class SpielHaltungBedienungTests
         return spiel;
     }
 
-    private static string KaufenUndAufstellen(Spielablauf spiel, string moebel)
+    internal static string KaufenUndAufstellen(Spielablauf spiel, string moebel)
     {
         var stueck = "m" + Guid.NewGuid().ToString("N")[..10];
         spiel.Ausfuehren(SpielAktionen.MoebelKaufen(spiel.Stand, moebel, stueck));
@@ -51,7 +51,7 @@ public class SpielHaltungBedienungTests
         return stueck;
     }
 
-    private static StadtSpiel ZuHause(Spielablauf spiel)
+    internal static StadtSpiel ZuHause(Spielablauf spiel)
     {
         var stadt = new Stadt(Inhalt, SpielStadtTests.Daten.Value);
         var s = new StadtSpiel(stadt, spiel, SpielGrafikTests.Bibliothek.Value, SpielInnenraumTests.Innenraeume.Value, SpielGeschaefteTests.Daten.Value, null, () => null, () => Jahreszeit.Sommer);
@@ -60,17 +60,18 @@ public class SpielHaltungBedienungTests
         return s;
     }
 
-    private static void Ankommen(StadtSpiel s)
+    internal static void Ankommen(StadtSpiel s)
     {
         for (var i = 0; i < 2000 && s.Fortschreiten(0.05); i++)
         {
         }
     }
 
-    private static Sitzgelegenheit PlatzVon(StadtSpiel s, string moebel) =>
-        s.Innen!.Sitzgelegenheiten.Single(p => p.Deko is { } d && Py.Gleich(SpielDaten.Get(d, "moebel"), moebel));
+    internal static Sitzgelegenheit PlatzVon(StadtSpiel s, string moebel) =>
+        // Welle A 0.93.0: Sofa, Sessel und Liegestuhl haben dazu einen Platz zum Zuruecklehnen (eigener Test SpielHaltungenTests)
+        s.Innen!.Sitzgelegenheiten.Single(p => p.Art != SitzArt.Zurueck && p.Deko is { } d && Py.Gleich(SpielDaten.Get(d, "moebel"), moebel));
 
-    private static bool Hat(StadtSpiel s, string aktion) => s.Knoepfe.Any(k => k.Aktion == aktion);
+    internal static bool Hat(StadtSpiel s, string aktion) => s.Knoepfe.Any(k => k.Aktion == aktion);
 
     [Fact]
     public void PcStuhlAntippen_ErstImSitzenDiePcKnoepfe_AufstehenWoandersHin()

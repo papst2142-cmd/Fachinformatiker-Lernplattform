@@ -101,6 +101,53 @@ public static class SpielProbeTexte
     /// <summary>Am Bett, solange die Figur steht („Schlafen“ gibt es erst im Liegen).</summary>
     public const string ErstHinlegen = "Leg dich ins Bett (antippen oder „Hinlegen“), dann kannst du schlafen.";
 
+    // ---- Welle A 0.93.0 (Weisung P12-303, Sammelliste 352): Haltungen ----
+
+    /// <summary>Knopf „Springen“ (Leertaste): kurzer Sprung an der Stelle oder im Gehen.</summary>
+    public const string KnopfSpringen = "Springen";
+
+    /// <summary>Knopf „Ducken“ (nur an der Stelle; Gehen beendet die Haltung).</summary>
+    public const string KnopfDucken = "Ducken";
+
+    /// <summary>Knopf „Kriechen“ (nur an der Stelle; Gehen beendet die Haltung).</summary>
+    public const string KnopfKriechen = "Kriechen";
+
+    /// <summary>Knopf im Sitzen auf Sofa, Sessel oder Liegestuhl.</summary>
+    public const string KnopfZuruecklehnen = "Zurücklehnen";
+
+    /// <summary>Knopf im zurueckgelehnten Sitzen.</summary>
+    public const string KnopfAufrichten = "Aufrichten";
+
+    /// <summary>Erste Zeile im zurueckgelehnten Sitzen.</summary>
+    public const string DuSitztZurueck = "Du sitzt zurückgelehnt. Mit „Aufrichten“ setzt du dich wieder gerade hin.";
+
+    /// <summary>Ansage und Zeile beim Ducken.</summary>
+    public const string DuDuckst = "Du duckst dich. Zum Aufstehen gehe los oder tippe noch einmal auf „Ducken“.";
+
+    /// <summary>Ansage und Zeile beim Kriechen.</summary>
+    public const string DuKriechst = "Du gehst auf alle viere. Zum Aufstehen gehe los oder tippe noch einmal auf „Kriechen“.";
+
+    /// <summary>Ansage beim Aufstehen aus Ducken oder Kriechen.</summary>
+    public const string DuStehst = "Du stehst wieder.";
+
+    /// <summary>Ansage beim Springen.</summary>
+    public const string DuSpringst = "Du springst.";
+
+    /// <summary>Ducken geht hier nicht (die Figur wuerde etwas beruehren oder ueber eine Wand ragen).</summary>
+    public const string KeinPlatzDucken = "Hier ist zum Ducken kein Platz.";
+
+    /// <summary>Kriechen geht hier nicht (die Figur wuerde etwas beruehren oder ueber eine Wand ragen).</summary>
+    public const string KeinPlatzKriechen = "Hier ist zum Kriechen kein Platz.";
+
+    /// <summary>Springen geht hier nicht (ueber dem Kopf ist etwas im Weg).</summary>
+    public const string KeinPlatzSpringen = "Hier ist zum Springen kein Platz.";
+
+    /// <summary>Ducken und Kriechen gehen nur an der Stelle.</summary>
+    public const string ErstAnkommenHaltung = "Ducken und Kriechen gehen nur im Stehen. Warte, bis du angekommen bist.";
+
+    /// <summary>Im Sitzen, Liegen, im Bus und beim Einrichten gibt es keine dieser Haltungen.</summary>
+    public const string ErstAufstehen = "Steh erst auf.";
+
     // ---- Welle A 0.73.0 (Weisung P12-239, Sammelliste 335): selbst mit dem Bus fahren ----
 
     /// <summary>Knopf unten, wenn der Bus an der Haltestelle der Figur haelt.</summary>

@@ -976,6 +976,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         var nachLaden = _uhr.Elapsed.TotalSeconds;
         // Welle A 0.73.0: mit dem Bus unterwegs (selbst gefahren) folgt die Kamera dem Bus wie der gehenden Figur
         var geht = (_spiel?.Fortschreiten(dt) ?? false) | (_spiel?.MitfahrtAktiv ?? false);
+        // Welle A 0.93.0 (Weisung P12-303): der Sprung laeuft je Bild weiter (nur Darstellung)
+        var springt = _spiel?.HaltungTakt((float)dt) ?? false;
         VorBild?.Invoke();
         var nachLogik = _uhr.Elapsed.TotalSeconds;
         var verdecktSek = 0.0;
@@ -1001,7 +1003,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         if (_spiel is { } ichSpiel && kamera is not null && FesteKamera)
         {
             // Welle A 0.92.0 (Weisung P12-301): Ich-Sicht weiterfuehren (Auge, Uebergang, Gehrichtung, Pause beim Sitzen/Bus)
-            ichBewegt = _ich.Takt(kamera, ichSpiel, (float)dt, _busMitFigur) && (kamera.IchAnteil != kamera.IchZiel || geht);
+            ichBewegt = _ich.Takt(kamera, ichSpiel, (float)dt, _busMitFigur) && (kamera.IchAnteil != kamera.IchZiel || geht || springt);
             if (kamera.Ich != _ichWarAn)
             {
                 _ichWarAn = kamera.Ich;
@@ -1165,9 +1167,13 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             else
             {
                 // Welle A 0.92.0 (Weisung P12-301 Punkt 3): in der Ich-Sicht ohne Kopf (das Auge sitzt darin)
-                spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild, IchNah(kamera));
+                // Welle A 0.93.0 (Weisung P12-303): geduckt, kriechend oder im Sprung das Modell der Haltung (Tabelle Figur.HaltungBild),
+                // im Sprung um die Sprunghoehe angehoben; die Figur steht logisch weiter an ihrer Stelle
+                spieler = _spiel.HaltungModell is { } modell
+                    ? FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, modell, 0, IchNah(kamera))
+                    : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild, IchNah(kamera));
                 figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(IchSicht.FigurDrehung(kamera, _spiel) * MathF.PI / 180f)
-                    * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? FigurHoehe(_spiel) : 0f, _spiel.FigurZ);
+                    * Matrix4x4.CreateTranslation(_spiel.FigurX, (innen is null ? FigurHoehe(_spiel) : 0f) + (_spiel.SprungHoehe * groesse), _spiel.FigurZ);
             }
             if (!_busMitFigur)
             {
@@ -1313,7 +1319,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             Belastung.Bild(jetzt, LetzteZeichenzeitMs);
         }
-        if (geht || ichBewegt || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Laeuft(jetzt, VerkehrNurNachBedienen)))
+        if (geht || springt || ichBewegt || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Laeuft(jetzt, VerkehrNurNachBedienen)))
         {
             // Welle Grafik G1: mit Bildbremse (Niedrig) erst nach 1 / Bilder Sekunden, sonst sofort wie vorher
             NaechstesBildAnfordern(jetzt);

@@ -816,6 +816,43 @@
    "arme": 84,
    "bewegung": "sitzen_frei",
    "sitz": 0.9
+  },
+  {
+   "name": "figur-springen",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "springen"
+  },
+  {
+   "name": "figur-ducken",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "ducken"
+  },
+  {
+   "name": "figur-kriechen",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "kriechen"
+  },
+  {
+   "name": "figur-sitzen-zurueck",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "sitzen_zurueck",
+   "sitz": 0.9
   }
  ]
 }

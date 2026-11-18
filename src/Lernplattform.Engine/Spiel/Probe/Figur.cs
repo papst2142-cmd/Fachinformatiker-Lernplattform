@@ -122,7 +122,63 @@ public static class Figur
     public static bool SitzenWieBisher => SitzenAlt.Value;
 
     /// <summary>Welle A 0.81.0 (Sammelliste 351): Bewegung des Sitzbilds der Spielfigur je Platz (am PC die Schreibtisch-Haltung).</summary>
-    public static string SitzBild(SitzArt art) => art == SitzArt.Sitzen && !SitzenAlt.Value ? SitzenFrei : Sitzen;
+    public static string SitzBild(SitzArt art) => art switch
+    {
+        SitzArt.Zurueck => SitzenZurueck,
+        SitzArt.Sitzen when !SitzenAlt.Value => SitzenFrei,
+        _ => Sitzen,
+    };
+
+    /// <summary>Welle A 0.93.0 (Weisung P12-303, Sammelliste 352): in der Luft beim Springen (ein Bild, Name plus "00"); die Hoehe rechnet das Spiel.</summary>
+    public const string Springen = "figur-springen";
+
+    /// <summary>Welle A 0.93.0 (Sammelliste 352): geduckt in der Hocke, der Kopf aufrecht ueber der Stelle wie im Stehen (ein Bild).</summary>
+    public const string Ducken = "figur-ducken";
+
+    /// <summary>Welle A 0.93.0 (Sammelliste 352): auf Haenden und Knien, der Kopf ueber der Stelle wie im Stehen, der Koerper dahinter (ein Bild).</summary>
+    public const string Kriechen = "figur-kriechen";
+
+    /// <summary>Welle A 0.93.0 (Sammelliste 352): zurueckgelehnt sitzend auf Sofa, Sessel und Liegestuhl (ein Bild, Sitzhoehe wie <see cref="SitzenFrei"/>).</summary>
+    public const string SitzenZurueck = "figur-sitzen-zurueck";
+
+    /// <summary>
+    /// Welle A 0.93.0 (Weisung P12-303: „Wahl nur ueber eine Tabelle wie Figur.SitzBild“): Bild der Figur je Haltung im Stehen
+    /// (null = stehend oder gehend wie bisher). Springen geht vor (auch im Gehen).
+    /// </summary>
+    public static string? HaltungBild(Koerperhaltung haltung, bool springt) => springt ? Springen : haltung switch
+    {
+        Koerperhaltung.Ducken => Ducken,
+        Koerperhaltung.Kriechen => Kriechen,
+        _ => null,
+    };
+
+    /// <summary>Welle A 0.93.0: die neuen Haltungen, deren Teile am Koerper (Rock, Mantel, Kragen, Tasche) dem Koerper folgen (<see cref="Folgen"/>).</summary>
+    public static readonly IReadOnlySet<string> NeueHaltungen = new HashSet<string>(StringComparer.Ordinal) { Springen, Ducken, Kriechen, SitzenZurueck };
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GrafikModell, Dictionary<string, float>> SenkungVorrat = new();
+
+    /// <summary>
+    /// Welle A 0.93.0 (Ich-Sicht: „das Auge sinkt mit“): so weit (Anteil der Figurhoehe) liegt der Kopf im ersten Bild der
+    /// Bewegung <paramref name="bewegung"/> tiefer als im Stehen (Unterkante des Kopf-Kastens, <see cref="Kopf(GrafikModell, GrafikModell)"/>);
+    /// 0 ohne Grafik oder ohne Bild.
+    /// </summary>
+    public static float KopfSenkung(GrafikBibliothek? grafik, string? bewegung)
+    {
+        if (bewegung is null || grafik?.Modell(Modell) is not { } gm || grafik.Modell(BildName(bewegung, 0)) is not { } fm || fm.Dreiecke != gm.Dreiecke)
+        {
+            return 0f;
+        }
+        var vorrat = SenkungVorrat.GetValue(gm, _ => new Dictionary<string, float>(StringComparer.Ordinal));
+        lock (vorrat)
+        {
+            if (!vorrat.TryGetValue(bewegung, out var wert))
+            {
+                wert = Kopf(gm, gm) is { } steht && Kopf(gm, fm) is { } bild ? (steht.Min.Y - bild.Min.Y) / (gm.Max.Y - gm.Min.Y) : 0f;
+                vorrat[bewegung] = wert;
+            }
+            return wert;
+        }
+    }
 
     /// <summary>
     /// Welle A 0.81.0 (Sammelliste 351): so weit (Anteil der Figurhoehe) reicht der Kopf der sitzenden Figur ohne Tisch samt
@@ -355,7 +411,11 @@ public static class Figur
             var teile = kopfTeile ? Gesicht(kopf.Min, kopf.Max, haut) : [];
             if (kopfTeile && kopfStueck is not null)
             {
-                teile.AddRange(Kopfbedeckung(kopf.Min, kopf.Max, gm.Max.Y, kopfStueck));
+                // Welle A 0.93.0: in den neuen Haltungen sinkt der Bommel der Muetze mit dem Kopf (bisher blieb er in Stehhoehe;
+                // bisherige Bilder unveraendert)
+                var bommel = NeueHaltungen.Contains(bewegung ?? "") && !FolgenAltFuerTests && Kopf(gm, gm) is { } steht
+                    ? gm.Max.Y - (steht.Min.Y - kopf.Min.Y) : gm.Max.Y;
+                teile.AddRange(Kopfbedeckung(kopf.Min, kopf.Max, bommel, kopfStueck));
             }
             if (kopfTeile && oben is { Form: "kapuze" } && kleid is not { Form: "kleid" })
             {
@@ -370,9 +430,29 @@ public static class Figur
             {
                 teile.AddRange(Brille(kopf.Min, kopf.Max, Probe.Netz.Farbe(brille.Farbe)));
             }
+            var koerperAb = teile.Count;
             teile.AddRange(Koerper(gm, oben, kleid, jacke, kleidung?.FirstOrDefault(k => k.Slot == "tasche"), unter, hemd));
-            foreach (var teil in teile)
+            // Welle A 0.93.0: in den neuen Haltungen folgen Rock, Mantel, Kragen und Tasche dem Koerper (bisherige Bilder unveraendert)
+            var folgen = !ReferenceEquals(form, gm) && bewegung is not null && NeueHaltungen.Contains(bewegung) && !FolgenAltFuerTests;
+            for (var nr = 0; nr < teile.Count; nr++)
             {
+                var teil = teile[nr];
+                if (folgen && nr >= koerperAb)
+                {
+                    var (ty1, ty2) = (teil.Y1, teil.Y2);
+                    if (teil.Art == TeilArt.Quader && koerperBis < float.MaxValue)
+                    {
+                        var roh = gm.Min.Y + (koerperBis * hoehe / s);
+                        if (MathF.Min(ty1, ty2) >= roh)
+                        {
+                            continue;
+                        }
+                        (ty1, ty2) = (MathF.Min(ty1, roh), MathF.Min(ty2, roh));
+                    }
+                    var abbild = Folgen(gm, form, teil with { Y1 = ty1, Y2 = ty2 });
+                    netz.Kasten(teil with { Y1 = ty1, Y2 = ty2 }, p => Vector3.Transform(abbild(p), lage));
+                    continue;
+                }
                 float y1 = (teil.Y1 - gm.Min.Y) * s, y2 = (teil.Y2 - gm.Min.Y) * s;
                 if (teil.Art == TeilArt.Quader && koerperBis < float.MaxValue)
                 {
@@ -392,6 +472,117 @@ public static class Figur
             }
         }
         return netz;
+    }
+
+    private static readonly AsyncLocal<bool> FolgenAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Teile am Koerper bleiben auch in den neuen Haltungen, wo sie im Stehen sind.</summary>
+    public static bool FolgenAltFuerTests { get => FolgenAlt.Value; set => FolgenAlt.Value = value; }
+
+    /// <summary>
+    /// Welle A 0.93.0: Abbildung, mit der ein Teil am Koerper (<paramref name="teil"/>, Koordinaten der stehenden Figur) dem Bild
+    /// <paramref name="form"/> folgt: die Ecken der stehenden Figur im Kasten des Teils (0,04 der Hoehe Zugabe) und dieselben Ecken im
+    /// Bild bestimmen eine affine Abbildung (kleinste Quadrate). Mit weniger als 12 Ecken nur die mittlere Verschiebung.
+    /// </summary>
+    public static Func<Vector3, Vector3> Folgen(GrafikModell gm, GrafikModell form, Teil teil)
+    {
+        var zugabe = 0.04f * (gm.Max.Y - gm.Min.Y);
+        Vector3 lo = new(MathF.Min(teil.X1, teil.X2) - zugabe, MathF.Min(teil.Y1, teil.Y2) - zugabe, MathF.Min(teil.Z1, teil.Z2) - zugabe);
+        Vector3 hi = new(MathF.Max(teil.X1, teil.X2) + zugabe, MathF.Max(teil.Y1, teil.Y2) + zugabe, MathF.Max(teil.Z1, teil.Z2) + zugabe);
+        var m = new double[4, 4];
+        var r = new double[4, 3];
+        var schub = Vector3.Zero;
+        var zahl = 0;
+        for (var i = 0; i < gm.Ecken.Length; i += 3)
+        {
+            var p = new Vector3(gm.Ecken[i], gm.Ecken[i + 1], gm.Ecken[i + 2]);
+            if (p.X < lo.X || p.Y < lo.Y || p.Z < lo.Z || p.X > hi.X || p.Y > hi.Y || p.Z > hi.Z)
+            {
+                continue;
+            }
+            var q = new Vector3(form.Ecken[i], form.Ecken[i + 1], form.Ecken[i + 2]);
+            double[] a = [p.X, p.Y, p.Z, 1];
+            for (var j = 0; j < 4; j++)
+            {
+                for (var k = 0; k < 4; k++)
+                {
+                    m[j, k] += a[j] * a[k];
+                }
+                r[j, 0] += a[j] * q.X;
+                r[j, 1] += a[j] * q.Y;
+                r[j, 2] += a[j] * q.Z;
+            }
+            schub += q - p;
+            zahl++;
+        }
+        if (zahl == 0)
+        {
+            return p => p;
+        }
+        var mittel = schub / zahl;
+        if (zahl < 12 || Loesen(m, r) is not { } x)
+        {
+            return p => p + mittel;
+        }
+        return p => new Vector3(
+            (float)((x[0, 0] * p.X) + (x[1, 0] * p.Y) + (x[2, 0] * p.Z) + x[3, 0]),
+            (float)((x[0, 1] * p.X) + (x[1, 1] * p.Y) + (x[2, 1] * p.Z) + x[3, 1]),
+            (float)((x[0, 2] * p.X) + (x[1, 2] * p.Y) + (x[2, 2] * p.Z) + x[3, 2]));
+    }
+
+    /// <summary>Gauss mit Pivot: m * x = r (4 x 4, drei rechte Seiten); null, wenn m (fast) singulaer ist.</summary>
+    private static double[,]? Loesen(double[,] m, double[,] r)
+    {
+        var a = (double[,])m.Clone();
+        var b = (double[,])r.Clone();
+        for (var s = 0; s < 4; s++)
+        {
+            var piv = s;
+            for (var z = s + 1; z < 4; z++)
+            {
+                if (Math.Abs(a[z, s]) > Math.Abs(a[piv, s]))
+                {
+                    piv = z;
+                }
+            }
+            if (Math.Abs(a[piv, s]) < 1e-9)
+            {
+                return null;
+            }
+            for (var k = 0; k < 4; k++)
+            {
+                (a[s, k], a[piv, k]) = (a[piv, k], a[s, k]);
+            }
+            for (var k = 0; k < 3; k++)
+            {
+                (b[s, k], b[piv, k]) = (b[piv, k], b[s, k]);
+            }
+            for (var z = 0; z < 4; z++)
+            {
+                if (z == s)
+                {
+                    continue;
+                }
+                var f = a[z, s] / a[s, s];
+                for (var k = 0; k < 4; k++)
+                {
+                    a[z, k] -= f * a[s, k];
+                }
+                for (var k = 0; k < 3; k++)
+                {
+                    b[z, k] -= f * b[s, k];
+                }
+            }
+        }
+        var x = new double[4, 3];
+        for (var z = 0; z < 4; z++)
+        {
+            for (var k = 0; k < 3; k++)
+            {
+                x[z, k] = b[z, k] / a[z, z];
+            }
+        }
+        return x;
     }
 
     /// <summary>

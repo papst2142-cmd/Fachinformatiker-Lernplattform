@@ -39,6 +39,9 @@ public static class ProbeWelt
 
     private static readonly string[] BegehbareDeko = ["teppich", "fussmatte", "whiteboard", "markierung", "bild", "wimpel", "kamera"];
 
+    /// <summary>Welle A 0.93.0: Deko, ueber die die Figur geht oder die an der Wand haengt (kein Hindernis fuer Haltungen).</summary>
+    public static IReadOnlyList<string> BegehbareTypen => BegehbareDeko;
+
     /// <summary>Buero aus gebaeude.json: Boden je Raum, niedrige Waende mit Tueroeffnungen, Deko als Kloetze.</summary>
     private static ProbeFlaeche BueroBauen(JsonElement g)
     {

@@ -132,6 +132,22 @@ public sealed partial class Netz
         Viereck(new(b.X, a.Y, b.Z), new(b.X, a.Y, a.Z), new(b.X, b.Y, a.Z), new(b.X, b.Y, b.Z), t.Farbe);   // rechts
     }
 
+    /// <summary>
+    /// Welle A 0.93.0: ein Quader wie <see cref="Hinzu(Teil)"/> (gleiche Seiten und Ecken in gleicher Reihenfolge), jede Ecke ueber
+    /// <paramref name="abbilden"/> versetzt (Teile am Koerper der Figur, die einer Haltung folgen).
+    /// </summary>
+    public void Kasten(Teil t, Func<Vector3, Vector3> abbilden)
+    {
+        Vector3 a = new(t.X1, t.Y1, t.Z1), b = new(t.X2, t.Y2, t.Z2);
+        Vector3 P(float x, float y, float z) => abbilden(new Vector3(x, y, z));
+        Viereck(P(a.X, b.Y, a.Z), P(a.X, b.Y, b.Z), P(b.X, b.Y, b.Z), P(b.X, b.Y, a.Z), t.Farbe);
+        Viereck(P(a.X, a.Y, a.Z), P(b.X, a.Y, a.Z), P(b.X, a.Y, b.Z), P(a.X, a.Y, b.Z), t.Farbe);
+        Viereck(P(a.X, a.Y, b.Z), P(b.X, a.Y, b.Z), P(b.X, b.Y, b.Z), P(a.X, b.Y, b.Z), t.Farbe);
+        Viereck(P(b.X, a.Y, a.Z), P(a.X, a.Y, a.Z), P(a.X, b.Y, a.Z), P(b.X, b.Y, a.Z), t.Farbe);
+        Viereck(P(a.X, a.Y, a.Z), P(a.X, a.Y, b.Z), P(a.X, b.Y, b.Z), P(a.X, b.Y, a.Z), t.Farbe);
+        Viereck(P(b.X, a.Y, b.Z), P(b.X, a.Y, a.Z), P(b.X, b.Y, a.Z), P(b.X, b.Y, b.Z), t.Farbe);
+    }
+
     /// <summary>Ein CC0-Modell an seiner Lage einfuegen (flache Normale je Dreieck, Farbe je Ecke, Weisung P12-50).</summary>
     public void Hinzu(GrafikModell modell, Matrix4x4 lage) => Hinzu(modell, lage, null);
 

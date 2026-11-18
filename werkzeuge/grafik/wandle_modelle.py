@@ -537,6 +537,105 @@ def sitzen_frei_haltung(sk, arme):
     return G
 
 
+def springen_haltung(sk, arme):
+    """Welle A 0.93.0 (Weisung P12-303, Sammelliste 352): in der Luft beim Springen. Knie angezogen (Oberschenkel 40 Grad nach
+    vorn, Unterschenkel 70 Grad zurueck), Arme gesenkt und etwas nach hinten (nie ueber Kopfhoehe: in der Ich-Sicht steht nichts
+    vor dem Auge), waagrecht nie weiter als die stehende Figur (Test SpielHaltungenTests). Die Hoehe des Sprungs rechnet das Spiel."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -74)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, 74)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, 25)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, 25)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -20)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -20)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -40)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, -40)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 70)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 70)
+    welt_drehen(G, sk.eltern, 'LeftFoot', 0, -15)
+    welt_drehen(G, sk.eltern, 'RightFoot', 0, -15)
+    return G
+
+
+def ducken_haltung(sk, arme):
+    """Welle A 0.93.0 (Sammelliste 352): geduckt in der Hocke. Oberschenkel 110 Grad nach vorn und etwas auseinander,
+    Unterschenkel 135 Grad zurueck, Fuesse flach; Oberkoerper 25 Grad vorgebeugt, der Kopf bleibt aufrecht (Hals 25 Grad
+    zurueck: Gesicht, Haar und Kopfbedeckung sitzen wie im Stehen); Arme nach vorn ueber den Knien."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -110)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, -110)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 135)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 135)
+    welt_drehen(G, sk.eltern, 'LeftFoot', 0, -25)
+    welt_drehen(G, sk.eltern, 'RightFoot', 0, -25)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 2, -12)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 2, 12)
+    welt_drehen(G, sk.eltern, 'Spine', 0, 25)
+    welt_drehen(G, sk.eltern, 'Neck', 0, -25)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, -45)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -45)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -35)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -35)
+    return G
+
+
+def kriechen_haltung(sk, arme):
+    """Welle A 0.93.0 (Sammelliste 352): auf Haenden und Knien. Oberschenkel senkrecht, Unterschenkel waagrecht nach hinten,
+    Fussruecken unten; Oberkoerper 60 Grad vorgebeugt, Arme senkrecht zum Boden, der Kopf bleibt aufrecht (Hals 60 Grad zurueck)."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 90)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 90)
+    welt_drehen(G, sk.eltern, 'LeftFoot', 0, 60)
+    welt_drehen(G, sk.eltern, 'RightFoot', 0, 60)
+    welt_drehen(G, sk.eltern, 'Spine', 0, 60)
+    welt_drehen(G, sk.eltern, 'Neck', 0, -60)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, -60)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -60)
+    return G
+
+
+def sitzen_zurueck_haltung(sk, arme):
+    """Welle A 0.93.0 (Sammelliste 352): zurueckgelehnt sitzen (Sofa, Sessel, Liegestuhl). Beine wie ohne Tisch (92/70 Grad),
+    Oberkoerper 25 Grad nach hinten, der Kopf bleibt aufrecht (Hals 25 Grad vor: Gesicht, Haar und Kopfbedeckung sitzen wie im
+    Stehen), die Haende liegen im Schoss."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, -25)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -25)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -40)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -40)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 1, -12)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 1, 12)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -92)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, -92)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 70)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 70)
+    welt_drehen(G, sk.eltern, 'Spine', 0, -25)
+    welt_drehen(G, sk.eltern, 'Neck', 0, 25)
+    return G
+
+
+def am_boden_kopf_fest(dreiecke, ruhe):
+    """Welle A 0.93.0: Haltung auf den Boden stellen (tiefste Ecke wie die stehende Figur) und waagrecht so schieben, dass der
+    Kopf (Dreiecke der Ruhehaltung ganz ueber 75 % der Hoehe) ueber derselben Stelle steht wie im Stehen. So bleibt die Figur
+    logisch an ihrer Stelle, das Auge der Ich-Sicht sinkt nur senkrecht, und der Rest liegt hinter dem Kopf."""
+    ys = [p[1] for e, _ in ruhe for p in e]
+    unten, oben = min(ys), max(ys)
+    grenze = unten + 0.75 * (oben - unten)
+    kopf = [i for i, (e, _) in enumerate(ruhe) if all(p[1] > grenze for p in e)]
+    def mitte(liste):
+        pts = [p for i in kopf for p in liste[i][0]]
+        return sum(p[0] for p in pts) / len(pts), sum(p[2] for p in pts) / len(pts)
+    (rx, rz), (hx, hz) = mitte(ruhe), mitte(dreiecke)
+    dy = unten - min(p[1] for e, _ in dreiecke for p in e)
+    return [(tuple((p[0] + rx - hx, p[1] + dy, p[2] + rz - hz) for p in e), f) for e, f in dreiecke]
+
+
 def auf_sitz(dreiecke, G, sitz):
     """Sitzende Figur senken: die Unterseite der Oberschenkel (Ecken zwischen Huefte und Knie) liegt auf
     Hoehe <sitz> (Einheiten des Modells, die Figur steht 3,77 hoch)."""
@@ -599,12 +698,22 @@ def fbx_figur_haltung(z, pfad, haut_png, G):
 
 def bewegung_bilder(z, eintrag):
     """Bilder einer Bewegung: "lauf" aus Animations/run.fbx (Paket), "gehen" (eigene Gelenk-Bewegung), "sitzen"
-    (ein Bild, Phase 9 W1) oder "sitzen_frei" (ein Bild, Sammelliste 351)."""
+    (ein Bild, Phase 9 W1), "sitzen_frei" (ein Bild, Sammelliste 351) oder seit A 0.93.0 (Sammelliste 352) "springen", "ducken",
+    "kriechen", "sitzen_zurueck" (je ein Bild)."""
     bilder = eintrag["bilder"]
     modell = Skelett(fbx_lesen(z.read(eintrag["datei"])))
     erg = []
     if eintrag["bewegung"] in ("sitzen", "sitzen_frei"):
         G = (sitzen_haltung if eintrag["bewegung"] == "sitzen" else sitzen_frei_haltung)(modell, eintrag.get("arme", 72))
+        return [auf_sitz(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), G, eintrag["sitz"])]
+    haltungen = {"springen": springen_haltung, "ducken": ducken_haltung, "kriechen": kriechen_haltung}
+    if eintrag["bewegung"] in haltungen:
+        # Welle A 0.93.0 (Sammelliste 352): je ein Bild, auf dem Boden, der Kopf ueber der Stelle wie im Stehen
+        G = haltungen[eintrag["bewegung"]](modell, eintrag.get("arme", 72))
+        ruhe = fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], modell.global_())
+        return [am_boden_kopf_fest(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), ruhe)]
+    if eintrag["bewegung"] == "sitzen_zurueck":
+        G = sitzen_zurueck_haltung(modell, eintrag.get("arme", 72))
         return [auf_sitz(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), G, eintrag["sitz"])]
     if eintrag["bewegung"] == "gehen":
         for b in range(bilder):

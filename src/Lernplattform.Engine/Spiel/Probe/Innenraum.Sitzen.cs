@@ -15,6 +15,25 @@ public enum SitzArt
 
     /// <summary>Liegen im Bett oder auf der Matratze (Bett antippen oder Knopf „Hinlegen“).</summary>
     Liegen,
+
+    /// <summary>Welle A 0.93.0 (Sammelliste 352): zurueckgelehnt sitzen auf Sofa, Sessel und Liegestuhl (Knopf „Zurücklehnen“ im Sitzen).</summary>
+    Zurueck,
+}
+
+/// <summary>
+/// Welle A 0.93.0 (Weisung P12-303, Sammelliste 352): Haltung der stehenden Figur an ihrer Stelle (nur Darstellung). Gehen beendet
+/// sie; Springen ist ein kurzer Zustand daneben (<c>StadtSpiel.Springt</c>).
+/// </summary>
+public enum Koerperhaltung
+{
+    /// <summary>Stehen oder Gehen wie bisher.</summary>
+    Stehen,
+
+    /// <summary>Geduckt in der Hocke.</summary>
+    Ducken,
+
+    /// <summary>Auf Haenden und Knien.</summary>
+    Kriechen,
 }
 
 /// <summary>
@@ -74,6 +93,22 @@ public sealed partial class Innenraum
         ["kkArmchair"] = (0.055f, 0f),
     };
 
+    /// <summary>
+    /// Welle A 0.93.0 (Weisung P12-303, Sammelliste 352: „zurueckgelehnt sitzen auf Sofa, Sessel und Liegestuhl“): auf diesen
+    /// Modellen gibt es neben dem Sitzplatz einen Platz zum Zuruecklehnen an derselben Stelle (gemessen: an jedem Platz der Raeume
+    /// bleibt die zurueckgelehnte Figur frei, <c>SpielHaltungTests</c>). Wohnung: Sofa (loungeSofa), Sessel (loungeChair),
+    /// Liegestuhl (loungeChairRelax).
+    /// </summary>
+    public static readonly IReadOnlySet<string> ZurueckModelle = new HashSet<string>(StringComparer.Ordinal) { "loungeSofa", "loungeChair", "loungeChairRelax" };
+
+    /// <summary>Welle A 0.93.0: der zurueckgelehnte Platz zum Sitzplatz <paramref name="sitz"/> (gleiches Moebel), sonst null.</summary>
+    public Sitzgelegenheit? ZurueckZu(Sitzgelegenheit sitz) =>
+        _sitzgelegenheiten.FirstOrDefault(s => s.Art == SitzArt.Zurueck && ReferenceEquals(s.Deko, sitz.Deko) && s.Modell == sitz.Modell && s.Rechteck == sitz.Rechteck);
+
+    /// <summary>Welle A 0.93.0: der Sitzplatz zum zurueckgelehnten Platz <paramref name="zurueck"/> (gleiches Moebel), sonst null.</summary>
+    public Sitzgelegenheit? SitzZu(Sitzgelegenheit zurueck) =>
+        _sitzgelegenheiten.FirstOrDefault(s => s.Art == SitzArt.Sitzen && ReferenceEquals(s.Deko, zurueck.Deko) && s.Modell == zurueck.Modell && s.Rechteck == zurueck.Rechteck);
+
     /// <summary>Welle A 0.81.0 (Sammelliste 351): Weg nach hinten (Welt) auf einem Modell der Tiefe <paramref name="tiefe"/> (Welt) fuer die Figur der Hoehe <paramref name="figur"/>.</summary>
     public static float Zurueck(string name, float tiefe, float figur) =>
         Figur.SitzenWieBisher || !SitzTiefe.TryGetValue(name, out var t) ? 0f : (t.Wert * figur) + (t.Bezug > 0 ? 0.8f * MathF.Max(0f, tiefe - t.Bezug) : 0f);
@@ -119,6 +154,9 @@ public sealed partial class Innenraum
     /// </summary>
     public static IReadOnlyList<(float Halb, float Y1, float Y2, float Z1, float Z2)> FigurQuader(SitzArt art) => art == SitzArt.Liegen
         ? [(0.19f, -0.15f, 0.16f, -1.01f, 0.01f)]
+        : art == SitzArt.Zurueck
+            // Welle A 0.93.0: Oberkoerper und Kopf weiter hinten, die Haende im Schoss
+            ? [(0.12f, 0.09f, 0.26f, 0.10f, 0.30f), (0.12f, 0.24f, 0.46f, -0.07f, 0.185f), (0.13f, 0.44f, 0.61f, -0.155f, 0.285f), (0.125f, 0.59f, 0.86f, -0.245f, 0.065f), (0.19f, 0.83f, 1.04f, -0.31f, 0.13f)]
         : art == SitzArt.Sitzen && !Figur.SitzenWieBisher
             // Sammelliste 351: ohne Tisch (Figur.SitzenFrei) reichen Knie und Fuesse weiter nach vorn
             ? [(0.14f, 0.27f, 0.90f, -0.145f, 0.16f), (0.19f, 0.86f, 1.08f, -0.215f, 0.22f), (0.12f, 0.27f, 0.43f, -0.06f, 0.24f), (0.12f, 0.09f, 0.30f, 0.04f, 0.30f), (0.19f, 0.44f, 0.65f, -0.06f, 0.35f)]
@@ -180,10 +218,17 @@ public sealed partial class Innenraum
     {
         for (var i = ab; i < _stuecke.Count; i++)
         {
-            if (Grafik?.Modell(_stuecke[i].Name) is { } gm && Platz(_stuecke[i].Name, gm.Min, gm.Max, _stuecke[i].Lage, Innenraum.FigurHoehe, _dekoJetzt) is { } s
-                && VorDerWand(s) is { } frei)
+            if (Grafik?.Modell(_stuecke[i].Name) is { } gm && Platz(_stuecke[i].Name, gm.Min, gm.Max, _stuecke[i].Lage, Innenraum.FigurHoehe, _dekoJetzt) is { } s)
             {
-                _sitzgelegenheiten.Add(frei);
+                if (VorDerWand(s) is { } frei)
+                {
+                    _sitzgelegenheiten.Add(frei);
+                }
+                // Welle A 0.93.0 (Sammelliste 352): auf Sofa, Sessel und Liegestuhl auch zurueckgelehnt (eigener Platz, eigene Pruefung)
+                if (s.Art == SitzArt.Sitzen && ZurueckModelle.Contains(s.Modell) && VorDerWand(s with { Art = SitzArt.Zurueck }) is { } zurueck)
+                {
+                    _sitzgelegenheiten.Add(zurueck);
+                }
             }
         }
     }
@@ -194,7 +239,7 @@ public sealed partial class Innenraum
     /// Laenge nach hinten (Kopf), ohne Kopfbedeckung (die Figur legt sie im Bett ab).
     /// </summary>
     public static (float Hinten, float Vorn, float Halb) Grundflaeche(SitzArt art) =>
-        art == SitzArt.Liegen ? (1.02f, 0.02f, 0.19f) : (0.21f, 0.35f, 0.19f);
+        art == SitzArt.Liegen ? (1.02f, 0.02f, 0.19f) : art == SitzArt.Zurueck ? (0.32f, 0.35f, 0.19f) : (0.21f, 0.35f, 0.19f);
 
     /// <summary>
     /// Welle A 0.81.0: der Platz so, dass die Grundflaeche der Figur nicht ueber die Mitte einer Wand reicht (0,02 Spiel wie

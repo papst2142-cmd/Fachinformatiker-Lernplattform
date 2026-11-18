@@ -487,6 +487,8 @@ public sealed partial class StadtSpiel
     /// <summary>Figur um <paramref name="sekunden"/> weiterbewegen; true, solange sie geht.</summary>
     public bool Fortschreiten(double sekunden)
     {
+        // Welle A 0.93.0: Gehen beendet Ducken und Kriechen
+        KoerperBeimGehen();
         if (_weg.Count == 0)
         {
             return false;
