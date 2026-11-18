@@ -56,6 +56,17 @@ public sealed class IchSicht
     public bool Pausiert => _pause is not null;
 
     /// <summary>
+    /// Neues Spiel auf der Flaeche (neu angelegt, geladen oder gewechselt): nichts von der Ich-Sicht des alten Spiels mitnehmen
+    /// (Pause aus dem Bus, letzte Kamera, letzte angesagte Richtung). Das neue Spiel beginnt immer ohne Ich-Sicht.
+    /// </summary>
+    public void Neu()
+    {
+        _letzte = null;
+        _pause = null;
+        _richtungZuletzt = -1;
+    }
+
+    /// <summary>
     /// Stelle des Auges: Kopf der Figur draussen (auf Weg, Strasse oder Gelaende) oder im Innenraum, vorn am Gesicht in Richtung
     /// <paramref name="drehung"/> der Kamera (ohne: in Richtung der Figur). In der Ich-Sicht dreht der Koerper mit dem Blick
     /// (<see cref="FigurDrehung"/>), darum sitzt das Auge immer vor dem Gesicht, auch beim Umsehen im Stehen.

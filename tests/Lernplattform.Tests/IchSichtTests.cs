@@ -367,6 +367,43 @@ public sealed class IchSichtTests
         Assert.True(k.Ich && bilder > 100);
     }
 
+    /// <summary>
+    /// Lauf 1069 (Windows): nach einer Busfahrt in der Ich-Sicht nahm ein neues Spiel auf derselben Flaeche die Pause mit und
+    /// begann in der Ich-Sicht. Ein neues Spiel (<see cref="IchSicht.Neu"/>) beginnt immer ohne; Gegenprobe ohne Neu: die
+    /// Ich-Sicht kommt mit.
+    /// </summary>
+    [Fact]
+    public void NeuesSpiel_BeginntOhneIchSicht_AuchNachPauseImBus()
+    {
+        float Anteil(bool neu)
+        {
+            var s = SpielMitfahrtTests.StadtNachFassung(2);
+            var regeln = new IchSicht();
+            var alt = SpielKamera.Draussen(s.FigurX, s.FigurZ, s.Szene.Breite, s.Szene.Tiefe);
+            Assert.True(SpielKamera.IchUmschalten(alt));
+            for (var i = 0; i < 120; i++)
+            {
+                regeln.Takt(alt, s, 1f / 60);
+            }
+            Assert.Equal(1f, alt.IchAnteil);
+            regeln.Takt(alt, s, 1f / 60, busFaehrtFigur: true);
+            Assert.True(regeln.Pausiert);
+            if (neu)
+            {
+                regeln.Neu();
+            }
+            var frisch = SpielMitfahrtTests.StadtNachFassung(2);
+            var k = SpielKamera.Draussen(frisch.FigurX, frisch.FigurZ, frisch.Szene.Breite, frisch.Szene.Tiefe);
+            for (var i = 0; i < 120; i++)
+            {
+                regeln.Takt(k, frisch, 1f / 60);
+            }
+            return k.IchAnteil;
+        }
+        Assert.Equal(0f, Anteil(neu: true));
+        Assert.True(Anteil(neu: false) > 0.5f);
+    }
+
     [Fact]
     public void Gegenprobe_AugeInDerWand_WirdGefunden()
     {

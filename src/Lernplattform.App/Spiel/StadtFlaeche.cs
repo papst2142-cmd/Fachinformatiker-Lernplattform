@@ -273,6 +273,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _spiel = value;
             _kameras.Clear();
+            _ich.Neu();
             NachladenAusMerken();
             if (value is not null)
             {
