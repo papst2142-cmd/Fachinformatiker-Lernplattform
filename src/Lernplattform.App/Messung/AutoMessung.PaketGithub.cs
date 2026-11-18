@@ -73,8 +73,8 @@ public static partial class AutoMessung
                 }
             }
             var karten = optionen.PaketKarten.Keys.Order(StringComparer.Ordinal).ToList();
-            Pruefe("Suchen nur Pakete", karten.SequenceEqual(["probe_kaputt", QuestPaket]) && github.Abfragen.Contains("/releases"),
-                string.Join(", ", karten) + " (Entwurf, Vorab und Programm-Release nicht dabei) | Abfragen: " + string.Join(", ", github.Abfragen));
+            Pruefe("Suchen nur Pakete", karten.SequenceEqual([.. FachrichtungsPaket.Fachrichtungen.Select(FachrichtungsPaket.Kennung), "probe_kaputt", QuestPaket]) && github.Abfragen.Contains("/releases"),
+                string.Join(", ", karten) + " (Entwurf, Vorab und Programm-Release nicht dabei; die drei Fachrichtungs-Zeilen sind in der App enthalten) | Abfragen: " + string.Join(", ", github.Abfragen));
 
             // falsche Pruefsumme (Eingabetaste): roter Grund, nichts geladen, Datenordner gleich
             if (optionen.PaketKnoepfe.GetValueOrDefault("probe_kaputt")?.GetValueOrDefault(PaketKnopf.Laden) is { } kaputt)

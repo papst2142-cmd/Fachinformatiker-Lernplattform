@@ -15,7 +15,15 @@ Dateien des Inhalts, keine Unterordner).
   python3 -I werkzeuge/pakete/paket_bauen.py ordner pakete/<kennung> <zielordner>
       baut <zielordner>/<kennung>_<stand>.fipaket und gibt den Pfad aus.
   python3 -I werkzeuge/pakete/paket_bauen.py selbsttest [pakete]
-      baut jedes Paket zweimal (gleiche Bytes), prueft Kopf, Pruefsummen und Reihenfolge, dazu Gegenproben.
+      baut jedes Paket zweimal (gleiche Bytes), prueft Kopf, Pruefsummen und Reihenfolge, dazu Gegenproben; seit A 0.91.0
+      auch die drei Fachrichtungs-Pakete aus inhalte_csharp/lernen (Schnitt, Rueckbau, echte Testdatei, Gegenproben).
+
+Welle A 0.91.0 (Weisung P12-300, Kurzplan P12-180, Nico 2c 5a): Fachrichtungs-Pakete (Art lernen, Kennung lernen_<fr>).
+Eine Quelle: das Werkzeug schneidet das Paket aus inhalte_csharp/lernen/ im Repo, immer gleich (gleiche Bytes bei gleichem
+Inhalt). Jeder Eintrag traegt seine feste Stelle in der ganzen Datei (der Lernstand merkt sich Szenarien und Testprojekte
+ueber diese Stelle).
+  python3 -I werkzeuge/pakete/paket_bauen.py lernen <ae|dpa|dv> <zielordner> --stand <n> --braucht-app "A 0.91.0" [--repo .]
+      baut <zielordner>/lernen_<fr>_<stand>.fipaket und gibt den Pfad aus.
 """
 import argparse
 import hashlib
@@ -28,6 +36,12 @@ import tempfile
 import zipfile
 
 KOPF_FELDER = {"art", "braucht_app", "format", "kennung", "name", "stand", "text"}
+FACHRICHTUNGEN = ("ae", "dpa", "dv")
+LERNEN_LISTEN = ("karteikarten", "quizfragen", "szenarien_ap2", "projektarbeiten", "fachgespraech")
+LERNEN_ORDNER = os.path.join("inhalte_csharp", "lernen")
+# echte Testdateien der App (Stand 1, je Fachrichtung); nach jeder Inhalte-Aenderung einer Fachrichtung neu bauen
+# (selbsttest prueft die Gleichheit mit dem heutigen Bau)
+LERNEN_TESTDATEI = (1, "A 0.91.0")
 KENNUNG = re.compile(r"^[a-z][a-z0-9_]{1,31}\Z")
 RESERVIERT = {"stadt1", "falschlieferung"}
 
@@ -72,6 +86,153 @@ def quelle_lesen(ordner):
     if [n for n, _ in dateien] != ["stadt.fistadt"]:
         raise ValueError(kennung + ": ein Stadt-Paket enthaelt genau stadt.fistadt")
     return kopf, dateien
+
+
+def _json(obj):
+    return (json.dumps(obj, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def _laden(repo, name):
+    with open(os.path.join(repo, LERNEN_ORDNER, name + ".json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _liste(repo, name):
+    daten = _laden(repo, name)
+    return daten["fragen"] if name == "fachgespraech" else daten
+
+
+def lernen_schnitt(repo, fr):
+    """(lernen.json, pruefungssaetze.json) als Bytes: alle Eintraege mit fachrichtung == fr und ihrer Stelle."""
+    if fr not in FACHRICHTUNGEN:
+        raise ValueError("Fachrichtung nur ae, dpa oder dv: " + str(fr))
+    listen = {}
+    for name in LERNEN_LISTEN:
+        eintraege = [{"stelle": i, "eintrag": e} for i, e in enumerate(_liste(repo, name))
+                     if isinstance(e, dict) and e.get("fachrichtung") == fr and e.get("im_paket") is not True]
+        if eintraege:
+            listen[name] = eintraege
+    stellen = {name: {e["stelle"]: e["eintrag"] for e in liste} for name, liste in listen.items()}
+    ausschluss = [a for a in _laden(repo, "ausschluss")["eintraege"]
+                  if a["stelle"] in stellen.get(a["datei"], {}) and stellen[a["datei"]][a["stelle"]].get("q") == a["q"]]
+    lernen = {"format": 1, "fachrichtung": fr, "listen": listen}
+    if ausschluss:
+        lernen["ausschluss"] = [{"datei": a["datei"], "stelle": a["stelle"], "q": a["q"]} for a in ausschluss]
+    saetze_quelle = _laden(repo, "pruefungssaetze")
+    saetze = {"format": saetze_quelle["format"],
+              "saetze": [{"stelle": i, "satz": s} for i, s in enumerate(saetze_quelle["saetze"])
+                         if isinstance(s, dict) and s.get("fachrichtung") == fr and s.get("im_paket") is not True]}
+    return _json(lernen), _json(saetze)
+
+
+def lernen_bauen(repo, fr, ziel_ordner, stand, braucht_app):
+    if not isinstance(stand, int) or stand < 1:
+        raise ValueError("stand ab 1 noetig")
+    lernen, saetze = lernen_schnitt(repo, fr)
+    kopf = {"format": 1, "art": "lernen", "kennung": "lernen_" + fr, "name": "Fachrichtungs-Paket " + fr.upper(),
+            "stand": stand, "braucht_app": braucht_app,
+            "text": "Lerninhalte der Fachrichtung " + fr.upper()
+            + ": Karteikarten, Quiz, AP2-Szenarien, Testprojekte, Fachgespräch und Prüfungssätze."}
+    ziel = os.path.join(ziel_ordner, "lernen_%s_%d.fipaket" % (fr, stand))
+    with tempfile.TemporaryDirectory() as tmp:
+        dateien = []
+        for name, inhalt in (("lernen.json", lernen), ("pruefungssaetze.json", saetze)):
+            pfad = os.path.join(tmp, name)
+            with open(pfad, "wb") as f:
+                f.write(inhalt)
+            dateien.append((name, pfad))
+        bauen(ziel, kopf, dateien)
+    return ziel
+
+
+def lernen_rueckbau(repo, fr, lernen, saetze):
+    """Funde, wenn App-Dateien mit Platzhaltern + Paket nicht genau die Dateien im Repo ergeben."""
+    funde = []
+    paket = json.loads(lernen)
+    for name in LERNEN_LISTEN:
+        original = _liste(repo, name)
+        rueck = [{"fachrichtung": fr, "im_paket": True} if isinstance(e, dict) and e.get("fachrichtung") == fr else e for e in original]
+        for e in paket["listen"].get(name, []):
+            if e["stelle"] >= len(rueck) or rueck[e["stelle"]] != {"fachrichtung": fr, "im_paket": True}:
+                funde.append("%s %s: Stelle %d passt nicht" % (fr, name, e["stelle"]))
+                continue
+            rueck[e["stelle"]] = e["eintrag"]
+        if rueck != original:
+            funde.append("%s %s: Rueckbau ungleich" % (fr, name))
+    s = json.loads(saetze)
+    original = _laden(repo, "pruefungssaetze")["saetze"]
+    rueck = [None if isinstance(x, dict) and x.get("fachrichtung") == fr else x for x in original]
+    for e in s["saetze"]:
+        if e["stelle"] < len(rueck) and rueck[e["stelle"]] is None:
+            rueck[e["stelle"]] = e["satz"]
+    if rueck != original:
+        funde.append(fr + " pruefungssaetze: Rueckbau ungleich")
+    return funde
+
+
+def lernen_selbsttest(repo):
+    funde = []
+    if not os.path.isdir(os.path.join(repo, LERNEN_ORDNER)):
+        return [repo + ": " + LERNEN_ORDNER + " fehlt"]
+    with tempfile.TemporaryDirectory() as tmp:
+        for fr in FACHRICHTUNGEN:
+            a, b = os.path.join(tmp, "a"), os.path.join(tmp, "b")
+            os.makedirs(a, exist_ok=True)
+            os.makedirs(b, exist_ok=True)
+            pa, pb = lernen_bauen(repo, fr, a, 1, "A 0.91.0"), lernen_bauen(repo, fr, b, 1, "A 0.91.0")
+            with open(pa, "rb") as f:
+                ba = f.read()
+            with open(pb, "rb") as f:
+                if f.read() != ba:
+                    funde.append("lernen_" + fr + ": zweimal gebaut, aber nicht bytegleich")
+            with zipfile.ZipFile(io.BytesIO(ba)) as z:
+                if z.namelist() != ["paket.json", "lernen.json", "pruefungssaetze.json"]:
+                    funde.append("lernen_" + fr + ": Dateien im Archiv " + ",".join(z.namelist()))
+                kopf = json.loads(z.read("paket.json"))
+                if kopf["art"] != "lernen" or kopf["kennung"] != "lernen_" + fr or kopf["name"] != "Fachrichtungs-Paket " + fr.upper():
+                    funde.append("lernen_" + fr + ": Kopf falsch")
+                lernen, saetze = z.read("lernen.json"), z.read("pruefungssaetze.json")
+                for n, angabe in kopf["dateien"].items():
+                    inhalt = z.read(n)
+                    if hashlib.sha256(inhalt).hexdigest() != angabe["sha256"] or len(inhalt) != angabe["groesse"]:
+                        funde.append("lernen_" + fr + ": Pruefsumme von " + n + " falsch")
+            paket = json.loads(lernen)
+            zahlen = {n: len(paket["listen"].get(n, [])) for n in LERNEN_LISTEN}
+            erwartet = {n: sum(1 for e in _liste(repo, n) if isinstance(e, dict) and e.get("fachrichtung") == fr) for n in LERNEN_LISTEN}
+            if zahlen != erwartet or not all(zahlen[n] for n in LERNEN_LISTEN):
+                funde.append("lernen_%s: Zahlen %s statt %s" % (fr, zahlen, erwartet))
+            if any(e["eintrag"].get("fachrichtung") != fr for n in LERNEN_LISTEN for e in paket["listen"].get(n, [])):
+                funde.append("lernen_" + fr + ": fremder Eintrag im Paket")
+            funde.extend(lernen_rueckbau(repo, fr, lernen, saetze))
+            # Gegenprobe: eine verschobene Stelle faellt im Rueckbau auf
+            verschoben = json.loads(lernen)
+            verschoben["listen"]["szenarien_ap2"][0]["stelle"] += 1
+            if not lernen_rueckbau(repo, fr, _json(verschoben), saetze):
+                funde.append("lernen_" + fr + ": Gegenprobe (Stelle verschoben) nicht erkannt")
+            # Gegenprobe: ein anderer Text faellt auf
+            anders = json.loads(lernen)
+            anders["listen"]["karteikarten"][0]["eintrag"]["q"] = anders["listen"]["karteikarten"][0]["eintrag"].get("q", "") + " "
+            if not lernen_rueckbau(repo, fr, _json(anders), saetze):
+                funde.append("lernen_" + fr + ": Gegenprobe (Eintrag geaendert) nicht erkannt")
+            # echte Testdatei der App: gleiche Bytes wie der heutige Bau
+            echt = os.path.join(repo, "tests", "Lernplattform.Tests", "Testdaten", "pakete_echt", "lernen_%s_%d.fipaket" % (fr, LERNEN_TESTDATEI[0]))
+            c = os.path.join(tmp, "c")
+            os.makedirs(c, exist_ok=True)
+            with open(lernen_bauen(repo, fr, c, LERNEN_TESTDATEI[0], LERNEN_TESTDATEI[1]), "rb") as f:
+                neu = f.read()
+            if not os.path.exists(echt):
+                funde.append("Testdatei " + os.path.basename(echt) + " fehlt")
+            else:
+                with open(echt, "rb") as f:
+                    if f.read() != neu:
+                        funde.append("Testdatei " + os.path.basename(echt) + " weicht vom Bau ab (neu bauen: paket_bauen.py lernen " + fr + " "
+                                     + "tests/Lernplattform.Tests/Testdaten/pakete_echt --stand 1 --braucht-app \"A 0.91.0\")")
+        try:
+            lernen_schnitt(repo, "si")
+            funde.append("Gegenprobe Fachrichtung si: nicht abgelehnt")
+        except ValueError:
+            pass
+    return funde
 
 
 def ordner_bauen(ordner, ziel_ordner):
@@ -159,9 +320,11 @@ def selbsttest(wurzel):
                 pass
             if fall == "Unterordner":
                 os.rmdir(os.path.join(probe, "unter"))
+    # Welle A 0.91.0: die drei Fachrichtungs-Pakete aus dem Repo (Wurzel = Ordner ueber pakete/)
+    funde.extend(lernen_selbsttest(os.path.dirname(os.path.abspath(wurzel))))
     for f in funde:
         print("FEHLER:", f)
-    print("paket_bauen selbsttest:", len(kennungen), "Pakete,", "gruen" if not funde else "rot")
+    print("paket_bauen selbsttest:", len(kennungen), "Pakete,", len(FACHRICHTUNGEN), "Fachrichtungs-Pakete,", "gruen" if not funde else "rot")
     return 1 if funde else 0
 
 
@@ -184,6 +347,19 @@ def main():
         try:
             print(ordner_bauen(sys.argv[2], sys.argv[3]))
         except ValueError as e:
+            sys.exit("FEHLER: " + str(e))
+        return
+    if len(sys.argv) >= 2 and sys.argv[1] == "lernen":
+        q = argparse.ArgumentParser(prog="paket_bauen.py lernen")
+        q.add_argument("fachrichtung")
+        q.add_argument("zielordner")
+        q.add_argument("--stand", type=int, required=True)
+        q.add_argument("--braucht-app", required=True)
+        q.add_argument("--repo", default=".")
+        b = q.parse_args(sys.argv[2:])
+        try:
+            print(lernen_bauen(b.repo, b.fachrichtung, b.zielordner, b.stand, b.braucht_app))
+        except (ValueError, OSError, KeyError) as e:
             sys.exit("FEHLER: " + str(e))
         return
     if len(sys.argv) >= 2 and sys.argv[1] == "selbsttest":

@@ -17,6 +17,9 @@ public sealed record PaketKopf(long Format, string Art, string Kennung, string N
 public sealed record PaketErgebnis(PaketKopf? Kopf, string? Grund)
 {
     public bool Gut => Kopf is not null && Grund is null;
+
+    /// <summary>Welle A 0.91.0: Inhalt eines gueltigen Fachrichtungs-Pakets (sonst null).</summary>
+    public FachrichtungsInhalt? Lernen { get; init; }
 }
 
 /// <summary>
@@ -35,11 +38,19 @@ public static partial class Paket
     public const string StadtDatei = "stadt.fistadt";
     public const string ArtStadt = "stadt";
 
-    /// <summary>Arten, die diese App kennt (heute nur Staedte; Lern-Pakete erst nach eigenem Kurzplan, Nico 3b).</summary>
-    public static readonly IReadOnlyList<string> Arten = [ArtStadt];
+    /// <summary>Welle A 0.91.0 (Weisung P12-300): Fachrichtungs-Paket (<see cref="FachrichtungsPaket"/>).</summary>
+    public const string ArtLernen = "lernen";
+
+    /// <summary>Arten, die diese App kennt: Staedte und seit A 0.91.0 Fachrichtungs-Pakete (Nico 3b, Weisung P12-300).</summary>
+    public static readonly IReadOnlyList<string> Arten = [ArtStadt, ArtLernen];
 
     /// <summary>Pflichtdateien je Art.</summary>
-    public static IReadOnlyList<string> Pflicht(string art) => art == ArtStadt ? [StadtDatei] : [];
+    public static IReadOnlyList<string> Pflicht(string art) => art switch
+    {
+        ArtStadt => [StadtDatei],
+        ArtLernen => [FachrichtungsPaket.LernenDatei, FachrichtungsPaket.SaetzeDatei],
+        _ => [],
+    };
 
     /// <summary>
     /// Kennungen, die zur App gehoeren (Stadt 1 bleibt immer in der App, Nico 4a). Seit A 0.89.0 auch <c>falschlieferung</c>:
@@ -111,18 +122,19 @@ public static partial class Paket
     }
 
     /// <summary>Prueft ein Paket-Archiv vollstaendig (Kopf, Prüfsummen, Inhalt); <paramref name="app"/> = Anzeige der App.</summary>
-    public static PaketErgebnis PruefenArchiv(Stream archiv, string app)
+    public static PaketErgebnis PruefenArchiv(Stream archiv, string app, Inhalte.LernenOrdner? eingebaut = null)
     {
         var (dateien, grund) = Entpacken(archiv);
-        return dateien is null ? new(null, grund) : Pruefen(dateien, app);
+        return dateien is null ? new(null, grund) : Pruefen(dateien, app, eingebaut);
     }
 
     /// <summary>
     /// Prueft die Dateien eines Pakets (aus dem Archiv oder aus dem Ordner im Datenordner): Kopf, Format, Art, Kennung,
     /// <c>braucht_app</c>, jede Datei gegen SHA-256 und Groesse, keine fremde und keine fehlende Datei, Ladepruefung des Inhalts
-    /// (Stadt: <see cref="StadtFassung.Lesen"/>). Gibt den ersten Grund zurueck.
+    /// (Stadt: <see cref="StadtFassung.Lesen"/>; Fachrichtungs-Paket: Aufbau und „nur angehaengt“ gegenueber
+    /// <paramref name="eingebaut"/>, den Inhalten der App; ohne Angabe gegenueber leeren Inhalten). Gibt den ersten Grund zurueck.
     /// </summary>
-    public static PaketErgebnis Pruefen(IReadOnlyDictionary<string, byte[]> dateien, string app)
+    public static PaketErgebnis Pruefen(IReadOnlyDictionary<string, byte[]> dateien, string app, Inhalte.LernenOrdner? eingebaut = null)
     {
         if (!dateien.TryGetValue(KopfDatei, out var kopfBytes))
         {
@@ -161,6 +173,12 @@ public static partial class Paket
         if (Reserviert.Contains(kennung))
         {
             return new(null, PaketTexte.Format(PaketTexte.KennungReserviert, kennung));
+        }
+        // Welle A 0.91.0: Art lernen nur mit Kennung lernen_ae/dpa/dv, und diese Kennungen nur mit Art lernen
+        var fachrichtung = FachrichtungsPaket.FachrichtungAus(kennung);
+        if ((art == ArtLernen) != (fachrichtung is not null) || (art != ArtLernen && kennung.StartsWith(FachrichtungsPaket.Praefix, StringComparison.Ordinal)))
+        {
+            return new(null, PaketTexte.Format(PaketTexte.KennungArt, kennung));
         }
         if (Text(kopf["name"]) is not { Length: > 0 and <= 40 } name || name.Trim() != name)
         {
@@ -234,6 +252,21 @@ public static partial class Paket
             {
                 return new(null, PaketTexte.Format(PaketTexte.StadtFehler, x.Message));
             }
+        }
+        if (art == ArtLernen)
+        {
+            // Schluessel = gepruefte Pruefsummen der zwei Dateien: Lesen und „nur angehaengt“ rechnen je Inhalt nur einmal
+            var schluessel = fachrichtung + ":" + stand + ":" + angaben[FachrichtungsPaket.LernenDatei].Item1 + angaben[FachrichtungsPaket.SaetzeDatei].Item1;
+            var (inhalt, lernGrund) = FachrichtungsPaket.LesenGemerkt(schluessel, dateien, fachrichtung!, stand);
+            if (inhalt is null)
+            {
+                return new(null, lernGrund);
+            }
+            if (FachrichtungsPaket.NurAngehaengt(inhalt, schluessel, eingebaut ?? Inhalte.LernenOrdner.Leer) is { } angehaengt)
+            {
+                return new(null, angehaengt);
+            }
+            return new(new PaketKopf(format, art, kennung, name, stand, braucht, text, angaben), null) { Lernen = inhalt };
         }
         return new(new PaketKopf(format, art, kennung, name, stand, braucht, text, angaben), null);
     }

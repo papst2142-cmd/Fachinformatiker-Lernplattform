@@ -26,7 +26,7 @@ namespace Lernplattform.Messung;
 /// </summary>
 public static partial class AutoMessung
 {
-    public const int PaketeAnsichtenAnzahl = 4;
+    public const int PaketeAnsichtenAnzahl = 7;
 
     private const string ProbePaket = "tests/Lernplattform.Tests/Testdaten/pakete/probe_testkarte_1.fipaket";
     private const string EchtOrdner = "tests/Lernplattform.Tests/Testdaten/pakete_echt";
@@ -66,7 +66,7 @@ public static partial class AutoMessung
         {
             var klein = File.ReadAllBytes(echt);
             File.WriteAllBytes(Path.Combine(quelle, "probe_klein_1.fipaket"), klein);
-            File.WriteAllBytes(Path.Combine(quelle, "probe_lernen_1.fipaket"), File.ReadAllBytes(Path.Combine(EchtOrdner, "probe_lernen_1.fipaket")));
+            File.WriteAllBytes(Path.Combine(quelle, "probe_grafik_1.fipaket"), File.ReadAllBytes(Path.Combine(EchtOrdner, "probe_grafik_1.fipaket")));
             File.WriteAllBytes(Path.Combine(quelle, "probe_halb_1.fipaket"), klein[..(klein.Length / 2)]);
             File.WriteAllBytes(Path.Combine(quelle, "probe_neu_1.fipaket"), PaketUmbauen(klein, k =>
             {
@@ -181,7 +181,9 @@ public static partial class AutoMessung
             optionen.OeffneBereich(Optionen.Pakete, false);
             optionen.PaketeNeu();
             await ansicht.BildFertigAsync();
-            Pruefe("Karte vor der Suche", optionen.PaketKarten.Count == 0, optionen.PaketKarten.Count + " Pakete (nichts gesucht, nichts geladen)");
+            // A 0.91.0: vor der Suche stehen nur die drei Fachrichtungs-Pakete der App da („In der App enthalten“)
+            Pruefe("Karte vor der Suche", optionen.PaketKarten.Count == 3 && FachrichtungsPaket.Fachrichtungen.All(fr => optionen.PaketKarten.ContainsKey(FachrichtungsPaket.Kennung(fr))),
+                optionen.PaketKarten.Count + " Zeilen (nichts gesucht, nichts geladen; erwartet die drei Fachrichtungs-Pakete)");
             // A1 mit jeder Bedienart: suchen, laden, anzeigen, entfernen
             foreach (var art in new[] { "Maus", "Finger", "Eingabetaste", "Screenreader" })
             {
@@ -199,7 +201,7 @@ public static partial class AutoMessung
                     await ansicht.BildFertigAsync();
                 }
                 var gefunden = optionen.PaketKnoepfe.TryGetValue("probe_testkarte", out var k) && k.ContainsKey(PaketKnopf.Laden);
-                Pruefe(art + " Suchen", gefunden && optionen.PaketKarten.Count == 6, optionen.PaketKarten.Count + " Pakete angeboten" + (gefunden ? ", Probe-Paket mit „Laden“" : ", Probe-Paket FEHLT"));
+                Pruefe(art + " Suchen", gefunden && optionen.PaketKarten.Count == 9, optionen.PaketKarten.Count + " Pakete angeboten" + (gefunden ? ", Probe-Paket mit „Laden“" : ", Probe-Paket FEHLT"));
                 if (!gefunden)
                 {
                     continue;
@@ -238,7 +240,7 @@ public static partial class AutoMessung
             {
                 ("probe_kaputt", PaketTexte.Format(PaketTexte.Pruefsumme, Paket.StadtDatei)),
                 ("probe_halb", PaketTexte.KeinArchiv),
-                ("probe_lernen", PaketTexte.ArtUnbekannt),
+                ("probe_grafik", PaketTexte.ArtUnbekannt),
                 ("probe_neu", PaketTexte.Format(PaketTexte.FormatNeu, 2, 1)),
             })
             {
@@ -384,6 +386,27 @@ public static partial class AutoMessung
             yield return "optionen/pakete-mobil";
             Dialog.AlleSchliessen();
             await Task.WhenAny(frage, Task.Delay(3000));
+            OptionenSeite.PaketMobilFuerTests = false;
+            // Welle A 0.91.0: Zeile eines Fachrichtungs-Pakets mit neuem Stand, Sperre beim offenen Pruefungssatz, Rueckfrage
+            if (quelle is not null && File.Exists(Path.Combine(EchtOrdner, "lernen_ae_1.fipaket")))
+            {
+                File.Copy(Path.Combine(EchtOrdner, "lernen_ae_1.fipaket"), Path.Combine(quelle, "lernen_ae_1.fipaket"), true);
+                await PaketDienst.Verwaltung.SuchenAsync();
+                optionen.PaketeNeu();
+                await ansicht.BildFertigAsync();
+                optionen.PaketKarten.GetValueOrDefault("lernen_ae")?.BringIntoView();
+                await ansicht.BildFertigAsync();
+                yield return "optionen/pakete-fachrichtung";
+                optionen.PaketStatusZeigen(PaketTexte.Format(PaketTexte.FrEntfernenGesperrt, PaketTexte.Fr("ae")), true);
+                await ansicht.BildFertigAsync();
+                yield return "optionen/pakete-fachrichtung-gesperrt";
+                optionen.PaketStatusZeigen("", false);
+                var fehlt = Programm.FachrichtungsPaketDienst.FehltAsync("ae");
+                await ansicht.BildFertigAsync();
+                yield return "optionen/pakete-fachrichtung-fehlt";
+                Dialog.AlleSchliessen();
+                await Task.WhenAny(fehlt, Task.Delay(3000));
+            }
         }
         finally
         {
@@ -410,7 +433,7 @@ public static partial class AutoMessung
         File.Delete(Path.Combine(quelle, "probe_kaputt_1.fipaket"));
         var v = PaketDienst.Verwaltung;
         await v.SuchenAsync();
-        foreach (var kennung in new[] { "probe_testkarte", "probe_klein", "probe_lernen" })
+        foreach (var kennung in new[] { "probe_testkarte", "probe_klein", "probe_grafik" })
         {
             if (v.Angebote.FirstOrDefault(a => a.Kennung == kennung) is { } a)
             {

@@ -302,9 +302,11 @@ public static class Zustand
         {
             // Phase 10 W1 (Weisung P9-13, Nico 5): erst die bisherigen Inhalte, dann die Wahl, dann aus
             // inhalte_csharp/lernen nur die neuen Inhalte der gewaehlten Fachrichtung (die anderen beim Wechsel)
-            var lernen = new LernenOrdner(LernenDatei);
-            lernen.Vorab();     // die Listen aus inhalte_csharp/lernen lesen schon, waehrend die bisherigen laden
+            var eingebaut = Eingebaut;
+            eingebaut.Vorab();     // die Listen aus inhalte_csharp/lernen lesen schon, waehrend die bisherigen laden
             var bisher = Lerninhalte.Laden(EingebauteDatei);
+            // Welle A 0.91.0 (Weisung P12-300): gueltige Fachrichtungs-Pakete aus dem Datenordner (geprueft „nur angehaengt“)
+            var lernen = MitPaketen(eingebaut);
             uhr.Stop();
             var wahlUhr = Stopwatch.StartNew();
             Sicht = Wahl();
@@ -329,6 +331,95 @@ public static class Zustand
             return null;
         }
     }
+
+    /// <summary>Welle A 0.91.0: die Dateien aus inhalte_csharp/lernen, die die App selbst mitbringt (Grundstand), einmal gelesen.</summary>
+    internal static LernenOrdner Eingebaut => LazyInitializer.EnsureInitialized(ref _eingebaut, () => new LernenOrdner(LernenDatei));
+
+    private static LernenOrdner? _eingebaut;
+
+    /// <summary>Welle A 0.91.0: Ordner der aktuellen Inhalte (Grundstand mit den geladenen Fachrichtungs-Paketen).</summary>
+    internal static LernenOrdner Aktuell => _aktuell ?? Eingebaut;
+
+    private static LernenOrdner? _aktuell;
+
+    private static LernenOrdner MitPaketen(LernenOrdner eingebaut)
+    {
+        IReadOnlyList<Core.Pakete.FachrichtungsInhalt> pakete;
+        try
+        {
+            pakete = PaketDienst.Verwaltung.Fachrichtungen();
+        }
+        catch (Exception fehler)
+        {
+            // nie ein Absturz: ohne Pakete gilt der Grundstand
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            pakete = [];
+        }
+        var ordner = pakete.Count == 0 ? eingebaut : eingebaut.MitPaketen(pakete);
+        _aktuell = ordner;
+        _echt = NeuerBestand();
+        return ordner;
+    }
+
+    /// <summary>Welle A 0.91.0: Messpunkt „Fachrichtungs-Paket einsetzen &lt;FR&gt;“ (Pruefen bis die Sicht steht), ms.</summary>
+    public static System.Collections.Concurrent.ConcurrentDictionary<string, double> EinsetzenMs { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Welle A 0.91.0 (Weisung P12-300): nach Laden oder Entfernen eines Fachrichtungs-Pakets die Inhalte neu bilden (die
+    /// bisherigen Inhalte werden nicht neu gelesen, der Lernstand bleibt, wie er ist). <paramref name="uhr"/> laeuft schon seit
+    /// dem Pruefen (Messpunkt „Fachrichtungs-Paket einsetzen &lt;FR&gt;“ bis die Sicht steht); null = nicht messen.
+    /// </summary>
+    public static Task<Lerninhalte?> PaketeNeu(string? fachrichtung, Stopwatch? uhr = null)
+    {
+        var vorher = AlleInhalte;
+        AlleInhalte = vorher.ContinueWith(t =>
+        {
+            if (!t.IsCompletedSuccessfully || t.Result is not { } alle)
+            {
+                return null;
+            }
+            var ordner = MitPaketen(Eingebaut);
+            void Fehler(Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+                Messwerte.Notiere("Lerninhalte: FEHLER mit Fachrichtungs-Paket " + fehler.GetType().Name + ", nur die bisherigen Inhalte");
+            }
+            if (fachrichtung is not null && alle.Alle.Geladen is not null)
+            {
+                // nur die Eintraege dieser Fachrichtung neu umwandeln, die anderen wiederverwenden (gleiches Ergebnis wie ganz neu)
+                try
+                {
+                    var neu = alle.MitPaketNeu(ordner, fachrichtung);
+                    return neu.HatFachrichtung(Sicht) ? neu : neu.MitFachrichtung(Sicht);
+                }
+                catch (Exception ausnahme) when (ausnahme is not OutOfMemoryException)
+                {
+                    Fehler(ausnahme);
+                }
+            }
+            return Lerninhalte.MitLernenSicher(() => alle.Bisher, ordner, Fehler, alle.Alle.Geladen is { } g ? [.. g, Sicht] : null);
+        }, TaskScheduler.Default);
+        Gemerkt.Clear();
+        Inhalte = AlleInhalte.ContinueWith(t =>
+        {
+            var sicht = t.IsCompletedSuccessfully ? t.Result?.Fuer(Sicht) : null;
+            if (uhr is not null && sicht is not null && fachrichtung is not null)
+            {
+                var ms = uhr.Elapsed.TotalMilliseconds;
+                EinsetzenMs[fachrichtung] = ms;
+                Messpunktdienst.Notieren(Core.Diagnose.Messpunkte.Punkt.FachrichtungsPaketEinsetzen, ms, fachrichtung);
+                Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Fachrichtungs-Paket {fachrichtung} eingesetzt (Pruefen bis die Sicht steht): {ms:F0} ms"));
+            }
+            return sicht;
+        }, TaskScheduler.Default);
+        AbgeleiteteStarten();
+        InhalteGeaendert?.Invoke();
+        return Inhalte;
+    }
+
+    /// <summary>Welle A 0.91.0: die Inhalte wurden nach Laden oder Entfernen eines Fachrichtungs-Pakets neu gebildet.</summary>
+    public static event Action? InhalteGeaendert;
 
     /// <summary>W3: Fragen fuers Fachgespraech (inhalte/fachgespraech.json, _load_questions); leer bei einem Lesefehler.</summary>
     public static IReadOnlyList<Core.Projekt.ProjektFrage> Fachfragen() => LazyInitializer.EnsureInitialized(ref _fachfragen, () =>
@@ -362,8 +453,14 @@ public static class Zustand
     });
 
     /// <summary>A 0.76.0: Pruefungssaetze im echten Format, einmal geladen (Hintergrund ab dem ersten Zugriff), nie ein Absturz.</summary>
-    private static readonly Lazy<Core.Pruefung.Echt.EchtBestand> _echt = new(() => Core.Pruefung.Echt.EchtSaetze.Laden(
-        LernenDatei(Core.Pruefung.Echt.EchtSaetze.DateiName)));
+    /// <summary>Welle A 0.91.0: mit den Saetzen der geladenen Fachrichtungs-Pakete (neu nach Laden oder Entfernen).</summary>
+    private static Lazy<Core.Pruefung.Echt.EchtBestand> _echt = NeuerBestand();
+
+    private static Lazy<Core.Pruefung.Echt.EchtBestand> NeuerBestand()
+    {
+        var ordner = Aktuell;
+        return new(() => Core.Pruefung.Echt.EchtSaetze.Laden(ordner.Saetze()));
+    }
 
     public static Core.Pruefung.Echt.EchtBestand EchtBestand => _echt.Value;
 

@@ -19,14 +19,21 @@ public static class Messpunkte
     public const string DateiName = "messpunkte.log";
     public const int DateiMax = 8 * 1024;
 
-    /// <summary>Die vier Messpunkte (feste Namen; nichts anderes kommt in die Datei).</summary>
+    /// <summary>
+    /// Die Messpunkte (feste Namen; nichts anderes kommt in die Datei). Seit A 0.91.0 (Weisung P12-300, Nico 4a) dazu
+    /// „Fachrichtungs-Paket einsetzen &lt;FR&gt;“ (Pruefen bis die Sicht steht, ohne Download).
+    /// </summary>
     public enum Punkt
     {
         InhalteLaden,
         ErsteKarte,
         FachrichtungWechseln,
         SpielBetreten,
+        FachrichtungsPaketEinsetzen,
     }
+
+    /// <summary>Messpunkte mit Fachrichtung im Namen (je Fachrichtung einmal je Programmstart).</summary>
+    public static bool MitFachrichtung(Punkt punkt) => punkt is Punkt.FachrichtungWechseln or Punkt.FachrichtungsPaketEinsetzen;
 
     /// <summary>Anzeigename je Messpunkt (Zeile in der Datei und im Problembericht).</summary>
     public static string Name(Punkt punkt) => punkt switch
@@ -35,6 +42,7 @@ public static class Messpunkte
         Punkt.ErsteKarte => "Erste Karte",
         Punkt.FachrichtungWechseln => "Fachrichtung wechseln",
         Punkt.SpielBetreten => "Spiel betreten",
+        Punkt.FachrichtungsPaketEinsetzen => "Fachrichtungs-Paket einsetzen",
         _ => throw new ArgumentOutOfRangeException(nameof(punkt)),
     };
 
@@ -49,7 +57,7 @@ public static class Messpunkte
     {
         var inv = CultureInfo.InvariantCulture;
         var name = Name(punkt);
-        if (punkt == Punkt.FachrichtungWechseln)
+        if (MitFachrichtung(punkt))
         {
             name += " " + (fachrichtung is not null && Fachrichtungen.Werte.Contains(fachrichtung) ? fachrichtung : "?");
         }
@@ -70,7 +78,7 @@ public static class Messpunkte
     /// </summary>
     public static bool Notieren(string ordner, DateTime jetzt, string version, Punkt punkt, double ms, string? fachrichtung = null)
     {
-        var schluessel = punkt == Punkt.FachrichtungWechseln ? Name(punkt) + " " + fachrichtung : Name(punkt);
+        var schluessel = MitFachrichtung(punkt) ? Name(punkt) + " " + fachrichtung : Name(punkt);
         lock (Sperre)
         {
             if (!Geschrieben.Add(schluessel))

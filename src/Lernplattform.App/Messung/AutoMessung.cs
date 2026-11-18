@@ -368,6 +368,9 @@ public static partial class AutoMessung
         funde += RingVerlaufPruefen();   // Phase 8 W2 Nachtrag (P8-3b): Farbverlauf der Fortschrittsringe
         Zeitplan("P9W2MesspunkteAsync");
         funde += await P9W2MesspunkteAsync(ansicht);   // Phase 9 W2: Inhalte laden, Fachrichtung wechseln, Klausurauswahl AE
+        // A 0.91.0: Fachrichtungs-Pakete, Messpunkt „einsetzen <FR>“ (wechselt die Sicht und baut Seiten neu, darum zuletzt)
+        Zeitplan("FachrichtungsPaketeAsync");
+        funde += await FachrichtungsPaketeAsync(ansicht);
         return funde;
     }
 
@@ -791,7 +794,7 @@ public static partial class AutoMessung
             Messwerte.Notiere(string.Create(inv, $"  und {P8W2AnsichtenAnzahl} Ansichten der Welle W2 (Phase 8): Optionen \"Über das Programm\" mit der Liste \"Lizenzen\" (alle zu, erster Bestandteil offen)"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W2bAnsichtenAnzahl} Ansichten der Welle W2b (Phase 8): Seitenleiste mit allen Gruppen offen, Optionen mit allen Gruppen und Karten zu"));
             Messwerte.Notiere(string.Create(inv, $"  und {P8W8AnsichtenAnzahl} Ansichten der Welle W8 (Phase 8): Optionen \"Musik und Geräusche\" mit einem eigenen Lied, \"Vollbild\", \"Tastenbelegung\" mit Meldung \"schon belegt\""));
-            Messwerte.Notiere(string.Create(inv, $"  und {PaketeAnsichtenAnzahl} Ansichten Inhaltspakete (A 0.87.0, Testquelle): alle Zustaende, ohne Netz, beim Laden mit Balken, Rueckfrage am Handy"));
+            Messwerte.Notiere(string.Create(inv, $"  und {PaketeAnsichtenAnzahl} Ansichten Inhaltspakete (A 0.87.0, Testquelle): alle Zustaende, ohne Netz, beim Laden mit Balken, Rueckfrage am Handy; A 0.91.0 Fachrichtungs-Paket mit neuem Stand, Entfernen gesperrt, Rueckfrage \"fehlt\""));
             Messwerte.Notiere(string.Create(inv, $"  und je Schriftstufe {P8W10DashboardAnsichtenAnzahl} Ansichten der Welle W10 (Phase 8): Dashboard bei 1280 x 720 und 1920 x 1080 (hoechstens Bildschirmgroesse)"));
         }
         if (MitSpiel)

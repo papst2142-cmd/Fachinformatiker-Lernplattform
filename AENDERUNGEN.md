@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.91.0
+Die Inhalte der Fachrichtungen Anwendungsentwicklung (AE), Daten- und Prozessanalyse (DPA) und Digitale Vernetzung (DV) lassen sich jetzt auch als Inhaltspaket nachladen. Heute bringt die App diese Inhalte weiter selbst mit; das Paket ist die Grundlage dafür, dass neue Fragen später ohne App-Update kommen können.
+
+- Die Karte „Inhaltspakete“ in den Optionen zeigt drei neue Zeilen: „Fachrichtungs-Paket AE“, „Fachrichtungs-Paket DPA“ und „Fachrichtungs-Paket DV“. Heute steht dort „In der App enthalten“. Gibt es einen neueren Stand, steht er dabei, und „Laden“ holt ihn.
+- Findet die Suche nach Paketen einen neueren Stand für deine Fachrichtung, zeigt die Lernansicht oben einmal einen Hinweis mit der Größe. Geladen wird nur, wenn du auf „Laden“ tippst; am Handy ohne WLAN fragt die App vorher nach.
+- Ein Fachrichtungs-Paket darf nur Neues hinten anhängen. Jede Frage behält ihren Platz, nichts wird umgeschrieben oder verschoben. Ein Paket, das das versucht, wird abgelehnt und nicht eingesetzt.
+- Solange du einen Prüfungssatz einer Fachrichtung schreibst, lässt sich ihr Paket nicht entfernen. Nach dem Entfernen gelten wieder die Inhalte, die die App mitbringt.
+- Fehlen auf einem Gerät Inhalte, die du auf einem anderen schon bearbeitet hast, weist die App nach dem Abgleich einmal auf das Paket hin. Dein Fortschritt dazu bleibt und geht nach dem Laden genau dort weiter.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.90.0
 Im Spiel wird das Wohnen und Einkaufen bequemer: Betten, Möbel und das Geld in den Läden verhalten sich jetzt so, wie man es erwartet.
 

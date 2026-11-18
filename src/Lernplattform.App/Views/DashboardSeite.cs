@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
@@ -68,6 +69,56 @@ public sealed class DashboardSeite : UserControl
         }
     }
 
+    /// <summary>
+    /// Welle A 0.91.0 (Weisung P12-300, Nico 3a): einmal oben der Hinweis auf einen neuen Stand des Fachrichtungs-Pakets der
+    /// Sicht (nur nach einer Suche, Laden nur auf Knopfdruck); fehlen der Sicht alle Inhalte, der Hinweis darauf.
+    /// </summary>
+    private void FachrichtungsKarte()
+    {
+        if (Programm.FachrichtungsPaketDienst.Hinweis() is { } neu)
+        {
+            var text = Programm.FachrichtungsPaketDienst.HinweisText(neu.Fachrichtung, neu.Angebot);
+            var laden = Schrift.Knopf(Core.Texte.PaketTexte.Laden);
+            AutomationProperties.SetName(laden, Core.Texte.PaketTexte.Laden + ": " + text);
+            var spaeter = Schrift.Knopf(Core.Texte.PaketTexte.Spaeter, false);
+            AutomationProperties.SetName(spaeter, Core.Texte.PaketTexte.Spaeter + ": " + text);
+            laden.Margin = new Thickness(0, 0, 6, 0);
+            var karte = Schrift.Karte(new StackPanel
+            {
+                Spacing = 6,
+                Children =
+                {
+                    Schrift.Text(text, "Normal", FontWeight.SemiBold, "Pinsel.accent"),
+                    new WrapPanel { Children = { laden, spaeter } },
+                },
+            });
+            karte.Name = "FachrichtungsHinweis";
+            // gezeigt erst, wenn die Karte wirklich auf dem Bildschirm steht (eine verworfene Seite verbraucht den Hinweis nicht)
+            karte.AttachedToVisualTree += (_, _) => Programm.FachrichtungsPaketDienst.HinweisGezeigt(neu.Fachrichtung, neu.Angebot.Stand);
+            spaeter.Click += (_, _) => _liste.Children.Remove(karte);
+            laden.Click += async (_, _) =>
+            {
+                laden.IsEnabled = spaeter.IsEnabled = false;
+                var grund = await Programm.FachrichtungsPaketDienst.LadenAsync(neu.Fachrichtung);
+                if (grund is null)
+                {
+                    _liste.Children.Remove(karte);
+                }
+                else
+                {
+                    laden.IsEnabled = spaeter.IsEnabled = true;
+                    await Dialog.Zeigen(PaketTexte.Format(PaketTexte.FrName, PaketTexte.Fr(neu.Fachrichtung)), grund, Dialog.Ok);
+                }
+            };
+            _liste.Children.Add(karte);
+        }
+        if (Zustand.Aktuell.Fehlt(Zustand.Sicht))
+        {
+            _liste.Children.Add(Schrift.Karte(Schrift.Text(Core.Texte.PaketTexte.Format(Core.Texte.PaketTexte.FrFehltSicht,
+                Core.Texte.PaketTexte.Fr(Zustand.Sicht)), "Normal", FontWeight.SemiBold, "Pinsel.orange")));
+        }
+    }
+
     private async Task LadenAsync()
     {
         DashboardWerte? werte = null;
@@ -97,6 +148,7 @@ public sealed class DashboardSeite : UserControl
                 }
                 _liste.Children.Clear();
                 DefektKarte();
+                FachrichtungsKarte();
                 if (werte is not null)
                 {
                     Zeigen(werte);

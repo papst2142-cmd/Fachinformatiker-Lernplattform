@@ -3,7 +3,11 @@ using Lernplattform.Core.Texte;
 namespace Lernplattform.Core.Pakete;
 
 /// <summary>Ein geladenes Paket im Datenordner (gueltig oder mit Grund).</summary>
-public sealed record GeladenesPaket(string Kennung, long Stand, PaketKopf? Kopf, string? Grund);
+public sealed record GeladenesPaket(string Kennung, long Stand, PaketKopf? Kopf, string? Grund)
+{
+    /// <summary>Welle A 0.91.0: Inhalt eines gueltigen Fachrichtungs-Pakets (sonst null).</summary>
+    public FachrichtungsInhalt? Lernen { get; init; }
+}
 
 /// <summary>
 /// Welle A 0.87.0 (Plan P12-175 Abschnitt 2): Pakete liegen nur im Datenordner der App (nie im Installationsordner), entpackt
@@ -12,8 +16,11 @@ public sealed record GeladenesPaket(string Kennung, long Stand, PaketKopf? Kopf,
 /// Reste in <c>_laden/</c> raeumt <see cref="Aufraeumen"/> (Start der Verwaltung und Ende jedes Ladens) weg. Entfernen setzt den Ordner zuerst nach
 /// <c>_laden/</c> und loescht ihn dort; leere Ordner verschwinden, der Datenordner ist danach wie vorher.
 /// </summary>
-public sealed class PaketAblage(string datenordner)
+public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingebaut = null)
 {
+    /// <summary>Welle A 0.91.0: Inhalte der App, gegen die ein Fachrichtungs-Paket „nur angehaengt“ geprueft wird.</summary>
+    public Inhalte.LernenOrdner? Eingebaut { get; } = eingebaut;
+
     public const string OrdnerName = "pakete";
     public const string LadenName = "_laden";
 
@@ -74,12 +81,12 @@ public sealed class PaketAblage(string datenordner)
             var ergebnis = OrdnerPruefen(Path.Combine(ordner, stand.ToString(System.Globalization.CultureInfo.InvariantCulture)), app);
             var grund = ergebnis.Grund ?? (ergebnis.Kopf!.Kennung != kennung || ergebnis.Kopf.Stand != stand
                 ? PaketTexte.Format(PaketTexte.Anders, kennung, stand) : null);
-            liste.Add(new GeladenesPaket(kennung, stand, grund is null ? ergebnis.Kopf : null, grund));
+            liste.Add(new GeladenesPaket(kennung, stand, grund is null ? ergebnis.Kopf : null, grund) { Lernen = grund is null ? ergebnis.Lernen : null });
         }
         return liste;
     }
 
-    private static PaketErgebnis OrdnerPruefen(string ordner, string app)
+    private PaketErgebnis OrdnerPruefen(string ordner, string app)
     {
         try
         {
@@ -94,7 +101,7 @@ public sealed class PaketAblage(string datenordner)
                 }
                 dateien[Path.GetFileName(datei)] = File.ReadAllBytes(datei);
             }
-            return Paket.Pruefen(dateien, app);
+            return Paket.Pruefen(dateien, app, Eingebaut);
         }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException)
         {
@@ -124,7 +131,7 @@ public sealed class PaketAblage(string datenordner)
             {
                 string? grund;
                 (dateien, grund) = Paket.Entpacken(strom);
-                ergebnis = dateien is null ? new(null, grund) : Paket.Pruefen(dateien, app);
+                ergebnis = dateien is null ? new(null, grund) : Paket.Pruefen(dateien, app, Eingebaut);
             }
             if (!ergebnis.Gut)
             {

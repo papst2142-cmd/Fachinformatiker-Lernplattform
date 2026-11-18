@@ -209,8 +209,12 @@ public partial class MainView : UserControl
             if (ergebnis is not null)
             {
                 Dispatcher.UIThread.Post(async () => await AusbildungAnderswoAsync());
+                // Welle A 0.91.0: kennt der Lernstand Inhalte, die hier fehlen, einmal der Hinweis aufs Fachrichtungs-Paket
+                Dispatcher.UIThread.Post(async () => await Programm.FachrichtungsPaketDienst.NachAbgleichAsync());
             }
         };
+        // Welle A 0.91.0: nach Laden oder Entfernen eines Fachrichtungs-Pakets die Seiten mit Lerninhalten neu bauen
+        Programm.Zustand.InhalteGeaendert += () => Dispatcher.UIThread.Post(SeitenNeu);
         // Strg+F wie am PC (root.bind("<Control-f>")): Suche zeigen, Feld fokussieren
         AddHandler(KeyDownEvent, (_, e) =>
         {
@@ -373,6 +377,22 @@ public partial class MainView : UserControl
         {
             return false;
         }
+        SeitenNeu();
+        // Welle A 0.91.0 (Weisung P12-300 Punkt 4): fehlen der Fachrichtung alle Inhalte, die Rueckfrage zum Laden
+        if (Programm.Zustand.Aktuell.Fehlt(fachrichtung))
+        {
+            Dispatcher.UIThread.Post(async () => await Programm.FachrichtungsPaketDienst.FehltAsync(fachrichtung));
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Seiten mit Lerninhalten verwerfen (sie bauen sich beim naechsten Zeigen mit den neuen Inhalten); Seiten mit Eingaben
+    /// frischen nur ihre Sicht auf. Nach einem Wechsel der Fachrichtung und seit A 0.91.0 nach Laden oder Entfernen eines
+    /// Fachrichtungs-Pakets. Der Lernstand bleibt.
+    /// </summary>
+    private void SeitenNeu()
+    {
         foreach (var (id, seite) in _seiten.ToList())
         {
             if (seite is not (KarteikartenSeite or TrainerSeite or FortschrittSeite or SucheSeite
@@ -404,7 +424,6 @@ public partial class MainView : UserControl
         }
         _leisten.LernstatusLesen();
         NachladeanzeigeSetzen();
-        return true;
     }
 
     private readonly Border _nachladeAnzeige;
