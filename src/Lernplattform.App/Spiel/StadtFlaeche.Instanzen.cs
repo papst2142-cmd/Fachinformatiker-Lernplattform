@@ -1,5 +1,6 @@
 using System.Numerics;
 using Avalonia.OpenGL;
+using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using static Avalonia.OpenGL.GlConsts;
 
@@ -120,6 +121,36 @@ public sealed partial class StadtFlaeche
         _instanzen.Clear();
     }
 
+    /// <summary>
+    /// Welle A 0.92.0: die ersten <paramref name="zahl"/> Lagen ordnen: zuerst die Stuecke bis <see cref="IchSicht.KachelnVollBis"/>
+    /// vom Auge (waagrecht), dann die bis <see cref="IchSicht.Sichtweite"/>; weiter weg (im vollen Dunst) faellt weg.
+    /// Rueckgabe = (Zahl der nahen, Zahl der nahen und mittleren).
+    /// </summary>
+    private (int Nah, int Sicht) IchNahZuerst(int zahl, Vector2 auge)
+    {
+        var nah = 0;
+        for (var i = 0; i < zahl; i++)
+        {
+            var t = _instanzLagen[i].Translation;
+            if (Vector2.Distance(new Vector2(t.X, t.Z), auge) <= IchSicht.KachelnVollBis)
+            {
+                (_instanzLagen[nah], _instanzLagen[i]) = (_instanzLagen[i], _instanzLagen[nah]);
+                nah++;
+            }
+        }
+        var sicht = nah;
+        for (var i = nah; i < zahl; i++)
+        {
+            var t = _instanzLagen[i].Translation;
+            if (Vector2.Distance(new Vector2(t.X, t.Z), auge) <= IchSicht.Sichtweite)
+            {
+                (_instanzLagen[sicht], _instanzLagen[i]) = (_instanzLagen[i], _instanzLagen[sicht]);
+                sicht++;
+            }
+        }
+        return (nah, sicht);
+    }
+
     /// <summary>Netz eines Satzes; mit Instancing im eigenen Vertex-Array mit Puffer fuer die Lagen (Attribute 4-7, eins je Stueck).</summary>
     private unsafe (GlNetz Netz, int Lagen) SatzNetz(GlInterface gl, Netz netz)
     {
@@ -156,50 +187,76 @@ public sealed partial class StadtFlaeche
         var mitProgramm = false;
         foreach (var s in _instanzen)
         {
-            if (s.Satz.Ziel == Instanzen.Gruen && !_gw.Gruen(abstand))
+            if (s.Satz.Ziel == Instanzen.Gruen && !_gw.Gruen(abstand) && _ichFern is null)
             {
                 continue;
             }
-            var fern = fernBild && s.Fern is not null;
-            var netz = fern ? s.Fern! : s.Nah;
-            var puffer = fern ? s.LagenFern : s.LagenNah;
             var zahl = s.Satz.ImBild(sichtProj, _instanzLagen, alle: OhneSparenFuerTests);
             if (zahl == 0)
             {
                 continue;
             }
-            if (puffer == 0)
+            var nahZahl = zahl;
+            if (_ichFern is { } ich && !OhneSparenFuerTests)
             {
-                // ohne Instancing: jedes Stueck ein Aufruf mit dem Programm der Szene
-                for (var i = 0; i < zahl; i++)
+                // Welle A 0.92.0: in der Ich-Sicht (Blick waagrecht weit) nur Stuecke nahe am Auge in voller Form; weiter weg
+                // die Fernform, hinter der Sichtweite (voller Dunst) nichts; Kleingruen nur nah (wie sonst bis GruenBis).
+                (nahZahl, zahl) = IchNahZuerst(zahl, ich);
+                if (s.Satz.Ziel == Instanzen.Gruen)
                 {
-                    Zeichnen(gl, netz, _instanzLagen[i], sichtProj);
-                    _festAufrufe++;
-                    _festDreiecke += netz.Anzahl / 3;
+                    zahl = nahZahl;
                 }
-                continue;
+                else if (s.Fern is null)
+                {
+                    nahZahl = zahl;
+                }
             }
-            if (!mitProgramm)
+            var fernAlle = fernBild && s.Fern is not null;
+            if (fernAlle)
             {
-                gl.UseProgram(_instanzProgramm);
-                gl.UniformMatrix4fv(_instanzOrtSichtProj, 1, false, &sichtProj);
-                gl.Uniform1f(_instanzOrtHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
-                LichtSetzen(gl, _instanzLichtOrte, licht, auge);
-                DunstSetzen(gl, _instanzDunstOrte);
-                gl.Uniform1f(_instanzOrtDurch, 0f);
-                mitProgramm = true;
+                nahZahl = 0;
             }
-            netz.Binden(gl);
-            gl.BindBuffer(GL_ARRAY_BUFFER, puffer);
-            fixed (Matrix4x4* lagen = _instanzLagen)
+            foreach (var (fern, von, anzahl) in new[] { (false, 0, nahZahl), (true, nahZahl, zahl - nahZahl) })
             {
-                gl.BufferData(GL_ARRAY_BUFFER, new IntPtr(zahl * 64), new IntPtr(lagen), GlDynamicDraw);
+                if (anzahl <= 0)
+                {
+                    continue;
+                }
+                var netz = fern ? s.Fern! : s.Nah;
+                var puffer = fern ? s.LagenFern : s.LagenNah;
+                if (puffer == 0)
+                {
+                    // ohne Instancing: jedes Stueck ein Aufruf mit dem Programm der Szene
+                    for (var i = von; i < von + anzahl; i++)
+                    {
+                        Zeichnen(gl, netz, _instanzLagen[i], sichtProj);
+                        _festAufrufe++;
+                        _festDreiecke += netz.Anzahl / 3;
+                    }
+                    continue;
+                }
+                if (!mitProgramm)
+                {
+                    gl.UseProgram(_instanzProgramm);
+                    gl.UniformMatrix4fv(_instanzOrtSichtProj, 1, false, &sichtProj);
+                    gl.Uniform1f(_instanzOrtHell, (IstDunkel() ? 0.72f : 1f) * licht.Hell);
+                    LichtSetzen(gl, _instanzLichtOrte, licht, auge);
+                    DunstSetzen(gl, _instanzDunstOrte);
+                    gl.Uniform1f(_instanzOrtDurch, 0f);
+                    mitProgramm = true;
+                }
+                netz.Binden(gl);
+                gl.BindBuffer(GL_ARRAY_BUFFER, puffer);
+                fixed (Matrix4x4* lagen = _instanzLagen)
+                {
+                    gl.BufferData(GL_ARRAY_BUFFER, new IntPtr(anzahl * 64), new IntPtr(lagen + von), GlDynamicDraw);
+                }
+                ((delegate* unmanaged[Stdcall]<int, int, int, IntPtr, int, void>)_glInstanziert)(GL_TRIANGLES, netz.Anzahl, GlUnsignedInt, IntPtr.Zero, anzahl);
+                _aufrufe++;
+                _dreiecke += (long)(netz.Anzahl / 3) * anzahl;
+                _festAufrufe++;
+                _festDreiecke += (long)(netz.Anzahl / 3) * anzahl;
             }
-            ((delegate* unmanaged[Stdcall]<int, int, int, IntPtr, int, void>)_glInstanziert)(GL_TRIANGLES, netz.Anzahl, GlUnsignedInt, IntPtr.Zero, zahl);
-            _aufrufe++;
-            _dreiecke += (long)(netz.Anzahl / 3) * zahl;
-            _festAufrufe++;
-            _festDreiecke += (long)(netz.Anzahl / 3) * zahl;
         }
         if (mitProgramm)
         {

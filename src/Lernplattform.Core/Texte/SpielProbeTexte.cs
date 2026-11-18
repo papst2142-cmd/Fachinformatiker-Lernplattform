@@ -14,7 +14,7 @@ public static class SpielProbeTexte
     /// zwei Finger bzw. rechte Maustaste drehen und neigen, Rest-Zoom 7 bis 9, Ueberblick in der Karte im Handy (bis A 0.79.0:
     /// „Ziehen verschiebt die Ansicht … Pfeiltasten verschieben …“).
     /// </summary>
-    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Die ganze Stadt zeigt die Karte im Handy.";
+    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.";
 
     /// <summary>Hinweis mit den gewaehlten Tasten (Tastenbelegung); mit Standard genau <see cref="Hinweis"/>.</summary>
     public static string HinweisFuer(Tasten tasten)
@@ -25,8 +25,29 @@ public static class SpielProbeTexte
             // ohne Taste fuers Neigen (Zusammenstoss mit einer eigenen Wahl aus frueherer Fassung) nennt der Hinweis keine
             + (tasten.Tasten(Tasten.Steiler).Contains(Tasten.OhneTaste) || tasten.Tasten(Tasten.Flacher).Contains(Tasten.OhneTaste)
                 ? "" : $", {T(Tasten.Steiler)} und {T(Tasten.Flacher)} neigen")
-            + ". Die ganze Stadt zeigt die Karte im Handy.";
+            + ". Ganz heranzoomen"
+            + (tasten.Tasten(Tasten.IchSicht).Contains(Tasten.OhneTaste) ? "" : $" oder {T(Tasten.IchSicht)}")
+            + " führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.";
     }
+
+    /// <summary>Welle A 0.92.0 (Weisung P12-301 Punkt 1): Eintrag im aufgeklappten Menue unten, aus der normalen Kamera.</summary>
+    public const string IchSichtKnopf = "Ich-Sicht";
+
+    /// <summary>Welle A 0.92.0: derselbe Eintrag in der Ich-Sicht.</summary>
+    public const string IchSichtBeenden = "Ich-Sicht beenden";
+
+    /// <summary>Welle A 0.92.0: Ansage beim Einschalten (Screenreader).</summary>
+    public const string IchSichtAn = "Ich-Sicht an.";
+
+    /// <summary>Welle A 0.92.0: Ansage beim Ausschalten (Screenreader).</summary>
+    public const string IchSichtAus = "Ich-Sicht aus.";
+
+    /// <summary>Welle A 0.92.0: Blickrichtung in der Ich-Sicht (Screenreader).</summary>
+    public static string IchBlick(string richtung) => "Blick nach " + richtung + ".";
+
+    /// <summary>Welle A 0.92.0: was vorn liegt (Screenreader), z. B. „Vor dir: Kaufhaus, 12 m.“</summary>
+    public static string IchVorDir(string name, int meter) =>
+        meter < 2 ? "Vor dir: " + name + "." : "Vor dir: " + name + ", " + meter.ToString(System.Globalization.CultureInfo.InvariantCulture) + " m.";
 
     public const string Orte = "Orte";
 

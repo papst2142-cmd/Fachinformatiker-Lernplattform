@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.92.0
+Im Spiel kannst du die Stadt jetzt mit den Augen deiner Figur sehen: die Ich-Sicht.
+
+- Zoomst du draußen ganz heran, geht die Kamera weich über die Schulter deiner Figur bis in ihren Kopf. Zoomst du wieder heraus, geht es denselben Weg zurück. Weiter weg als bisher geht es nicht.
+- Die Ich-Sicht lässt sich auch mit der Taste I und im aufgeklappten Menü mit „Ich-Sicht“ ein- und ausschalten. Ein Screenreader sagt beim Einschalten, wohin du schaust und was vor dir liegt, und beim Umsehen die neue Himmelsrichtung.
+- Umsehen geht mit der rechten Maustaste, mit einem Finger, mit Q und E (drehen) und mit R und F (Blick heben und senken). Gehen geht wie bisher mit Antippen eines Orts; beim Gehen dreht sich der Blick in die Gehrichtung.
+- Schaust du nach unten, siehst du Körper und Beine deiner Figur. Beim Sitzen, Liegen und im Bus pausiert die Ich-Sicht und kommt danach von allein zurück.
+- In Häusern bleibt die Ich-Sicht an. Dort haben die Räume eine Decke und Wände in voller Höhe, solange du in der Ich-Sicht bist. Die gewohnte Ansicht von oben bleibt, sobald du sie verlässt.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.91.0
 Die Inhalte der Fachrichtungen Anwendungsentwicklung (AE), Daten- und Prozessanalyse (DPA) und Digitale Vernetzung (DV) lassen sich jetzt auch als Inhaltspaket nachladen. Heute bringt die App diese Inhalte weiter selbst mit; das Paket ist die Grundlage dafür, dass neue Fragen später ohne App-Update kommen können.
 

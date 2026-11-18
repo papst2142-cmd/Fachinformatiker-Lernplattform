@@ -69,6 +69,8 @@ public static partial class AutoMessung
                     Messwerte.Notiere("Spiel: Nahansicht " + name + " mit allen Orten (Weihnachten, Winter, nachts)");
                     funde += await NahansichtAsync(seite, stufe);
                 }
+                // Welle A 0.92.0 (Weisung P12-301 Punkt 5): Ich-Sicht draussen an jeder Kachel und drinnen in jedem Raum
+                funde += await IchGrenzenAsync(seite, stufe);
                 if (stufe == Grafikstufe.Niedrig)
                 {
                     var g = flaeche.LetzteBildgroesse;

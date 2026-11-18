@@ -302,6 +302,34 @@ public static partial class AutoMessung
             {
                 teuerstMittel = teuerst;
             }
+            // Welle A 0.92.0 (Weisung P12-301 Punkt 5): Ich-Sicht an jeder Kachel der Testkarte (acht Richtungen)
+            var (ichD, ichA, ichWo) = await IchKachelnAsync(flaeche, spiel, kacheln);
+            var kIch = flaeche.AktuelleKamera!;
+            kIch.IchZiel = 0f;
+            kIch.IchAnteil = 0f;
+            Messwerte.Notiere(string.Create(inv,
+                $"Spiel: Ich-Sicht Testkarte {GrafikTexte.Name(stufe)}: {kacheln.Count} Kacheln x {IchRichtungen.Length} Richtungen, teuerstes Bild {ichWo}: {ichD} Dreiecke, hoechstens {ichA} Zeichenaufrufe (Grenzen {grenzeD}, {grenzeA})"));
+            if (ichD > grenzeD || ichA > grenzeA || ichD <= 0)
+            {
+                Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Ich-Sicht Testkarte {GrafikTexte.Name(stufe)}: {ichD} Dreiecke, {ichA} Aufrufe (Grenzen {grenzeD}, {grenzeA}) bei {ichWo}"));
+                funde++;
+            }
+            if (stufe == Grafikstufe.Mittel)
+            {
+                // Gegenprobe: ohne Sichtweite und Fernformen der Ich-Sicht laege die Testkarte ueber der Grenze
+                StadtFlaeche.IchSichtweiteAusFuerTests = true;
+                var (ohneD, ohneA, ohneWo) = await IchKachelnAsync(flaeche, spiel, kacheln);
+                StadtFlaeche.IchSichtweiteAusFuerTests = false;
+                kIch.IchZiel = 0f;
+                kIch.IchAnteil = 0f;
+                var gegenIch = string.Create(inv, $"Spiel: Ich-Sicht Testkarte Gegenprobe ohne Sichtweite: teuerstes Bild {ohneWo}: {ohneD} Dreiecke, {ohneA} Aufrufe ({(ohneD > grenzeD ? "ueber" : "NICHT ueber")} der Grenze {grenzeD})");
+                Messwerte.Notiere(gegenIch);
+                if (ohneD <= grenzeD)
+                {
+                    Messwerte.Notiere("  FEHLER: " + gegenIch);
+                    funde++;
+                }
+            }
         }
         // Gegenprobe (Mittel, teuerstes Bild): ganze Karte geladen wie bis A 0.81.2 liegt ueber der Grenze
         Zustand.Aendere(w => Grafikstufen.Wert(w, Grafikstufe.Mittel));

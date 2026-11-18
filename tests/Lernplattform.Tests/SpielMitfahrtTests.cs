@@ -297,16 +297,20 @@ public sealed class SpielMitfahrtBelastungTests
     /// <summary>Die Aktionen der Probe in ihrer Reihenfolge; jede gibt einen Fund zurueck oder null.</summary>
     internal static readonly (string Name, Func<StadtSpiel, Verkehr, Haltestelle, string?> Tun)[] Aktionen =
     [
+        // Welle A 0.92.0 (Weisung P12-301 Punkt 6): Ich-Sicht an, umsehen, Gehen in der Ich-Sicht, Pause im Sitzen und im Bus, aus
+        ("Ich-Sicht an", (s, v, h) => Ich.An(s)),
         ("Hingehen", (s, v, h) =>
         {
             SpielMitfahrtTests.Hingehen(s, v, h);
             return s.WartetAn == h.Nr ? null : $"wartet an {s.WartetAn}";
         }),
+        ("Umsehen in der Ich-Sicht", (s, v, h) => Ich.Umsehen(s)),
         // Welle A 0.81.0 (Nico 4b): auf der Bank sitzend warten, „Einsteigen“ steht vorher auf
         ("Hinsetzen", (s, v, h) =>
             !s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionHinsetzen) ? "kein Knopf Hinsetzen"
             : !s.Knopf(StadtSpiel.AktionHinsetzen) || s.AufDerBank != h.Nr || s.Haltung is null ? $"sitzt nicht (Bank {s.AufDerBank})"
             : s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionAufstehen) ? null : "kein Knopf Aufstehen"),
+        ("Ich-Sicht pausiert im Sitzen", (s, v, h) => Ich.Pausiert(s)),
         ("Warten", (s, v, h) => SpielMitfahrtTests.Bis(s, v, () => s.BusZumEinsteigen is not null, SpielMitfahrtTests.Runde(v))
             && s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionEinsteigen) ? null : "kein Bus, kein Knopf Einsteigen"),
         ("Einsteigen", (s, v, h) =>
@@ -328,6 +332,7 @@ public sealed class SpielMitfahrtBelastungTests
             return s.SitztImBus && s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionAussteigen) && s.AufDerBank is null && s.Haltung is null
                 ? null : $"nicht im Bus ({s.Mitfahrt}) oder noch auf der Bank ({s.AufDerBank})";
         }),
+        ("Ich-Sicht pausiert im Bus", (s, v, h) => Ich.Pausiert(s)),
         ("Antippen im Bus", (s, v, h) =>
         {
             var zeilen = s.Ablauf.Stand.Verlauf.Count;
@@ -356,6 +361,7 @@ public sealed class SpielMitfahrtBelastungTests
             var aus = s.Szene.Haltestellen.Single(x => x.Nr == s.LetzteMitfahrt!.Value.Aus);
             return Vector2.Distance(new Vector2(s.FigurX, s.FigurZ), StadtSpiel.Wartplatz(aus)) < 0.01f && s.ImFreien ? null : "steht nicht neben der Haltestelle";
         }),
+        ("Ich-Sicht nach dem Aussteigen zurueck", (s, v, h) => Ich.Zurueck(s)),
         ("Wieder hinsetzen", (s, v, h) =>
             s.Knopf(StadtSpiel.AktionHinsetzen) && s.AufDerBank == s.WartetAn && s.AufDerBank is not null ? null : $"sitzt nicht (Bank {s.AufDerBank}, wartet an {s.WartetAn}, {s.Mitfahrt}, Knoepfe {string.Join(",", s.Knoepfe.Select(k => k.Aktion))})"),
         ("Weggehen", (s, v, h) =>
@@ -369,7 +375,131 @@ public sealed class SpielMitfahrtBelastungTests
             return s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionEinsteigen) ? "Knopf Einsteigen nach dem Weggehen"
                 : s.AufDerBank is not null || s.Haltung is not null ? "sitzt nach dem Weggehen noch auf der Bank" : null;
         }),
+        ("Gehen in der Ich-Sicht", (s, v, h) => Ich.Gehen(s, v)),
+        ("Ich-Sicht aus", (s, v, h) => Ich.Aus(s)),
     ];
+
+    /// <summary>
+    /// Welle A 0.92.0: Kamera und Regeln der Ich-Sicht zur laufenden Probe (dieselbe Rechnung wie die Spielflaeche:
+    /// <see cref="SpielKamera"/>, <see cref="Kamerabedienung"/>, <see cref="IchSicht"/>). Jede Aktion prueft auch, dass die
+    /// Ich-Sicht nichts am Spiel aendert (Uhr, Stelle der Figur, Gehen).
+    /// </summary>
+    internal static class Ich
+    {
+        private static Kamera? _k;
+        private static IchSicht _regeln = new();
+        private static StadtSpiel? _fuer;
+
+        private static Kamera K(StadtSpiel s)
+        {
+            if (_k is null || !ReferenceEquals(_fuer, s))
+            {
+                _k = SpielKamera.Draussen(s.FigurX, s.FigurZ, s.Szene.Breite, s.Szene.Tiefe);
+                _regeln = new IchSicht();
+                _fuer = s;
+            }
+            return _k;
+        }
+
+        private static (string, float, float, bool) Stand(StadtSpiel s) => (s.Kopfzeile, s.FigurX, s.FigurZ, s.Geht);
+
+        private static void Takt(StadtSpiel s, Kamera k, int bilder)
+        {
+            for (var i = 0; i < bilder; i++)
+            {
+                _regeln.Takt(k, s, (float)SpielMitfahrtTests.Dt);
+            }
+        }
+
+        private static string? Unveraendert(StadtSpiel s, (string, float, float, bool) vorher) =>
+            Stand(s) == vorher ? null : $"Ich-Sicht aendert das Spiel: {vorher} -> {Stand(s)}";
+
+        public static string? An(StadtSpiel s)
+        {
+            var k = K(s);
+            var vorher = Stand(s);
+            if (!SpielKamera.IchUmschalten(k))
+            {
+                return "Ich-Sicht nicht erlaubt";
+            }
+            Takt(s, k, 60);
+            return !k.Ich ? $"nicht in der Ich-Sicht (Anteil {k.IchAnteil})" : Unveraendert(s, vorher);
+        }
+
+        public static string? Umsehen(StadtSpiel s)
+        {
+            var k = K(s);
+            Takt(s, k, 5);
+            var vorher = Stand(s);
+            var drehung = k.Drehung;
+            Kamerabedienung.Ziehen(k, true, 200, -300, 800);
+            Kamerabedienung.RechteMaus(k, true, new Kameragriff.Schritt(Kameragriff.Art.Drehen, Dy: 5000, Grad: 30));
+            Kamerabedienung.Taste(k, true, Tastenbelegung.DrehLinks, 800);
+            Kamerabedienung.Taste(k, true, Tastenbelegung.Flacher, 800);
+            Kamerabedienung.ZweiFinger(k, true, 1, 10, -2000);
+            Takt(s, k, 5);
+            return !k.Ich ? "Ich-Sicht nach dem Umsehen weg"
+                : k.Drehung == drehung ? "Umsehen dreht nicht"
+                : k.IchNeigung < SpielKamera.IchNeigungMin || k.IchNeigung > SpielKamera.IchNeigungMax ? $"Blick {k.IchNeigung} ausserhalb"
+                : k.Abstand < SpielKamera.AbstandMin || k.Abstand > SpielKamera.AbstandMax || k.Neigung < SpielKamera.NeigungMin || k.Neigung > SpielKamera.NeigungMax ? "Kamera ausserhalb der Bereiche"
+                : Unveraendert(s, vorher);
+        }
+
+        public static string? Pausiert(StadtSpiel s)
+        {
+            var k = K(s);
+            var vorher = Stand(s);
+            Takt(s, k, 60);
+            return k.IchAnteil > 0f || k.IchZiel > 0f || !_regeln.Pausiert ? $"Ich-Sicht nicht pausiert (Anteil {k.IchAnteil}, Haltung {s.Haltung is not null}, Bus {s.SitztImBus})"
+                : Unveraendert(s, vorher);
+        }
+
+        public static string? Zurueck(StadtSpiel s)
+        {
+            var k = K(s);
+            Takt(s, k, 60);
+            return s.Haltung is null && !s.SitztImBus && !k.Ich ? $"Ich-Sicht nach dem Aufstehen nicht zurueck (Anteil {k.IchAnteil})" : null;
+        }
+
+        public static string? Gehen(StadtSpiel s, Verkehr v)
+        {
+            var k = K(s);
+            Takt(s, k, 60);
+            if (!k.Ich)
+            {
+                return "vor dem Gehen nicht in der Ich-Sicht";
+            }
+            k.Drehen(123f);
+            var hier = new Vector2(s.FigurX, s.FigurZ);
+            if (!new[] { new Vector2(3f, 0f), new Vector2(-3f, 0f), new Vector2(0f, 3f), new Vector2(0f, -3f) }.Any(d => s.GeheZu(hier.X + d.X, hier.Y + d.Y) && s.Geht))
+            {
+                return "kein freier Weg in vier Richtungen";
+            }
+            var auge = 0f;
+            for (var i = 0; i < 60 * 30 && s.Geht; i++)
+            {
+                SpielMitfahrtTests.Bild(s, v);
+                _regeln.Takt(k, s, (float)SpielMitfahrtTests.Dt);
+                auge = MathF.Max(auge, Vector3.Distance(k.Auge, IchSicht.Auge(s, k.Drehung)));
+            }
+            var rest = MathF.Abs(((IchSicht.DrehungZu(s.FigurRichtung) - k.Drehung + 540f) % 360f) - 180f);
+            return s.Geht ? "kommt nicht an"
+                : !k.Ich ? "Ich-Sicht beim Gehen weg"
+                : auge > 1e-3f ? $"Auge nicht im Kopf der Figur ({auge})"
+                : rest > 5f ? $"Blick nicht in Gehrichtung ({rest} Grad daneben)"
+                : null;
+        }
+
+        public static string? Aus(StadtSpiel s)
+        {
+            var k = K(s);
+            var vorher = Stand(s);
+            SpielKamera.IchUmschalten(k);
+            Takt(s, k, 60);
+            _k = null;
+            return k.IchAnteil > 0f ? $"Ich-Sicht nicht aus (Anteil {k.IchAnteil})" : Unveraendert(s, vorher);
+        }
+    }
 
     internal static List<string> Probe(long[] tage)
     {

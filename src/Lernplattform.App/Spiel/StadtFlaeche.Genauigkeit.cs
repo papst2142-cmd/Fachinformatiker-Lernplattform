@@ -68,6 +68,7 @@ public sealed partial class StadtFlaeche
             {
                 f(GlFramebuffer, anhang, GlFramebufferAttachmentDepthSize, &bits);
                 tiefe = bits.ToString(System.Globalization.CultureInfo.InvariantCulture) + " Bit";
+                TiefeBits = bits;
             }
         }
         zeilen.Add("Tiefe: " + tiefe + (AufloesungDa ? " (bei Aufloesung unter 100 % eigener Bildspeicher mit 24 Bit)" : ""));

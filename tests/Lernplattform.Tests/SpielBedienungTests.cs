@@ -49,7 +49,7 @@ public sealed class SpielBedienungTests
         Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.DrehLinks, "Q", out _));
         Assert.Equal([Tastenbelegung.Naeher], tasten.Eigen.Keys);
         Assert.Equal("Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. "
-            + "Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Die ganze Stadt zeigt die Karte im Handy.",
+            + "Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.",
             SpielProbeTexte.HinweisFuer(tasten));
         // Welle A 0.80.0: die Pfeiltasten verschieben draussen nicht mehr, der Hinweis nennt sie nicht; eigene Neige-Tasten stehen darin
         tasten.Setzen(Tastenbelegung.Links, "J", out _);

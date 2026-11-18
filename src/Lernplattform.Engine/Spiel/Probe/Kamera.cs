@@ -115,7 +115,8 @@ public sealed class Kamera
 
     public Vector3 Ziel => new(ZielX, ZielY, ZielZ);
 
-    public Vector3 Auge
+    /// <summary>Auge der normalen Kamera (schraeg von oben auf das Ziel), ohne Ich-Sicht.</summary>
+    private Vector3 AugeNormal
     {
         get
         {
@@ -126,7 +127,142 @@ public sealed class Kamera
         }
     }
 
-    public Matrix4x4 Sicht => Matrix4x4.CreateLookAt(Auge, Ziel, Vector3.UnitY);
+    // ---- Welle A 0.92.0 (Weisung P12-301, Kurzplan P12-181): Ich-Sicht ------------------------------------------------------
+
+    /// <summary>
+    /// Welle A 0.92.0: Anteil der Ich-Sicht, 0 = normale Kamera, 1 = Auge im Kopf der Figur (<see cref="IchAuge"/>). Dazwischen
+    /// liegt der Weg dorthin: Blickpunkt vom Ziel zum Auge, Neigung zur <see cref="IchNeigung"/>, Weite vom Abstand bis 0
+    /// (Schulterblick). Ohne Ich-Sicht (Werkzeug, Messungen) bleibt er 0 und alles ist wie vorher.
+    /// </summary>
+    public float IchAnteil
+    {
+        get => _ichAnteil;
+        set => _ichAnteil = Math.Clamp(value, 0f, 1f);
+    }
+
+    private float _ichAnteil;
+
+    /// <summary>Welle A 0.92.0: wohin der Anteil weich laeuft (<see cref="IchTakt"/>); beim Zoomen setzen ihn die Regeln mit.</summary>
+    public float IchZiel
+    {
+        get => _ichZiel;
+        set => _ichZiel = Math.Clamp(value, 0f, 1f);
+    }
+
+    private float _ichZiel;
+
+    /// <summary>Welle A 0.92.0: so viel Anteil je Sekunde laeuft der Uebergang (ganz hinein in rund 0,6 s).</summary>
+    public const float IchTempo = 1.7f;
+
+    /// <summary>Welle A 0.92.0: Anteil weich zum <see cref="IchZiel"/> bewegen; true = er hat sich bewegt.</summary>
+    public bool IchTakt(float dt)
+    {
+        if (_ichAnteil == _ichZiel)
+        {
+            return false;
+        }
+        var schritt = IchTempo * Math.Max(0f, dt);
+        _ichAnteil = _ichAnteil < _ichZiel ? Math.Min(_ichZiel, _ichAnteil + schritt) : Math.Max(_ichZiel, _ichAnteil - schritt);
+        return true;
+    }
+
+    /// <summary>Welle A 0.92.0: ganz in der Ich-Sicht (Anteil 1).</summary>
+    public bool Ich => _ichAnteil >= 1f;
+
+    /// <summary>Welle A 0.92.0: diese Kamera darf in die Ich-Sicht (nur die Spielkamera; das Werkzeug nie).</summary>
+    public bool IchErlaubt { get; set; }
+
+    /// <summary>Welle A 0.92.0: der Weg in die Ich-Sicht fuehrt ueber den Schulterblick (draussen); sonst nur weich hinein.</summary>
+    public bool IchMitSchulter { get; set; }
+
+    /// <summary>Welle A 0.92.0: Stelle des Auges in der Ich-Sicht (Kopf der Figur; setzt die Spielflaeche je Bild).</summary>
+    public Vector3 IchAuge { get; set; }
+
+    /// <summary>Welle A 0.92.0: Blick in der Ich-Sicht nach unten in Grad (negativ = nach oben), im <see cref="IchNeigungBereich"/>.</summary>
+    public float IchNeigung
+    {
+        get => _ichNeigung;
+        set => _ichNeigung = Math.Clamp(value, _ichNeigungBereich.Min, _ichNeigungBereich.Max);
+    }
+
+    private float _ichNeigung = 5f;
+
+    /// <summary>Welle A 0.92.0: erlaubter Blick nach oben (negativ) und unten in der Ich-Sicht.</summary>
+    public (float Min, float Max) IchNeigungBereich
+    {
+        get => _ichNeigungBereich;
+        set
+        {
+            _ichNeigungBereich = (value.Min, Math.Max(value.Min, value.Max));
+            _ichNeigung = Math.Clamp(_ichNeigung, _ichNeigungBereich.Min, _ichNeigungBereich.Max);
+        }
+    }
+
+    private (float Min, float Max) _ichNeigungBereich = (-40f, 75f);
+
+    /// <summary>Welle A 0.92.0: naechste Ebene in der Ich-Sicht (das Auge sitzt im Kopf; die Figur hat 0,3 Einheiten).</summary>
+    public const float IchNah = 0.01f;
+
+    /// <summary>Welle A 0.92.0: Blickrichtung (Laenge 1) in der Ich-Sicht aus <see cref="Drehung"/> und <see cref="IchNeigung"/>.</summary>
+    public Vector3 IchBlick
+    {
+        get
+        {
+            var d = Drehung * MathF.PI / 180f;
+            var n = IchNeigung * MathF.PI / 180f;
+            return new Vector3(-MathF.Sin(d) * MathF.Cos(n), -MathF.Sin(n), -MathF.Cos(d) * MathF.Cos(n));
+        }
+    }
+
+    /// <summary>Welle A 0.92.0: weicher Verlauf des Anteils (langsam am Anfang und am Ende).</summary>
+    private static float Weich(float a) => a * a * (3f - (2f * a));
+
+    /// <summary>
+    /// Welle A 0.92.0: Blickpunkt, Blickrichtung und Weite der Kamera. Ohne Ich-Sicht genau wie bisher (Ziel, Richtung vom Auge
+    /// zum Ziel, Abstand); mit Anteil a laeuft der Blickpunkt zum Auge der Figur, die Neigung zur Neigung der Ich-Sicht und die
+    /// Weite von Abstand bis 0.
+    /// </summary>
+    private (Vector3 Punkt, Vector3 Richtung, float Weite) Blick()
+    {
+        var normalAuge = AugeNormal;
+        if (_ichAnteil <= 0f)
+        {
+            return (Ziel, Vector3.Normalize(Ziel - normalAuge), Abstand);
+        }
+        var s = Weich(_ichAnteil);
+        var d = Drehung * MathF.PI / 180f;
+        var n = (Neigung + ((IchNeigung - Neigung) * s)) * MathF.PI / 180f;
+        var richtung = new Vector3(-MathF.Sin(d) * MathF.Cos(n), -MathF.Sin(n), -MathF.Cos(d) * MathF.Cos(n));
+        return (Vector3.Lerp(Ziel, IchAuge, s), richtung, Abstand * (1f - _ichAnteil));
+    }
+
+    public Vector3 Auge
+    {
+        get
+        {
+            if (_ichAnteil <= 0f)
+            {
+                return AugeNormal;
+            }
+            var (punkt, richtung, weite) = Blick();
+            return punkt - (richtung * weite);
+        }
+    }
+
+    public Matrix4x4 Sicht
+    {
+        get
+        {
+            if (_ichAnteil <= 0f)
+            {
+                return Matrix4x4.CreateLookAt(AugeNormal, Ziel, Vector3.UnitY);
+            }
+            var (punkt, richtung, weite) = Blick();
+            var auge = punkt - (richtung * weite);
+            // ganz senkrecht waere die Hochachse ungeeignet; die Ich-Neigung bleibt unter 90 Grad
+            return Matrix4x4.CreateLookAt(auge, auge + richtung, Vector3.UnitY);
+        }
+    }
 
     /// <summary>
     /// Naechste Ebene des Sichtraums: je weiter vorn, desto genauer der Tiefenpuffer (am Handy 16 Bit;
@@ -134,7 +270,8 @@ public sealed class Kamera
     /// dem Abstand (bei 5 wie bisher 1,5), damit die Kamera nah an die kleinere Figur kann, ohne vorn etwas
     /// abzuschneiden, und weit weg der Tiefenpuffer genau bleibt.
     /// </summary>
-    public float Nah => Math.Max(0.3f, Abstand * 0.3f);
+    public float Nah => _ichAnteil <= 0f ? Math.Max(0.3f, Abstand * 0.3f)
+        : Math.Clamp(Abstand * (1f - _ichAnteil) * 0.3f, IchNah, Math.Max(0.3f, Abstand * 0.3f));
 
     /// <summary>
     /// Nachtrag 1 zu P7-13 (Wunsch 2): das Bild um diesen Anteil der halben Bildhoehe nach oben schieben
@@ -145,7 +282,7 @@ public sealed class Kamera
 
     public Matrix4x4 Projektion(float breite, float hoehe) =>
         Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f)
-        * Matrix4x4.CreateTranslation(0, Versatz, 0);
+        * Matrix4x4.CreateTranslation(0, Versatz * (1f - _ichAnteil), 0);
 
     public void Setzen(float zielX, float zielZ)
     {

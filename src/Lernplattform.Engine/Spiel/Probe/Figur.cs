@@ -369,6 +369,40 @@ public static class Figur
         return netz;
     }
 
+    /// <summary>
+    /// Welle A 0.92.0 (Ich-Sicht, Weisung P12-301 Punkt 3): die Figur der Hoehe 1 nur bis <paramref name="bis"/> (ohne Kopf, Haar,
+    /// Brille, Bart und Kopfbedeckung; der Kopf reicht von 0,68 bis 1). Der Hals bekommt oben einen Deckel in der Hautfarbe, damit
+    /// man beim Blick nach unten nicht in die Figur hineinsieht (keine Luecke).
+    /// </summary>
+    public static Netz OhneKopf(GrafikBibliothek? grafik, PyObjekt? aussehen, IReadOnlyList<Stueck>? kleidung, string? bewegung, int bild, float bis)
+    {
+        var netz = Netz(grafik, aussehen, 1f, kleidung, bewegung, bild).Unterhalb(bis);
+        // Deckel in der Farbe des Oberteils knapp unter dem Schnitt (wirkt von oben wie Kragen und Schultern, nicht wie Haut)
+        var e = netz.Ecken;
+        var summe = Vector3.Zero;
+        var zahl = 0;
+        for (var i = 0; i < e.Count; i += Probe.Netz.Zahlen)
+        {
+            if (e[i + 1] >= bis - 0.07f && e[i + 1] <= bis - 0.03f && MathF.Abs(e[i]) < 0.1f)
+            {
+                summe += new Vector3(e[i + 6], e[i + 7], e[i + 8]);
+                zahl++;
+            }
+        }
+        var farbe = zahl > 0 ? summe / zahl : Probe.Netz.Farbe(Haut[Py.Str(Aussehen.Normalisieren(aussehen)["haut"])]);
+        netz.Hinzu(new Teil(TeilArt.Quader, -HalsHalb, bis - 0.04f, HalsVon, HalsHalb, bis, HalsBis, farbe));
+        return netz;
+    }
+
+    /// <summary>Welle A 0.92.0: halbe Breite des Halsdeckels (Anteil der Hoehe).</summary>
+    public const float HalsHalb = 0.04f;
+
+    /// <summary>Welle A 0.92.0: Halsdeckel von hinten bis vorn (Anteil der Hoehe; der Hals liegt leicht vorn).</summary>
+    public const float HalsVon = -0.045f;
+
+    /// <inheritdoc cref="HalsVon"/>
+    public const float HalsBis = 0.085f;
+
     /// <summary>Kasten der Haut am Kopf (Haut-Dreiecke oberhalb von 75 % der Hoehe), null ohne Kopf.</summary>
     public static (Vector3 Min, Vector3 Max)? Kopf(GrafikModell gm) => Kopf(gm, gm);
 

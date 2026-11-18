@@ -67,6 +67,22 @@ public static partial class AutoMessung
         return funde;
     }
 
+    /// <summary>
+    /// Welle A 0.92.0: mit dem Mausrad aus der Ich-Sicht und dem Schulterblick heraus (derselbe Weg zurueck), bis die Kamera
+    /// wieder die feste Kamera ist (fuer die Pruefungen dieser Welle, die danach die Kamera ohne Ich-Sicht pruefen).
+    /// </summary>
+    private static void IchVerlassen(StadtFlaeche fl, Kamera k, Point mitte)
+    {
+        for (var i = 0; i < 40 && (k.IchZiel > 0f || k.IchAnteil > 0f); i++)
+        {
+            Rad(fl, mitte, -1);
+            if (k.IchZiel == 0f)
+            {
+                k.IchAnteil = 0f;   // den weichen Rueckweg nicht abwarten (die Bilder laufen hier nicht)
+            }
+        }
+    }
+
     private static string Kam(Kamera k) => string.Create(CultureInfo.InvariantCulture, $"Abstand {k.Abstand:F2}, Neigung {k.Neigung:F1}, Drehung {k.Drehung:F1}");
 
     private static bool ImBereich(Kamera k) =>
@@ -157,8 +173,12 @@ public static partial class AutoMessung
             Merken("Mausrad hinein");
         }
         var nah = k.Abstand;
-        pruefe("Mausrad 7 bis 9", Math.Abs(weit - SpielKamera.AbstandMax) < 0.001f && Math.Abs(nah - SpielKamera.AbstandMin) < 0.001f,
-            string.Create(inv, $"weitester {weit:F2}, naechster {nah:F2}"));
+        // Welle A 0.92.0 (Weisung P12-301 Punkt 1): ganz heran fuehrt in die Ich-Sicht (Abstand bleibt 7); heraus wieder bis 9
+        var ichNachRad = SpielKamera.ImIch(k);
+        IchVerlassen(fl, k, mitte);
+        pruefe("Mausrad 7 bis 9", Math.Abs(weit - SpielKamera.AbstandMax) < 0.001f && Math.Abs(nah - SpielKamera.AbstandMin) < 0.001f && ichNachRad
+            && k.IchZiel == 0f && k.IchAnteil == 0f,
+            string.Create(inv, $"weitester {weit:F2}, naechster {nah:F2}, ganz heran Ich-Sicht {ichNachRad}, danach heraus Ich {k.IchAnteil:F2}"));
 
         // Maus: rechte Taste waagrecht dreht, nach oben steiler (bis 70), nach unten flacher (bis 35), nie Gehen
         var maus = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, true);
@@ -212,6 +232,7 @@ public static partial class AutoMessung
             Merken("zwei Finger zusammen");
         }
         var fingerWeit = k.Abstand;
+        IchVerlassen(fl, k, mitte);
         var dVor = k.Drehung;
         Bewegen(fl, b, new Point(pb.X, pb.Y + 20));
         var fingerDreh = Math.Abs(k.Drehung - dVor) > 1;
@@ -274,9 +295,11 @@ public static partial class AutoMessung
             Merken("Taste +");
         }
         var tNah = k.Abstand;
+        var tIch = SpielKamera.ImIch(k);
+        IchVerlassen(fl, k, mitte);
         pruefe("Tastatur", pfeileNichts && qDreht && tSteil == SpielKamera.NeigungMax && tFlach == SpielKamera.NeigungMin
-            && Math.Abs(tWeit - SpielKamera.AbstandMax) < 0.001f && Math.Abs(tNah - SpielKamera.AbstandMin) < 0.001f,
-            string.Create(inv, $"Pfeile verschieben {(pfeileNichts ? "nicht" : "NOCH")}, Q dreht {qDreht}, R bis {tSteil:F1}, F bis {tFlach:F1}, − bis {tWeit:F2}, + bis {tNah:F2}"));
+            && Math.Abs(tWeit - SpielKamera.AbstandMax) < 0.001f && Math.Abs(tNah - SpielKamera.AbstandMin) < 0.001f && tIch,
+            string.Create(inv, $"Pfeile verschieben {(pfeileNichts ? "nicht" : "NOCH")}, Q dreht {qDreht}, R bis {tSteil:F1}, F bis {tFlach:F1}, − bis {tWeit:F2}, + bis {tNah:F2} (dann Ich-Sicht {tIch})"));
         k.Neigung = SpielKamera.NeigungStart;
         k.Zoomen(k.Abstand / SpielKamera.Abstand);
 

@@ -36,12 +36,15 @@ public sealed class Tastenbelegung
 
     public const string Flacher = "flacher";
 
+    /// <summary>Welle A 0.92.0 (Weisung P12-301 Punkt 1): Ich-Sicht an und aus (I wie „Ich“).</summary>
+    public const string IchSicht = "ich_sicht";
+
     /// <summary>
     /// Aufgaben, die nach A 0.79.0 dazukamen. Hatte jemand ihre Standardtaste (R, F) schon fuer eine andere Aufgabe gewaehlt,
     /// behaelt diese eigene Wahl beim Lesen Vorrang (nie still verloren); die neue Aufgabe hat dann keine Taste, bis man ihr in
     /// den Optionen eine gibt (<see cref="OhneTaste"/>).
     /// </summary>
-    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher };
+    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher, IchSicht };
 
     /// <summary>Gespeicherter Wert „keine Taste“ (nur fuer die Aufgaben aus <see cref="NeuAb080"/> nach einem Zusammenstoss).</summary>
     public const string OhneTaste = "";
@@ -62,6 +65,7 @@ public sealed class Tastenbelegung
         (Auftraege, "Aufträge öffnen", ["L"]),
         (Steiler, "Draußen: Kamera steiler", ["R"]),
         (Flacher, "Draußen: Kamera flacher", ["F"]),
+        (IchSicht, "Ich-Sicht ein und aus", ["I"]),
     ];
 
     /// <summary>Bleiben dem Programm (Esc bricht ab, die anderen braucht die Bedienung).</summary>

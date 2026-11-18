@@ -367,6 +367,25 @@ public sealed partial class Netz
         _indizes.AddRange((ReadOnlySpan<uint>)[basis, basis + 1, basis + 2, basis, basis + 2, basis + 3]);
     }
 
+    /// <summary>
+    /// Welle A 0.92.0 (Ich-Sicht): neues Netz nur mit den Dreiecken, deren Ecken alle hoechstens auf Hoehe <paramref name="hoehe"/>
+    /// liegen (die eigene Figur ohne Kopf, Haar und Kopfbedeckung). Dieses Netz bleibt unveraendert.
+    /// </summary>
+    public Netz Unterhalb(float hoehe)
+    {
+        var neu = new Netz();
+        neu._ecken.AddRange(_ecken);
+        for (var i = 0; i + 2 < _indizes.Count; i += 3)
+        {
+            uint a = _indizes[i], b = _indizes[i + 1], c = _indizes[i + 2];
+            if (_ecken[((int)a * Zahlen) + 1] <= hoehe && _ecken[((int)b * Zahlen) + 1] <= hoehe && _ecken[((int)c * Zahlen) + 1] <= hoehe)
+            {
+                neu._indizes.AddRange((ReadOnlySpan<uint>)[a, b, c]);
+            }
+        }
+        return neu;
+    }
+
     /// <summary>Ein fertiges Netz an seiner Lage einfuegen (Schaufensterpuppe mit Kleidung).</summary>
     public void Hinzu(Netz andere, Matrix4x4 lage)
     {

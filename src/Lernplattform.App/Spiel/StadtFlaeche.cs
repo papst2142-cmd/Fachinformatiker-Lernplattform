@@ -12,6 +12,7 @@ using Lernplattform.Core.Daten;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Spiel.Ton;
+using Lernplattform.Core.Texte;
 using static Avalonia.OpenGL.GlConsts;
 
 namespace Lernplattform.Spiel;
@@ -70,6 +71,47 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private readonly Dictionary<string, (PyObjekt? Aussehen, IReadOnlyList<Figur.Stueck>? Kleidung, GlNetz Netz)> _figurZuletzt = [];
     private PyObjekt? _ringAussehen;
     private Innenraum? _innenGeladen;
+
+    /// <summary>Welle A 0.92.0 (Weisung P12-301): Regeln der Ich-Sicht (Auge, Gehrichtung, Pause), je Bild aufgerufen.</summary>
+    private readonly IchSicht _ich = new();
+
+    /// <summary>Welle A 0.92.0: Decke des Innenraums in der Ich-Sicht (einmal je Innenraum geladen).</summary>
+    private (Innenraum Raum, GlNetz Netz)? _decke;
+
+    /// <summary>Welle A 0.92.0: war die Ich-Sicht im letzten Bild ganz an (fuer die Ansage an/aus)?</summary>
+    private bool _ichWarAn;
+
+    /// <summary>Welle A 0.92.0: Regeln der Ich-Sicht dieser Flaeche (Start-Test).</summary>
+    public IchSicht IchRegeln => _ich;
+
+    /// <summary>
+    /// Welle A 0.92.0: Ich-Sicht ganz an oder aus (true/false) und der Text fuer den Screenreader (an/aus und Blickrichtung);
+    /// auch bei jedem Wechsel der Blickrichtung in der Ich-Sicht (acht Richtungen).
+    /// </summary>
+    public event Action<bool, string>? IchAnsage;
+
+    /// <summary>Welle A 0.92.0: Ich-Sicht ein- oder ausschalten (Menue, Taste); false = geht hier nicht (kein Spiel).</summary>
+    public bool IchUmschalten()
+    {
+        if (AktuelleKamera is not { } kamera || !SpielKamera.IchUmschalten(kamera))
+        {
+            return false;
+        }
+        AnfordernBild();
+        return true;
+    }
+
+    /// <summary>Welle A 0.92.0: ist die Ich-Sicht an oder auf dem Weg hinein?</summary>
+    public bool IchAn => AktuelleKamera is { } k && (SpielKamera.ImIch(k) || _ich.Pausiert);
+
+    /// <summary>Welle A 0.92.0: zeichnet die Flaeche gerade nah (Figur ohne Kopf, nichts halb durchsichtig, drinnen Decke)?</summary>
+    public static bool IchNah(Kamera k) => k.IchAnteil >= IchSicht.NahAb;
+
+    /// <summary>Welle A 0.92.0 (nur Start-Test, Gegenprobe): Ich-Sicht auf grossen Karten ohne Sichtweite und Fernformen.</summary>
+    public static bool IchSichtweiteAusFuerTests { get; set; }
+
+    /// <summary>Welle A 0.92.0 (Start-Test): das letzte Bild drinnen zeichnete die Decke der Ich-Sicht.</summary>
+    public bool LetzteIchDecke { get; private set; }
     private bool _innenNeu;
     private GlNetz? _markierung;
     private string _markierungSchluessel = "";
@@ -273,6 +315,10 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             {
                 Neigung = 58f,
                 Grenzen = (0, 0, innen.Breite, innen.Tiefe),
+                // Welle A 0.92.0 (Weisung P12-301 Punkt 4): im Spiel auch drinnen Ich-Sicht (ohne Schulterblick)
+                IchErlaubt = FesteKamera,
+                IchNeigungBereich = (SpielKamera.IchNeigungMin, SpielKamera.IchNeigungMax),
+                IchNeigung = SpielKamera.IchNeigungStart,
             };
         }
         AnfordernBild();
@@ -538,6 +584,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _figurZuletzt.Clear();
         _innen = null;
         _innenWaende = [];
+        _decke = null;
         _innenGl.Clear();
         _hochladen = null;
         _vorladeAufgabe = null;
@@ -604,6 +651,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _figurZuletzt.Clear();
         _innen = null;
         _innenWaende = [];
+        _decke = null;
         _markierung = null;
         _ring = null;
         _ringAussehen = null;
@@ -948,6 +996,22 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 kamera.ZielY += (KameraZielHoehe(_spiel) - kamera.ZielY) * k;
             }
         }
+        var ichBewegt = false;
+        if (_spiel is { } ichSpiel && kamera is not null && FesteKamera)
+        {
+            // Welle A 0.92.0 (Weisung P12-301): Ich-Sicht weiterfuehren (Auge, Uebergang, Gehrichtung, Pause beim Sitzen/Bus)
+            ichBewegt = _ich.Takt(kamera, ichSpiel, (float)dt, _busMitFigur) && (kamera.IchAnteil != kamera.IchZiel || geht);
+            if (kamera.Ich != _ichWarAn)
+            {
+                _ichWarAn = kamera.Ich;
+                _ich.RichtungNeu(kamera);
+                IchAnsage?.Invoke(kamera.Ich, (kamera.Ich ? SpielProbeTexte.IchSichtAn + " " + IchSicht.Ansage(kamera, ichSpiel) : SpielProbeTexte.IchSichtAus));
+            }
+            else if (_ich.RichtungNeu(kamera))
+            {
+                IchAnsage?.Invoke(true, IchSicht.Ansage(kamera, ichSpiel));
+            }
+        }
         if (_spiel is { } tonSpiel && kamera is not null && TonDienst.Aktiv)
         {
             // Phase 8 W8: Schleifen der Stadt nach der Bildmitte (Fluss, Autos nach Naehe, Voegel)
@@ -995,6 +1059,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 NachladenTakt(gl, _spiel, sichtProj);
                 gl.UseProgram(_programm);
             }
+            // Welle A 0.92.0: grosse Karte in der Ich-Sicht: nah voll, weiter Fernformen, hinter der Sichtweite (Dunst) nichts
+            _ichFern = kamera.IchAnteil > 0f && nachladen && !IchSichtweiteAusFuerTests ? new Vector2(kamera.IchAuge.X, kamera.IchAuge.Z) : null;
+            _ichAnteil = kamera.IchAnteil;
             // Weisung P8-52 (nur Leistungsprobe der Probe-APK): die Stadt mehrfach an derselben Stelle (sonst einmal)
             for (var mal = 0; mal < (_spiel.ImInnenraum ? 1 : ProbeMehrfach); mal++)
             {
@@ -1096,8 +1163,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             else
             {
-                spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild);
-                figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(_spiel.FigurRichtung * MathF.PI / 180f)
+                // Welle A 0.92.0 (Weisung P12-301 Punkt 3): in der Ich-Sicht ohne Kopf (das Auge sitzt darin)
+                spieler = FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild, IchNah(kamera));
+                figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(IchSicht.FigurDrehung(kamera, _spiel) * MathF.PI / 180f)
                     * Matrix4x4.CreateTranslation(_spiel.FigurX, innen is null ? FigurHoehe(_spiel) : 0f, _spiel.FigurZ);
             }
             if (!_busMitFigur)
@@ -1129,14 +1197,39 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                         Zeichnen(gl, _ausruf, Matrix4x4.CreateTranslation(person.X, groesse + 0.25f, person.Z), sichtProj);
                     }
                 }
-                // Waende vor der Kamera und zwischen Auge und Figur halb durchsichtig (Sammelliste 102)
+                // Waende vor der Kamera und zwischen Auge und Figur halb durchsichtig (Sammelliste 102); Welle A 0.92.0 (Nico 4a):
+                // in der Ich-Sicht keine Wand durchsichtig, Waende 2,5 m hoch und eine Decke darueber
                 var d0 = _uhr.Elapsed.TotalSeconds;
-                innen.Durchsichtig(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, groesse, _durchsichtig);
-                verdecktSek += _uhr.Elapsed.TotalSeconds - d0;
-                foreach (var (wand, netz) in _innenWaende)
+                var ichNah = IchNah(kamera);
+                if (ichNah)
                 {
-                    gl.Uniform1f(_ortDurch, _durchsichtig.Contains(wand) ? 1f : 0f);
-                    Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                    _durchsichtig.Clear();
+                }
+                else
+                {
+                    innen.Durchsichtig(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, groesse, _durchsichtig);
+                }
+                verdecktSek += _uhr.Elapsed.TotalSeconds - d0;
+                LetzteIchDecke = ichNah;
+                if (ichNah)
+                {
+                    // Welle A 0.92.0: Waende 2,5 m und Decke in einem Netz (ein Aufruf; nichts ist halb durchsichtig)
+                    if (_decke is not { } decke || !ReferenceEquals(decke.Raum, innen))
+                    {
+                        _decke?.Netz.Freigeben(gl);
+                        decke = (innen, GlNetz.Laden(gl, innen.IchHuelle()));
+                        _decke = decke;
+                    }
+                    gl.Uniform1f(_ortDurch, 0f);
+                    Zeichnen(gl, decke.Netz, Matrix4x4.Identity, sichtProj);
+                }
+                else
+                {
+                    foreach (var (wand, netz) in _innenWaende)
+                    {
+                        gl.Uniform1f(_ortDurch, _durchsichtig.Contains(wand) ? 1f : 0f);
+                        Zeichnen(gl, netz, Matrix4x4.Identity, sichtProj);
+                    }
                 }
                 gl.Uniform1f(_ortDurch, 0f);
                 VerdecktZahl = _durchsichtig.Count;
@@ -1149,10 +1242,19 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             else
             {
+                LetzteIchDecke = false;
                 LieferpaketZeichnen(gl, sichtProj);
                 // Haeuser; wer zwischen Auge und Figur steht, halb durchsichtig (Sammelliste 102)
                 var v0 = _uhr.Elapsed.TotalSeconds;
-                _spiel.Szene.Verdeckt(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, Figur.StadtHoehe, _verdeckt);
+                if (IchNah(kamera))
+                {
+                    // Welle A 0.92.0: in der Ich-Sicht steht nichts zwischen Auge und Figur
+                    _verdeckt.Clear();
+                }
+                else
+                {
+                    _spiel.Szene.Verdeckt(kamera.Auge, _spiel.FigurX, _spiel.FigurZ, Figur.StadtHoehe, _verdeckt);
+                }
                 verdecktSek += _uhr.Elapsed.TotalSeconds - v0;
                 foreach (var haus in _haeuser.Keys)
                 {
@@ -1169,7 +1271,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 VerdecktZahl = _verdeckt.Count;
                 // Nachtrag 1 zu P7-13 (Wunsch 2): Kreis um die Figur in ihrer Kreisfarbe, ohne Tiefenpruefung
                 // (kein Haus, Baum oder Schild verdeckt ihn), danach die Figur noch einmal ganz vorn
-                if (!_busMitFigur)
+                if (!_busMitFigur && !IchNah(kamera))
                 {
                     gl.Disable(GL_DEPTH_TEST);
                     var ring = haltung is { } hr ? new Vector2(hr.Ort.X, hr.Ort.Z) : new Vector2(_spiel.FigurX, _spiel.FigurZ);
@@ -1210,7 +1312,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             Belastung.Bild(jetzt, LetzteZeichenzeitMs);
         }
-        if (geht || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Laeuft(jetzt, VerkehrNurNachBedienen)))
+        if (geht || ichBewegt || Dauerlauf || jetzt < _nachlaufBis || jetzt < _weiterBis || (_verkehr is not null && _spiel is { ImInnenraum: false } && _verkehr.Laeuft(jetzt, VerkehrNurNachBedienen)))
         {
             // Welle Grafik G1: mit Bildbremse (Niedrig) erst nach 1 / Bilder Sekunden, sonst sofort wie vorher
             NaechstesBildAnfordern(jetzt);
@@ -1733,8 +1835,21 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         return k.Ohne;
     }
 
-    private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung = null, string? bewegung = null, int bild = -1)
+    private GlNetz FigurNetz(GlInterface gl, string id, PyObjekt? aussehen, IReadOnlyList<Figur.Stueck>? kleidung = null, string? bewegung = null, int bild = -1,
+        bool ohneKopf = false)
     {
+        if (ohneKopf)
+        {
+            // Welle A 0.92.0 (Weisung P12-301 Punkt 3): eigene Figur in der Ich-Sicht ohne Kopf, je Bild der Bewegung einmal gebaut
+            var sk = FigurSchluessel(id, aussehen, kleidung, bewegung, bild) + "|ohneKopf";
+            if (!_figuren.TryGetValue(sk, out var nk))
+            {
+                var grafik = _spiel?.Grafik;
+                nk = GlNetz.Laden(gl, _figurenCpu.GetOrAdd(sk, _ => Figur.OhneKopf(grafik, aussehen, kleidung, bewegung, bild, IchSicht.KoerperBis)));
+                _figuren[sk] = nk;
+            }
+            return nk;
+        }
         if (bild >= 0 && bewegung is not null)
         {
             // Bilder der Schrittbewegung: je Aussehen, Kleidung und Bild einmal gebaut (Sammelliste 125)

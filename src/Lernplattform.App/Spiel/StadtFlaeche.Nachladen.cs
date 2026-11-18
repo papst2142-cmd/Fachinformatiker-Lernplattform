@@ -282,6 +282,12 @@ public sealed partial class StadtFlaeche
         }
     }
 
+    /// <summary>Welle A 0.92.0: Auge der Ich-Sicht (waagrecht) fuer dieses Bild auf einer Karte mit Nachladen, sonst null.</summary>
+    private Vector2? _ichFern;
+
+    /// <summary>Welle A 0.92.0: Anteil der Ich-Sicht in diesem Bild (Dunst wird mit ihm dicht).</summary>
+    private float _ichAnteil;
+
     /// <summary>Boden, Kacheln im Bild (nah) und Fernkaesten der uebrigen Kacheln im Bild (fern), mit Zaehlung.</summary>
     private unsafe void NachladenZeichnen(GlInterface gl, Matrix4x4 sichtProj)
     {
@@ -300,6 +306,21 @@ public sealed partial class StadtFlaeche
                 continue;
             }
             imBild++;
+            if (_ichFern is { } augeWeit && k.Abstand(augeWeit) > IchSicht.Sichtweite)
+            {
+                // Welle A 0.92.0: hinter der Sichtweite der Ich-Sicht liegt voller Dunst, dort wird nichts gezeichnet
+                continue;
+            }
+            if (_ichFern is { } auge && k.Abstand(auge) > IchSicht.KachelnVollBis)
+            {
+                // Welle A 0.92.0: in der Ich-Sicht sieht man waagrecht weit; ferne Kacheln nur als Fernkasten (geladen oder nicht)
+                fern++;
+                if (lader.Grundlage.FernBereiche.TryGetValue(k, out var bi) && bi.Anzahl > 0)
+                {
+                    _fernLaeufe.Add(bi);
+                }
+                continue;
+            }
             if (_kachelGl.TryGetValue(k, out var e))
             {
                 nah++;
@@ -358,9 +379,11 @@ public sealed partial class StadtFlaeche
     /// <summary>Die Werte des Dunstes in ein Programm (Orte: uDunst, uDunstVon, uDunstBis, uDunstR, uDunstG, uDunstB).</summary>
     private void DunstSetzen(GlInterface gl, int[] orte)
     {
-        gl.Uniform1f(orte[0], _dunstJetzt);
+        // Welle A 0.92.0: in der Ich-Sicht (grosse Karte) wird der Dunst bis zur Sichtweite dicht (dahinter wird nichts gezeichnet)
+        var ich = _ichFern is null ? 0f : _ichAnteil;
+        gl.Uniform1f(orte[0], _dunstJetzt + ((1f - _dunstJetzt) * ich * (_dunstJetzt > 0f ? 1f : 0f)));
         gl.Uniform1f(orte[1], Dunst.Von);
-        gl.Uniform1f(orte[2], Dunst.Bis);
+        gl.Uniform1f(orte[2], Dunst.Bis + ((IchSicht.Sichtweite - Dunst.Bis) * ich));
         gl.Uniform1f(orte[3], _dunstFarbe.X);
         gl.Uniform1f(orte[4], _dunstFarbe.Y);
         gl.Uniform1f(orte[5], _dunstFarbe.Z);
