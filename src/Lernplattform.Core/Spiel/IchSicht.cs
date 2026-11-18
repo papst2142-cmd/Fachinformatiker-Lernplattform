@@ -89,6 +89,14 @@ public sealed class IchSicht
     public const float WandAbstand = 0.03f;
 
     /// <summary>
+    /// Weisung P12-302: so viel (Welt) weiter als die nahe Ebene (<see cref="Kamera.IchNah"/>) bleibt jede Ecke der eigenen Figur
+    /// mindestens vom Auge weg. Gleich <see cref="WandAbstand"/>: das Dreifache der nahen Ebene und mehr als ihre halbe Diagonale
+    /// (0,0105 bei 2,5:1), so schneidet die nahe Ebene die Figur auch in den Bildecken nie an, und der Tiefenspeicher bleibt dort
+    /// genau. Die Figur hat 0,36, das Auge sitzt 0,05 ueber dem Hals (gemessen: naechste Ecke 0,06).
+    /// </summary>
+    public const float FigurAbstand = WandAbstand;
+
+    /// <summary>
     /// Auge drinnen (X, Z): vorn am Gesicht in Richtung <paramref name="grad"/> (Grad wie die Figur); steht die Figur dicht an einer
     /// Wand, rueckt das Auge in Vierteln zur Mitte der Figur zurueck, bis es <see cref="WandAbstand"/> von jedem Wandstueck hat
     /// (sonst schnitte die nahe Ebene die Wand an und man saehe hindurch; Weisung P12-301 Punkt 4).

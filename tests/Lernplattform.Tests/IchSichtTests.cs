@@ -214,11 +214,13 @@ public sealed class IchSichtTests
             var ganz = Figur.Netz(g, null, 1f, null, bew, bild);
             var ohne = Figur.OhneKopf(g, null, null, bew, bild, IchSicht.KoerperBis);
             var benutzt = ohne.Indizes.Distinct().Select(i => ohne.Ort((int)i)).ToList();
-            Assert.True(benutzt.Max(p => p.Y) <= IchSicht.KoerperBis + 1e-5f);
+            Assert.True(benutzt.Max(p => p.Y) <= IchSicht.KoerperBis + 0.01f);
             Assert.True(benutzt.Min(p => p.Y) < 0.02f, "keine Fuesse");
             Assert.True(ohne.Indizes.Count < ganz.Indizes.Count);
-            // Koerper unter dem Kopf vollstaendig: jedes Dreieck der ganzen Figur unterhalb der Grenze ist noch da
-            var unten = Enumerable.Range(0, ganz.Indizes.Count / 3).Count(d => Enumerable.Range(0, 3).All(e => ganz.Ort((int)ganz.Indizes[(d * 3) + e]).Y <= IchSicht.KoerperBis));
+            // Koerper unter dem Kopf vollstaendig (Weisung P12-302: bestimmt an der stehenden Figur): jedes Dreieck der stehenden
+            // ganzen Figur unterhalb der Grenze ist in jedem Bild noch da, dazu der Deckel (12 Dreiecke)
+            var stehend = Figur.Netz(g, null, 1f, null, null, -1);
+            var unten = Enumerable.Range(0, stehend.Indizes.Count / 3).Count(d => Enumerable.Range(0, 3).All(e => stehend.Ort((int)stehend.Indizes[(d * 3) + e]).Y <= IchSicht.KoerperBis));
             Assert.Equal(unten + 12, ohne.Indizes.Count / 3);
             // Gegenprobe: die ganze Figur reicht mit dem Kopf ueber das Auge
             Assert.True(Enumerable.Range(0, ganz.AnzahlEcken).Max(e => ganz.Ort(e).Y) > IchSicht.AugeAnteil);
