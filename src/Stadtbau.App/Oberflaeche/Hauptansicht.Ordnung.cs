@@ -32,6 +32,13 @@ public sealed partial class Hauptansicht
     public static readonly string[] Reiter = [Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.Spielgeschichte, Texte.Quests, Texte.Questgeber,
         Texte.GebaeudeEntwerfen];
 
+    /// <summary>
+    /// Sammelliste 378: die Knoepfe der oberen Leiste ab S 0.58.0 (die drei Seiten unter „Spiel ▾“ werden mitgebaut und stehen
+    /// in der Seitenleiste <see cref="SpielSeiten"/>).
+    /// </summary>
+    public static readonly string[] ReiterLeiste = [Texte.Draufsicht, Texte.Innenraeume, Texte.Ansicht3D, Texte.GebaeudeEntwerfen, Texte.SpielMenue,
+        Texte.Spielgeschichte, Texte.Quests, Texte.Questgeber];
+
     private readonly TextBlock _speicherStand = Schrift.Text("", "Klein");
 
     /// <summary>Welle G1 (Weisung P12-183, Sammelliste 288): Version immer sichtbar, rechts in der Titelzeile vor den Menues.</summary>
@@ -116,7 +123,8 @@ public sealed partial class Hauptansicht
 
         // Reiter als eine zusammenhaengende Leiste (Punkt 1), rechts daneben die Pfeile (Punkt 4)
         var leiste = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var name in Reiter)
+        // Sammelliste 378 (Weisung P12-298): Spielgeschichte, Quests, Questgeber unter „Spiel ▾“, „Gebäude entwerfen“ nach 3D
+        foreach (var name in SpielReiterAltFuerTests ? Reiter : ReiterLeiste)
         {
             var k = Schrift.Knopf(name).Mit(Texte.KopfTipps[name]);
             k.CornerRadius = new CornerRadius(0);
@@ -124,8 +132,24 @@ public sealed partial class Hauptansicht
             k.Margin = new Thickness(0);
             k.Padding = new Thickness(18, 10);
             k.MinHeight = EintragHoehe;
-            k.Click += (_, _) => ReiterGedrueckt(name);
+            if (name == Texte.SpielMenue)
+            {
+                if (k.Content is TextBlock spielText)
+                {
+                    spielText.Text = Texte.SpielMenue + " ▾";
+                }
+                k.Vorlese(Texte.SpielMenueName);
+                k.Click += (_, _) => SpielMenueGedrueckt();
+            }
+            else
+            {
+                k.Click += (_, _) => ReiterGedrueckt(name);
+            }
             _kopf[name] = k;
+            if (!SpielReiterAltFuerTests && SpielSeiten.Contains(name))
+            {
+                continue;
+            }
             if (leiste.Children.Count > 0)
             {
                 leiste.Children.Add(new Border { Width = 1 }.Farbe(Border.BackgroundProperty, "Pinsel.border"));
@@ -141,6 +165,10 @@ public sealed partial class Hauptansicht
             HorizontalAlignment = HorizontalAlignment.Left,
         }.Farbe(Border.BorderBrushProperty, "Pinsel.border").Farbe(Border.BackgroundProperty, "Pinsel.card_alt");
         AutomationProperties.SetName(reiterRahmen, Texte.ReiterName);
+        if (!SpielReiterAltFuerTests)
+        {
+            SpielSeitenleisteFuellen();
+        }
         var pfeile = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -492,6 +520,13 @@ public sealed partial class Hauptansicht
     /// <summary>Wie oft man tippen muss, bis ein Element zu sehen ist: 0 sichtbar, 1 hinter einer Gruppe oder einem Menue, sonst -1.</summary>
     internal int KlicksBis(Control c)
     {
+        // Sammelliste 379: ein Eintrag eines Menues der schmalen Knopfleiste ist ein Tippen weit (wenn ihr Knopf zu sehen ist);
+        // vorher pruefen: eine nicht eingehaengte Liste gilt sonst als „zu sehen“ (keine verborgenen Eltern)
+        if (c is Button lb && _leisteMenues.FirstOrDefault(m => m.Value.Children.Contains(lb)).Key is { } leisteMenue)
+        {
+            return !c.IsVisible ? -1 : LeisteMenueOffen == leisteMenue && c.IsEffectivelyVisible ? 0
+                : _leisteKnoepfe[leisteMenue].IsEffectivelyVisible ? 1 : -1;
+        }
         if (c.IsEffectivelyVisible)
         {
             return 0;

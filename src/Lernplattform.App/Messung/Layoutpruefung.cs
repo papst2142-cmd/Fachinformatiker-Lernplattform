@@ -23,7 +23,8 @@ namespace Lernplattform.Messung;
 /// seiner Karte (Sammelliste 194).
 /// Phase 11 W2 (Weisung P11-20): (11) jedes bedienbare Element hat einen Namen fuer den Screenreader
 /// (<see cref="Namenspruefung"/>).
-/// Welle A 0.81.0 (Weisung P12-273): (13) „Zurück“ jeder offenen Spiel-Tafel steht fest oben (<c>SpielTafel.ZurueckFund</c>).
+/// Welle A 0.81.0 (Weisung P12-273): (13) „Zurück“ jeder offenen Spiel-Tafel steht fest oben (<c>SpielTafel.ZurueckFund</c>);
+/// seit A 0.90.0 (Sammelliste 381) auch das Geld jeder Seite mit Einkauf daneben (<c>SpielTafel.GeldFund</c>).
 /// </summary>
 public static class Layoutpruefung
 {
@@ -75,6 +76,11 @@ public static class Layoutpruefung
             if (tafel.ZurueckFund() is { } fund)
             {
                 funde.Add("Spiel-Tafel: " + fund);
+            }
+            // Sammelliste 381 (Weisung P12-298): in jedem Laden das Geld fest oben neben „Zurueck“
+            if (tafel.GeldFund() is { } geld)
+            {
+                funde.Add("Spiel-Tafel: " + geld);
             }
         }
         if (Views.Dialog.Offen is { IsEffectivelyVisible: true } fenster && fenster.GetVisualAncestors().Contains(wurzel)

@@ -295,15 +295,18 @@ public static partial class Wohnung
         AufgestellteMoebel(stand).Where(m => m.X <= x && x <= m.X + Py.F(m.W) && m.Y <= y && y <= m.Y + Py.F(m.H))
             .OrderBy(m => Begehbar.Contains(m.Typ) ? 1 : 0).FirstOrDefault();
 
-    /// <summary>furniture_near: benutzbares Moebel in Reichweite der Figur.</summary>
-    public static Aufgestellt? MoebelNahe(Spielstand stand, double x, double y)
+    /// <summary>
+    /// furniture_near: benutzbares Moebel in Reichweite der Figur. Sammelliste 383: <paramref name="nutzbar"/> (nur C#, null =
+    /// wie Python) laesst Moebel weg, die die Darstellung nicht zulaesst (hinter einer Wand).
+    /// </summary>
+    public static Aufgestellt? MoebelNahe(Spielstand stand, double x, double y, Func<Aufgestellt, bool>? nutzbar = null)
     {
         Aufgestellt? beste = null;
         double? besteWeite = null;
         foreach (var m in AufgestellteMoebel(stand))
         {
             var info = MoebelStueck(m.Moebel, stand.Inhalt);
-            if (info is null || !(Py.Wahr(Get(info, "aktion")) || Py.Wahr(Get(info, "texte"))))
+            if (info is null || !(Py.Wahr(Get(info, "aktion")) || Py.Wahr(Get(info, "texte"))) || (nutzbar is not null && !nutzbar(m)))
             {
                 continue;
             }
@@ -329,7 +332,8 @@ public static partial class Wohnung
     }
 
     /// <summary>home_message: (Ueberschrift, Text, [(aktion, Beschriftung)]) in der Wohnung.</summary>
-    public static (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(double x, double y, Spielstand stand)
+    public static (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe) Nachricht(double x, double y, Spielstand stand,
+        Func<Aufgestellt, bool>? nutzbar = null)
     {
         var bleibe = Bleibe(stand.Wohnung, stand.Inhalt)!;
         var gebaeude = Objekt(bleibe["gebaeude"]);
@@ -337,7 +341,7 @@ public static partial class Wohnung
         {
             return ("Wohnungstür", "Von hier geht es zur Arbeit.", [("buero", "Zur Arbeit")]);
         }
-        if (MoebelNahe(stand, x, y) is { } m)
+        if (MoebelNahe(stand, x, y, nutzbar) is { } m)
         {
             var info = MoebelStueck(m.Moebel, stand.Inhalt)!;
             var texte = Py.Wahr(Get(info, "texte")) ? Liste(info["texte"]) : [];

@@ -15,6 +15,8 @@ namespace Lernplattform.Messung;
 /// gerollt (<see cref="SpielTafel.ZurueckFund"/>, dieselbe Pruefung wie in der Layoutpruefung jeder Schriftstufe und Groesse);
 /// ganz unten gerollt „Zurück“ mit Maus, Finger und Screenreader (Aufruf ueber die Automation) schliesst die Seite wie bisher.
 /// Gegenprobe: Kopfzeile wie bis A 0.80.0 im Bildlauf liefert den Fund.
+/// Sammelliste 381 (Weisung P12-298): in jedem Laden (Kaufhaus, Moebelhaus, Elektromarkt) und im Online-Shop am PC steht das
+/// Geld fest neben „Zurück“ (<see cref="SpielTafel.GeldFund"/>), in der Firma nicht; Gegenprobe Geld im Bildlauf wie bis A 0.89.0.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -55,6 +57,7 @@ public static partial class AutoMessung
             {
                 ("Kaufhaus-Sortiment", () => kaufhaus is not null && tafel.ProbeGeschaeft(Kleidung.Laden, kaufhaus)),
                 ("Moebelhaus", () => tafel.ProbeGeschaeft("moebelhaus")),
+                ("Elektromarkt", () => tafel.ProbeGeschaeft("elektromarkt")),
                 ("PC zu Hause", () => { tafel.PcOeffnen(SpielTafel.PcShop); return true; }),
                 ("Firma", () => { if (firma is null) { return false; } tafel.ProbeFirma(firma); return true; }),
             };
@@ -78,6 +81,11 @@ public static partial class AutoMessung
                     }
                     var fund = tafel.ZurueckFund();
                     Pruefe($"{name} {art} fest oben", fund is null, fund ?? "ok");
+                    // Sammelliste 381 (Weisung P12-298): in jedem Laden und im Online-Shop das Geld fest neben „Zurueck“
+                    var mitGeld = name != "Firma";
+                    var geld = tafel.GeldFund();
+                    Pruefe($"{name} {art} Geld fest oben", geld is null && tafel.SeiteMitGeld == mitGeld,
+                        geld ?? (tafel.SeiteMitGeld == mitGeld ? (mitGeld ? "„" + tafel.GeldWert.Text + "“ neben Zurück" : "kein Laden, kein Geld im Kopf") : "Seite mit Einkauf falsch erkannt"));
                     var rolle = tafel.Rolle;
                     rolle.Offset = new Vector(0, Math.Max(0, rolle.Extent.Height - rolle.Viewport.Height));
                     await ansicht.BildFertigAsync();
@@ -111,6 +119,22 @@ public static partial class AutoMessung
             finally
             {
                 tafel.KopfImBildlaufFuerTests(false);
+            }
+            // Gegenprobe 381: Geld wie bis A 0.89.0 als erste Zeile im Bildlauf
+            foreach (var i in new[] { 1, 3 })
+            {
+                await Oeffnen(tafeln[i].Oeffnen);
+                tafel.GeldImBildlaufFuerTests(true);
+                try
+                {
+                    await ansicht.BildFertigAsync();
+                    var gegen = tafel.GeldFund();
+                    Pruefe("Gegenprobe Geld im Bildlauf " + tafeln[i].Name, gegen is not null, gegen ?? "KEIN Fund (Pruefung zu schwach)");
+                }
+                finally
+                {
+                    tafel.GeldImBildlaufFuerTests(false);
+                }
             }
         }
         finally

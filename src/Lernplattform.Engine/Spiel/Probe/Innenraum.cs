@@ -1271,7 +1271,16 @@ public sealed partial class Innenraum
         return false;
     }
 
-    private int AutoDrehung(float x, float z, float w, float t)
+    /// <summary>
+    /// Sammelliste 380 (Weisung P12-298), Gegenprobe: Betten und Matratzen ohne eigene Drehung wie bis A 0.89.0 (Kopfteil an
+    /// der langen Seite, das Bett wirkte breiter als lang und die Figur lag quer).
+    /// </summary>
+    internal static readonly AsyncLocal<bool> BettQuerAltFuerTests = new();
+
+    /// <summary>Sammelliste 380: Liegemoebel, deren Kopfteil (Rueckseite des Modells) an der kurzen Seite steht.</summary>
+    private static readonly HashSet<string> Liegemoebel = ["bett", "matratze"];
+
+    private int AutoDrehung(string typ, float x, float z, float w, float t)
     {
         var cx = x + (w / 2);
         var cz = z + (t / 2);
@@ -1286,6 +1295,13 @@ public sealed partial class Innenraum
         {
             var flur = Objekt(Gebaeude["flur"]);
             (rx, rz, rw, rt) = (0, (float)Py.F(flur["y"]), Breite, (float)Py.F(flur["h"]));
+        }
+        if (Liegemoebel.Contains(typ) && !BettQuerAltFuerTests.Value)
+        {
+            // Sammelliste 380: das Kopfteil steht an einer kurzen Seite (das Bett ist laenger als breit), an der naeheren Wand
+            return w >= t
+                ? (x - rx <= rx + rw - (x + w) ? 3 : 1)
+                : (z - rz <= rz + rt - (z + t) ? 0 : 2);
         }
         if (w >= t)
         {
@@ -1313,7 +1329,7 @@ public sealed partial class Innenraum
         }
         else
         {
-            dreh = AnDerWand.Contains(typ) ? AutoDrehung(x, z, w, t) : 0;
+            dreh = AnDerWand.Contains(typ) ? AutoDrehung(typ, x, z, w, t) : 0;
         }
         var r = new Rahmen(x, z, w, t, dreh);
         var ohneStuhl = false;

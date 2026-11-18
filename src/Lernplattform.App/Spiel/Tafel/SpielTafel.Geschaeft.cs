@@ -34,7 +34,7 @@ public sealed partial class SpielTafel
             _kleiderSlot = typ;
         }
         _stapel.Clear();
-        Oeffnen(Krumen("SPIEL", _laden switch { "moebelhaus" => "MÖBELHAUS", Kleidung.Laden => "KAUFHAUS", _ => "ELEKTROMARKT" }), () => Geschaeft(Stand));
+        Oeffnen(Krumen("SPIEL", _laden switch { "moebelhaus" => "MÖBELHAUS", Kleidung.Laden => "KAUFHAUS", _ => "ELEKTROMARKT" }), () => Geschaeft(Stand), mitGeld: true);
     }
 
     private IEnumerable<Control?> Geschaeft(Spielstand stand)
@@ -42,7 +42,7 @@ public sealed partial class SpielTafel
         var g = _s.Geschaefte!;
         var laden = _laden!;
         var waren = g.Waren(laden);
-        yield return T(PyFormat.Prozent("Kontostand: %s", Euro(stand.Geld)), 14, "text", true);
+        // Sammelliste 381: das Geld steht fest in der Kopfzeile (SpielTafel.GeldFund)
         if (laden == Kleidung.Laden)
         {
             yield return KleidungKarte(stand, g);

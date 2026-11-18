@@ -25,6 +25,9 @@ public sealed partial class Hauptansicht
 {
     private const double LeisteBreite = 330;
 
+    /// <summary>Sammelliste 377: schmalste Breite der Karte „Grenzen live“ neben der Kamera-Karte.</summary>
+    private const double LeisteSchmal = 240;
+
     private readonly Border _grenzLeiste = new()
     {
         Padding = new Thickness(10, 8),
@@ -61,6 +64,39 @@ public sealed partial class Hauptansicht
     internal Task GrenzenLiveFertig => _grenzenFertig.Task;
 
     internal Border GrenzLeiste => _grenzLeiste;
+
+    /// <summary>Sammelliste 377: Knopf „Einklappen“/„Grenzen“ und die Huelle mit Balken, Zeilen und Legende.</summary>
+    private readonly Button _grenzKlappe = new Button
+    {
+        Content = Schrift.Text(Texte.KameraEinklappen, "Klein"),
+        Padding = new Thickness(8, 2),
+        VerticalAlignment = VerticalAlignment.Top,
+    }.Vorlese(Texte.GrenzenEinklappenName).Mit(Texte.GrenzenEinklappenTipp);
+    private readonly StackPanel _grenzHuelle = new() { Spacing = 4 };
+
+    /// <summary>Start-Test: Knopf „Einklappen“/„Grenzen“ der Karte „Grenzen live“.</summary>
+    internal Button GrenzKlappKnopf => _grenzKlappe;
+
+    /// <summary>Ist die Karte „Grenzen live“ eingeklappt? (Sammelliste 377)</summary>
+    internal bool GrenzenEingeklappt => !_grenzHuelle.IsVisible;
+
+    /// <summary>Text der Kopfzeile (eingeklappt die Kurzzeile).</summary>
+    internal string GrenzKopfText => _grenzKopf.Text ?? "";
+
+    /// <summary>Ist die Kopfzeile rot (ueber der Grenze)?</summary>
+    internal bool GrenzKopfRot { get; private set; }
+
+    /// <summary>Sammelliste 377: Karte „Grenzen live“ ein- oder aufklappen (wie die Kamera-Karte).</summary>
+    internal void GrenzenKlappen(bool zu)
+    {
+        _grenzHuelle.IsVisible = !zu;
+        _grenzLeiste.Width = zu ? double.NaN : LeisteBreite;
+        var text = zu ? Texte.GrenzenAufklappen : Texte.KameraEinklappen;
+        _grenzKlappe.Content = Schrift.Text(text, "Klein");
+        _grenzKlappe.Vorlese(zu ? Texte.GrenzenAufklappenName : Texte.GrenzenEinklappenName);
+        Tipp.Setzen(_grenzKlappe, zu ? Texte.GrenzenAufklappenTipp : Texte.GrenzenEinklappenTipp);
+        GrenzLeisteLegen();
+    }
     internal string GrenzLeisteKopf => _grenzKopf.Text ?? "";
     internal Button WaermeKnopf => _waermeChip;
     internal WrapPanel WaermeLegende => _waermeLegende;
@@ -86,7 +122,24 @@ public sealed partial class Hauptansicht
                 },
             });
         }
-        _grenzLeiste.Child = new StackPanel { Spacing = 4, Children = { _grenzKopf, _grenzLiveBalken, _grenzGesamt, _grenzNah, _grenzStufen, _waermeLegende } };
+        // Sammelliste 377 (Weisung P12-298): „Einklappen“ wie die Kamera-Karte; eingeklappt bleibt die Kopfzeile mit dem
+        // Anteil des groessten Werts, rot ueber der Grenze
+        _grenzKlappe.Click += (_, _) => GrenzenKlappen(!GrenzenEingeklappt);
+        foreach (var t in new[] { _grenzKopf, _grenzGesamt, _grenzNah, _grenzStufen })
+        {
+            t.TextWrapping = TextWrapping.Wrap;
+        }
+        _grenzKopf.VerticalAlignment = VerticalAlignment.Center;
+        var kopfZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
+        kopfZeile.Children.Add(_grenzKopf);
+        Grid.SetColumn(_grenzKlappe, 1);
+        kopfZeile.Children.Add(_grenzKlappe);
+        _grenzHuelle.Children.Add(_grenzLiveBalken);
+        _grenzHuelle.Children.Add(_grenzGesamt);
+        _grenzHuelle.Children.Add(_grenzNah);
+        _grenzHuelle.Children.Add(_grenzStufen);
+        _grenzHuelle.Children.Add(_waermeLegende);
+        _grenzLeiste.Child = new StackPanel { Spacing = 4, Children = { kopfZeile, _grenzHuelle } };
         _grenzLeiste.Farbe(Border.BackgroundProperty, "Pinsel.card").Farbe(Border.BorderBrushProperty, "Pinsel.border");
         _grenzLeiste.Vorlese(Texte.GrenzenLive).Mit(Texte.GrenzenLiveTipp);
         mitte.Children.Add(_grenzLeiste);
@@ -99,6 +152,8 @@ public sealed partial class Hauptansicht
         StadtteileKnopfBauen();
         NamenKnopfBauen();
         PlaetzeKnopfBauen();
+        // Sammelliste 379: alle Knoepfe gebaut, jetzt in die schmale Zeile und ihre Menues
+        KnopfleisteOrdnen(mitte);
     }
 
     /// <summary>Neben die Kamera-Karte, wenn beide nebeneinander passen, sonst darueber; die Karte haelt unten Platz frei.</summary>
@@ -109,7 +164,16 @@ public sealed partial class Hauptansicht
             return;
         }
         var kamera = Kamerakarte.Hoehe(_kameraAussen);
-        var daneben = _grenzMitte.Bounds.Width - _kameraAussen.Bounds.Width - (3 * Kamerakarte.Rand) >= LeisteBreite;
+        // Sammelliste 377: neben der Kamera-Karte (Unterkante buendig), wenn die Karte dort mindestens LeisteSchmal breit
+        // sein kann; dann so breit, wie Platz ist (hoechstens LeisteBreite), die Zeilen brechen um
+        var platz = _grenzMitte.Bounds.Width - _kameraAussen.Bounds.Width - (3 * Kamerakarte.Rand);
+        var daneben = platz >= LeisteSchmal;
+        var breite = Math.Min(LeisteBreite, Math.Max(LeisteSchmal, platz));
+        if (!GrenzenEingeklappt && Math.Abs(_grenzLeiste.Width - breite) > 0.5)
+        {
+            _grenzLeiste.Width = breite;
+        }
+        _grenzLeiste.MaxWidth = breite;
         var unten = daneben ? Kamerakarte.Rand : kamera;
         var rand = new Thickness(Kamerakarte.Rand, 0, 0, unten);
         if (_grenzLeiste.Margin != rand)
@@ -193,6 +257,9 @@ public sealed partial class Hauptansicht
         var anteil = g.Anteil;
         var kopf = Texte.GrenzenLiveKopf(d, a, StadtbauGrenzen.Dreiecke, StadtbauGrenzen.Aufrufe);
         _grenzKopf.Text = Texte.GrenzenLive + ": " + kopf;
+        // Sammelliste 377: ueber der Grenze ist die Kopfzeile rot (auch eingeklappt sichtbar)
+        GrenzKopfRot = anteil > 1;
+        _grenzKopf.Farbe(TextBlock.ForegroundProperty, GrenzKopfRot ? "Pinsel.red" : "Pinsel.text");
         _grenzLiveBalken.Value = Math.Min(100, anteil * 100);
         _grenzLiveBalken.Farbe(ProgressBar.ForegroundProperty, anteil > 1 ? "Pinsel.red" : anteil >= GrenzenLive.GelbAb ? "Pinsel.yellow" : "Pinsel.green");
         // Welle S 0.55.0: grosse Karten zeigt das Spiel nur mit Nachladen (nie ganz): teuerster Stadtteil und Netzdaten

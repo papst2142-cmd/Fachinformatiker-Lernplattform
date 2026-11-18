@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.58.0
+
+Über der Karte ist jetzt viel mehr Platz: die Knöpfe sind kleiner, und was du gerade nicht brauchst, lässt sich einklappen.
+
+- Die Knöpfe über der Karte stehen in einer schmalen Zeile: „Wählen“ (Einzeln oder Mehrere), „Einfügen“, „Werkzeuge“ (Maßband, Notiz, Plätze, Stadtteil-Namen) und „Anzeigen“ (Ebenen, Wärmekarte, Stadtteile; ein Häkchen zeigt, was an ist). Was gerade aktiv ist, steht im Knopf, zum Beispiel „Werkzeuge: Maßband“. Mit „‹“ klappt die Zeile ein; alle Tastenkürzel wirken weiter.
+- Die Karte „Grenzen live“ lässt sich wie die Kamera-Karte einklappen. Eingeklappt bleibt die Zeile mit dem größten Anteil stehen, über der Grenze in Rot. Sie steht jetzt neben der Kamera-Karte auf gleicher Höhe.
+- Spielgeschichte, Quests und Questgeber liegen oben unter einem Reiter „Spiel“. Ein Tipp darauf öffnet links eine Leiste mit den drei Seiten; nach der Wahl einer Seite klappt sie wieder ein, damit die Seite die volle Breite behält. „Gebäude entwerfen“ rückt dafür neben die 3D-Ansicht.
+- Deine Projekte, die Prüfungen und die Dateien für das Spiel bleiben, wie sie sind.
+
 ## S 0.57.0
 
 Eine neue Stadt lässt sich jetzt gleich als Inhaltspaket anlegen.

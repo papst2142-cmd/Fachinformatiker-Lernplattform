@@ -200,8 +200,10 @@ public class PruefungTests
         var soll = new Dictionary<string, (long, int)>
         {
             // A 0.68.0 (Weisung P12-206): der begehbare Schrank in der Auslage ist jetzt Entwurf B (vorher 10160); A 0.80.0
-            // (Sammelliste 347): am Esstisch an der Aussenwand entfaellt die Stuhlreihe in der Wand (2 Stuehle, vorher 10184)
-            ["moebelhaus"] = (9882, 12),
+            // (Sammelliste 347): am Esstisch an der Aussenwand entfaellt die Stuhlreihe in der Wand (2 Stuehle, vorher 10184); A 0.90.0
+            // (Sammelliste 380): die Betten stehen laengs mit dem Kopfteil an der Wand, an der Wand fallen andere Flaechen weg
+            // (vorher 9882, Gegenprobe unten)
+            ["moebelhaus"] = (9833, 12),
             ["elektromarkt"] = (15282, 12),
             ["bank"] = (7468, 12),
             // A 0.68.0: Frisuren an der 3D-Figur; im Amt langes Haar (3 Quader, vorher 9259), im Kaufhaus Locken (29 Quader mit den
@@ -213,6 +215,18 @@ public class PruefungTests
         {
             var innen = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), Grundriss(ort), InnenGrundriss.Personen(D.Fassung.Innenraeume, ort), D.Grafik);
             Assert.Equal(soll[ort], StadtbauGrenzen.Innen(innen));
+        }
+        // Gegenprobe Sammelliste 380: mit den Betten wie bis A 0.89.0 (quer) wieder der alte Wert
+        Innenraum.BettQuerAltFuerTests.Value = true;
+        try
+        {
+            var alt = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht("moebelhaus"), Grundriss("moebelhaus"),
+                InnenGrundriss.Personen(D.Fassung.Innenraeume, "moebelhaus"), D.Grafik);
+            Assert.Equal((9882L, 12), StadtbauGrenzen.Innen(alt));
+        }
+        finally
+        {
+            Innenraum.BettQuerAltFuerTests.Value = false;
         }
     }
 

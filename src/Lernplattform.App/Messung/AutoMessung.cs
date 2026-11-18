@@ -233,6 +233,8 @@ public static partial class AutoMessung
             funde += await HaltungAsync(ansicht);              // Welle A 0.81.0: Hinsetzen und Hinlegen (Sammelliste 349)
             Zeitplan("TafelZurueckAsync");
             funde += await TafelZurueckAsync(ansicht);         // Welle A 0.81.0: Zurueck in der Spiel-Tafel fest oben (Nico 5a)
+            Zeitplan("Einrichten382Async");
+            funde += await Einrichten382Async(ansicht);        // Welle A 0.90.0: „Übernehmen“ im Einrichtungsmenue (Sammelliste 382)
             Zeitplan("LeisteUebersichtAsync");
             funde += await LeisteUebersichtAsync(ansicht);     // Welle A 0.81.0: Uebersicht im Handy, Leiste schlank (Sammelliste 350)
             Zeitplan("PaketStaedteAsync");

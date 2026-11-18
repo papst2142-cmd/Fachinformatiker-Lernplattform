@@ -177,7 +177,7 @@ public sealed partial class StadtSpiel
                 Geaendert?.Invoke();
                 return true;
             case AktionHinsetzen or AktionHinlegen when Innen is { } innen
-                && innen.FreierPlatzNahe(FigurX, FigurZ, s => (s.Art == SitzArt.Liegen) == (aktion == AktionHinlegen)) is { } platz:
+                && innen.FreierPlatzNahe(FigurX, FigurZ, s => (s.Art == SitzArt.Liegen) == (aktion == AktionHinlegen) && PlatzNutzbar(s, FigurX, FigurZ)) is { } platz:
                 Setzen(platz);
                 return true;
             case AktionHinsetzen or AktionHinlegen:
@@ -199,7 +199,10 @@ public sealed partial class StadtSpiel
             return false;
         }
         var (w, t) = (ziel.Rechteck.X2 - ziel.Rechteck.X1, ziel.Rechteck.Z2 - ziel.Rechteck.Z1);
-        var weg = MitWeg(() => innen.Weg(FigurX, FigurZ, ziel.Mitte.X, ziel.Mitte.Y, Wohnung.MoebelReichweite + (Math.Min(w, t) / 2)));
+        // Sammelliste 383: zu Hause nie ueber die Wand: durch die Tuer an eine Seite im Raum des Platzes
+        var weg = RaumRegel
+            ? WegInDenRaum(innen, ziel.Rechteck.X1, ziel.Rechteck.Z1, w, t, null) ?? []
+            : MitWeg(() => innen.Weg(FigurX, FigurZ, ziel.Mitte.X, ziel.Mitte.Y, Wohnung.MoebelReichweite + (Math.Min(w, t) / 2)));
         WegLeeren();
         _weg.AddRange(weg);
         if (weg.Count > 0)
@@ -207,7 +210,7 @@ public sealed partial class StadtSpiel
             _setzenNach = ziel;
             geht = true;
         }
-        else if (ziel.Abstand(FigurX, FigurZ) <= Wohnung.MoebelReichweite + 0.3)
+        else if (ziel.Abstand(FigurX, FigurZ) <= Wohnung.MoebelReichweite + 0.3 && PlatzNutzbar(ziel, FigurX, FigurZ))
         {
             Setzen(ziel);
         }
@@ -258,21 +261,21 @@ public sealed partial class StadtSpiel
             Zeile = (p.Art == SitzArt.Liegen ? SpielProbeTexte.DuLiegst : SpielProbeTexte.DuSitzt) + (bleibt.Count > 0 ? "\n" + Zeile : "");
             return [.. bleibt, (AktionAufstehen, SpielProbeTexte.KnopfAufstehen)];
         }
-        if (knoepfe.Any(k => PcAktionen.Contains(k.Aktion)) && innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art == SitzArt.PcStuhl) is not null)
+        if (knoepfe.Any(k => PcAktionen.Contains(k.Aktion)) && innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art == SitzArt.PcStuhl && PlatzNutzbar(s, FigurX, FigurZ)) is not null)
         {
             knoepfe = [.. knoepfe.Where(k => !PcAktionen.Contains(k.Aktion))];
             Zeile += "\n" + SpielProbeTexte.ErstHinsetzen;
         }
-        if (knoepfe.Any(k => k.Aktion == AktionSchlafen) && innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art == SitzArt.Liegen) is not null)
+        if (knoepfe.Any(k => k.Aktion == AktionSchlafen) && innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art == SitzArt.Liegen && PlatzNutzbar(s, FigurX, FigurZ)) is not null)
         {
             knoepfe = [.. knoepfe.Where(k => k.Aktion != AktionSchlafen)];
             Zeile += "\n" + SpielProbeTexte.ErstHinlegen;
         }
-        if (innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art != SitzArt.Liegen) is not null)
+        if (innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art != SitzArt.Liegen && PlatzNutzbar(s, FigurX, FigurZ)) is not null)
         {
             knoepfe = [.. knoepfe, (AktionHinsetzen, SpielProbeTexte.KnopfHinsetzen)];
         }
-        if (innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art == SitzArt.Liegen) is not null)
+        if (innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art == SitzArt.Liegen && PlatzNutzbar(s, FigurX, FigurZ)) is not null)
         {
             knoepfe = [.. knoepfe, (AktionHinlegen, SpielProbeTexte.KnopfHinlegen)];
         }

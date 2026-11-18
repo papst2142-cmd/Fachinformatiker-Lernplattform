@@ -293,9 +293,10 @@ public sealed partial class Innenraum
         var blick = MathF.Atan2(f.X, f.Y);
         if (m.Art == SitzArt.Liegen)
         {
-            // laengs der laengeren Seite: normal vom Kopfteil (hinten) nach vorn; steht das Bett quer (Kopfteil an der langen
-            // Seite), quer ueber die Liegeflaeche mit Abstand zum Kopfteil
-            var laengsZ = Vector3.Distance(L(0.5f, m.Sitz, 0f), L(0.5f, m.Sitz, 1f)) >= Vector3.Distance(L(0f, m.Sitz, 0.5f), L(1f, m.Sitz, 0.5f));
+            // Sammelliste 380 (Nico: „laengs, Kopf am Kopfteil“): immer laengs vom Kopfteil (hinten) zum Fussende, fuer jedes
+            // Bett; bis A 0.89.0 lag die Figur quer, wenn das Bett breiter als lang gezeichnet war (Gegenprobe BettQuerAltFuerTests)
+            var laengsZ = !BettQuerAltFuerTests.Value
+                || Vector3.Distance(L(0.5f, m.Sitz, 0f), L(0.5f, m.Sitz, 1f)) >= Vector3.Distance(L(0f, m.Sitz, 0.5f), L(1f, m.Sitz, 0.5f));
             var (kopfende, fussende, rand) = laengsZ
                 ? (L(0.5f, m.Sitz, 0f), L(0.5f, m.Sitz, 1f), Figur.LiegenKopfteil)
                 : (L(0f, m.Sitz, (1 + Figur.LiegenKopfteil) / 2), L(1f, m.Sitz, (1 + Figur.LiegenKopfteil) / 2), 0f);

@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.90.0
+Im Spiel wird das Wohnen und Einkaufen bequemer: Betten, Möbel und das Geld in den Läden verhalten sich jetzt so, wie man es erwartet.
+
+- Deine Figur liegt jetzt immer längs im Bett, mit dem Kopf am Kopfteil, egal wie das Bett gedreht ist oder an welcher Wand es steht. Das gilt auch für die Betten im Möbelhaus.
+- In jedem Laden (Kaufhaus, Möbelhaus, Elektromarkt) und im Online-Shop am PC steht dein Kontostand fest oben neben „Zurück“. Er bleibt dort, auch wenn du in einer langen Liste nach unten rollst.
+- Beim Einrichten der Wohnung gibt es nach dem Aufstellen eines Möbelstücks den Knopf „Übernehmen“: das Stück bleibt an seinem Platz, die Auswahl wird aufgehoben, und du kannst gleich das nächste Stück anfassen. „Fertig“ beendet das Einrichten wie bisher.
+- Ein Möbelstück lässt sich nur noch aus seinem eigenen Raum benutzen. Stehst du auf der anderen Seite der Wand und tippst es an, geht deine Figur durch die Tür vor das Möbel; durch die Wand hindurch bietet es nichts mehr an.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.89.0
 Inhaltspakete lassen sich jetzt wirklich aus dem Internet laden, und Städte aus Paketen können eigene Aufträge haben.
 

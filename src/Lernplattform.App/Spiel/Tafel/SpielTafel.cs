@@ -37,6 +37,8 @@ public sealed partial class SpielTafel : Grid
     private readonly TextBlock _krumen;
     private readonly Button _zurueck;
     private readonly Control _kopf;
+    private TextBlock _geldWert;
+    private readonly StackPanel _geld;
     private readonly StackPanel _kopfFest;
     private readonly StackPanel _spalte;
     private readonly List<Seite> _stapel = [];
@@ -44,7 +46,11 @@ public sealed partial class SpielTafel : Grid
     private bool _waehlen;
 
     /// <summary>Eine Seite wie app.push(crumbs, ...): baut ihren Inhalt bei jedem Neuzeichnen.</summary>
-    private sealed record Seite(string Krumen, Func<IEnumerable<Control?>> Bauen);
+    /// <summary>Sammelliste 381: <paramref name="MitGeld"/> = Seite mit Einkauf (Laden, Online-Shop), das Geld steht fest im Kopf.</summary>
+    private sealed record Seite(string Krumen, Func<IEnumerable<Control?>> Bauen, bool MitGeld = false);
+
+    /// <summary>Sammelliste 381: Ueberschrift des Gelds in der Kopfzeile.</summary>
+    internal const string GeldTitel = "KONTOSTAND";
 
     public SpielTafel(SpielSitzung sitzung, Action verlassen, SpielWege? wege)
     {
@@ -55,7 +61,11 @@ public sealed partial class SpielTafel : Grid
         _zurueck = Knopf(KartenTexte.Zurueck, () => Zurueck(), "ghost", 38);
         // Welle A 0.81.0 (Weisung P12-273, Nico 5a): die Kopfzeile mit „Zurueck“ steht fest ueber dem Bildlauf (rollt nicht
         // mehr mit dem Inhalt weg); Abstaende wie bisher (Kopf 12 oben, 4 + 14 zum Inhalt)
-        _kopf = Zeile(_krumen, _zurueck);
+        // Sammelliste 381 (Weisung P12-298, Nico): in jedem Laden steht das Geld fest oben neben „Zurueck“ (nie im Bildlauf)
+        _geldWert = T("", 14, "text", true);
+        _geld = new StackPanel { Spacing = 0, IsVisible = false, Children = { T(GeldTitel, 11, "muted", true), _geldWert } };
+        Avalonia.Automation.AutomationProperties.SetName(_geld, GeldTitel);
+        _kopf = new KopfZeile(_krumen, Zeile(_geld, _zurueck, 12), 10);
         _kopf.Margin = new Thickness(0, 0, 0, 4);
         _kopfFest = new StackPanel { MaxWidth = Breite, Margin = new Thickness(16, 12, 16, 0), Children = { _kopf } };
         _spalte = new StackPanel { Spacing = 14, MaxWidth = Breite, Margin = new Thickness(16, 14, 16, 24) };
@@ -117,7 +127,18 @@ public sealed partial class SpielTafel : Grid
             return;
         }
         _krumen.Text = krumen;
+        var mitGeld = _stapel.Count > 0 && _stapel[^1].MitGeld && !GeldImBildlauf;
+        _geld.IsVisible = mitGeld;
+        if (mitGeld)
+        {
+            _geldWert = T(Euro(Stand.Geld), 14, Stand.Geld >= 0 ? "text" : "red", true);
+            _geld.Children[1] = _geldWert;
+        }
         _inhalt.Children.Clear();
+        if (_stapel.Count > 0 && _stapel[^1].MitGeld && GeldImBildlauf)
+        {
+            _inhalt.Children.Add(T(PyFormat.Prozent("Kontostand: %s", Euro(Stand.Geld)), 14, "text", true));
+        }
         foreach (var teil in teile)
         {
             if (teil is not null)
@@ -132,9 +153,9 @@ public sealed partial class SpielTafel : Grid
     private static string Krumen(params string[] teile) => string.Join(" · ", teile);
 
     /// <summary>app.push: neue Seite oben auf den Stapel.</summary>
-    private void Oeffnen(string krumen, Func<IEnumerable<Control?>> bauen)
+    private void Oeffnen(string krumen, Func<IEnumerable<Control?>> bauen, bool mitGeld = false)
     {
-        _stapel.Add(new Seite(krumen, bauen));
+        _stapel.Add(new Seite(krumen, bauen, mitGeld));
         Zeichnen();
         _rolle.Offset = default;
     }

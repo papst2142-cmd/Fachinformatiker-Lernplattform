@@ -150,6 +150,12 @@ public static class SpielProbeTexte
     public const string Drehen = "Drehen";
     public const string InDenKarton = "In den Karton";
 
+    /// <summary>Sammelliste 382 (Weisung P12-298, Nico): Platz des eben aufgestellten Moebels bestaetigen, im Einrichten bleiben.</summary>
+    public const string Uebernehmen = "Übernehmen";
+
+    /// <summary>Sammelliste 382: Zeile nach „Übernehmen“, %s = Name des Moebels.</summary>
+    public const string Uebernommen = "„%s“ steht. Tippe das nächste Möbelstück an oder auf „Fertig“.";
+
     /// <summary>Phase 12 Welle 1 (Nico 3b): Knopf beim Einrichten, %s = Rueckkaufpreis („Zurückverkaufen (170 €)“).</summary>
     public const string Zurueckverkaufen = "Zurückverkaufen (%s)";
 

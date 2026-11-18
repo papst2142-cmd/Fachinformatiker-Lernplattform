@@ -35,12 +35,12 @@ public sealed partial class SpielTafel
         // Kredite aufnehmen und abloesen gehen hier nicht (nur am Schalter der Bank)
         _schalter = null;
         _stapel.Clear();
-        Oeffnen(Krumen("SPIEL", "PC ZU HAUSE"), () => PcSeite(Stand));
+        Oeffnen(Krumen("SPIEL", "PC ZU HAUSE"), () => PcSeite(Stand), mitGeld: true);
     }
 
     private IEnumerable<Control?> PcSeite(Spielstand stand)
     {
-        yield return T(PyFormat.Prozent("Kontostand: %s", Euro(stand.Geld)), 14, "text", true);
+        // Sammelliste 381: das Geld steht fest in der Kopfzeile (Online-Shop)
         yield return Pillen([(PcShop, Spielwelt.ReiterShop), (PcKredite, Spielwelt.ReiterKredite), (PcGezahlt, Spielwelt.ReiterGezahlt)],
             _pcReiter, r => { _pcReiter = r; Neu(); });
         var seite = _pcReiter switch

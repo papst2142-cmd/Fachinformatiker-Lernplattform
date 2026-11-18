@@ -122,11 +122,11 @@ public static class Spielwelt
     public static bool Aufgestellt(Spielstand stand, string typ) => Wohnung.AufgestellteMoebel(stand).Any(m => m.Typ == typ);
 
     /// <summary>Aufgestelltes Moebel des Typs in Reichweite der Figur (wie furniture_near, nur dieser Typ), sonst null.</summary>
-    public static Wohnung.Aufgestellt? Nahe(Spielstand stand, string typ, double x, double y)
+    public static Wohnung.Aufgestellt? Nahe(Spielstand stand, string typ, double x, double y, Func<Wohnung.Aufgestellt, bool>? nutzbar = null)
     {
         Wohnung.Aufgestellt? beste = null;
         var besteWeite = double.MaxValue;
-        foreach (var m in Wohnung.AufgestellteMoebel(stand).Where(m => m.Typ == typ))
+        foreach (var m in Wohnung.AufgestellteMoebel(stand).Where(m => m.Typ == typ && (nutzbar is null || nutzbar(m))))
         {
             var weite = Abstand(m.X, m.Y, Py.F(m.W), Py.F(m.H), x, y);
             if (weite <= Wohnung.MoebelReichweite && weite < besteWeite)

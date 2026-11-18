@@ -88,6 +88,73 @@ public sealed partial class SpielTafel
         }
     }
 
+    /// <summary>
+    /// Gegenprobe Sammelliste 381 (Weisung P12-298): true zeigt das Geld wie bis A 0.89.0 als erste Zeile im Bildlauf
+    /// (rollt weg), false fest in der Kopfzeile.
+    /// </summary>
+    internal bool GeldImBildlauf { get; private set; }
+
+    internal void GeldImBildlaufFuerTests(bool imBildlauf)
+    {
+        GeldImBildlauf = imBildlauf;
+        Zeichnen();
+    }
+
+    /// <summary>Knopf „Zurueck“ und das Geld der Kopfzeile (Start-Test, Sammelliste 381).</summary>
+    internal TextBlock GeldWert => _geldWert;
+
+    /// <summary>Sammelliste 381: die offene Seite ist ein Laden oder der Online-Shop (Geld fest im Kopf).</summary>
+    internal bool SeiteMitGeld => _stapel.Count > 0 && _stapel[^1].MitGeld;
+
+    /// <summary>
+    /// Layoutpruefung und Start-Test (Sammelliste 381, Weisung P12-298): auf einer Seite mit Einkauf steht das Geld fest oben
+    /// in der Kopfzeile neben „Zurueck“, auch ganz nach unten gerollt: richtiger Betrag, nicht im Bildlauf, im Bereich der
+    /// Tafel, auf der Hoehe von „Zurueck“ (senkrecht ueberlappend) und links davon, im oberen Drittel; keine zweite Zeile
+    /// „Kontostand:“ im Bildlauf. Auf anderen Seiten nichts. Rollt ganz nach unten und danach zurueck. null = in Ordnung.
+    /// </summary>
+    internal string? GeldFund()
+    {
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        if (!SeiteMitGeld)
+        {
+            return _geld.IsVisible ? "Geld im Kopf auf einer Seite ohne Einkauf" : null;
+        }
+        var soll = Bau.Euro(Stand.Geld);
+        if (_rolle.IsVisualAncestorOf(_geldWert) || _rolle.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text?.StartsWith("Kontostand:", StringComparison.Ordinal) == true))
+        {
+            return "Geld steht im Bildlauf (rollt weg)";
+        }
+        if (_geldWert.Text != soll)
+        {
+            return $"Geld im Kopf „{_geldWert.Text}“ statt „{soll}“";
+        }
+        var vorher = _rolle.Offset;
+        try
+        {
+            _rolle.Offset = new Avalonia.Vector(0, Math.Max(0, _rolle.Extent.Height - _rolle.Viewport.Height));
+            if (!_geldWert.IsEffectivelyVisible || _geldWert.Bounds.Width < 1 || _geldWert.TranslatePoint(default, this) is not { } p
+                || _zurueck.TranslatePoint(default, this) is not { } z)
+            {
+                return "Geld nicht zu sehen";
+            }
+            var g = new Avalonia.Rect(p, _geldWert.Bounds.Size);
+            var zr = new Avalonia.Rect(z, _zurueck.Bounds.Size);
+            if (g.X < -0.5 || g.Y < -0.5 || g.Right > Bounds.Width + 0.5 || g.Bottom > Bounds.Height + 0.5 || g.Y > Bounds.Height / 3)
+            {
+                return string.Create(inv, $"Geld nicht oben in der Tafel ({g.X:0.#},{g.Y:0.#} {g.Width:0.#}x{g.Height:0.#} von {Bounds.Width:0.#}x{Bounds.Height:0.#})");
+            }
+            if (g.Right > zr.X + 0.5 || g.Bottom < zr.Y || g.Y > zr.Bottom)
+            {
+                return string.Create(inv, $"Geld nicht neben „Zurück“ (Geld {g.X:0.#},{g.Y:0.#} {g.Width:0.#}x{g.Height:0.#}, Zurück {zr.X:0.#},{zr.Y:0.#})");
+            }
+            return null;
+        }
+        finally
+        {
+            _rolle.Offset = vorher;
+        }
+    }
+
     /// <summary>Start-Test: neue Abzeichen nur abholen, kein Hinweisfenster (es haelt die Layoutpruefung an).</summary>
     internal bool OhneFenster { get; set; }
 

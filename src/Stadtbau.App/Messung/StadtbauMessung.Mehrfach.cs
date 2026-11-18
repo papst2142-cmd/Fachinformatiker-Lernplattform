@@ -50,9 +50,14 @@ public static partial class StadtbauMessung
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         var p = a.Projekt!;
         var k = a.Karte;
-        if (!a.MehrereKnopf.IsEffectivelyVisible || a.KlicksBis(a.MehrereKnopf) is not 0)
+        // Welle S 0.58.0 (Sammelliste 379, Nico a): „Mehrere“ steht im Menue „Wählen ▾“ der schmalen Knopfleiste, ein Tippen weit
+        a.LeisteMenueZu();
+        await BildAsync(a);
+        if (a.KlicksBis(a.MehrereKnopf) is not 1)
         {
-            Fund("Mehrfach: Knopf \"" + Texte.MehrereWaehlen + "\" nicht sichtbar oben in der Draufsicht");
+            Fund("Mehrfach: Knopf \"" + Texte.MehrereWaehlen + "\" nicht mit einem Tippen im Menue \"" + Texte.LeisteWaehlen + "\" oben in der Draufsicht ("
+                + a.KlicksBis(a.MehrereKnopf).ToString(Inv) + " Tippen, sichtbar " + a.MehrereKnopf.IsVisible + "/" + a.MehrereKnopf.IsEffectivelyVisible
+                + ", Knopf " + a.LeisteKnoepfe[Texte.LeisteWaehlen].IsEffectivelyVisible + ")");
             return;
         }
         p.AussenAendern("Straße", aa => Aussen.Landschaft(aa).Add(new PyObjekt
