@@ -41,7 +41,9 @@ public static partial class AutoMessung
             foreach (var art in new[] { "Maus", "Finger", "Screenreader", "Gegenprobe" })
             {
                 var spiel = Frisch(seite);
-                await seite.Flaeche.NaechstesBildAsync();
+                // kein Warten auf ein Bild der 3D-Flaeche: Einrichten ist Spiel-Kern und Knopfleiste; am Mac (Metal, ohne Bild der
+                // Flaeche) wartete die Probe sonst ewig (voller Lauf 1062, Wachhund)
+                await ansicht.BildFertigAsync();
                 if (!spiel.KannBetreten || !spiel.Betreten())
                 {
                     Pruefe(art + " Wohnung", false, spiel.Zeile.Replace('\n', ' '));
