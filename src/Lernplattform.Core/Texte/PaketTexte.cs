@@ -9,11 +9,11 @@ namespace Lernplattform.Core.Texte;
 public static class PaketTexte
 {
     public const string Titel = "Inhaltspakete";
-    public const string Kurz = "Neue Städte zum Nachladen";
+    public const string Kurz = "Neue Städte und Fachrichtungs-Pakete";
     public static readonly IReadOnlyList<string> Stichwoerter = ["Inhaltspakete", "Pakete", "DLC", "Städte", "nachladen"];
 
-    public const string Satz = "Neue Städte zum Nachladen, ohne die App zu tauschen. Geladene Pakete gehen auch ohne Netz und bleiben bei "
-        + "jedem App-Update erhalten. Nichts lädt von allein.";
+    public const string Satz = "Neue Städte und neue Lerninhalte je Fachrichtung, ohne die App zu tauschen. Geladene Pakete gehen auch ohne "
+        + "Netz und bleiben bei jedem App-Update erhalten. Nichts lädt von allein.";
     public const string Suchen = "Nach Paketen suchen";
     public const string Sucht = "Suche nach Paketen …";
     public const string KeineVerbindung = "Keine Verbindung. Geladene Pakete gehen weiter.";
@@ -62,6 +62,43 @@ public static class PaketTexte
 
     /// <summary>Welle A 0.89.0 (Weisung P12-297 W3-2): die Stadt traegt die Kennung eines anderen Pakets.</summary>
     public const string StadtAnderesPaket = "Die Stadt im Paket gehört zum Paket „{0}“.";
+    // Welle A 0.91.0 (Weisung P12-300, Nico 2c): Fachrichtungs-Pakete (Art „lernen“), Name „Fachrichtungs-Paket AE“
+    public const string FrName = "Fachrichtungs-Paket {0}";
+    public const string FrText = "Lerninhalte der Fachrichtung {0}: Karteikarten, Quiz, AP2-Szenarien, Testprojekte, Fachgespräch und Prüfungssätze.";
+    public const string ZustandEingebaut = "In der App enthalten";
+    public const string ZustandEingebautNeu = "In der App enthalten · neuer Stand {0} da";
+    public const string KennungArt = "Die Kennung „{0}“ passt nicht zur Art des Pakets.";
+    public const string LernenAufbau = "Der Inhalt des Pakets ist fehlerhaft ({0}: {1}).";
+    public const string StelleDoppelt = "Stelle {0} doppelt oder nicht der Reihe nach";
+    public const string StelleFremd = "Eintrag an Stelle {0} gehört nicht zu dieser Fachrichtung";
+    public const string StelleBelegt = "Das Paket verschiebt Inhalte: {0}, Stelle {1} gehört in der App zu einem anderen Eintrag.";
+    public const string EintragFehlt = "Das Paket ist älter als die App: in {0} fehlt Stelle {1}.";
+    public const string EintragAnders = "Das Paket ändert einen Inhalt der App: {0}, Stelle {1}.";
+
+    /// <summary>Hinweis auf einen neuen Stand (Nico 3a): in der Karte und einmal oben in der Lernansicht.</summary>
+    public const string FrHinweisNeu = "Neue Inhalte für {0}: Fachrichtungs-Paket {0}, Stand {1}, {2} MB.";
+    public const string Spaeter = "Später";
+
+    /// <summary>Rueckfrage, wenn eine Fachrichtung keine Inhalte hat (Weisung P12-300 Punkt 4, wortgleich).</summary>
+    public const string FrFehltTitel = "Fachrichtungs-Paket fehlt";
+    public const string FrFehltFrage = "Für {0} fehlt das Fachrichtungs-Paket ({1} MB). Jetzt laden?";
+    public const string FrFehltOhneNetz = "Für {0} fehlt das Fachrichtungs-Paket. Ohne Verbindung kann es gerade nicht geladen werden. Dein Lernstand bleibt.";
+    public const string FrFehltSicht = "Für {0} fehlt das Fachrichtungs-Paket. Du siehst die gemeinsamen Inhalte. Dein Lernstand bleibt.";
+
+    /// <summary>Entfernen gesperrt, solange ein Pruefungssatz dieser Fachrichtung offen ist.</summary>
+    public const string FrEntfernenGesperrt = "Du schreibst gerade einen {0}-Prüfungssatz. Erst beenden oder abbrechen.";
+    public const string FrEntfernenFrage = "Das Fachrichtungs-Paket {0} wird vom Gerät entfernt. Danach gilt wieder der Stand, den die App mitbringt. Dein Lernstand bleibt.";
+    public const string FrEntfernenFrageOhne = "Das Fachrichtungs-Paket {0} wird vom Gerät entfernt. Danach fehlen die Inhalte für {0}, bis du es wieder lädst. Dein Lernstand bleibt.";
+
+    /// <summary>Der offene Pruefungssatz fehlt (z. B. nach einem Abgleich); sein gespeicherter Stand bleibt.</summary>
+    public const string FrSatzFehlt = "Dieser Prüfungssatz gehört zum Fachrichtungs-Paket {0}. Bitte laden, um weiterzumachen. Dein Stand bleibt gespeichert.";
+
+    /// <summary>Hinweis nach einem Abgleich: der Lernstand kennt Inhalte, die auf diesem Geraet fehlen.</summary>
+    public const string FrNachAbgleich = "Auf diesem Gerät fehlen neuere Inhalte für {0}. Bitte das Fachrichtungs-Paket {0} laden (Optionen › Inhaltspakete). Nichts geht verloren.";
+
+    /// <summary>Anzeige der Fachrichtung im Text (AE, DPA, DV).</summary>
+    public static string Fr(string fachrichtung) => fachrichtung.ToUpperInvariant();
+
     public const string Speichern = "Das Paket konnte nicht gespeichert werden: {0}";
     public const string Netz = "Laden fehlgeschlagen: {0}";
     public const string QuelleFehlt = "Die Testquelle der Pakete wurde nicht gefunden.";

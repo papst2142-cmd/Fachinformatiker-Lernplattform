@@ -91,7 +91,7 @@ public sealed class PaketTests : IDisposable
     [Fact]
     public void A2_UnbekannteArt_EchteTestdatei_KlarerGrund_Gegenprobe()
     {
-        var echt = File.ReadAllBytes(Path.Combine(Echt, "probe_lernen_1.fipaket"));
+        var echt = File.ReadAllBytes(Path.Combine(Echt, "probe_grafik_1.fipaket"));
         Assert.Equal(PaketTexte.ArtUnbekannt, Grund(echt));
         Assert.Equal("Diese Art von Paket kennt die App noch nicht. Bitte die App aktualisieren.", PaketTexte.ArtUnbekannt);
         // Gegenprobe: dieselbe Datei mit art „stadt“ ist gut (der Grund kommt wirklich von der Art)
@@ -234,7 +234,7 @@ public sealed class PaketTests : IDisposable
         var quelle = Path.Combine(_tmp, "quelle");
         Directory.CreateDirectory(quelle);
         File.WriteAllBytes(Path.Combine(quelle, "probe_klein_1.fipaket"), Klein[..(Klein.Length - 40)]);
-        File.Copy(Path.Combine(Echt, "probe_lernen_1.fipaket"), Path.Combine(quelle, "probe_lernen_1.fipaket"));
+        File.Copy(Path.Combine(Echt, "probe_grafik_1.fipaket"), Path.Combine(quelle, "probe_grafik_1.fipaket"));
         var v = Verwaltung(quelle, daten);
         await v.SuchenAsync(TestContext.Current.CancellationToken);
         foreach (var a in v.Angebote)
@@ -243,15 +243,15 @@ public sealed class PaketTests : IDisposable
         }
         var zeilen = v.Zeilen().ToDictionary(z => z.Kennung);
         Assert.Equal(PaketTexte.Format(PaketTexte.ZustandFehler, PaketTexte.KeinArchiv), zeilen["probe_klein"].ZustandText);
-        Assert.Equal(PaketTexte.Format(PaketTexte.ZustandFehler, PaketTexte.ArtUnbekannt), zeilen["probe_lernen"].ZustandText);
+        Assert.Equal(PaketTexte.Format(PaketTexte.ZustandFehler, PaketTexte.ArtUnbekannt), zeilen["probe_grafik"].ZustandText);
         Assert.All(zeilen.Values, z => Assert.Equal(PaketZustand.Fehlerhaft, z.Zustand));
         // Sammelliste 374: ein abgeschnittenes Archiv kann ein neues Laden loesen, eine unbekannte Art nur ein App-Update
         Assert.Equal([PaketKnopf.NeuLaden], zeilen["probe_klein"].Knoepfe);
-        Assert.Empty(zeilen["probe_lernen"].Knoepfe);
+        Assert.Empty(zeilen["probe_grafik"].Knoepfe);
         PaketTexte.NeuLadenAltFuerTests = true;
         try
         {
-            Assert.Equal([PaketKnopf.NeuLaden], v.Zeilen().First(z => z.Kennung == "probe_lernen").Knoepfe);
+            Assert.Equal([PaketKnopf.NeuLaden], v.Zeilen().First(z => z.Kennung == "probe_grafik").Knoepfe);
         }
         finally
         {
@@ -444,27 +444,27 @@ public sealed class PaketTests : IDisposable
         var quelle = Path.Combine(_tmp, "quelle376");
         Directory.CreateDirectory(quelle);
         File.Copy(Path.Combine(Echt, "probe_klein_1.fipaket"), Path.Combine(quelle, "probe_klein_1.fipaket"));
-        File.Copy(Path.Combine(Echt, "probe_lernen_1.fipaket"), Path.Combine(quelle, "probe_lernen_1.fipaket"));
+        File.Copy(Path.Combine(Echt, "probe_grafik_1.fipaket"), Path.Combine(quelle, "probe_grafik_1.fipaket"));
         var v = Verwaltung(quelle);
         await v.SuchenAsync(TestContext.Current.CancellationToken);
         // vor dem Laden: die Art steht im Angebot (Kopf paket.json)
-        Assert.Equal(["probe_klein stadt", "probe_lernen lernen"], v.Angebote.Select(a => a.Kennung + " " + a.Art));
+        Assert.Equal(["probe_grafik grafik", "probe_klein stadt"], v.Angebote.Select(a => a.Kennung + " " + a.Art));
         var zeilen = v.Zeilen().ToDictionary(z => z.Kennung);
         Assert.True(zeilen["probe_klein"].ImFahrplan);
-        Assert.False(zeilen["probe_lernen"].ImFahrplan);
+        Assert.False(zeilen["probe_grafik"].ImFahrplan);
         // Angebot ohne Art (Release-Text nennt keine): nicht im Fahrplan, aber in den Optionen
         var ohneArt = zeilen["probe_klein"] with { Art = null };
         Assert.False(ohneArt.ImFahrplan);
         // geladen und als unbekannte Art erkannt: weiter nicht im Fahrplan
-        Assert.Equal(PaketTexte.ArtUnbekannt, await v.LadenAsync(v.Angebote.Single(a => a.Kennung == "probe_lernen"), null, TestContext.Current.CancellationToken));
-        Assert.False(v.Zeilen().Single(z => z.Kennung == "probe_lernen").ImFahrplan);
+        Assert.Equal(PaketTexte.ArtUnbekannt, await v.LadenAsync(v.Angebote.Single(a => a.Kennung == "probe_grafik"), null, TestContext.Current.CancellationToken));
+        Assert.False(v.Zeilen().Single(z => z.Kennung == "probe_grafik").ImFahrplan);
         Assert.Null(await v.LadenAsync(v.Angebote.Single(a => a.Kennung == "probe_klein"), null, TestContext.Current.CancellationToken));
         Assert.True(v.Zeilen().Single(z => z.Kennung == "probe_klein").ImFahrplan);
-        // Gegenprobe Stand A 0.88.0: das Lern-Paket stand vor dem Laden im Fahrplan
+        // Gegenprobe Stand A 0.88.0: das Paket unbekannter Art stand vor dem Laden im Fahrplan
         PaketZeile.ArtAltFuerTests = true;
         try
         {
-            Assert.True(zeilen["probe_lernen"].ImFahrplan);
+            Assert.True(zeilen["probe_grafik"].ImFahrplan);
             Assert.True(ohneArt.ImFahrplan);
         }
         finally

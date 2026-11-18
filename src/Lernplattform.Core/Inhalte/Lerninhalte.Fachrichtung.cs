@@ -90,7 +90,9 @@ public sealed partial class Lerninhalte
             Einteilen(bisher, einteilung);
         }
 
-        var ausschluss = vorher?.Ausschluss ?? (lernen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : []);
+        var ausschluss = vorher?.Ausschluss ?? [.. lernen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : [], .. ordner.PaketAusschluss];
+        // Welle A 0.91.0: mit Fachrichtungs-Paketen oder Platzhaltern laufen alle Listen ueber die gemischten Eintraege
+        var gemischt = ordner.Gemischt;
         // Sammelliste 309 (Weisung P12-204, Nico a): beim Nachladen nur die neuen Fachrichtungen umwandeln, die schon
         // umgewandelten Eintraege von vorher wiederverwenden (gleiche Nummern, Reihenfolge nach Nummer = Dateireihenfolge).
         var wiederverwenden = vorher?.Geladen is { } vorherGeladen && geladen is not null && !NachladenAltFuerTests
@@ -106,7 +108,9 @@ public sealed partial class Lerninhalte
                 InhaltArt.Ap2Szenario => bisher.Ap2Szenarien.Count,
                 _ => bisher.Testprojekte.Count,
             };
-            List<(int Index, JsonObject Daten)> daten = umwandeln is null
+            List<(int Index, JsonObject Daten)> daten = gemischt
+                ? LadeListeFuer(ordner.Eintraege(name), name, umwandeln ?? AlleWerte)
+                : umwandeln is null
                 ? lernen(name) is { } dateiInhalt ? LadeListe(_ => dateiInhalt, name).Select((d, i) => (i, d)).ToList() : []
                 : ordner.Dokument(name) is { } dokument ? LadeListeFuer(dokument, name, umwandeln) : [];
             var umgewandelt = daten.Where(d => !Ausgeschlossen(ausschluss, name, d.Index, d.Daten)).Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
@@ -191,15 +195,26 @@ public sealed partial class Lerninhalte
     {
         if (ordner.Dokument(FachgespraechDatei) is not { } dokument)
         {
-            return [];
+            if (!ordner.Gemischt)
+            {
+                return [];
+            }
         }
-        var wurzel = JsonNode.Parse(dokument.RootElement.GetRawText()) as JsonObject
-            ?? throw new InvalidDataException("lernen/fachgespraech.json enthaelt kein Objekt");
-        var fragen = wurzel["fragen"] as JsonArray ?? throw new InvalidDataException("lernen/fachgespraech.json: Feld 'fragen' fehlt");
+        else if (dokument.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            throw new InvalidDataException("lernen/fachgespraech.json enthaelt kein Objekt");
+        }
+        else if (!dokument.RootElement.TryGetProperty("fragen", out var liste) || liste.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidDataException("lernen/fachgespraech.json: Feld 'fragen' fehlt");
+        }
+        // Welle A 0.91.0: Eintraege mit Stelle (Pakete eingemischt, Platzhalter ohne Frage); Nummer = Stelle + 1 wie bisher
         static string Text(JsonNode? wert) => wert is JsonValue v && v.GetValueKind() == JsonValueKind.String ? v.GetValue<string>() : "";
         var erg = new List<NeueFachfrage>();
-        foreach (var (eintrag, index) in fragen.Select((f, i) => (f as JsonObject ?? throw new InvalidDataException("lernen/fachgespraech.json: Eintrag ist kein Objekt"), i)))
+        foreach (var (index, element) in ordner.Eintraege(FachgespraechDatei))
         {
+            var eintrag = element.ValueKind == JsonValueKind.Object ? (JsonObject)JsonNode.Parse(element.GetRawText())!
+                : throw new InvalidDataException("lernen/fachgespraech.json: Eintrag ist kein Objekt");
             var fr = Text(eintrag[Fachrichtungen.Feld]);
             var zugehoerigkeit = Fachrichtungen.Werte.Contains(fr) ? fr : Ungueltig;
             if (geladen is not null && !geladen.Contains(zugehoerigkeit))
@@ -251,6 +266,40 @@ public sealed partial class Lerninhalte
             () => MitLernen(alle.Bisher, lernen, [.. alle.Geladen!, fr], alle))).Value;
     }
 
+    /// <summary>
+    /// Welle A 0.91.0 (Weisung P12-300): dieselben Inhalte wie <c>MitLernen(Bisher, ordner, Geladen)</c> nach Laden oder
+    /// Entfernen des Fachrichtungs-Pakets von <paramref name="fachrichtung"/>; neu umgewandelt werden nur die Eintraege dieser
+    /// Fachrichtung, die der anderen geladenen Fachrichtungen werden wiederverwendet (wie beim Nachladen, Sammelliste 309).
+    /// Der Ausschluss wird neu gebildet (das Paket bringt seinen eigenen mit). Gleichheit mit dem ganzen Neubau pruefen
+    /// <c>FachrichtungsPaketTests</c> (Gegenprobe <see cref="PaketNeuGanzFuerTests"/>).
+    /// </summary>
+    public Lerninhalte MitPaketNeu(LernenOrdner ordner, string fachrichtung)
+    {
+        var alle = Alle;
+        if (alle.Geladen is not { } geladen || PaketNeuGanzFuerTests)
+        {
+            return MitLernen(alle.Bisher, ordner, alle.Geladen, null);
+        }
+        var ohne = new Lerninhalte
+        {
+            Ordner = alle.Ordner,
+            Einteilung = alle.Einteilung,
+            Ausschluss = [.. ordner.Lesen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : [], .. ordner.PaketAusschluss],
+            Geladen = geladen.Where(f => f != fachrichtung).ToHashSet(StringComparer.Ordinal),
+            Neue = alle.Neue.ToDictionary(p => p.Key, p => (IReadOnlyList<Lerninhalt>)[.. p.Value.Where(e => e.Zugehoerigkeit != fachrichtung)]),
+            Themen = alle.Themen,
+            NeueThemen = alle.NeueThemen,
+            RahmenplanZusatz = alle.RahmenplanZusatz,
+            NeueFachfragen = [.. alle.NeueFachfragen.Where(f => f.Zugehoerigkeit != fachrichtung)],
+        };
+        return MitLernen(alle.Bisher, ordner, [.. geladen, fachrichtung], ohne);
+    }
+
+    /// <summary>Gegenprobe: <see cref="MitPaketNeu"/> baut alles neu (nur Tests).</summary>
+    internal static bool PaketNeuGanzFuerTests { get => PaketNeuGanz.Value; set => PaketNeuGanz.Value = value; }
+
+    private static readonly AsyncLocal<bool> PaketNeuGanz = new();
+
     /// <summary>Zugehoerigkeit der bisherigen Eintraege nach der Einteilung (einmal je Laden der bisherigen Inhalte).</summary>
     private static void Einteilen(Lerninhalte bisher, Einteilung einteilung)
     {
@@ -295,6 +344,8 @@ public sealed partial class Lerninhalte
             return MitLernen(bisher(), _ => null);
         }
     }
+
+    private static readonly IReadOnlySet<string> AlleWerte = Fachrichtungen.Werte.ToHashSet(StringComparer.Ordinal);
 
     /// <summary>Zugehoerigkeit eines neuen Eintrags ohne gueltiges Feld "fachrichtung": niemand sieht ihn, die Pruefung meldet ihn.</summary>
     public const string Ungueltig = "";
@@ -486,11 +537,24 @@ public sealed class Einteilung
 /// Listen werden je Datei einmal gelesen und als JSON-Dokument gemerkt, damit das Nachladen einer Fachrichtung sie nicht
 /// neu zerlegt; <see cref="Vorab"/> beginnt damit im Hintergrund, waehrend die bisherigen Inhalte laden.
 /// </summary>
-public sealed class LernenOrdner(Func<string, byte[]?> lesen)
+public sealed class LernenOrdner
 {
-    private readonly ConcurrentDictionary<string, Lazy<JsonDocument?>> _dokumente = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, Lazy<JsonDocument?>> _dokumente;
 
-    public Func<string, byte[]?> Lesen { get; } = lesen;
+    public LernenOrdner(Func<string, byte[]?> lesen) : this(lesen, new(StringComparer.Ordinal))
+    {
+    }
+
+    private LernenOrdner(Func<string, byte[]?> lesen, ConcurrentDictionary<string, Lazy<JsonDocument?>> dokumente)
+    {
+        Lesen = lesen;
+        _dokumente = dokumente;
+    }
+
+    /// <summary>Ein Ordner ohne Dateien (Pruefung eines Fachrichtungs-Pakets ohne Inhalte der App).</summary>
+    public static readonly LernenOrdner Leer = new(_ => null);
+
+    public Func<string, byte[]?> Lesen { get; }
 
     /// <summary>Liste <paramref name="name"/> als Dokument (null = Datei fehlt); ein Lesefehler kommt hier an.</summary>
     public JsonDocument? Dokument(string name) =>
@@ -514,6 +578,113 @@ public sealed class LernenOrdner(Func<string, byte[]?> lesen)
             });
         }
     }
+
+    /// <summary>
+    /// Welle A 0.91.0 (Weisung P12-300): gueltige Fachrichtungs-Pakete je Fachrichtung (leer = nur die Inhalte der App). Ein
+    /// Paket ersetzt die Eintraege der App fuer seine Fachrichtung an denselben Stellen (geprueft „nur angehaengt“) und bringt
+    /// neue dahinter mit.
+    /// </summary>
+    public IReadOnlyDictionary<string, Core.Pakete.FachrichtungsInhalt> Pakete { get; private init; } =
+        new Dictionary<string, Core.Pakete.FachrichtungsInhalt>(StringComparer.Ordinal);
+
+    /// <summary>Derselbe Ordner (dieselben schon gelesenen Dateien der App) mit diesen Paketen.</summary>
+    public LernenOrdner MitPaketen(IEnumerable<Core.Pakete.FachrichtungsInhalt> pakete) => new(Lesen, _dokumente)
+    {
+        Pakete = pakete.ToDictionary(p => p.Fachrichtung, StringComparer.Ordinal),
+    };
+
+    private readonly ConcurrentDictionary<string, bool> _platzhalter = new(StringComparer.Ordinal);
+
+    /// <summary>Traegt die App fuer <paramref name="fachrichtung"/> Platzhalter (Inhalte nur im Paket, Vorbereitung 386)?</summary>
+    public bool HatPlatzhalter(string fachrichtung) => _platzhalter.GetOrAdd(fachrichtung, fr =>
+        Core.Pakete.FachrichtungsPaket.Listen.Any(name => Platzhalter(name, fr)));
+
+    private bool Platzhalter(string name, string fr) =>
+        Eingebaut(name).Any(e => Core.Pakete.FachrichtungsPaket.IstPlatzhalter(e) && Core.Pakete.FachrichtungsPaket.FachrichtungVon(e) == fr);
+
+    /// <summary>Gibt es Pakete oder Platzhalter? Dann laufen alle Listen ueber <see cref="Eintraege"/>.</summary>
+    public bool Gemischt => Pakete.Count > 0 || Core.Pakete.FachrichtungsPaket.Fachrichtungen.Any(HatPlatzhalter);
+
+    /// <summary>
+    /// Fehlen der Fachrichtung alle eigenen Inhalte (die App traegt nur Platzhalter und kein Paket ist geladen)?
+    /// </summary>
+    public bool Fehlt(string fachrichtung) => !Pakete.ContainsKey(fachrichtung) && HatPlatzhalter(fachrichtung);
+
+    /// <summary>
+    /// Eintraege der App in einer Datei: Liste (karteikarten …), bei fachgespraech die Liste "fragen", bei pruefungssaetze die
+    /// Liste "saetze"; leer, wenn es die Datei nicht gibt. Ein falscher Aufbau wirft wie beim Laden.
+    /// </summary>
+    public IReadOnlyList<JsonElement> Eingebaut(string name)
+    {
+        if (Dokument(name) is not { } dokument)
+        {
+            return [];
+        }
+        var wurzel = dokument.RootElement;
+        var liste = name switch
+        {
+            Lerninhalte.FachgespraechDatei => wurzel.ValueKind == JsonValueKind.Object && wurzel.TryGetProperty("fragen", out var f) ? f : default,
+            Pruefung.Echt.EchtSaetze.DateiName => wurzel.ValueKind == JsonValueKind.Object && wurzel.TryGetProperty("saetze", out var s) ? s : default,
+            _ => wurzel,
+        };
+        if (liste.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidDataException("lernen/" + name + ".json: keine Liste");
+        }
+        return liste.EnumerateArray().ToList();
+    }
+
+    /// <summary>
+    /// Alle Eintraege einer Datei mit ihrer Stelle, Pakete eingemischt: Eintraege der App ohne Platzhalter, fuer eine
+    /// Fachrichtung mit Paket stattdessen die des Pakets (an denselben Stellen, dazu neue dahinter); nach Stelle sortiert.
+    /// </summary>
+    public IReadOnlyList<(int Index, JsonElement Eintrag)> Eintraege(string name)
+    {
+        var app = Eingebaut(name);
+        var ergebnis = new List<(int, JsonElement)>(app.Count);
+        for (var i = 0; i < app.Count; i++)
+        {
+            if (Core.Pakete.FachrichtungsPaket.IstPlatzhalter(app[i])
+                || (Pakete.Count > 0 && Core.Pakete.FachrichtungsPaket.FachrichtungVon(app[i]) is { } fr && Pakete.ContainsKey(fr)))
+            {
+                continue;
+            }
+            ergebnis.Add((i, app[i]));
+        }
+        foreach (var paket in Pakete.Values)
+        {
+            if (name == Pruefung.Echt.EchtSaetze.DateiName)
+            {
+                ergebnis.AddRange(paket.Saetze);
+            }
+            else if (paket.Listen.TryGetValue(name, out var eintraege))
+            {
+                ergebnis.AddRange(eintraege);
+            }
+        }
+        return ergebnis.OrderBy(e => e.Item1).ToList();
+    }
+
+    /// <summary>Datei pruefungssaetze.json mit eingemischten Paketen (ohne Platzhalter); null, wenn es keine gibt.</summary>
+    public byte[]? Saetze()
+    {
+        if (Pakete.Count == 0 && !Core.Pakete.FachrichtungsPaket.Fachrichtungen.Any(fr => Platzhalter(Pruefung.Echt.EchtSaetze.DateiName, fr)))
+        {
+            return Lesen(Pruefung.Echt.EchtSaetze.DateiName);
+        }
+        var format = Dokument(Pruefung.Echt.EchtSaetze.DateiName) is { } d && d.RootElement.ValueKind == JsonValueKind.Object
+            && d.RootElement.TryGetProperty("format", out var f) && f.TryGetInt32(out var n) ? n : Pruefung.Echt.EchtSaetze.Format;
+        return Core.Pakete.FachrichtungsPaket.SaetzeBytes(format, Eintraege(Pruefung.Echt.EchtSaetze.DateiName).Select(e => e.Eintrag));
+    }
+
+    /// <summary>Ausschluesse aus den Paketen (zu denen aus ausschluss.json der App).</summary>
+    public IEnumerable<(string Datei, int Stelle, string Frage)> PaketAusschluss => Pakete.Values.SelectMany(p => p.Ausschluss);
+
+    /// <summary>
+    /// Bekannte Laenge einer Liste (App oder Paket, die hoechste Stelle plus 1): Stellen des Lernstands dahinter gehoeren zu
+    /// Inhalten, die auf diesem Geraet fehlen (Hinweis nach einem Abgleich).
+    /// </summary>
+    public int Laenge(string name) => Math.Max(Eingebaut(name).Count, Pakete.Values.Select(p => p.Ende(name)).DefaultIfEmpty(0).Max());
 }
 
 /// <summary>

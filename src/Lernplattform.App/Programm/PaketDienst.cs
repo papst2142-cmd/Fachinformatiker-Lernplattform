@@ -17,11 +17,27 @@ public static class PaketDienst
     public static PaketVerwaltung Verwaltung => _verwaltung ??= Neu();
 
     // Welle A 0.88.0 (Nico 5a): Entfernen gesperrt, solange die Figur in der Stadt des Pakets ist
-    private static PaketVerwaltung Neu() => new(new PaketAblage(Ablage.Datenordner()),
+    // Welle A 0.91.0 (Weisung P12-300): Fachrichtungs-Pakete werden gegen die Inhalte der App geprueft („nur angehaengt“);
+    // Entfernen gesperrt, solange ein Pruefungssatz im echten Format dieser Fachrichtung offen ist
+    private static PaketVerwaltung Neu() => new(new PaketAblage(Ablage.Datenordner(), Zustand.Eingebaut),
         () => PaketQuelle.Fuer(Http, zeile => Updateprotokoll.Schreiben(zeile)), Aktualisierung.Aktualisierung.Anzeige)
     {
-        EntfernenSperre = Spiel.SpielStart.EntfernenSperre,
+        EntfernenSperre = kennung => Spiel.SpielStart.EntfernenSperre(kennung) ?? FachrichtungsPaket.EntfernenSperre(kennung, OffenerSatz()),
     };
+
+    /// <summary>Kennung des offenen Pruefungssatzes im echten Format (null = keiner); nur lesen.</summary>
+    internal static string? OffenerSatz()
+    {
+        try
+        {
+            return new Core.Pruefung.Echt.EchtAblage(() => Zustand.Einstellungen.Laden(), _ => false).Laden() is { } z
+                ? Core.Pruefung.Json.Text(z["satz"]) : null;
+        }
+        catch (Exception fehler) when (fehler is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
 
     /// <summary>
     /// Rueckfrage vor dem Laden ueber mobile Daten (nur am Handy ohne WLAN, sonst null); true = laden. Ein Weg fuer die Karte in den

@@ -141,7 +141,9 @@ public sealed partial class OptionenSeite
     private Control PaketKarte(PaketZeile zeile, (long Geladen, long Gesamt)? laden)
     {
         var inhalt = new StackPanel { Spacing = 2 };
-        inhalt.Children.Add(new LernText(zeile.Name + " · " + PaketTexte.Mb(zeile.Groesse) + " MB", "Normal", FontWeight.SemiBold, "Pinsel.text"));
+        // Welle A 0.91.0: eine Zeile ohne Groesse (Fachrichtungs-Paket in der App, kein Angebot) zeigt nur den Namen
+        inhalt.Children.Add(new LernText(zeile.Groesse > 0 ? zeile.Name + " · " + PaketTexte.Mb(zeile.Groesse) + " MB" : zeile.Name, "Normal",
+            FontWeight.SemiBold, "Pinsel.text"));
         if (zeile.Text.Length > 0)
         {
             inhalt.Children.Add(new LernText(zeile.Text, "Klein", FontWeight.Normal, "Pinsel.text_dim"));
@@ -250,6 +252,11 @@ public sealed partial class OptionenSeite
         }
         PaketStatusSetzen(grund ?? PaketTexte.Format(PaketTexte.Geladen, zeile.Name), grund is null || grund == PaketTexte.Abgebrochen ? "Pinsel.muted" : "Pinsel.red");
         PaketeNeu();
+        // Welle A 0.91.0: ein neues Fachrichtungs-Paket gilt sofort (Inhalte neu bilden, der Lernstand bleibt)
+        if (grund is null && FachrichtungsPaket.FachrichtungAus(zeile.Kennung) is { } fr)
+        {
+            await Zustand.PaketeNeu(fr);
+        }
     }
 
     /// <summary>Rueckfrage vor dem Laden ueber mobile Daten (nur am Handy ohne WLAN, sonst null); true = laden. Gleich am Bahnhof.</summary>
@@ -267,14 +274,24 @@ public sealed partial class OptionenSeite
             PaketStatusSetzen(gesperrt, "Pinsel.red");
             return;
         }
-        if (PaketLaedt || await Dialog.Zeigen(PaketTexte.EntfernenTitel, PaketTexte.Format(PaketTexte.EntfernenFrage, zeile.Name), TrainerTexte.Ja, TrainerTexte.Nein) != 0)
+        if (PaketLaedt || await Dialog.Zeigen(PaketTexte.EntfernenTitel, EntfernenFrage(zeile), TrainerTexte.Ja, TrainerTexte.Nein) != 0)
         {
             return;
         }
         var ok = PaketDienst.Verwaltung.Entfernen(zeile.Kennung);
         PaketStatusSetzen(ok ? PaketTexte.Format(PaketTexte.Entfernt, zeile.Name) : PaketTexte.Format(PaketTexte.Speichern, zeile.Name), ok ? "Pinsel.muted" : "Pinsel.red");
         PaketeNeu();
+        // Welle A 0.91.0: danach gilt wieder der Grundstand der App (Inhalte neu bilden, der Lernstand bleibt)
+        if (ok && FachrichtungsPaket.FachrichtungAus(zeile.Kennung) is { } fr)
+        {
+            await Zustand.PaketeNeu(fr);
+        }
     }
+
+    /// <summary>Rueckfrage vor dem Entfernen; beim Fachrichtungs-Paket mit dem, was danach gilt.</summary>
+    internal static string EntfernenFrage(PaketZeile zeile) => FachrichtungsPaket.FachrichtungAus(zeile.Kennung) is { } fr
+        ? PaketTexte.Format(Zustand.Eingebaut.HatPlatzhalter(fr) ? PaketTexte.FrEntfernenFrageOhne : PaketTexte.FrEntfernenFrage, PaketTexte.Fr(fr))
+        : PaketTexte.Format(PaketTexte.EntfernenFrage, zeile.Name);
 
     /// <summary>Fotos und Layoutpruefung: zeigt eine Zeile im Zustand „laedt“ (ohne zu laden).</summary>
     internal void PaketLaedtVorschau(string kennung, long geladen)

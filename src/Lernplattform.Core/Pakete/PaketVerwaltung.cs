@@ -107,19 +107,25 @@ public sealed class PaketVerwaltung
         var geladen = _ablage.Liste(_app).ToDictionary(g => g.Kennung, StringComparer.Ordinal);
         var angebote = _angebote.ToDictionary(a => a.Kennung, StringComparer.Ordinal);
         var zeilen = new List<PaketZeile>();
-        foreach (var kennung in geladen.Keys.Union(angebote.Keys).Union(_fehler.Keys))
+        // Welle A 0.91.0 (Weisung P12-300 Punkt 5): je Fachrichtung AE, DPA, DV immer eine Zeile „Fachrichtungs-Paket AE“
+        var frZeilen = _ablage.Eingebaut is null ? [] : FachrichtungsPaket.Fachrichtungen.Select(FachrichtungsPaket.Kennung);
+        foreach (var kennung in geladen.Keys.Union(angebote.Keys).Union(_fehler.Keys).Union(frZeilen))
         {
             geladen.TryGetValue(kennung, out var g);
             angebote.TryGetValue(kennung, out var a);
-            if (g is null && a is null)
+            var fr = FachrichtungsPaket.FachrichtungAus(kennung);
+            if (g is null && a is null && (fr is null || _ablage.Eingebaut is null))
             {
                 continue;
             }
-            var name = g?.Kopf?.Name ?? a?.Name ?? kennung;
-            var text = g?.Kopf?.Text ?? a?.Text ?? "";
+            var name = fr is not null ? PaketTexte.Format(PaketTexte.FrName, PaketTexte.Fr(fr)) : g?.Kopf?.Name ?? a?.Name ?? kennung;
+            var text = fr is not null ? PaketTexte.Format(PaketTexte.FrText, PaketTexte.Fr(fr)) : g?.Kopf?.Text ?? a?.Text ?? "";
             var groesse = g?.Kopf?.Dateien.Values.Sum(d => d.Groesse) ?? a?.Groesse ?? 0;
             var fehler = _fehler.GetValueOrDefault(kennung) ?? g?.Grund;
-            var art = g?.Kopf?.Art ?? a?.Art;
+            var art = g?.Kopf?.Art ?? a?.Art ?? (fr is not null ? Paket.ArtLernen : null);
+            // Inhalte der App fuer diese Fachrichtung (Grundstand, gilt als Stand 0); ohne sie (nur Platzhalter) „Nicht geladen“
+            var eingebaut = fr is not null && _ablage.Eingebaut is { } ord && !ord.HatPlatzhalter(fr) && ord.Eingebaut(Inhalte.Lerninhalte.LernenListen[0].Name)
+                .Any(e => FachrichtungsPaket.FachrichtungVon(e) == fr);
             PaketZeile Zeile(PaketZustand z, string zText, params PaketKnopf[] knoepfe) => new(kennung, name, text, groesse, z, zText, knoepfe, a, art);
             if (fehler is not null)
             {
@@ -142,6 +148,18 @@ public sealed class PaketVerwaltung
             else if (g is not null)
             {
                 zeilen.Add(Zeile(PaketZustand.Geladen, PaketTexte.Format(PaketTexte.ZustandGeladen, g.Stand), PaketKnopf.Entfernen));
+            }
+            else if (eingebaut && a is not null)
+            {
+                zeilen.Add(Zeile(PaketZustand.NeuerStand, PaketTexte.Format(PaketTexte.ZustandEingebautNeu, a.Stand), PaketKnopf.Laden));
+            }
+            else if (eingebaut)
+            {
+                zeilen.Add(Zeile(PaketZustand.Geladen, PaketTexte.ZustandEingebaut));
+            }
+            else if (a is null)
+            {
+                zeilen.Add(Zeile(PaketZustand.NichtGeladen, PaketTexte.ZustandNicht));
             }
             else
             {
@@ -203,6 +221,23 @@ public sealed class PaketVerwaltung
     public IReadOnlyList<(PaketKopf Kopf, string Datei)> Staedte() =>
         [.. _ablage.Liste(_app).Where(g => g.Kopf is { Art: Paket.ArtStadt })
             .Select(g => (g.Kopf!, Path.Combine(_ablage.Ordner, g.Kennung, g.Stand.ToString(System.Globalization.CultureInfo.InvariantCulture), Paket.StadtDatei)))];
+
+    /// <summary>
+    /// Welle A 0.91.0: die geladenen, gueltigen Fachrichtungs-Pakete (Art <c>lernen</c>, geprueft „nur angehaengt“ gegenueber
+    /// den Inhalten der App). Liest nur den Datenordner (geht ohne Netz).
+    /// </summary>
+    public IReadOnlyList<FachrichtungsInhalt> Fachrichtungen() => [.. _ablage.Liste(_app).Where(g => g.Lernen is not null).Select(g => g.Lernen!)];
+
+    /// <summary>
+    /// Welle A 0.91.0 (Nico 3a): Angebote mit neuerem Stand eines Fachrichtungs-Pakets (gegenueber dem geladenen Paket, sonst
+    /// gegenueber dem Grundstand der App = Stand 0). Nur aus der letzten Suche; nichts laedt von allein.
+    /// </summary>
+    public IReadOnlyList<(string Fachrichtung, PaketAngebot Angebot)> NeueFachrichtungsStaende()
+    {
+        var geladen = _ablage.Liste(_app).Where(g => g.Lernen is not null).ToDictionary(g => g.Kennung, g => g.Stand, StringComparer.Ordinal);
+        return [.. _angebote.Where(a => FachrichtungsPaket.FachrichtungAus(a.Kennung) is not null && a.Stand > geladen.GetValueOrDefault(a.Kennung))
+            .Select(a => (FachrichtungsPaket.FachrichtungAus(a.Kennung)!, a))];
+    }
 
     /// <summary>Entfernt ein Paket aus dem Datenordner (auch ein fehlerhaftes); true bei Erfolg. Gesperrt (<see cref="EntfernenGesperrt"/>) = false, nichts geaendert.</summary>
     public bool Entfernen(string kennung)

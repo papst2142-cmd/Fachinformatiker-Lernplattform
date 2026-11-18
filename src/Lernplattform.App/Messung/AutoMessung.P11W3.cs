@@ -17,7 +17,7 @@ namespace Lernplattform.Messung;
 public static partial class AutoMessung
 {
     private static readonly Regex MesspunktZeile = new(
-        @"^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2} · [A-Za-z0-9. -]+ · (Inhalte laden|Erste Karte|Fachrichtung wechseln (si|ae|dpa|dv)|Spiel betreten): \d+ ms$",
+        @"^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2} · [A-Za-z0-9. -]+ · (Inhalte laden|Erste Karte|Fachrichtung wechseln (si|ae|dpa|dv)|Fachrichtungs-Paket einsetzen (ae|dpa|dv)|Spiel betreten): \d+ ms$",
         RegexOptions.CultureInvariant);
 
     private static async Task<int> P11W3MesspunkteAsync(MainView ansicht)

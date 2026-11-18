@@ -206,6 +206,22 @@ public sealed partial class Lerninhalte
     /// uebrigen werden nur gelesen, nicht umgewandelt (das spart beim Start die Zeit der anderen Fachrichtungen).
     /// Ein Eintrag ohne gueltiges Feld wird uebersprungen (er waere fuer niemanden sichtbar, die Pruefung meldet ihn).
     /// </summary>
+    /// <summary>Welle A 0.91.0: wie unten, aus Eintraegen mit ihrer Stelle (Pakete eingemischt, <see cref="LernenOrdner.Eintraege"/>).</summary>
+    private static List<(int Index, JsonObject Daten)> LadeListeFuer(IReadOnlyList<(int Index, JsonElement Eintrag)> eintraege, string name,
+        IReadOnlySet<string> fachrichtungen)
+    {
+        var ergebnis = new List<(int, JsonObject)>();
+        foreach (var (index, element) in eintraege)
+        {
+            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty(Fachrichtungen.Feld, out var wert)
+                && wert.ValueKind == JsonValueKind.String && wert.GetString() is { } fr && fachrichtungen.Contains(fr))
+            {
+                ergebnis.Add((index, Umwandeln(JsonObject.Create(element)!, name)));
+            }
+        }
+        return ergebnis;
+    }
+
     private static List<(int Index, JsonObject Daten)> LadeListeFuer(JsonDocument dokument, string name, IReadOnlySet<string> fachrichtungen)
     {
         if (dokument.RootElement.ValueKind != JsonValueKind.Array)

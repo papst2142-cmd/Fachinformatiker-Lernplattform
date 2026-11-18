@@ -169,7 +169,9 @@ public sealed class EchtAblauf(Func<EchtBestand> bestand, EchtAblage ablage, Fun
         }
         if (Satz is null)
         {
-            return new(EchtAnsicht.Auswahl, KartenTexte.HinweisTitel, EchtTexte.SatzFehlt);
+            // Welle A 0.91.0: gehoert der Satz zu einem Fachrichtungs-Paket, nennt der Hinweis das Paket; der Stand bleibt gespeichert
+            return new(EchtAnsicht.Auswahl, KartenTexte.HinweisTitel,
+                Pakete.FachrichtungsPaket.SatzFehltText(Json.Text(Zustand["satz"])) ?? EchtTexte.SatzFehlt);
         }
         if (ImLauf)
         {
