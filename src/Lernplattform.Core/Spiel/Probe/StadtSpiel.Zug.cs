@@ -79,6 +79,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     public StadtGrund ZugFahren(string kennung, string name)
     {
+        FreiHalt();
         if (!AmBahnhof)
         {
             Zeile = ZugTexte.NichtAmBahnhof;

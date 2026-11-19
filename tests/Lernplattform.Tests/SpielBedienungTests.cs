@@ -38,18 +38,19 @@ public sealed class SpielBedienungTests
     [Fact]
     public void NeueTasteErsetztDieStandardtasten()
     {
+        // Welle A 0.95.0: W, A, S, D sind jetzt die Standardtasten zum Gehen, darum hier die freien Tasten Y und U
         var tasten = new Tastenbelegung();
-        Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.Naeher, "W", out var andere));
+        Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.Naeher, "Y", out var andere));
         Assert.Null(andere);
-        Assert.Equal(["W"], tasten.Tasten(Tastenbelegung.Naeher));
+        Assert.Equal(["Y"], tasten.Tasten(Tastenbelegung.Naeher));
         Assert.Null(tasten.AufgabeFuer("Add"));
-        Assert.Equal(Tastenbelegung.Naeher, tasten.AufgabeFuer("W"));
+        Assert.Equal(Tastenbelegung.Naeher, tasten.AufgabeFuer("Y"));
         // zurueck auf die einzige Standardtaste = keine Abweichung mehr
-        Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.DrehLinks, "A", out _));
+        Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.DrehLinks, "U", out _));
         Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.DrehLinks, "Q", out _));
         Assert.Equal([Tastenbelegung.Naeher], tasten.Eigen.Keys);
         Assert.Equal("Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. "
-            + "Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.",
+            + "Am PC: W, A, S und D gehen, rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.",
             SpielProbeTexte.HinweisFuer(tasten));
         // Welle A 0.80.0: die Pfeiltasten verschieben draussen nicht mehr, der Hinweis nennt sie nicht; eigene Neige-Tasten stehen darin
         tasten.Setzen(Tastenbelegung.Links, "J", out _);
@@ -200,17 +201,19 @@ public sealed class SpielBedienungTests
                 [Tastenbelegung.Runter] = "S",
             },
         });
-        Assert.Equal(new Dictionary<string, string> { [Tastenbelegung.Runter] = "S" }, gelesen.Eigen);
+        // Welle A 0.95.0: S ist die Standardtaste von „Gehen: rückwärts“; die eigene Wahl aus einer früheren Fassung behält Vorrang,
+        // die neue Aufgabe hat dann keine Taste (nie still verloren)
+        Assert.Equal(new Dictionary<string, string> { [Tastenbelegung.Runter] = "S", [Tastenbelegung.GehZurueck] = Tastenbelegung.OhneTaste }, gelesen.Eigen);
     }
 
     [Fact]
     public void KopieIstUnabhaengig()
     {
         var tasten = new Tastenbelegung();
-        tasten.Setzen(Tastenbelegung.Links, "A", out _);
+        tasten.Setzen(Tastenbelegung.Links, "J", out _);
         var kopie = tasten.Kopie();
         kopie.Setzen(Tastenbelegung.Links, "Left", out _);
-        Assert.Equal(["A"], tasten.Tasten(Tastenbelegung.Links));
+        Assert.Equal(["J"], tasten.Tasten(Tastenbelegung.Links));
         Assert.True(kopie.IstStandard);
     }
 

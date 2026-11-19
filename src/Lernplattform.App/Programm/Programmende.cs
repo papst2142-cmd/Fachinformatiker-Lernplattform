@@ -76,6 +76,8 @@ public static class Programmende
 
     private static void VorDemAbgleich()
     {
+        // Welle A 0.95.0 (Sammelliste 385): frei Gegangenes zuerst als Ereignis schreiben
+        Core.Spiel.Probe.StadtSpiel.AlleFreiHalten();
         Core.Spiel.Spielschlange.AlleLeeren();
         Diagnosedienst.Beenden();
         Zustand.Beenden();

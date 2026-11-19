@@ -113,7 +113,13 @@ public sealed partial class SpielSeite : Grid
 
     private SpielSeite(Action verlassen)
     {
-        _verlassen = verlassen;
+        // Welle A 0.95.0: vor dem Verlassen frei Gegangenes abschliessen (ein Ereignis), Gehtasten los
+        _verlassen = () =>
+        {
+            Flaeche?.GehTastenLos();
+            Spiel?.FreiHalt();
+            verlassen();
+        };
         Flaeche = new StadtFlaeche { FesteKamera = true };
         Focusable = true;
         // Phase 11 W2 (Antwort 2a): die Seite traegt den Fokus fuer die Tasten der Stadt; die 3D-Stadt selbst liest der
@@ -633,10 +639,13 @@ public sealed partial class SpielSeite : Grid
             alt.Geaendert -= Beschriften;
             alt.SzeneGeaendert -= ListeBauen;
             alt.Ton -= TonDienst.Anlass;
+            alt.GehAnsage -= GehAnsage;
+            alt.FreiHalt();
         }
         Spiel = spiel;
         Flaeche.Spiel = spiel;
         spiel.Ton += TonDienst.Anlass;
+        spiel.GehAnsage += GehAnsage;
         spiel.Geaendert += Beschriften;
         spiel.SzeneGeaendert += ListeBauen;
         ListeBauen();
@@ -644,6 +653,9 @@ public sealed partial class SpielSeite : Grid
     }
 
     public StadtFlaeche Flaeche { get; }
+
+    /// <summary>Welle A 0.95.0: Ansagen beim freien Gehen („Hier geht es nicht weiter“, „Vor dir: …“) fuer den Screenreader.</summary>
+    private void GehAnsage(string text) => Dispatcher.UIThread.Post(() => Views.Ansage.Sagen(text));
 
     /// <summary>Das Spiel, sobald die Inhalte geladen sind (sonst null).</summary>
     public StadtSpiel? Spiel { get; private set; }
@@ -871,7 +883,54 @@ public sealed partial class SpielSeite : Grid
             // Welle A 0.93.0: Leertaste springt, C duckt, X kriecht (frei belegbar)
             e.Handled = true;
         }
+        else if (!e.Handled && e.Source is not TextBox && e.KeyModifiers == KeyModifiers.None && Tafel is not { IsVisible: true }
+            && Flaeche.GehTaste(e.Key, true))
+        {
+            // Welle A 0.95.0 (Sammelliste 385): W/A/S/D gehen, solange sie gehalten werden (frei belegbar)
+            e.Handled = true;
+        }
     }
+
+    /// <summary>Welle A 0.95.0: eine Gehtaste losgelassen (immer, auch mit Umschalt- oder Strg-Taste dazu).</summary>
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        base.OnKeyUp(e);
+        if (Flaeche.GehTaste(e.Key, false))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private TopLevel? _fokusFenster;
+
+    /// <summary>Welle A 0.95.0: verliert das Fenster den Fokus (Alt+Tab), gelten alle Gehtasten als losgelassen.</summary>
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _fokusFenster = TopLevel.GetTopLevel(this);
+        if (_fokusFenster is Window fenster)
+        {
+            fenster.Deactivated += FensterInaktiv;
+        }
+    }
+
+    /// <summary>Welle A 0.95.0: die Seite verschwindet (anderer Bereich, Spiel verlassen): Tasten los, Halt schreiben.</summary>
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        if (_fokusFenster is Window fenster)
+        {
+            fenster.Deactivated -= FensterInaktiv;
+        }
+        _fokusFenster = null;
+        Flaeche.GehTastenLos();
+        Spiel?.FreiHalt();
+    }
+
+    private void FensterInaktiv(object? sender, EventArgs e) => Flaeche.GehTastenLos();
+
+    /// <summary>Start-Test: wie das Ereignis „Fenster nicht mehr vorn“ (Alt+Tab), das sich von aussen nicht ausloesen laesst.</summary>
+    internal void FokusVerlorenFuerMessung() => FensterInaktiv(this, EventArgs.Empty);
 
     private void Zurueck(object? sender, RoutedEventArgs e)
     {
@@ -1150,7 +1209,8 @@ public sealed partial class SpielSeite : Grid
         // Welle A 0.81.0: Sitzen und Liegen nur mit 3D (ohne 3D Knoepfe wie bis A 0.80.0)
         spiel.OhneDreiDSetzen(_ersatz.IsVisible);
         _kopfzeile.Text = spiel.Kopfzeile;
-        _zeile.Text = spiel.Zeile;
+        // Weisung P12-307 Fund 2: mit „Antippen zum Gehen“ aus verspricht die Tafel kein Antippen (ohne 3D wie immer)
+        _zeile.Text = SpielProbeTexte.Tafelzeile(spiel.Zeile, AntippenGilt);
         HinweisfeldZeigen(spiel);
         _betreten.IsVisible = spiel.KannBetreten;
         // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss
@@ -1205,6 +1265,9 @@ public sealed partial class SpielSeite : Grid
     public bool HinweisZu => _hinweisZu && Spiel is not { Einrichten: true };
 
     /// <summary>Kurze Meldung neben dem zugeklappten Pfeil (Start-Test, Fotos); leer = keine.</summary>
+    /// <summary>Welle A 0.95.0 (Weisung P12-307): die Tafelzeile, wie sie gerade steht (Start-Test).</summary>
+    public string TafelText => _zeile.Text ?? "";
+
     public string KurzeMeldung => _kurz.IsVisible ? _kurz.Text ?? "" : "";
 
     /// <summary>Pfeil gedrueckt: auf- oder zuklappen und den Zustand merken (nur ueber Einstellungen.Aendern).</summary>
@@ -1218,6 +1281,9 @@ public sealed partial class SpielSeite : Grid
             Beschriften();
         }
     }
+
+    /// <summary>Weisung P12-307: Antippen gilt, wenn der Schalter an ist oder es keine 3D-Ansicht gibt (Ortsliste).</summary>
+    private bool AntippenGilt => Core.Spiel.Gehbedienung.AntippenAn || _ersatz.IsVisible;
 
     private void HinweisfeldZeigen(StadtSpiel spiel)
     {
@@ -1236,7 +1302,7 @@ public sealed partial class SpielSeite : Grid
         // Sammelliste 371 (Nico 17.11.2026: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
         // zugeklappt ist „Spiel verlassen“ mit den anderen Knoepfen weg, aufgeklappt wie seit A 0.81.0
         VerlassenKnopf.IsVisible = !zu || VerlassenZuAltFuerTests;
-        _kurz.Text = meldung;
+        _kurz.Text = SpielProbeTexte.Tafelzeile(meldung, AntippenGilt);
         _kurz.IsVisible = zu && meldung.Length > 0 && Stopwatch.GetTimestamp() < _kurzBis;
         QuestZeileSetzen();
         _klappSymbol.RenderTransform = new RotateTransform(zu ? 180 : 0);

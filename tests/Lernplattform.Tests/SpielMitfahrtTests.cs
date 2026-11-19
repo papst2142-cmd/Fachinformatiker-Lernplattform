@@ -357,6 +357,19 @@ public sealed class SpielMitfahrtBelastungTests
             s.GeheZu(h.Haeuschen.X + 2, h.Haeuschen.Y + 2);
             return s.Geht || s.Ablauf.Stand.Verlauf.Count != zeilen ? "Antippen im Bus: Figur geht los" : null;
         }),
+        // Welle A 0.95.0 (Weisung P12-306): im Bus geht kein freies Gehen (kein Schritt, kein Ereignis, Hinweis „erst aussteigen“)
+        ("Frei gehen im Bus", (s, v, h) =>
+        {
+            var zeilen = s.Ablauf.Stand.Verlauf.Count;
+            var (x, z) = (s.FigurX, s.FigurZ);
+            for (var i = 0; i < 10; i++)
+            {
+                s.FreiGehen(1, 0, SpielMitfahrtTests.Dt);
+            }
+            s.FreiGehen(0, 0, 1);
+            return s.Ablauf.Stand.Verlauf.Count != zeilen || s.FigurX != x || s.FigurZ != z || s.FreiOffen ? "Frei gehen im Bus: Figur geht"
+                : s.Zeile != Core.Texte.SpielProbeTexte.ErstAussteigen ? $"kein Hinweis ({s.Zeile})" : null;
+        }),
         ("Ortsliste im Bus", (s, v, h) =>
         {
             var zeilen = s.Ablauf.Stand.Verlauf.Count;
@@ -394,6 +407,7 @@ public sealed class SpielMitfahrtBelastungTests
                 : s.AufDerBank is not null || s.Haltung is not null ? "sitzt nach dem Weggehen noch auf der Bank" : null;
         }),
         ("Gehen in der Ich-Sicht", (s, v, h) => Ich.Gehen(s, v)),
+        ("Frei gehen in der Ich-Sicht", (s, v, h) => Ich.FreiGehen(s)),
         ("Ich-Sicht aus", (s, v, h) => Ich.Aus(s)),
     ];
 
@@ -531,6 +545,60 @@ public sealed class SpielMitfahrtBelastungTests
                 : auge > 1e-3f ? $"Auge nicht im Kopf der Figur ({auge})"
                 : rest > 5f ? $"Blick nicht in Gehrichtung ({rest} Grad daneben)"
                 : null;
+        }
+
+        /// <summary>
+        /// Welle A 0.95.0: in der Ich-Sicht frei gehen (vor, zurueck, links, rechts mit den Tasten, schraeg mit dem Stick), je Bild wie
+        /// die Spielflaeche. Die Figur steht nie auf einer Sperre, der Koerper bleibt im Blick, die Ich-Sicht bleibt; beim Halt hoechstens
+        /// ein Ereignis (genau eins, wenn sie draussen vorankam).
+        /// </summary>
+        public static string? FreiGehen(StadtSpiel s)
+        {
+            var k = K(s);
+            Takt(s, k, 60);
+            if (!k.Ich)
+            {
+                return "vor dem freien Gehen nicht in der Ich-Sicht";
+            }
+            var zeilen = s.Ablauf.Stand.Verlauf.Count;
+            var (x0, z0) = (s.FigurX, s.FigurZ);
+            var eingaben = new[]
+            {
+                Steuerung.AusTasten(true, false, false, false), Steuerung.AusTasten(false, true, false, false),
+                Steuerung.AusTasten(false, false, true, false), Steuerung.AusTasten(false, false, false, true),
+                Steuerung.AusStick(30, -40, 60),
+            };
+            foreach (var (vor, seit) in eingaben)
+            {
+                for (var i = 0; i < 20; i++)
+                {
+                    var (rx, rz) = Steuerung.Richtung(vor, seit, k.Drehung);
+                    var blick = IchSicht.DrehungZu(k.Drehung);
+                    s.FreiGehen(rx, rz, SpielMitfahrtTests.Dt, blick);
+                    _regeln.Takt(k, s, (float)SpielMitfahrtTests.Dt);
+                    if (!s.Szene.Laufraster.KannStehen(s.FigurX, s.FigurZ) || s.Szene.Laufraster.FeinGesperrt(s.FigurX, s.FigurZ))
+                    {
+                        return $"Figur auf einer Sperre ({s.FigurX}, {s.FigurZ})";
+                    }
+                    if (Math.Abs(s.FigurRichtung - blick) > 1e-3f)
+                    {
+                        return $"Koerper nicht im Blick ({s.FigurRichtung} statt {blick})";
+                    }
+                }
+            }
+            if (!k.Ich)
+            {
+                return "Ich-Sicht beim freien Gehen weg";
+            }
+            for (var i = 0; i < 20; i++)
+            {
+                s.FreiGehen(0, 0, SpielMitfahrtTests.Dt);
+            }
+            var bewegt = s.FigurX != x0 || s.FigurZ != z0;
+            var neu = s.Ablauf.Stand.Verlauf.Count - zeilen;
+            return s.FreiOffen ? "kein Halt nach dem Loslassen"
+                : neu > 1 ? $"{neu} Ereignisse statt eines"
+                : bewegt && neu != 1 ? "gegangen, aber kein Ereignis" : null;
         }
 
         public static string? Aus(StadtSpiel s)

@@ -120,6 +120,41 @@
       "stufe": "A",
       "version": " 0.11.0",
       "tag": null
+    },
+    {
+      "stufe": "A",
+      "version": "0.99.0",
+      "tag": "vA0.99.0"
+    },
+    {
+      "stufe": "A",
+      "version": "0.99.1",
+      "tag": "vA0.99.1"
+    },
+    {
+      "stufe": "A",
+      "version": "1.0.0",
+      "tag": "vA1.0.0"
+    },
+    {
+      "stufe": "A",
+      "version": "1.1.0",
+      "tag": "vA1.1.0"
+    },
+    {
+      "stufe": "B",
+      "version": "0.1.0",
+      "tag": "vB0.1.0"
+    },
+    {
+      "stufe": "",
+      "version": "1.0.0",
+      "tag": "v1.0.0"
+    },
+    {
+      "stufe": "A",
+      "version": "01.0.0",
+      "tag": null
     }
   ]
 }

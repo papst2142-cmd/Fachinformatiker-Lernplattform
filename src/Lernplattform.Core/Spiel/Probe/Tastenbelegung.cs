@@ -48,12 +48,27 @@ public sealed class Tastenbelegung
     /// <summary>Welle A 0.93.0 (Weisung P12-303): kriechen und wieder aufstehen (Taste frei belegbar, Standard X).</summary>
     public const string Kriechen = "kriechen";
 
+    /// <summary>Welle A 0.95.0 (Weisung P12-306, Sammelliste 385): frei gehen, vorwaerts (vom Bildschirm weg bzw. in Blickrichtung).</summary>
+    public const string GehVor = "geh_vor";
+
+    /// <summary>Welle A 0.95.0: frei gehen, rueckwaerts.</summary>
+    public const string GehZurueck = "geh_zurueck";
+
+    /// <summary>Welle A 0.95.0: frei gehen, nach links (seitwaerts).</summary>
+    public const string GehLinks = "geh_links";
+
+    /// <summary>Welle A 0.95.0: frei gehen, nach rechts (seitwaerts).</summary>
+    public const string GehRechts = "geh_rechts";
+
+    /// <summary>Die vier Gehtasten (werden gehalten, nicht nur gedrueckt).</summary>
+    public static readonly IReadOnlySet<string> Gehen = new HashSet<string>(StringComparer.Ordinal) { GehVor, GehZurueck, GehLinks, GehRechts };
+
     /// <summary>
-    /// Aufgaben, die nach A 0.79.0 dazukamen. Hatte jemand ihre Standardtaste (R, F) schon fuer eine andere Aufgabe gewaehlt,
+    /// Aufgaben, die nach A 0.79.0 dazukamen (seit A 0.95.0 auch die vier Gehtasten W, A, S, D). Hatte jemand ihre Standardtaste (R, F, W, A, S, D) schon fuer eine andere Aufgabe gewaehlt,
     /// behaelt diese eigene Wahl beim Lesen Vorrang (nie still verloren); die neue Aufgabe hat dann keine Taste, bis man ihr in
     /// den Optionen eine gibt (<see cref="OhneTaste"/>).
     /// </summary>
-    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher, IchSicht, Springen, Ducken, Kriechen };
+    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher, IchSicht, Springen, Ducken, Kriechen, GehVor, GehZurueck, GehLinks, GehRechts };
 
     /// <summary>Gespeicherter Wert „keine Taste“ (nur fuer die Aufgaben aus <see cref="NeuAb080"/> nach einem Zusammenstoss).</summary>
     public const string OhneTaste = "";
@@ -78,6 +93,10 @@ public sealed class Tastenbelegung
         (Springen, "Springen", ["Space"]),
         (Ducken, "Ducken und wieder aufstehen", ["C"]),
         (Kriechen, "Kriechen und wieder aufstehen", ["X"]),
+        (GehVor, "Gehen: vorwärts", ["W"]),
+        (GehZurueck, "Gehen: rückwärts", ["S"]),
+        (GehLinks, "Gehen: nach links", ["A"]),
+        (GehRechts, "Gehen: nach rechts", ["D"]),
     ];
 
     /// <summary>Bleiben dem Programm (Esc bricht ab, die anderen braucht die Bedienung).</summary>

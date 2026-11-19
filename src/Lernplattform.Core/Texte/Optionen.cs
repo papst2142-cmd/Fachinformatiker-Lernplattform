@@ -146,7 +146,7 @@ public static class Optionen
     public const string Ton = "ton";
     public const string Vollbild = "vollbild";
     public const string Tasten = "tasten";
-    public const string TastenKurz = "Tasten zum Drehen, Verschieben und Zoomen im Spiel";
+    public const string TastenKurz = "Tasten zum Gehen, Drehen, Verschieben und Zoomen im Spiel";
     public static readonly OptionenBereich TastenBereich = new(Tasten, "Tastenbelegung", null, null,
         false, false, false, [], ["Tasten", "Tastatur", "Tastenbelegung"], []);
     public const string TonKurz = "Lautstärke von Musik und Geräuschen im Spiel";

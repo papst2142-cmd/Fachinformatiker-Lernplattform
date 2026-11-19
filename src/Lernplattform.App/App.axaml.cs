@@ -35,6 +35,7 @@ public partial class App : Application
         Programm.Diagnosedienst.Starten(Programm.Zustand.Werte);
         // Phase 8 W8: Tastenbelegung, Toene und Vollbild aus den Einstellungen
         Core.Spiel.Probe.Tastenbelegung.Aktuell = Core.Spiel.Probe.Tastenbelegung.Lesen(Programm.Zustand.Werte);
+        Core.Spiel.Gehbedienung.AntippenAn = Core.Spiel.Gehbedienung.Lesen(Programm.Zustand.Werte);
         Spiel.TonDienst.Regler(Core.Spiel.Ton.TonEinstellungen.Lesen(Programm.Zustand.Werte));
         Spiel.TonDienst.Lieder = new Core.Spiel.Ton.EigeneLieder(Core.Daten.Ablage.Datenordner());
         Spiel.Vollbild.DauerhaftSetzen(Core.Spiel.Ton.VollbildWahl.Lesen(Programm.Zustand.Werte));
@@ -104,6 +105,8 @@ public partial class App : Application
             {
                 if (e.Kind == ActivationKind.Background)
                 {
+                    // Welle A 0.95.0 (Sammelliste 385): frei Gegangenes zuerst als Ereignis schreiben
+                    Core.Spiel.Probe.StadtSpiel.AlleFreiHalten();
                     // Weisung P7-17: alle Spielschritte fertig schreiben
                     Core.Spiel.Spielschlange.AlleLeeren();
                     // W3: offene Eingaben im Abschlussprojekt zuerst speichern (_lifecycle main.py 5975)

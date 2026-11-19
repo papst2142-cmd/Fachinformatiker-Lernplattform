@@ -45,6 +45,7 @@ public sealed partial class StadtSpiel
         string? fehlerLog = null)
     {
         _fehlerLog = fehlerLog;
+        Anmelden();
         Stadt = stadt;
         Ablauf = ablauf;
         Grafik = grafik;
@@ -185,8 +186,16 @@ public sealed partial class StadtSpiel
     /// <summary>Zum Ort gehen: Ereignis schreiben (Uhr springt), dann den Weg sichtbar abgehen.</summary>
     public StadtGrund GeheZu(string ziel) => Gemessen(() => GeheZuOrt(ziel));
 
-    private StadtGrund GeheZuOrt(string ziel)
+    private StadtGrund GeheZuOrt(string ziel) => GeheZuOrt(ziel, 0);
+
+    /// <summary>
+    /// Wie oben; <paramref name="vorStrecke"/> = draussen schon frei gegangene, noch nicht geschriebene Strecke (Welle A 0.95.0,
+    /// Halt vor einer Tuer): sie zaehlt zu den Schritten dieses einen Wegs.
+    /// </summary>
+    private StadtGrund GeheZuOrt(string ziel, double vorStrecke)
     {
+        // Welle A 0.95.0: frei Gegangenes zuerst abschliessen (ein Ereignis), dann der neue Weg
+        FreiHalt();
         if (ErstAussteigen())
         {
             // Welle A 0.73.0: im Bus (selbst gefahren) geht nur „Aussteigen“
@@ -226,6 +235,11 @@ public sealed partial class StadtSpiel
         if (ImFreien && Szene.Ort(ziel) is { } zielOrt)
         {
             frei = [.. MitWeg(() => Szene.LaufWeg((FigurX, FigurZ), (zielOrt.StehX, zielOrt.StehZ)))];
+            if (frei.Count == 0 && vorStrecke > 0 && GeradeVorDieTuer(zielOrt))
+            {
+                // Welle A 0.95.0: frei bis kurz vor die Tuer gegangen (die Wegsuche findet so nah keinen Weg): das letzte Stueck gerade
+                frei.Add((zielOrt.StehX, zielOrt.StehZ));
+            }
             if (frei.Count == 0 && !(Math.Abs(FigurX - zielOrt.StehX) < 0.01 && Math.Abs(FigurZ - zielOrt.StehZ) < 0.01))
             {
                 Zeile = SpielProbeTexte.NichtErreichbar;
@@ -233,7 +247,7 @@ public sealed partial class StadtSpiel
                 return StadtGrund.KeinWeg;
             }
         }
-        var ergebnis = Schreiben(() => frei is null ? Stadt.Gehen(Ablauf, ziel) : Stadt.Gehen(Ablauf, ziel, Schritte(frei)));
+        var ergebnis = Schreiben(() => frei is null ? Stadt.Gehen(Ablauf, ziel) : Stadt.Gehen(Ablauf, ziel, Schritte(frei, vorStrecke)));
         if (ergebnis is null)
         {
             return StadtGrund.KeinProfil;
@@ -283,8 +297,11 @@ public sealed partial class StadtSpiel
     }
 
     /// <summary>Schritte eines freien Wegs: seine Laenge in Zellen des Stadt-Rasters, aufgerundet.</summary>
-    public long Schritte(IReadOnlyList<(double X, double Y)> weg) =>
-        (long)Math.Ceiling((Wegsuche.Laenge((FigurX, FigurZ), weg) / Stadt.Zelle) - 1e-9);
+    public long Schritte(IReadOnlyList<(double X, double Y)> weg) => Schritte(weg, 0);
+
+    /// <summary>Wie oben mit <paramref name="vorStrecke"/> davor (Welle A 0.95.0: frei gegangen bis vor die Tuer).</summary>
+    private long Schritte(IReadOnlyList<(double X, double Y)> weg, double vorStrecke) =>
+        (long)Math.Ceiling(((Wegsuche.Laenge((FigurX, FigurZ), weg) + vorStrecke) / Stadt.Zelle) - 1e-9);
 
     /// <summary>
     /// Zum Bodenpunkt gehen. Im Innenraum ohne Spielzeit; in der Stadt (Nachtrag 1, Wunsch 3) ueber
@@ -295,6 +312,7 @@ public sealed partial class StadtSpiel
 
     private bool GeheZuPunkt(double x, double z)
     {
+        FreiHalt();
         if (ErstAussteigen())
         {
             // Welle A 0.73.0 (E1): Antippen der Stadt waehrend der Fahrt aendert nichts
@@ -597,7 +615,7 @@ public sealed partial class StadtSpiel
     public string Bewegung => ImInnenraum ? Figur.Gehen : Figur.Rennen;
 
     /// <summary>Bild der Schrittbewegung (0 bis <see cref="Figur.Bilder"/> - 1) nach dem Weg, -1 = steht.</summary>
-    public int SchrittBild => (Geht && !ImBus) || Mitfahrt is MitfahrtStufe.SteigtEin or MitfahrtStufe.SteigtAus ? BildNachWeg(Schrittweg, Zyklus) : -1;
+    public int SchrittBild => (Geht && !ImBus) || FreiUnterwegs || Mitfahrt is MitfahrtStufe.SteigtEin or MitfahrtStufe.SteigtAus ? BildNachWeg(Schrittweg, Zyklus) : -1;
 
     /// <summary>Bild der Bewegung nach dem Weg <paramref name="weg"/> bei Doppelschritt <paramref name="zyklus"/>.</summary>
     public static int BildNachWeg(double weg, double zyklus) =>
@@ -757,6 +775,7 @@ public sealed partial class StadtSpiel
 
     private StadtGrund WartenOhneMessung()
     {
+        FreiHalt();
         if (Schreiben(() => Stadt.Warten(Ablauf)) is not { } ergebnis)
         {
             return StadtGrund.KeinProfil;
@@ -770,6 +789,8 @@ public sealed partial class StadtSpiel
 
     private bool BetretenOhneMessung()
     {
+        // Welle A 0.95.0: nach freiem Gehen vor der Tuer den kurzen Rest gleich zu Ende gehen
+        TuerWegBeenden();
         if (!KannBetreten)
         {
             return false;
@@ -1142,6 +1163,7 @@ public sealed partial class StadtSpiel
 
     private bool KnopfOhneMessung(string aktion)
     {
+        FreiHalt();
         if (!Knoepfe.Any(k => k.Aktion == aktion))
         {
             return false;
@@ -1196,6 +1218,7 @@ public sealed partial class StadtSpiel
 
     private void VerlassenOhneMessung()
     {
+        FreiHalt();
         if (!ImInnenraum)
         {
             return;
