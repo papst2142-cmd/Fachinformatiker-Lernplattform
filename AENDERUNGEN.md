@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.96.0
+Im Spiel steuerst du deine Figur jetzt auch am Handy und Tablet frei, mit zwei Sticks unter deinen Daumen.
+
+- Setz einen Daumen links unten auf das Bild und zieh ihn ein Stück: Dort erscheint ein runder Stick, und deine Figur geht in die Richtung, in die du ziehst. Wenig ziehen geht langsam, ab etwa drei Vierteln geht sie mit vollem Tempo. Lässt du los, verschwindet der Stick, und deine Figur bleibt stehen.
+- Rechts unten erscheint genauso ein zweiter Stick. Mit ihm drehst du die Ansicht, in der Ich-Sicht schaust du dich damit um (nach oben ziehen: Blick nach oben). Beide Sticks gehen zugleich, mit beiden Daumen.
+- Ein kurzer Tipp ohne Ziehen bleibt Antippen: Deine Figur geht wie bisher dorthin, wenn „Antippen zum Gehen“ an ist. Zwei Finger zoomen, drehen und neigen wie bisher.
+- Die Sticks liegen nie über der Leiste unten oder der Zeile oben. Ist das Spiel-Handy offen, gibt es keine Sticks.
+- Für das Gehen mit dem Stick gelten dieselben Regeln wie mit den Gehtasten am PC: Gehwege, Zebrastreifen, Gleiten an Wänden, Spielzeit beim Stehenbleiben, Ansagen für den Screenreader.
+- In den Optionen heißt die Karte „Tastenbelegung“ jetzt „Steuerung“. Oben darin steht jetzt der Schalter „Antippen zum Gehen“ (vorher unter „Spiel“), darunter eine kurze Erklärung der Sticks und die Tastenliste. Deine Wahl beim Schalter bleibt, wie sie war.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.95.0
 Im Spiel kannst du deine Figur am PC jetzt frei mit der Tastatur steuern: W, A, S und D.
 

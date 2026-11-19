@@ -49,6 +49,8 @@ public static partial class AutoMessung
         try
         {
             await FreiBedienungAsync(ansicht, seite, Pruefe);
+            // Welle A 0.96.0 (Weisung P12-309): die Sticks am Handy und Tablet mit gedachten Fingern
+            await FreiSticksAsync(ansicht, seite, Pruefe);
         }
         finally
         {
@@ -364,9 +366,19 @@ public static partial class AutoMessung
             && !SpielProbeTexte.TippeHinzugehen.IsMatch(tafelAus) && tafelAn == tafelRoh,
             $"aus: „{TafelKurz(tafelAus)}“; an (Gegenprobe): {(tafelAn == tafelRoh ? "wie bisher" : "anders: " + TafelKurz(tafelAn))}");
 
-        // 9 der Schalter in den Optionen: Name fuer den Screenreader, Standard an, Hinweis darunter
+        // 9 der Schalter in den Optionen: Name fuer den Screenreader, Standard an, Hinweis darunter; seit A 0.96.0 (Weisung P12-308)
+        // nur noch in der Karte „Steuerung“ (dort zuoberst), die Karte „Spiel“ hat keinen mehr (Gegenprobe)
         await ansicht.ZeigeAsync(Seiten.Optionen);
-        if (ansicht.GebauteSeiten.GetValueOrDefault(Seiten.Optionen) is OptionenSeite optionen && optionen.Klappe(Optionen.Spiel) is { } klappe)
+        if (ansicht.GebauteSeiten.GetValueOrDefault(Seiten.Optionen) is OptionenSeite optSpiel && optSpiel.Klappe(Optionen.Spiel) is { } spielKlappe)
+        {
+            spielKlappe.IsExpanded = true;
+            await ansicht.BildFertigAsync();
+            var inSpiel = Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(spielKlappe).OfType<Avalonia.Controls.ToggleSwitch>()
+                .Count(t => Avalonia.Automation.AutomationProperties.GetName(t) == SpielProbeTexte.AntippenGehen);
+            pruefe("Schalter nicht mehr in der Karte Spiel", inSpiel == 0, inSpiel + " Schalter dort");
+            spielKlappe.IsExpanded = false;
+        }
+        if (ansicht.GebauteSeiten.GetValueOrDefault(Seiten.Optionen) is OptionenSeite optionen && optionen.Klappe(Optionen.Tasten) is { } klappe)
         {
             klappe.IsExpanded = true;
             await ansicht.BildFertigAsync();
@@ -378,7 +390,7 @@ public static partial class AutoMessung
         }
         else
         {
-            pruefe("Schalter in den Optionen", false, "Karte Spiel fehlt");
+            pruefe("Schalter in den Optionen", false, "Karte Steuerung fehlt");
         }
         await ansicht.ZeigeAsync(Seiten.Spiel);
     }

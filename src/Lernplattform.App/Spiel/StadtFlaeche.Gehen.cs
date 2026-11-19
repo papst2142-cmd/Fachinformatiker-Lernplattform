@@ -42,7 +42,7 @@ public sealed partial class StadtFlaeche
         return true;
     }
 
-    /// <summary>Alle Gehtasten los (Fokus verloren, Flaeche weg, Fenster vorne verdeckt).</summary>
+    /// <summary>Alle Gehtasten los (Fokus verloren, Flaeche weg, Fenster vorne verdeckt); seit A 0.96.0 auch die Sticks.</summary>
     public void GehTastenLos()
     {
         if (_gehTasten.Count > 0)
@@ -50,18 +50,23 @@ public sealed partial class StadtFlaeche
             _gehTasten.Clear();
             AnfordernBild();
         }
+        SticksLos();
     }
 
-    /// <summary>Gehrichtung am Boden aus den gehaltenen Tasten und der Drehung der Kamera (0 = keine).</summary>
+    /// <summary>
+    /// Gehrichtung am Boden aus den gehaltenen Tasten, dem linken Stick (Welle A 0.96.0; wenig Ausschlag = langsam) und der
+    /// Drehung der Kamera (0 = keine; zusammen nie schneller als volles Tempo).
+    /// </summary>
     internal (double X, double Z) GehRichtung(Kamera kamera)
     {
-        if (_gehTasten.Count == 0)
+        var stick = _sticks.Links?.Eingabe ?? (0, 0);
+        if (_gehTasten.Count == 0 && stick == (0, 0))
         {
             return (0, 0);
         }
         var (vor, seit) = Steuerung.AusTasten(_gehTasten.Contains(Tastenbelegung.GehVor), _gehTasten.Contains(Tastenbelegung.GehZurueck),
             _gehTasten.Contains(Tastenbelegung.GehLinks), _gehTasten.Contains(Tastenbelegung.GehRechts));
-        return Steuerung.Richtung(vor, seit, kamera.Drehung);
+        return Steuerung.Richtung(vor + stick.Vor, seit + stick.Seit, kamera.Drehung);
     }
 
     /// <summary>Je Bild vor dem Gehen des Spiels: frei gehen (true = die Figur geht frei oder der Halt steht noch aus).</summary>
@@ -71,6 +76,7 @@ public sealed partial class StadtFlaeche
         {
             return false;
         }
+        SticksTakt(kamera, dt);
         var (rx, rz) = GehRichtung(kamera);
         // in der Ich-Sicht (nah) bleibt der Koerper im Blick, auch beim Rueckwaerts- und Seitwaertsgehen
         float? blick = kamera.IchAnteil >= IchSicht.NahAb ? IchSicht.DrehungZu(kamera.Drehung) : null;

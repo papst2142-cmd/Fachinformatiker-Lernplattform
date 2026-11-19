@@ -146,9 +146,15 @@ public static class Optionen
     public const string Ton = "ton";
     public const string Vollbild = "vollbild";
     public const string Tasten = "tasten";
-    public const string TastenKurz = "Tasten zum Gehen, Drehen, Verschieben und Zoomen im Spiel";
-    public static readonly OptionenBereich TastenBereich = new(Tasten, "Tastenbelegung", null, null,
-        false, false, false, [], ["Tasten", "Tastatur", "Tastenbelegung"], []);
+    /// <summary>
+    /// Seit A 0.96.0 (Weisung P12-308, E2 Chat) heisst die Karte „Steuerung“ (vorher „Tastenbelegung“, Kurzzeile „Tasten zum
+    /// Gehen, Drehen, Verschieben und Zoomen im Spiel“): oben der Schalter „Antippen zum Gehen“, der Satz zu den Sticks, dann
+    /// die Tastenliste. Die Suche findet sie weiter mit den alten Woertern.
+    /// </summary>
+    public const string TastenKurz = "Gehen, Tasten und Sticks im Spiel";
+    public const string TastenTitel = "Steuerung";
+    public static readonly OptionenBereich TastenBereich = new(Tasten, TastenTitel, null, null,
+        false, false, false, [], ["Steuerung", "Tasten", "Tastatur", "Tastenbelegung", "Antippen", "Gehen", "Stick"], []);
     public const string TonKurz = "Lautstärke von Musik und Geräuschen im Spiel";
     public const string VollbildKurz = "Programm über den ganzen Bildschirm";
     public static readonly OptionenBereich TonBereich = new(Ton, "Musik und Geräusche", null, null,

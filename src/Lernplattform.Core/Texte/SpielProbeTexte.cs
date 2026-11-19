@@ -201,13 +201,25 @@ public static class SpielProbeTexte
     /// <summary>Welle A 0.95.0: Ansage beim Halt nach freiem Gehen draussen, wenn ein Ort nah ist ({0} = sein Name).</summary>
     public const string VorDir = "Vor dir: {0}.";
 
-    /// <summary>Welle A 0.95.0 (Weisung P12-306, Nico 1c): Abschnitt und Schalter in der Karte „Spiel“ der Optionen.</summary>
-    public const string GehenTitel = "Gehen";
+    /// <summary>
+    /// Welle A 0.95.0 (Weisung P12-306, Nico 1c): Schalter in den Optionen; seit A 0.96.0 (Weisung P12-308/P12-309) oben in der
+    /// Karte „Steuerung“ (vorher Abschnitt „Gehen“ der Karte „Spiel“).
+    /// </summary>
 
     public const string AntippenGehen = "Antippen zum Gehen";
 
     /// <summary>Erklaerung unter dem Schalter (mit dem Hinweis fuer den Screenreader, E1 Chat).</summary>
-    public const string AntippenGehenSatz = "An: Ein Tipp oder Klick in die 3D-Ansicht lässt die Figur dorthin gehen. Aus: Die Figur geht nur mit den Gehtasten (Standard W, A, S, D, unter „Tastenbelegung“ änderbar). Die Liste der Orte, die Karte und die Knöpfe gehen immer. Mit Screenreader am besten anlassen.";
+    public const string AntippenGehenSatz = "An: Ein Tipp oder Klick in die 3D-Ansicht lässt die Figur dorthin gehen. Aus: Die Figur geht nur mit den Gehtasten (Standard W, A, S, D, unten in dieser Karte änderbar) und am Handy mit dem Stick. Die Liste der Orte, die Karte und die Knöpfe gehen immer. Mit Screenreader am besten anlassen.";
+
+    /// <summary>
+    /// Welle A 0.96.0 (Sammelliste 385 Welle 2, Weisung P12-309): Satz zu den Sticks in der Karte „Steuerung“ (PC und Handy gleich)
+    /// und ihre Namen fuer den Screenreader.
+    /// </summary>
+    public const string SticksSatz = "Am Handy und Tablet: Setzt du einen Daumen links unten auf und ziehst ihn ein Stück, erscheint dort ein Stick zum Gehen. Rechts unten erscheint so ein Stick zum Drehen der Ansicht (in der Ich-Sicht zum Umsehen). Beide gehen zugleich und verschwinden beim Loslassen. Ein kurzer Tipp ohne Ziehen bleibt Antippen.";
+
+    public const string StickGehen = "Stick zum Gehen";
+
+    public const string StickDrehen = "Stick zum Drehen";
 
     /// <summary>
     /// Weisung P12-307 Fund 2 (Wortlaut Chat, E2): steht in der Tafel statt eines Satzes „Tippe …, um hinzugehen.“, solange

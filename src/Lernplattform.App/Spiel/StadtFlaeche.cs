@@ -209,7 +209,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private readonly Stopwatch _uhr = Stopwatch.StartNew();
     private double _letztesBild = -1;
     private readonly Queue<double> _bilder = new();
-    private readonly Dictionary<IPointer, Point> _zeiger = [];
+    private readonly Dictionary<long, Point> _zeiger = [];
     private Point _druckStart;
     private bool _gezogen;
     private double _abstandZwei;
@@ -273,6 +273,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             _spiel = value;
             _gehTasten.Clear();
+            SticksLos();
             _kameras.Clear();
             _ich.Neu();
             NachladenAusMerken();
@@ -2388,19 +2389,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             e.Handled = true;
             return;
         }
-        _zeiger[e.Pointer] = p;
-        if (_zeiger.Count == 1)
-        {
-            _druckStart = p;
-            _gezogen = false;
-        }
-        else if (_zeiger.Count == 2)
-        {
-            _abstandZwei = Abstand();
-            _winkelZwei = Winkel();
-            _mitteZwei = MitteY();
-            _gezogen = true;
-        }
+        FingerAuf(e.Pointer.Id, p);
         e.Pointer.Capture(this);
         e.Handled = true;
     }
@@ -2418,48 +2407,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             MausSchritt(maus, _griff.Bewegen(mp.X, mp.Y));
             return;
         }
-        if (!_zeiger.TryGetValue(e.Pointer, out var vorher))
-        {
-            return;
-        }
-        var p = e.GetPosition(this);
-        _zeiger[e.Pointer] = p;
-        if (AktuelleKamera is not { } kamera)
-        {
-            return;
-        }
-        if (_zeiger.Count >= 2)
-        {
-            // zwei Finger: Abstand = Zoom, Winkel = Drehen um die Hochachse; Welle A 0.80.0: draussen neigt die Mitte der
-            // Finger (gemeinsam hoch oder runter), der Zoom bleibt im Bereich 7 bis 9 (Kamerabedienung)
-            var neu = Abstand();
-            var faktor = _abstandZwei > 1 && neu > 1 ? neu / _abstandZwei : 0;
-            _abstandZwei = neu;
-            var winkel = Winkel();
-            var dreh = winkel - _winkelZwei;
-            dreh = dreh > 180 ? dreh - 360 : dreh < -180 ? dreh + 360 : dreh;
-            _winkelZwei = winkel;
-            var mitte = MitteY();
-            var fest = KameraFest;
-            Kamerabedienung.ZweiFinger(kamera, fest, faktor, dreh, mitte - _mitteZwei);
-            _mitteZwei = mitte;
-            if (!fest)
-            {
-                _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
-            }
-            AnfordernBild();
-            return;
-        }
-        if (!_gezogen && Math.Abs(p.X - _druckStart.X) + Math.Abs(p.Y - _druckStart.Y) > ZiehenAb)
-        {
-            _gezogen = true;
-        }
-        if (_gezogen && Kamerabedienung.Ziehen(kamera, KameraFest, p.X - vorher.X, p.Y - vorher.Y, Bounds.Height))
-        {
-            // Welle A 0.80.0: draussen verschiebt ein Finger nichts mehr (Nico Antwort 3), drinnen wie bisher
-            _folgenAb = _uhr.Elapsed.TotalSeconds + 3;
-            AnfordernBild();
-        }
+        FingerBewegt(e.Pointer.Id, e.GetPosition(this));
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
@@ -2484,12 +2432,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             e.Handled = true;
             return;
         }
-        var war = _zeiger.Remove(e.Pointer);
+        // erst auswerten, dann die Kapsel loesen: das Loesen meldet „Kapsel verloren“ (FingerWeg), das nie ein Tipp ist
+        FingerAb(e.Pointer.Id, e.GetPosition(this));
         e.Pointer.Capture(null);
-        if (war && _zeiger.Count == 0 && !_gezogen)
-        {
-            Tippen(e.GetPosition(this));
-        }
         e.Handled = true;
     }
 
@@ -2500,7 +2445,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             _griff.Abbrechen();
         }
-        _zeiger.Remove(e.Pointer);
+        FingerWeg(e.Pointer.Id);
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)

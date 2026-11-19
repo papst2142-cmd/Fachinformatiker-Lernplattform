@@ -408,7 +408,10 @@ public sealed class SpielMitfahrtBelastungTests
         }),
         ("Gehen in der Ich-Sicht", (s, v, h) => Ich.Gehen(s, v)),
         ("Frei gehen in der Ich-Sicht", (s, v, h) => Ich.FreiGehen(s)),
+        // Welle A 0.96.0 (Weisung P12-309): beide Sticks zugleich (links gehen, rechts umsehen), dann loslassen: ein Halt
+        ("Zwei Sticks in der Ich-Sicht", (s, v, h) => Ich.ZweiSticks(s)),
         ("Ich-Sicht aus", (s, v, h) => Ich.Aus(s)),
+        ("Zwei Sticks draussen", (s, v, h) => Ich.ZweiSticks(s)),
     ];
 
     /// <summary>
@@ -552,6 +555,61 @@ public sealed class SpielMitfahrtBelastungTests
         /// die Spielflaeche. Die Figur steht nie auf einer Sperre, der Koerper bleibt im Blick, die Ich-Sicht bleibt; beim Halt hoechstens
         /// ein Ereignis (genau eins, wenn sie draussen vorankam).
         /// </summary>
+        /// <summary>
+        /// Welle A 0.96.0: zwei gedachte Daumen (links unten gehen, rechts unten drehen) ueber den Engine-Baustein
+        /// <see cref="Sticks"/>, je Bild wie die Spielflaeche (rechter Stick wie die rechte Maustaste, linker Stick als
+        /// Gehrichtung zur Kameradrehung); nie auf einer Sperre, die Kamera dreht sich, nach dem Loslassen genau ein Halt.
+        /// </summary>
+        public static string? ZweiSticks(StadtSpiel s)
+        {
+            var k = K(s);
+            Takt(s, k, 30);
+            var sticks = new Sticks();
+            var bereich = new Sticks.Bereich(384, 832, 80, 300);
+            var (yUnten, xLinks, xRechts) = (832 - 300 - 80.0, 100.0, 284.0);
+            if (!sticks.Druecken(1, xLinks, yUnten, bereich) || !sticks.Druecken(2, xRechts, yUnten, bereich))
+            {
+                return "Daumen unten nicht als Sticks angenommen";
+            }
+            sticks.Bewegen(1, xLinks + 20, yUnten - 50);
+            sticks.Bewegen(2, xRechts + 45, yUnten);
+            if (sticks.Links is null || sticks.Rechts is null)
+            {
+                return "nicht beide Sticks zugleich";
+            }
+            var zeilen = s.Ablauf.Stand.Verlauf.Count;
+            var drehung0 = k.Drehung;
+            for (var i = 0; i < 40; i++)
+            {
+                var (dx, dy) = sticks.Drehen(SpielMitfahrtTests.Dt);
+                Kamerabedienung.RechteMaus(k, !k.Ich, new Kameragriff.Schritt(Kameragriff.Art.Drehen, Dy: dy, Grad: (float)dx * Kameragriff.GradJePunkt));
+                var (vor, seit) = sticks.Links.Eingabe;
+                var (rx, rz) = Steuerung.Richtung(vor, seit, k.Drehung);
+                s.FreiGehen(rx, rz, SpielMitfahrtTests.Dt, k.Ich ? IchSicht.DrehungZu(k.Drehung) : null);
+                _regeln.Takt(k, s, (float)SpielMitfahrtTests.Dt);
+                if (!s.MitfahrtAktiv && (!s.Szene.Laufraster.KannStehen(s.FigurX, s.FigurZ) || s.Szene.Laufraster.FeinGesperrt(s.FigurX, s.FigurZ)))
+                {
+                    return $"Figur auf einer Sperre ({s.FigurX}, {s.FigurZ})";
+                }
+            }
+            if (Math.Abs(k.Drehung - drehung0) < 1f)
+            {
+                return "rechter Stick dreht nicht";
+            }
+            sticks.Loslassen(1);
+            sticks.Loslassen(2);
+            if (sticks.Aktiv || sticks.Drehen(1) != (0, 0))
+            {
+                return "Sticks nach dem Loslassen noch da";
+            }
+            for (var i = 0; i < 40; i++)
+            {
+                s.FreiGehen(0, 0, SpielMitfahrtTests.Dt);
+            }
+            var neu = s.Ablauf.Stand.Verlauf.Count - zeilen;
+            return s.FreiOffen ? "kein Halt nach dem Loslassen" : neu > 1 ? $"{neu} Ereignisse statt eines" : null;
+        }
+
         public static string? FreiGehen(StadtSpiel s)
         {
             var k = K(s);
