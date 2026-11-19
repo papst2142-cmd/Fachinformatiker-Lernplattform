@@ -17,6 +17,15 @@
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
+  <!-- Am Mac (osx-arm64, osx-x64) bleibt die Engine ohne Vorab-Uebersetzung: Lauf 1103 mass dort mit vorab uebersetzter
+       Engine „Stadt bauen Testkarte“ deutlich langsamer (Teil Bauen macos-15 1031 -> 1433/1808 ms, Intel 821 -> 1926 ms,
+       Grenze 2000 ms), Windows und Linux wurden schneller (1208 -> 935, 1447 -> 1333 ms). Die Engine baut die Stadt in langen
+       Schleifen, die einmal laufen; ohne Vorab-Uebersetzung optimiert die Laufzeit sie beim ersten Lauf voll. Das Laden der
+       Inhalte liegt in Core und App und bleibt vorab uebersetzt. -->
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx'))">
+    <PublishReadyToRunExclude Include="Lernplattform.Engine.dll" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Velopack" />
