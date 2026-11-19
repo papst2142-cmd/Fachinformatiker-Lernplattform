@@ -55,9 +55,17 @@ public static partial class AutoMessung
                     pruefe("Sticks " + groesse, false, string.Create(inv, $"frei {b.FreiHoehe:F0} Punkte hoch, moeglich {fl.SticksMoeglich}"));
                     continue;
                 }
-                var yUnten = b.Hoehe - b.Unten - (b.FreiHoehe / 4);
-                var links = new Point(b.Breite / 4, yUnten);
-                var rechts = new Point(b.Breite * 3 / 4, yUnten);
+                // die Punkte der Daumen je Schritt neu aus dem freien Bereich (am Handy hoch waechst die Tafel nach dem ersten Gehen,
+                // der freie Bereich endet dann hoeher; ein alter Punkt laege unter der Tafel, wo es nie einen Stick gibt)
+                Point links = default, rechts = default;
+                void Punkte()
+                {
+                    b = fl.StickBereich;
+                    var yUnten = b.Hoehe - b.Unten - (b.FreiHoehe / 4);
+                    links = new Point(b.Breite / 4, yUnten);
+                    rechts = new Point(b.Breite * 3 / 4, yUnten);
+                }
+                Punkte();
 
                 // a kurzer Tipp unten (auf ein fernes Haus, das unten im Bild steht): kein Stick, die Figur geht wie beim Antippen
                 var tippPunkt = (Point?)null;
@@ -106,6 +114,7 @@ public static partial class AutoMessung
                     && seite.StickRing(Sticks.Seite.Links) is null && seite.StickRing(Sticks.Seite.Rechts) is null,
                     string.Create(inv, $"Tipp bei {tp.X:F0},{tp.Y:F0} ({(tippPunkt is null ? "Boden" : "Haus")}): Stick {stickBeimTipp}, Figur geht {tippGeht}; gezogen (Gegenprobe): Stick {stickGezogen}, Figur geht {gezogenGeht}; danach Ring links {seite.StickRing(Sticks.Seite.Links) is not null}, rechts {seite.StickRing(Sticks.Seite.Rechts) is not null}"));
 
+                Punkte();
                 // b ziehen: Stick erscheint, die Figur geht nie auf eine Sperre; loslassen: Stick weg, genau ein Halt (frisches Spiel,
                 // die Figur steht wieder am Start und nicht am Haus des Tipps)
                 spiel = Frisch(seite);
@@ -152,6 +161,7 @@ public static partial class AutoMessung
                     && r.Width >= Sticks.Radius - 0.5,
                     ring is { } rr ? string.Create(inv, $"Ring {rr.Left:F0},{rr.Top:F0} bis {rr.Right:F0},{rr.Bottom:F0}; Kopf bis {kopfUnten:F0}, Leiste ab {leisteOben:F0}, Breite {seiteBreite:F0}") : "kein Ring");
 
+                Punkte();
                 // c beide Sticks zugleich: links gehen, rechts drehen
                 var drehung0 = k.Drehung;
                 var (idL, idR) = (++finger, ++finger);
@@ -175,6 +185,7 @@ public static partial class AutoMessung
                 pruefe("zwei Sticks zugleich " + groesse, beide && gedreht > 5 && !sperreBeide && !fl.StickZustand.Aktiv,
                     string.Create(inv, $"beide sichtbar {beide}, Kamera {gedreht:F0} Grad gedreht, Figur {Vector2.Distance(vorBeide, new Vector2(spiel.FigurX, spiel.FigurZ)):F2} weit, Sperre {sperreBeide}"));
 
+                Punkte();
                 // d oben (obere Haelfte des freien Bereichs): kein Stick; zwei Finger ohne Stick-Daumen zoomen wie heute (Gegenprobe)
                 id = ++finger;
                 var oben = new Point(b.Breite / 4, b.Oben + (b.FreiHoehe / 4));
@@ -199,6 +210,7 @@ public static partial class AutoMessung
                 {
                     continue;
                 }
+                Punkte();
                 // e Ich-Sicht: rechter Stick sieht um (Blick hoch), links geht die Figur in Blickrichtung
                 if (fl.IchUmschalten())
                 {
@@ -229,6 +241,7 @@ public static partial class AutoMessung
                     pruefe("Ich-Sicht rechter Stick sieht um", false, "Ich-Sicht ging nicht an");
                 }
 
+                Punkte();
                 // f Spiel-Handy offen: keine Sticks (Gegenprobe: zu = Stick geht wieder)
                 var handy = await KarteOeffnenAsync(ansicht, seite);
                 id = ++finger;
@@ -237,6 +250,7 @@ public static partial class AutoMessung
                 var mitHandy = fl.StickZustand.Aktiv || fl.SticksMoeglich;
                 fl.FingerAb(id, links);
                 await QuestlogSchliessenAsync(ansicht, handy);
+                Punkte();
                 id = ++finger;
                 fl.FingerAuf(id, links);
                 fl.FingerBewegt(id, links + new Point(0, -Sticks.Radius));

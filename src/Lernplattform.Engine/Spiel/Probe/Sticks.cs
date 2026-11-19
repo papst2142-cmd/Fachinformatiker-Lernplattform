@@ -2,8 +2,8 @@ namespace Lernplattform.Core.Spiel.Probe;
 
 /// <summary>
 /// Welle A 0.96.0 (Sammelliste 385 Welle 2, Weisung P12-309, Nico Antworten 2a und 4): die zwei Sticks am Handy und Tablet,
-/// ohne Spielwissen. Ein Daumen, der in der unteren Haelfte des freien Bereichs (zwischen Kopfzeile und Leiste) aufsetzt, ist
-/// zuerst nur ein Kandidat: bewegt er sich weniger als <see cref="AnfangAb"/>, bleibt er ein Tipp (Antippen wie heute). Erst ab
+/// ohne Spielwissen. Ein Daumen, der im unteren Teil des freien Bereichs (zwischen Kopfzeile und Leiste, <see cref="ZoneOben"/>)
+/// aufsetzt, ist zuerst nur ein Kandidat: bewegt er sich weniger als <see cref="AnfangAb"/>, bleibt er ein Tipp (Antippen wie heute). Erst ab
 /// diesem kleinen Weg wird er zum Stick, links zum Stick fuer das Gehen, rechts zum Stick fuer das Drehen. Der Stick erscheint,
 /// wo der Daumen aufsetzte, und verschwindet beim Loslassen. Er liegt immer ganz im freien Bereich (nie ueber Kopfzeile oder
 /// Leiste; ist der Bereich zu klein, wird er kleiner). Beide Sticks gehen gleichzeitig (zwei Daumen). Die Eingabe rechnet
@@ -104,13 +104,21 @@ public sealed class Sticks
     public int Kandidaten => _kandidaten.Count;
 
     /// <summary>
-    /// Seite fuer einen Daumen bei (<paramref name="x"/>, <paramref name="y"/>): links oder rechts in der unteren Haelfte des
-    /// freien Bereichs, sonst null (oben, in der Kopfzeile oder in der Leiste, oder der Bereich ist so klein, dass der Stick
+    /// Oberer Rand des Bereichs, in dem ein Daumen zum Stick werden kann: das untere Drittel des freien Bereichs, mindestens so
+    /// hoch wie ein Stick (2 Radien), hoechstens die untere Haelfte. Die Mitte des Bilds bleibt so fuer die Gesten von heute
+    /// (zwei Finger zoomen und drehen, ein Finger sieht sich in der Ich-Sicht um).
+    /// </summary>
+    public static double ZoneOben(Bereich b) =>
+        b.Hoehe - b.Unten - Math.Max(b.FreiHoehe / 3, Math.Min(b.FreiHoehe / 2, 2 * Radius));
+
+    /// <summary>
+    /// Seite fuer einen Daumen bei (<paramref name="x"/>, <paramref name="y"/>): links oder rechts im unteren Teil des freien
+    /// Bereichs (ab <see cref="ZoneOben"/>), sonst null (oben, in der Kopfzeile oder in der Leiste, oder der Bereich ist so klein, dass der Stick
     /// kleiner als sein halber Radius wuerde).
     /// </summary>
     public static Seite? SeiteFuer(double x, double y, Bereich b)
     {
-        if (b.Breite < 2 * Radius || b.FreiHoehe < Radius || x < 0 || x > b.Breite || y > b.Hoehe - b.Unten || y < b.Oben + (b.FreiHoehe / 2))
+        if (b.Breite < 2 * Radius || b.FreiHoehe < Radius || x < 0 || x > b.Breite || y > b.Hoehe - b.Unten || y < ZoneOben(b))
         {
             return null;
         }

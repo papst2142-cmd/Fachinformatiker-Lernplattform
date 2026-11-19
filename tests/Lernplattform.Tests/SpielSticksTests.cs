@@ -134,7 +134,13 @@ public sealed class SpielSticksTests
                 for (var y = 0.0; y <= b.Hoehe; y += b.Hoehe / 40)
                 {
                     var seite = Sticks.SeiteFuer(x, y, b);
-                    var unten = y >= b.Oben + (b.FreiHoehe / 2) && y <= b.Hoehe - b.Unten;
+                    var unten = y >= Sticks.ZoneOben(b) && y <= b.Hoehe - b.Unten;
+                    // der Bereich ist das untere Drittel, mindestens 2 Radien, hoechstens die untere Haelfte (die Mitte bleibt frei)
+                    Assert.True(Sticks.ZoneOben(b) >= b.Oben + (b.FreiHoehe / 2) - 1e-9);
+                    if (y < b.Oben + (b.FreiHoehe / 2))
+                    {
+                        Assert.Null(seite);
+                    }
                     if (!unten)
                     {
                         Assert.Null(seite);   // oben, in der Kopfzeile oder in der Leiste nie ein Stick

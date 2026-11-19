@@ -15,6 +15,27 @@ public class EinstellungenSperreTests
     public async Task GleichzeitigesSchreibenVerliertNichts()
     {
         using var ordner = new TempOrdner();
+        // Gegenpruefung W2 Fund 2: dazu Leser ohne Sperre (Oberflaeche, Abgleich), die dauernd laden. Weisung P12-310: die Leser
+        // starten zuerst, die Schreiber erst, wenn jeder Leser nachweislich einmal geladen hat (sonst konnten die Schreiber fertig
+        // sein, bevor ein Leser anfing, und die Gegenpruefung lief nie); sie laden bis nach dem Ende der Schreiber.
+        var fertig = false;
+        using var leserLaufen = new CountdownEvent(2);
+        var leser = Enumerable.Range(0, 2).Select(_ => Task.Run(() =>
+        {
+            var einstellungen = new Einstellungen(ordner.Pfad);
+            var n = 0;
+            do
+            {
+                einstellungen.Laden();
+                if (n++ == 0)
+                {
+                    leserLaufen.Signal();
+                }
+            }
+            while (!Volatile.Read(ref fertig));
+            return n;
+        })).ToArray();
+        Assert.True(leserLaufen.Wait(TimeSpan.FromSeconds(60), TestContext.Current.CancellationToken), "Leser starteten nicht");
         // je Faden eine eigene Instanz wie Oberflaeche (Zustand) und Abgleich im Hintergrund
         var faeden = Enumerable.Range(0, 4).Select(nr => Task.Run(() =>
         {
@@ -35,19 +56,9 @@ public class EinstellungenSperreTests
                 }
             }
         })).ToArray();
-        // Gegenpruefung W2 Fund 2: dazu Leser ohne Sperre (Oberflaeche, Abgleich), die dauernd laden
-        var fertig = false;
-        var leser = Enumerable.Range(0, 2).Select(_ => Task.Run(() =>
-        {
-            var einstellungen = new Einstellungen(ordner.Pfad);
-            while (!Volatile.Read(ref fertig))
-            {
-                einstellungen.Laden();
-            }
-        })).ToArray();
         await Task.WhenAll(faeden);
         Volatile.Write(ref fertig, true);
-        await Task.WhenAll(leser);
+        Assert.All(await Task.WhenAll(leser), n => Assert.True(n > 0));
         var ende = new Einstellungen(ordner.Pfad).Laden();
         for (var nr = 0; nr < 4; nr++)
         {
