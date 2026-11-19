@@ -116,12 +116,21 @@ def lernen_schnitt(repo, fr):
     ausschluss = [a for a in _laden(repo, "ausschluss")["eintraege"]
                   if a["stelle"] in stellen.get(a["datei"], {}) and stellen[a["datei"]][a["stelle"]].get("q") == a["q"]]
     lernen = {"format": 1, "fachrichtung": fr, "listen": listen}
-    if ausschluss:
-        lernen["ausschluss"] = [{"datei": a["datei"], "stelle": a["stelle"], "q": a["q"]} for a in ausschluss]
     saetze_quelle = _laden(repo, "pruefungssaetze")
-    saetze = {"format": saetze_quelle["format"],
-              "saetze": [{"stelle": i, "satz": s} for i, s in enumerate(saetze_quelle["saetze"])
-                         if isinstance(s, dict) and s.get("fachrichtung") == fr and s.get("im_paket") is not True]}
+    # A 0.94.0 (Weisung P12-304): ersetzte Pruefungssaetze dieser Fachrichtung (Stelle und Kennung) kommen mit
+    satz_stellen = {i: s for i, s in enumerate(saetze_quelle["saetze"]) if isinstance(s, dict) and s.get("fachrichtung") == fr}
+    ausschluss += [a for a in _laden(repo, "ausschluss")["eintraege"]
+                   if a["datei"] == "pruefungssaetze" and a["stelle"] in satz_stellen
+                   and satz_stellen[a["stelle"]].get("kennung") == a.get("kennung")]
+    if ausschluss:
+        lernen["ausschluss"] = [{"datei": a["datei"], "stelle": a["stelle"], "kennung": a["kennung"]} if a["datei"] == "pruefungssaetze"
+                                else {"datei": a["datei"], "stelle": a["stelle"], "q": a["q"]} for a in ausschluss]
+    eigene = [{"stelle": i, "satz": s} for i, s in enumerate(saetze_quelle["saetze"])
+              if isinstance(s, dict) and s.get("fachrichtung") == fr and s.get("im_paket") is not True]
+    # A 0.94.0: Format 3 nur, wenn ein Satz das Satzpaar ("aufbau") braucht; sonst bleibt das Paket im Format 2
+    # (DPA/DV bytegleich, auch fuer Apps vor A 0.94.0 lesbar)
+    saetze = {"format": saetze_quelle["format"] if any("aufbau" in e["satz"] for e in eigene) else min(saetze_quelle["format"], 2),
+              "saetze": eigene}
     return _json(lernen), _json(saetze)
 
 

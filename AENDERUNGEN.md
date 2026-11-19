@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.94.0
+Für die Fachrichtung Anwendungsentwicklung (AE) gibt es in „Prüfung im echten Format“ zehn neue Prüfungssätze, die dem Aufbau der echten Abschlussprüfung Teil 2 näher kommen.
+
+- Die neuen Sätze kommen als fünf Paare: Bereich 1 (Planen eines Softwareproduktes) und Bereich 2 (Entwicklung und Umsetzung von Algorithmen) spielen jeweils in derselben erfundenen Firma, Bereich 2 setzt das Projekt aus Bereich 1 um.
+- Jeder Satz hat vier Aufgaben mit 20 bis 30 Punkten und je drei bis sechs Teilaufgaben, darunter zwei bis drei große Teile. Dazu kommen Diagramme, Pseudocode und SQL in etwa dem Anteil der echten Prüfung und je Paar ein kurzer englischer Text.
+- Einige Diagramme (zum Beispiel Sequenzdiagramme, Aktivitätsdiagramme mit Schwimmbahnen und Skizzen von Bildschirmen) zeichnest du „auf Papier“ und vergleichst sie danach mit der Musterlösung.
+- Die zehn bisherigen AE-Sätze werden nicht mehr angeboten. Hast du einen davon angefangen, kannst du ihn noch zu Ende bearbeiten und abschließen; ein Hinweis sagt dir das. Dein Lernstand bleibt erhalten.
+- Das Fachrichtungs-Paket AE bringt die neuen Sätze mit.
+- Die Zeitmessung beim Laden der Inhalte zeigt jetzt auch, wie lange das Lesen der Dateien, das Lesen der Daten und der Aufbau der Ansicht dauern.
+- Die Inhalte der anderen Fachrichtungen, deine Spielstände und alles andere bleiben, wie sie sind.
+
 ## A 0.93.0
 Im Spiel kann deine Figur jetzt springen, sich ducken, kriechen und sich auf Sofa, Sessel und Liegestuhl zurücklehnen.
 

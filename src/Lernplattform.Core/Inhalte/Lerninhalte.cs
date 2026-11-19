@@ -170,7 +170,8 @@ public sealed partial class Lerninhalte
 
     private static List<JsonObject> LadeListe(Func<string, byte[]> lesen, string name)
     {
-        var liste = JsonNode.Parse(lesen(name)) as JsonArray
+        var roh = lesen(name);
+        var liste = Diagnose.LadeTeile.Json(() => JsonNode.Parse(roh)) as JsonArray
             ?? throw new InvalidDataException(name + ".json enthaelt keine Liste");
         var ergebnis = new List<JsonObject>(liste.Count);
         foreach (var knoten in liste.ToList())
@@ -242,9 +243,12 @@ public sealed partial class Lerninhalte
         return ergebnis;
     }
 
-    private static JsonObject LadeObjekt(Func<string, byte[]> lesen, string name) =>
-        JsonNode.Parse(lesen(name)) as JsonObject
-        ?? throw new InvalidDataException(name + ".json enthaelt kein Objekt");
+    private static JsonObject LadeObjekt(Func<string, byte[]> lesen, string name)
+    {
+        var roh = lesen(name);
+        return Diagnose.LadeTeile.Json(() => JsonNode.Parse(roh)) as JsonObject
+            ?? throw new InvalidDataException(name + ".json enthaelt kein Objekt");
+    }
 
     private static List<Lerninhalt> Verpacke(InhaltArt art, List<JsonObject> liste) =>
         liste.Select((daten, i) => new Lerninhalt(art, i + 1, daten)).ToList();

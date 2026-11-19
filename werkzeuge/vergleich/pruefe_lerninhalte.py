@@ -25,6 +25,10 @@ Inhalt:
             gelesen: Kennungen, die die Grundregeln verletzen (fehler), je gueltigem Satz Kopfdaten und
             Zaehlwerte (saetze) und je Fachrichtung die sichtbaren Saetze je Bereich (sichten; AP1 gilt fuer
             alle Fachrichtungen, AP2 nur fuer die eigene)
+            Seit Sollwert-Aenderung Nr. 22 (A 0.94.0, Weisung P12-304): AE-Satzpaare ("aufbau": "paar",
+            Strukturblatt Abschnitt 7) mit eigenen Grundregeln und Paarpruefung; je Satz dazu aufbau und die
+            Punkte je Gebiet; Saetze, die lernen/ausschluss.json ausschliesst (Stelle und Kennung), stehen in
+            "ausgeschlossen" und fehlen in den sichten (sie bleiben fuer offene Laeufe geladen)
 
 Aufruf (Python 3.12, nur Standardbibliothek):
   python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py <repo> <ziel.json>
@@ -318,8 +322,39 @@ ECHT_OPERATOREN = {
 }
 
 
+# A 0.94.0 (Strukturblatt Abschnitt 7): Operatoren im Satzpaar (wie EchtSaetze.OperatorPaarPruefen)
+ECHT_OPERATOREN_PAAR = {
+    "nennen": lambda p, n: 2 <= n <= 6 and p == n,
+    "beschreiben": lambda p, n: 1 <= n <= 3 and 2 * n <= p <= 3 * n,
+    "erlaeutern": lambda p, n: 1 <= n <= 3 and 2 * n <= p <= 3 * n,
+    "begruenden": lambda p, n: n in (1, 2) and p == 3 * n,
+    "ermitteln": lambda p, n: 2 <= p <= 6,
+    "berechnen": lambda p, n: 2 <= p <= 6,
+    "ergaenzen": lambda p, n: 4 <= p <= 12,
+    "erstellen": lambda p, n: 4 <= p <= 14,
+    "zeichnen": lambda p, n: 4 <= p <= 14,
+    "korrigieren": lambda p, n: 2 <= p <= 8,
+    "vergleichen": lambda p, n: 4 <= p <= 8,
+}
+
+
+def echt_teilaufgaben(teile):
+    """Satzpaar: Punkte je Teilaufgabe (Eintraege mit gleichem ersten Buchstaben); None, wenn b und ba zugleich da sind."""
+    g = {}
+    for t in teile:
+        g[t.get("nr", "?")[0]] = g.get(t.get("nr", "?")[0], 0) + t.get("punkte", 0)
+    einzeln = {t.get("nr") for t in teile if len(t.get("nr", "")) == 1}
+    if any(len(t.get("nr", "")) == 2 and t["nr"][0] in einzeln for t in teile):
+        return None
+    return g
+
+
 def echt_grundregeln(s):
-    """True, wenn ein Satz die Grundregeln aus Plan P12-152 Abschnitt 2 erfuellt (ohne Zeichnungen im Einzelnen)."""
+    """True, wenn ein Satz die Grundregeln aus Plan P12-152 Abschnitt 2 erfuellt (ohne Zeichnungen im Einzelnen);
+    ein Satz mit "aufbau": "paar" die Regeln des Satzpaars (Strukturblatt Abschnitt 7, ohne Partner)."""
+    paar = "aufbau" in s
+    if paar and (s["aufbau"] != "paar" or s.get("fachrichtung") != "ae" or s.get("bereich") not in ("b1", "b2")):
+        return False
     kennung = s.get("kennung", "")
     teile = kennung.split("_")
     if len(teile) != 3 or teile[0] not in ["alle"] + FACHRICHTUNGEN or teile[1] not in ("ap1", "b1", "b2"):
@@ -334,22 +369,47 @@ def echt_grundregeln(s):
     anlagen = {a.get("nr"): a.get("art") for a in s.get("anlagen") or []}
     benutzt = set()
     englisch_teil = False
+    gross = 0
     for a in aufgaben:
         tl = a.get("teile") or []
-        if not 24 <= a.get("punkte", 0) <= 26 or not 5 <= len(tl) <= 10 or sum(t.get("punkte", 0) for t in tl) != a["punkte"]:
+        if sum(t.get("punkte", 0) for t in tl) != a.get("punkte"):
+            return False
+        if paar:
+            g = echt_teilaufgaben(tl)
+            if not 20 <= a.get("punkte", 0) <= 30 or g is None or not 3 <= len(g) <= 6 or len(tl) > 10 \
+                    or any(not 2 <= x <= 14 for x in g.values()):
+                return False
+            gross += sum(x >= 8 for x in g.values())
+        elif not 24 <= a.get("punkte", 0) <= 26 or not 5 <= len(tl) <= 10:
             return False
         for t in tl:
             p, n = t.get("punkte", 0), t.get("angaben", 1)
-            regel = ECHT_OPERATOREN.get(t.get("operator"))
-            if not 2 <= p <= 9 or regel is None or not regel(p, n) or not t.get("loesung"):
+            regel = (ECHT_OPERATOREN_PAAR if paar else ECHT_OPERATOREN).get(t.get("operator"))
+            if not 2 <= p <= (14 if paar else 9) or regel is None or not regel(p, n) or not t.get("loesung"):
+                return False
+            if "gebiet" in t and (not paar or t["gebiet"] not in ("diagramm", "pseudocode", "sql")):
                 return False
             if any(v not in anlagen for v in t.get("anlagen", [])):
                 return False
             benutzt.update(t.get("anlagen", []))
             englisch_teil = englisch_teil or bool(t.get("englisch"))
-    if set(anlagen) - benutzt or list(anlagen.values()).count("englisch") != 1 or not englisch_teil:
+    englisch = list(anlagen.values()).count("englisch")
+    if set(anlagen) - benutzt:
+        return False
+    if paar:
+        alle = [t for a in aufgaben for t in a["teile"]]
+        if englisch > 1 or (englisch == 1) != englisch_teil or sum(t["punkte"] for t in alle if t.get("englisch")) > 12:
+            return False
+        if sum(t["antwort"]["form"] == "rechnen" or t["operator"] == "berechnen" for t in alle) > 1 or not 2 <= gross <= 3:
+            return False
+    elif englisch != 1 or not englisch_teil:
         return False
     return bool(s.get("zeitfrage"))
+
+
+def echt_partner(k):
+    fr, b, nn = k.split("_")
+    return "_".join([fr, "b2" if b == "b1" else "b1", nn])
 
 
 def echt_selbst(t):
@@ -365,13 +425,28 @@ def echt_selbst(t):
 def pruefungssaetze(repo):
     pfad = os.path.join(repo, "inhalte_csharp", "lernen", "pruefungssaetze.json")
     daten = lesen(pfad)
-    fehler, saetze, gesehen = [], {}, set()
+    fehler, saetze, gesehen, gueltig = [], {}, set(), {}
     for s in daten["saetze"]:
         kennung = s.get("kennung", "")
         if kennung in gesehen or not echt_grundregeln(s):
             fehler.append(kennung)
             continue
         gesehen.add(kennung)
+        gueltig[kennung] = s
+    # Satzpaare: Partner gueltig und Paar, gleiche Firma, genau ein englischer Text je Paar (bis nichts mehr faellt)
+    weiter = True
+    while weiter:
+        weiter = False
+        for kennung, s in list(gueltig.items()):
+            if "aufbau" not in s:
+                continue
+            p = gueltig.get(echt_partner(kennung))
+            if p is None or "aufbau" not in p or p.get("firma") != s.get("firma") \
+                    or sum(a.get("art") == "englisch" for x in (s, p) for a in x["anlagen"]) != 1:
+                del gueltig[kennung]
+                fehler.append(kennung)
+                weiter = True
+    for kennung, s in gueltig.items():
         alle_teile = [t for a in s["aufgaben"] for t in a["teile"]]
         formen, operatoren = {}, {}
         for t in alle_teile:
@@ -390,10 +465,18 @@ def pruefungssaetze(repo):
             "punkte_selbst": selbst,
             "punkte_programm": 100 - selbst,
         }
-    sichten = {fr: {b: [k for k, x in saetze.items() if x["bereich"] == b
+        if "aufbau" in s:
+            saetze[kennung]["aufbau"] = s["aufbau"]
+            saetze[kennung]["gebiete"] = {g: sum(t["punkte"] for t in alle_teile if t.get("gebiet") == g)
+                                          for g in ("diagramm", "pseudocode", "sql")}
+    aus = lesen(os.path.join(repo, "inhalte_csharp", "lernen", "ausschluss.json"))
+    ausgeschlossen = sorted(a["kennung"] for a in aus.get("eintraege") or [] if a.get("datei") == "pruefungssaetze"
+                            and 0 <= a.get("stelle", -1) < len(daten["saetze"])
+                            and daten["saetze"][a["stelle"]].get("kennung") == a.get("kennung"))
+    sichten = {fr: {b: [k for k, x in saetze.items() if x["bereich"] == b and k not in ausgeschlossen
                         and (x["fachrichtung"] == "alle" if b == "ap1" else x["fachrichtung"] == fr)]
                     for b in ("ap1", "b1", "b2")} for fr in FACHRICHTUNGEN}
-    return {"format": daten["format"], "fehler": fehler, "saetze": saetze, "sichten": sichten}
+    return {"format": daten["format"], "fehler": fehler, "saetze": saetze, "ausgeschlossen": ausgeschlossen, "sichten": sichten}
 
 
 def main():

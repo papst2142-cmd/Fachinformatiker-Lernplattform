@@ -182,7 +182,9 @@ public sealed class FachrichtungsPaketTests : IDisposable
             Assert.True(nachbau.Lernen.Listen[name].Zip(e.Lernen.Listen[name]).All(p => JsonElement.DeepEquals(p.First.Eintrag, p.Second.Eintrag)), name);
         }
         Assert.Equal(nachbau.Lernen!.Saetze.Select(s => s.Stelle), e.Lernen!.Saetze.Select(s => s.Stelle));
-        Assert.Equal(10, e.Lernen.Saetze.Count);
+        // A 0.94.0 (P12-304): 10 alte und 10 neue AE-Saetze; die 10 alten stehen mit Stelle und Kennung im Ausschluss
+        Assert.Equal(20, e.Lernen.Saetze.Count);
+        Assert.Equal(EchtInhalteAeTests.Ae, e.Lernen.Ausschluss.Where(a => a.Datei == "pruefungssaetze").Select(a => a.Frage).Order(StringComparer.Ordinal));
         Assert.Equal(1500, e.Lernen.Listen["karteikarten"].Count);
         Assert.Equal(330, e.Lernen.Listen["szenarien_ap2"].Count);
     }

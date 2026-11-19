@@ -260,7 +260,7 @@
   }
  },
  "pruefungssaetze": {
-  "format": 2,
+  "format": 3,
   "fehler": [],
   "saetze": {
    "alle_ap1_01": {
@@ -2436,8 +2436,538 @@
     },
     "punkte_selbst": 67,
     "punkte_programm": 33
+   },
+   "ae_b1_06": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Radstation Mühlbach GmbH",
+    "punkte": [
+     24,
+     26,
+     25,
+     25
+    ],
+    "teile": [
+     6,
+     4,
+     4,
+     5
+    ],
+    "anlagen": [
+     "code",
+     "englisch",
+     "text",
+     "code",
+     "text",
+     "code",
+     "tabelle",
+     "tabelle",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 1,
+     "luecke": 3,
+     "tabelle": 2,
+     "zeichnen": 1,
+     "zeilen": 12
+    },
+    "operatoren": {
+     "begruenden": 1,
+     "beschreiben": 2,
+     "ergaenzen": 4,
+     "erlaeutern": 5,
+     "ermitteln": 3,
+     "erstellen": 3,
+     "nennen": 1
+    },
+    "punkte_selbst": 79,
+    "punkte_programm": 21,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 25,
+     "pseudocode": 6,
+     "sql": 6
+    }
+   },
+   "ae_b1_07": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Tierarztpraxen Kleeberg GmbH",
+    "punkte": [
+     23,
+     26,
+     25,
+     26
+    ],
+    "teile": [
+     4,
+     5,
+     4,
+     6
+    ],
+    "anlagen": [
+     "tabelle",
+     "code",
+     "text",
+     "tabelle",
+     "text",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 5,
+     "rechnen": 1,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 11
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "berechnen": 1,
+     "beschreiben": 1,
+     "ergaenzen": 1,
+     "erlaeutern": 4,
+     "erstellen": 4,
+     "nennen": 3,
+     "vergleichen": 1,
+     "zeichnen": 2
+    },
+    "punkte_selbst": 94,
+    "punkte_programm": 6,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 27,
+     "pseudocode": 13,
+     "sql": 6
+    }
+   },
+   "ae_b1_08": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Kantinenservice Sonnhalde GmbH",
+    "punkte": [
+     22,
+     26,
+     26,
+     26
+    ],
+    "teile": [
+     5,
+     4,
+     5,
+     6
+    ],
+    "anlagen": [
+     "text",
+     "code",
+     "text",
+     "tabelle",
+     "code",
+     "englisch"
+    ],
+    "formen": {
+     "angaben": 3,
+     "auswahl": 2,
+     "luecke": 1,
+     "zeichnen": 1,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "beschreiben": 2,
+     "ergaenzen": 4,
+     "erlaeutern": 3,
+     "ermitteln": 3,
+     "erstellen": 2,
+     "nennen": 3,
+     "zeichnen": 1
+    },
+    "punkte_selbst": 89,
+    "punkte_programm": 11,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 23,
+     "pseudocode": 7,
+     "sql": 13
+    }
+   },
+   "ae_b1_09": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Bergbahnen Hohenfirst GmbH",
+    "punkte": [
+     25,
+     27,
+     26,
+     22
+    ],
+    "teile": [
+     5,
+     5,
+     4,
+     5
+    ],
+    "anlagen": [
+     "text",
+     "code",
+     "text",
+     "text",
+     "text",
+     "code",
+     "text"
+    ],
+    "formen": {
+     "angaben": 3,
+     "luecke": 1,
+     "tabelle": 3,
+     "zeichnen": 1,
+     "zeilen": 11
+    },
+    "operatoren": {
+     "begruenden": 3,
+     "beschreiben": 1,
+     "ergaenzen": 4,
+     "erlaeutern": 3,
+     "ermitteln": 1,
+     "erstellen": 4,
+     "nennen": 1,
+     "vergleichen": 1,
+     "zeichnen": 1
+    },
+    "punkte_selbst": 79,
+    "punkte_programm": 21,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 21,
+     "pseudocode": 17,
+     "sql": 6
+    }
+   },
+   "ae_b1_10": {
+    "fachrichtung": "ae",
+    "bereich": "b1",
+    "firma": "Handwerkerportal Werkbank Ost GmbH",
+    "punkte": [
+     22,
+     23,
+     25,
+     30
+    ],
+    "teile": [
+     5,
+     4,
+     5,
+     6
+    ],
+    "anlagen": [
+     "text",
+     "text",
+     "code",
+     "tabelle",
+     "englisch",
+     "text",
+     "code"
+    ],
+    "formen": {
+     "angaben": 4,
+     "auswahl": 1,
+     "tabelle": 2,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "beschreiben": 2,
+     "ergaenzen": 3,
+     "erlaeutern": 4,
+     "ermitteln": 1,
+     "erstellen": 2,
+     "nennen": 4,
+     "vergleichen": 1,
+     "zeichnen": 1
+    },
+    "punkte_selbst": 85,
+    "punkte_programm": 15,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 24,
+     "pseudocode": 10,
+     "sql": 4
+    }
+   },
+   "ae_b2_06": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Radstation Mühlbach GmbH",
+    "punkte": [
+     28,
+     25,
+     24,
+     23
+    ],
+    "teile": [
+     4,
+     5,
+     5,
+     3
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "code",
+     "tabelle",
+     "tabelle",
+     "code",
+     "code",
+     "text",
+     "text"
+    ],
+    "formen": {
+     "luecke": 2,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "erlaeutern": 4,
+     "ermitteln": 4,
+     "erstellen": 6,
+     "korrigieren": 1,
+     "zeichnen": 2
+    },
+    "punkte_selbst": 89,
+    "punkte_programm": 11,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 17,
+     "pseudocode": 25,
+     "sql": 23
+    }
+   },
+   "ae_b2_07": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Tierarztpraxen Kleeberg GmbH",
+    "punkte": [
+     24,
+     23,
+     25,
+     28
+    ],
+    "teile": [
+     4,
+     4,
+     5,
+     6
+    ],
+    "anlagen": [
+     "text",
+     "text",
+     "code",
+     "tabelle",
+     "text",
+     "englisch",
+     "code",
+     "code",
+     "tabelle",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 1,
+     "auswahl": 1,
+     "luecke": 2,
+     "zeichnen": 1,
+     "zeilen": 14
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "beschreiben": 1,
+     "ergaenzen": 1,
+     "erlaeutern": 3,
+     "ermitteln": 3,
+     "erstellen": 5,
+     "korrigieren": 1,
+     "nennen": 1,
+     "zeichnen": 2
+    },
+    "punkte_selbst": 88,
+    "punkte_programm": 12,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 18,
+     "pseudocode": 22,
+     "sql": 21
+    }
+   },
+   "ae_b2_08": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Kantinenservice Sonnhalde GmbH",
+    "punkte": [
+     22,
+     24,
+     24,
+     30
+    ],
+    "teile": [
+     4,
+     4,
+     5,
+     6
+    ],
+    "anlagen": [
+     "code",
+     "tabelle",
+     "code",
+     "text",
+     "code",
+     "code",
+     "tabelle",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 2,
+     "auswahl": 1,
+     "luecke": 2,
+     "tabelle": 1,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 1,
+     "beschreiben": 1,
+     "ergaenzen": 1,
+     "erlaeutern": 2,
+     "ermitteln": 3,
+     "erstellen": 6,
+     "korrigieren": 2,
+     "nennen": 2,
+     "zeichnen": 1
+    },
+    "punkte_selbst": 84,
+    "punkte_programm": 16,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 19,
+     "pseudocode": 23,
+     "sql": 24
+    }
+   },
+   "ae_b2_09": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Bergbahnen Hohenfirst GmbH",
+    "punkte": [
+     24,
+     25,
+     26,
+     25
+    ],
+    "teile": [
+     5,
+     5,
+     4,
+     6
+    ],
+    "anlagen": [
+     "text",
+     "tabelle",
+     "code",
+     "tabelle",
+     "text",
+     "englisch",
+     "text",
+     "text",
+     "code",
+     "tabelle",
+     "tabelle"
+    ],
+    "formen": {
+     "angaben": 5,
+     "luecke": 3,
+     "tabelle": 1,
+     "zeichnen": 2,
+     "zeilen": 9
+    },
+    "operatoren": {
+     "beschreiben": 2,
+     "ergaenzen": 2,
+     "erlaeutern": 3,
+     "ermitteln": 3,
+     "erstellen": 5,
+     "nennen": 3,
+     "zeichnen": 2
+    },
+    "punkte_selbst": 82,
+    "punkte_programm": 18,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 20,
+     "pseudocode": 20,
+     "sql": 16
+    }
+   },
+   "ae_b2_10": {
+    "fachrichtung": "ae",
+    "bereich": "b2",
+    "firma": "Handwerkerportal Werkbank Ost GmbH",
+    "punkte": [
+     24,
+     21,
+     25,
+     30
+    ],
+    "teile": [
+     4,
+     4,
+     5,
+     5
+    ],
+    "anlagen": [
+     "text",
+     "text",
+     "text",
+     "tabelle",
+     "text",
+     "code",
+     "tabelle",
+     "tabelle",
+     "tabelle",
+     "tabelle"
+    ],
+    "formen": {
+     "luecke": 3,
+     "tabelle": 1,
+     "zeichnen": 1,
+     "zeilen": 13
+    },
+    "operatoren": {
+     "begruenden": 2,
+     "beschreiben": 1,
+     "ergaenzen": 2,
+     "erlaeutern": 2,
+     "ermitteln": 3,
+     "erstellen": 8
+    },
+    "punkte_selbst": 83,
+    "punkte_programm": 17,
+    "aufbau": "paar",
+    "gebiete": {
+     "diagramm": 18,
+     "pseudocode": 22,
+     "sql": 22
+    }
    }
   },
+  "ausgeschlossen": [
+   "ae_b1_01",
+   "ae_b1_02",
+   "ae_b1_03",
+   "ae_b1_04",
+   "ae_b1_05",
+   "ae_b2_01",
+   "ae_b2_02",
+   "ae_b2_03",
+   "ae_b2_04",
+   "ae_b2_05"
+  ],
   "sichten": {
    "si": {
     "ap1": [
@@ -2474,18 +3004,18 @@
      "alle_ap1_06"
     ],
     "b1": [
-     "ae_b1_01",
-     "ae_b1_02",
-     "ae_b1_03",
-     "ae_b1_04",
-     "ae_b1_05"
+     "ae_b1_06",
+     "ae_b1_07",
+     "ae_b1_08",
+     "ae_b1_09",
+     "ae_b1_10"
     ],
     "b2": [
-     "ae_b2_01",
-     "ae_b2_02",
-     "ae_b2_03",
-     "ae_b2_04",
-     "ae_b2_05"
+     "ae_b2_06",
+     "ae_b2_07",
+     "ae_b2_08",
+     "ae_b2_09",
+     "ae_b2_10"
     ]
    },
    "dpa": {

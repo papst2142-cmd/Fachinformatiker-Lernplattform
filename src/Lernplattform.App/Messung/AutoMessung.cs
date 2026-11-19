@@ -70,7 +70,7 @@ public static partial class AutoMessung
     /// alle Einzelmessungen) und bei Rot die Fehlerzeile mit Messpunkt, Wert, Grenze und allen
     /// Einzelmessungen (Weisung P4-12 B5). Rueckgabe 1 = Fund.
     /// </summary>
-    private static int Ergebnis(string titel, Messreihe reihe)
+    private static int Ergebnis(string titel, Messreihe reihe, string? zusatz = null)
     {
         var inv = CultureInfo.InvariantCulture;
         var ms = reihe.Bester;
@@ -79,7 +79,8 @@ public static partial class AutoMessung
             UeberAbbruch.Add(titel);
         }
         Messwerte.Notiere(string.Create(inv, $"{titel}: {ms ?? -1:F0} ms{(ms > Geraetegrenze ? " (ueber 400)" : "")}")
-            + (reihe.Wiederholt ? " (wiederholt, Einzelmessungen " + reihe.Einzelwerte() + ")" : ""));
+            + (reihe.Wiederholt ? " (wiederholt, Einzelmessungen " + reihe.Einzelwerte() + ")" : "")
+            + (zusatz is null ? "" : " (" + zusatz + ")"));
         if (!reihe.Rot)
         {
             return 0;

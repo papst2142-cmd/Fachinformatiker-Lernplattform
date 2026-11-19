@@ -37,10 +37,12 @@ public class EchtInhalteDvTests
     [Fact]
     public void DV_ZehnSaetze_JeBereichFuenf_KeinPlatzhalterMehr_AndereGleich()
     {
-        var bestand = Bestand;
+        // A 0.94.0: wie in der App (die alten AE-Saetze schliesst ausschluss.json aus, die AE-Satzpaare stehen an ihrer Stelle)
+        var bestand = EchtTestDatei.App();
         Assert.Empty(bestand.Fehler);
-        Assert.Equal(47, bestand.Saetze.Count);
-        Assert.Equal(Dv, bestand.Saetze.Skip(37).Select(s => s.Kennung));
+        // A 0.94.0: dahinter folgen die AE-Satzpaare (EchtInhalteAePaareTests)
+        Assert.Equal(57, bestand.Saetze.Count);
+        Assert.Equal(Dv, bestand.Saetze.Skip(37).Take(Dv.Length).Select(s => s.Kennung));
         foreach (var f in Fachrichtung.Alle)
         {
             // AP1 gilt fuer alle (unveraendert 6), AP2: SI 6/5, AE und DPA 5/5 wie bisher, DV neu 5/5
@@ -62,7 +64,8 @@ public class EchtInhalteDvTests
     [Fact]
     public void DV_NurAngehaengt_DateiDavorBytegleich()
     {
-        var roh = File.ReadAllBytes(Datei);
+        // A 0.94.0: Datei seit Format 3, sonst bis hierher nur angehaengt (EchtTestDatei.AlsFormat2)
+        var roh = EchtTestDatei.AlsFormat2(File.ReadAllBytes(Datei));
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
         // direkt danach beginnt der erste DV-Satz
@@ -78,7 +81,7 @@ public class EchtInhalteDvTests
     public void DV_JederSatzEigeneFirma_RichtigeFachrichtung_NieIhk_NenntDieAufgaben()
     {
         var alle = Bestand.Saetze;
-        Assert.Equal(alle.Count, alle.Select(s => s.Firma).Distinct(StringComparer.Ordinal).Count());
+        EchtTestDatei.FirmaJeSatzOderPaar(alle);
         foreach (var s in DvSaetze)
         {
             var aus = string.Join(" ", s.Ausgangssituation);

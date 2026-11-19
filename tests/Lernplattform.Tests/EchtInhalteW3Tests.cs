@@ -71,7 +71,7 @@ public class EchtInhalteW3Tests
     public void W3_JederSatzEigeneFirma_NieIhk_AP2NenntDieAufgaben()
     {
         var alle = Bestand.Saetze;
-        Assert.Equal(alle.Count, alle.Select(s => s.Firma).Distinct(StringComparer.Ordinal).Count());
+        EchtTestDatei.FirmaJeSatzOderPaar(alle);
         foreach (var s in NeueSaetze)
         {
             Assert.DoesNotContain("IHK", Alles(s), StringComparison.Ordinal);
@@ -150,7 +150,8 @@ public class EchtInhalteW3Tests
     public void G52_Pruefungssaetze_GleichDerUnabhaengigenPruefung()
     {
         var soll = JsonNode.Parse(VergleichsHilfe.Lade("lerninhalte_pruefung.json").GetProperty("pruefungssaetze").GetRawText())!;
-        var bestand = Bestand;
+        // A 0.94.0: wie in der App mit den ausgeschlossenen Saetzen (ausschluss.json), die nicht mehr in den Sichten stehen
+        var bestand = EchtTestDatei.App();
         var saetze = new JsonObject();
         foreach (var s in bestand.Saetze)
         {
@@ -169,6 +170,12 @@ public class EchtInhalteW3Tests
                 ["punkte_selbst"] = selbst,
                 ["punkte_programm"] = 100 - selbst,
             };
+            if (s.Aufbau is { } aufbau)
+            {
+                saetze[s.Kennung]!["aufbau"] = aufbau;
+                saetze[s.Kennung]!["gebiete"] = new JsonObject(EchtSaetze.Gebiete.Select(g =>
+                    KeyValuePair.Create(g, (JsonNode?)teile.Where(t => t.Gebiet == g).Sum(t => t.Punkte))));
+            }
         }
         var sichten = new JsonObject();
         foreach (var f in Fachrichtung.Alle)
@@ -185,6 +192,7 @@ public class EchtInhalteW3Tests
             ["format"] = EchtSaetze.Format,
             ["fehler"] = Kennungen2(bestand.Fehler.Select(f => f.Kennung)),
             ["saetze"] = saetze,
+            ["ausgeschlossen"] = Kennungen2(bestand.Ausgeschlossen.Order(StringComparer.Ordinal)),
             ["sichten"] = sichten,
         };
         // gleiche Reihenfolge der Saetze und gleicher Inhalt
@@ -198,9 +206,10 @@ public class EchtInhalteW3Tests
         var wurzel = JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
         var liste = wurzel["saetze"]!.AsArray();
         var letzter = (string)liste[liste.Count - 1]!["kennung"]!;
-        liste[liste.Count - 1]!["aufgaben"]![0]!["punkte"] = 27;
+        // A 0.94.0: der letzte Satz gehoert zu einem Satzpaar (Aufgaben 20 bis 30 Punkte); faellt er, faellt sein Partner mit
+        liste[liste.Count - 1]!["aufgaben"]![0]!["punkte"] = 31;
         var bestand = EchtSaetze.Laden(System.Text.Encoding.UTF8.GetBytes(wurzel.ToJsonString()));
-        Assert.Equal(letzter, Assert.Single(bestand.Fehler).Kennung);
+        Assert.Equal([letzter, EchtSaetze.Partner(letzter)], bestand.Fehler.Select(f => f.Kennung));
         var soll = VergleichsHilfe.Lade("lerninhalte_pruefung.json").GetProperty("pruefungssaetze").GetProperty("fehler");
         Assert.Equal(0, soll.GetArrayLength());
     }
