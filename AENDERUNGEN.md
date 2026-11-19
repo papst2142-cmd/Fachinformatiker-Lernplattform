@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 0.93.0
+Im Spiel kann deine Figur jetzt springen, sich ducken, kriechen und sich auf Sofa, Sessel und Liegestuhl zurücklehnen.
+
+- „Springen“ steht im aufgeklappten Menü und liegt auf der Leertaste. Deine Figur springt kurz in die Höhe, im Stehen und beim Gehen. Ihr Weg bleibt dabei genau derselbe; über Hindernisse, Wände oder die Fahrbahn springt sie nicht. In Häusern springt sie nur, wo über dem Kopf Platz ist.
+- „Ducken“ und „Kriechen“ stehen ebenfalls im Menü und liegen auf den Tasten C und X; in den Optionen kannst du ihnen andere Tasten geben. Beides geht nur im Stehen an der Stelle. Ein zweiter Druck oder das Losgehen lässt deine Figur wieder aufstehen. Ist dort kein Platz, dreht sie sich in eine freie Richtung oder du bekommst den Hinweis „Hier ist zum Ducken kein Platz.“
+- In der Ich-Sicht siehst du geduckt und kriechend aus der Höhe des Kopfes, beim Springen hebt sich der Blick mit.
+- Sitzt du auf einem Sofa, einem Sessel oder einem Liegestuhl, gibt es den Knopf „Zurücklehnen“. Mit „Aufrichten“ sitzt du wieder gerade, mit „Aufstehen“ stehst du auf.
+- Ein Screenreader sagt an, was deine Figur gerade tut oder warum es dort nicht geht.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.92.0
 Im Spiel kannst du die Stadt jetzt mit den Augen deiner Figur sehen: die Ich-Sicht.
 

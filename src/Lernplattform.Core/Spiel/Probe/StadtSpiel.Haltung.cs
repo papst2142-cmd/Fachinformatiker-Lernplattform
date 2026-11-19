@@ -177,13 +177,13 @@ public sealed partial class StadtSpiel
                 Geaendert?.Invoke();
                 return true;
             case AktionHinsetzen or AktionHinlegen when Innen is { } innen
-                && innen.FreierPlatzNahe(FigurX, FigurZ, s => (s.Art == SitzArt.Liegen) == (aktion == AktionHinlegen) && PlatzNutzbar(s, FigurX, FigurZ)) is { } platz:
+                && innen.FreierPlatzNahe(FigurX, FigurZ, s => (aktion == AktionHinlegen ? s.Art == SitzArt.Liegen : s.Art is SitzArt.Sitzen or SitzArt.PcStuhl) && PlatzNutzbar(s, FigurX, FigurZ)) is { } platz:
                 Setzen(platz);
                 return true;
             case AktionHinsetzen or AktionHinlegen:
                 return true;
             default:
-                return false;
+                return ZurueckAktion(aktion);
         }
     }
 
@@ -258,7 +258,17 @@ public sealed partial class StadtSpiel
                 return HaltungKnoepfe(innen, knoepfe);
             }
             var bleibt = knoepfe.Where(k => (p.Art == SitzArt.PcStuhl || !PcAktionen.Contains(k.Aktion)) && (p.Art == SitzArt.Liegen || k.Aktion != AktionSchlafen)).ToList();
-            Zeile = (p.Art == SitzArt.Liegen ? SpielProbeTexte.DuLiegst : SpielProbeTexte.DuSitzt) + (bleibt.Count > 0 ? "\n" + Zeile : "");
+            Zeile = (p.Art switch { SitzArt.Liegen => SpielProbeTexte.DuLiegst, SitzArt.Zurueck => SpielProbeTexte.DuSitztZurueck, _ => SpielProbeTexte.DuSitzt })
+                + (bleibt.Count > 0 ? "\n" + Zeile : "");
+            // Welle A 0.93.0 (Sammelliste 352): auf Sofa, Sessel und Liegestuhl zuruecklehnen und wieder aufrichten
+            if (p.Art == SitzArt.Sitzen && innen.ZurueckZu(p) is not null)
+            {
+                bleibt.Add((AktionZuruecklehnen, SpielProbeTexte.KnopfZuruecklehnen));
+            }
+            else if (p.Art == SitzArt.Zurueck)
+            {
+                bleibt.Add((AktionAufrichten, SpielProbeTexte.KnopfAufrichten));
+            }
             return [.. bleibt, (AktionAufstehen, SpielProbeTexte.KnopfAufstehen)];
         }
         if (knoepfe.Any(k => PcAktionen.Contains(k.Aktion)) && innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art == SitzArt.PcStuhl && PlatzNutzbar(s, FigurX, FigurZ)) is not null)
@@ -271,7 +281,7 @@ public sealed partial class StadtSpiel
             knoepfe = [.. knoepfe.Where(k => k.Aktion != AktionSchlafen)];
             Zeile += "\n" + SpielProbeTexte.ErstHinlegen;
         }
-        if (innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art != SitzArt.Liegen && PlatzNutzbar(s, FigurX, FigurZ)) is not null)
+        if (innen.FreierPlatzNahe(FigurX, FigurZ, s => s.Art is SitzArt.Sitzen or SitzArt.PcStuhl && PlatzNutzbar(s, FigurX, FigurZ)) is not null)
         {
             knoepfe = [.. knoepfe, (AktionHinsetzen, SpielProbeTexte.KnopfHinsetzen)];
         }

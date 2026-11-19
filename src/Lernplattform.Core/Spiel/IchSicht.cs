@@ -76,14 +76,29 @@ public sealed class IchSicht
         var grad = drehung is { } d ? DrehungZu(d) : s.FigurRichtung;
         var r = grad * MathF.PI / 180f;
         var vor = new Vector3(MathF.Sin(r), 0f, MathF.Cos(r)) * AugeVor;
+        // Welle A 0.93.0 (Weisung P12-303): geduckt und kriechend sinkt das Auge mit dem Kopf, im Sprung steigt es mit
+        var anteil = AugeHoehe(s);
         if (s.ImInnenraum && s.Innen is { } innen)
         {
             var p = AugeDrinnen(innen, s.FigurX, s.FigurZ, grad);
-            return new Vector3(p.X, Innenraum.FigurHoehe * AugeAnteil, p.Y);
+            return new Vector3(p.X, Innenraum.FigurHoehe * anteil, p.Y);
         }
         var boden = MathF.Max(StadtSzene.Hoehe.Figur, s.Szene.BodenHoehe(s.FigurX, s.FigurZ));
-        return new Vector3(s.FigurX, boden + (Figur.StadtHoehe * AugeAnteil), s.FigurZ) + (vor * Figur.StadtHoehe);
+        return new Vector3(s.FigurX, boden + (Figur.StadtHoehe * anteil), s.FigurZ) + (vor * Figur.StadtHoehe);
     }
+
+    /// <summary>
+    /// Welle A 0.93.0: Hoehe des Auges (Anteil der Figurhoehe) in der Haltung der Figur: <see cref="AugeAnteil"/>, gesenkt um die
+    /// Senkung des Kopfes im Modell der Haltung (<see cref="Figur.KopfSenkung"/>), dazu die Hoehe im Sprung. Gegenprobe
+    /// <see cref="AugeStehendFuerTests"/>: immer in Stehhoehe (dann saesse das Auge geduckt ueber dem Kopf).
+    /// </summary>
+    public static float AugeHoehe(StadtSpiel s) =>
+        AugeStehend.Value ? AugeAnteil : AugeAnteil - Figur.KopfSenkung(s.Grafik, s.HaltungModell) + s.SprungHoehe;
+
+    private static readonly AsyncLocal<bool> AugeStehend = new();
+
+    /// <summary>Gegenprobe (nur Tests): das Auge bleibt in jeder Haltung in Stehhoehe.</summary>
+    public static void AugeStehendFuerTests(bool an) => AugeStehend.Value = an;
 
     /// <summary>So nah (Welt) darf das Auge drinnen einem Wandstueck kommen (mehr als die halbe Diagonale der nahen Ebene).</summary>
     public const float WandAbstand = 0.03f;
@@ -190,6 +205,12 @@ public sealed class IchSicht
                 k.Drehen(rest * Math.Min(1f, FolgenTempo * Math.Max(0f, dt)));
                 bewegt = true;
             }
+        }
+        if (k.IchAnteil >= NahAb && s.Koerper != Koerperhaltung.Stehen && !s.KoerperDrehen(DrehungZu(k.Drehung)))
+        {
+            // Welle A 0.93.0: geduckt oder kriechend dreht der Koerper mit dem Blick nur, wo Platz ist; sonst bleibt der Blick bei ihm
+            k.Drehung = DrehungZu(s.FigurRichtung);
+            bewegt = true;
         }
         k.IchAuge = Auge(s, k.Drehung);
         return bewegt || k.IchAnteil > 0f;

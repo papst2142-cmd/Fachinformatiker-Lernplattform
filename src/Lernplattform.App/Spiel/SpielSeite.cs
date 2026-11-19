@@ -183,6 +183,11 @@ public sealed partial class SpielSeite : Grid
             IchKnopfSetzen();
         });
         _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf, _ichKnopf } };
+        // Welle A 0.93.0 (Weisung P12-303): Springen, Ducken, Kriechen neben der Ich-Sicht
+        foreach (var knopf in HaltungKnoepfeAnlegen())
+        {
+            _knoepfe.Children.Add(knopf);
+        }
         if (Leistungsprobe.An)
         {
             // Weisung P8-52: nur in der Probe-APK; waehrend der Probe nicht antippbar
@@ -860,6 +865,12 @@ public sealed partial class SpielSeite : Grid
             e.Handled = true;
             _ = QuestlogZeigenAsync();
         }
+        else if (!e.Handled && e.Source is not TextBox && e.KeyModifiers == KeyModifiers.None && Tafel is not { IsVisible: true }
+            && Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) is { } aufgabe && HaltungAusfuehren(aufgabe))
+        {
+            // Welle A 0.93.0: Leertaste springt, C duckt, X kriecht (frei belegbar)
+            e.Handled = true;
+        }
     }
 
     private void Zurueck(object? sender, RoutedEventArgs e)
@@ -1154,6 +1165,7 @@ public sealed partial class SpielSeite : Grid
         }
         _einrichten.IsVisible = spiel.KannEinrichten;
         IchKnopfSetzen();
+        HaltungKnoepfeSetzen();
         if (_einrichten.Content is TextBlock einrichtenText)
         {
             einrichtenText.Text = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;

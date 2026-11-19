@@ -305,6 +305,24 @@ public sealed class SpielMitfahrtBelastungTests
             return s.WartetAn == h.Nr ? null : $"wartet an {s.WartetAn}";
         }),
         ("Umsehen in der Ich-Sicht", (s, v, h) => Ich.Umsehen(s)),
+        // Welle A 0.93.0 (Weisung P12-303): springen, ducken, kriechen und wieder aufstehen an der Haltestelle, in der Ich-Sicht
+        ("Springen", (s, v, h) => Ich.Haltung(s, () => s.Springen(), () => s.Springt ? null : "springt nicht", sprung: true)),
+        ("Ducken", (s, v, h) => Ich.Haltung(s, () => s.Ducken(), () => s.Koerper == Koerperhaltung.Ducken ? null
+            : s.HaltungHinweis == Core.Texte.SpielProbeTexte.KeinPlatzDucken ? null : $"duckt nicht ({s.HaltungHinweis})")),
+        ("Kriechen", (s, v, h) => Ich.Haltung(s, () => s.Kriechen(), () => s.Koerper == Koerperhaltung.Kriechen ? null
+            : s.HaltungHinweis == Core.Texte.SpielProbeTexte.KeinPlatzKriechen ? null : $"kriecht nicht ({s.HaltungHinweis})")),
+        ("Aufstehen aus der Haltung", (s, v, h) =>
+        {
+            if (s.Koerper == Koerperhaltung.Kriechen)
+            {
+                s.Kriechen();
+            }
+            else if (s.Koerper == Koerperhaltung.Ducken)
+            {
+                s.Ducken();
+            }
+            return s.Koerper == Koerperhaltung.Stehen && s.HaltungModell is null ? null : $"steht nicht ({s.Koerper})";
+        }),
         // Welle A 0.81.0 (Nico 4b): auf der Bank sitzend warten, „Einsteigen“ steht vorher auf
         ("Hinsetzen", (s, v, h) =>
             !s.Knoepfe.Any(k => k.Aktion == StadtSpiel.AktionHinsetzen) ? "kein Knopf Hinsetzen"
@@ -443,6 +461,31 @@ public sealed class SpielMitfahrtBelastungTests
                 : k.IchNeigung < SpielKamera.IchNeigungMin || k.IchNeigung > SpielKamera.IchNeigungMax ? $"Blick {k.IchNeigung} ausserhalb"
                 : k.Abstand < SpielKamera.AbstandMin || k.Abstand > SpielKamera.AbstandMax || k.Neigung < SpielKamera.NeigungMin || k.Neigung > SpielKamera.NeigungMax ? "Kamera ausserhalb der Bereiche"
                 : Unveraendert(s, vorher);
+        }
+
+        /// <summary>
+        /// Welle A 0.93.0: eine Haltung einnehmen und 40 Bilder weiterlaufen lassen (Ich-Sicht und Sprung je Bild). Spiel unveraendert
+        /// (Uhr, Stelle, Gehen); geduckt oder kriechend hat der Koerper dabei immer Platz; ein Sprung endet von allein.
+        /// </summary>
+        public static string? Haltung(StadtSpiel s, Func<bool> tun, Func<string?> pruefen, bool sprung = false)
+        {
+            var k = K(s);
+            var vorher = Stand(s);
+            tun();
+            if (pruefen() is { } fund)
+            {
+                return fund;
+            }
+            for (var i = 0; i < 40; i++)
+            {
+                s.HaltungTakt((float)SpielMitfahrtTests.Dt);
+                _regeln.Takt(k, s, (float)SpielMitfahrtTests.Dt);
+                if (s.Koerper != Koerperhaltung.Stehen && !s.KoerperFreiBei(s.FigurX, s.FigurZ, s.FigurRichtung, s.Koerper))
+                {
+                    return $"{s.Koerper} ohne Platz";
+                }
+            }
+            return sprung && s.Springt ? "Sprung endet nicht" : Unveraendert(s, vorher);
         }
 
         public static string? Pausiert(StadtSpiel s)
