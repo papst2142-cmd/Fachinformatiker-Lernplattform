@@ -94,7 +94,13 @@ public static partial class AutoMessung
             return Fund(string.Create(inv, $"zweiter Programmstart nach {InhalteAeFrist.TotalMinutes:F0} Minuten nicht beendet"));
         }
         await Task.WhenAll(ausgabe, fehler);
-        var zeile = File.Exists(datei) ? File.ReadAllLines(datei).FirstOrDefault(z => z.StartsWith(InhalteAeZeile, StringComparison.Ordinal)) : null;
+        var zeilen = File.Exists(datei) ? File.ReadAllLines(datei) : [];
+        var zeile = zeilen.FirstOrDefault(z => z.StartsWith(InhalteAeZeile, StringComparison.Ordinal));
+        // ein Ladefehler (z. B. fehlende Teile, dann nur die bisherigen Inhalte) waere sonst ein falsches Gruen
+        if (zeilen.FirstOrDefault(z => z.Contains("FEHLER", StringComparison.Ordinal)) is { } ladefehler)
+        {
+            return Fund("zweiter Programmstart meldet: " + ladefehler);
+        }
         Messwerte.Notiere(string.Create(inv, $"Inhalte laden AE: zweiter Programmstart Rueckgabe {prozess.ExitCode} nach {uhr.Elapsed.TotalSeconds:F1} s"));
         if (zeile is null)
         {

@@ -31,10 +31,12 @@
     <Lernplattform.Bau.LernenTeileBauen Quelle="$(LernenTeileQuelle)" Ziel="$(LernenTeileZiel)" />
   </Target>
 
+  <!-- WithCulture="false": sonst haelt MSBuild ".si" in "quizfragen.si.json" fuer die Sprache Singhalesisch und legt die
+       SI-Teile in eine Satelliten-Datei si/Lernplattform.App.resources.dll (das Programm faende sie nicht) -->
   <Target Name="LernenTeileEinbetten" AfterTargets="LernenTeileErzeugen" BeforeTargets="BeforeBuild" DependsOnTargets="LernenTeileZielSetzen">
     <ItemGroup>
       <LernenTeileDatei Include="$(LernenTeileZiel)*.json" />
-      <EmbeddedResource Include="@(LernenTeileDatei)" LogicalName="inhalte_csharp/lernen_teile/%(Filename)%(Extension)" Visible="false" />
+      <EmbeddedResource Include="@(LernenTeileDatei)" LogicalName="inhalte_csharp/lernen_teile/%(Filename)%(Extension)" WithCulture="false" Visible="false" />
       <FileWrites Include="@(LernenTeileDatei)" />
     </ItemGroup>
   </Target>
