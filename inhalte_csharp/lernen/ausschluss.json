@@ -771,6 +771,66 @@
    "stelle": 7647,
    "q": "Ein Mini-PC mit nur einer NVMe-SSD soll als kleiner Linux-Fileserver dienen. Die Daten liegen außerdem täglich auf einem NAS. Was fehlt diesem Aufbau am ehesten?",
    "grund": "Sammelliste 248: Verneinung in einer Antwort in Grossschrift verriet die Loesung; neue Fassung mit kleiner Verneinung am Ende der Datei"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 17,
+   "kennung": "ae_b1_01",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 18,
+   "kennung": "ae_b1_02",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 19,
+   "kennung": "ae_b1_03",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 20,
+   "kennung": "ae_b1_04",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 21,
+   "kennung": "ae_b1_05",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 22,
+   "kennung": "ae_b2_01",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 23,
+   "kennung": "ae_b2_02",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 24,
+   "kennung": "ae_b2_03",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 25,
+   "kennung": "ae_b2_04",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
+  },
+  {
+   "datei": "pruefungssaetze",
+   "stelle": 26,
+   "kennung": "ae_b2_05",
+   "grund": "Weisung P12-304 (Nico 18.11.2026): ersetzt durch die AE-Satzpaare ae_b1_06 bis ae_b2_10 (Strukturblatt Abschnitt 7); offene Laeufe gehen weiter"
   }
  ]
 }

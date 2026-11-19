@@ -173,11 +173,14 @@ public sealed class EchtAblauf(Func<EchtBestand> bestand, EchtAblage ablage, Fun
             return new(EchtAnsicht.Auswahl, KartenTexte.HinweisTitel,
                 Pakete.FachrichtungsPaket.SatzFehltText(Json.Text(Zustand["satz"])) ?? EchtTexte.SatzFehlt);
         }
+        // A 0.94.0 (Weisung P12-304): ein ersetzter Satz (ausschluss.json) bleibt im Bestand; der offene Lauf geht mit Hinweis weiter
+        var ersetzt = Bestand.IstAusgeschlossen(Satz.Kennung);
         if (ImLauf)
         {
-            return Rest <= 0 ? Abgeben(auto: true) : new(EchtAnsicht.Lauf);
+            return Rest <= 0 ? Abgeben(auto: true)
+                : ersetzt ? new(EchtAnsicht.Lauf, KartenTexte.HinweisTitel, EchtTexte.SatzErsetzt) : new(EchtAnsicht.Lauf);
         }
-        return new(EchtAnsicht.Bewertung);
+        return ersetzt ? new(EchtAnsicht.Bewertung, KartenTexte.HinweisTitel, EchtTexte.SatzErsetzt) : new(EchtAnsicht.Bewertung);
     }
 
     /// <summary>Start (nach "Ja"): eine laufende Pruefung wird gezeigt und nie ueberschrieben.</summary>

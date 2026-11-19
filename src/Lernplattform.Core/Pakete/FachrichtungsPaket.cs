@@ -113,6 +113,7 @@ public static class FachrichtungsPaket
                 ergebnis[liste.Name] = eintraege;
             }
             var ausschluss = new List<(string, int, string)>();
+            var satzAusschluss = new List<(int Stelle, string Kennung)>();
             if (l.TryGetProperty("ausschluss", out var aus))
             {
                 if (aus.ValueKind != JsonValueKind.Array)
@@ -121,6 +122,18 @@ public static class FachrichtungsPaket
                 }
                 foreach (var a in aus.EnumerateArray())
                 {
+                    // A 0.94.0 (Weisung P12-304): auch Pruefungssaetze des Pakets (Stelle und Kennung, geprueft nach dem Lesen der Saetze)
+                    if (a.ValueKind == JsonValueKind.Object && a.TryGetProperty("datei", out var sd) && sd.ValueKind == JsonValueKind.String
+                        && sd.GetString() == Pruefung.Echt.EchtSaetze.DateiName)
+                    {
+                        if (!a.TryGetProperty("stelle", out var ss) || !ss.TryGetInt32(out var satzStelle)
+                            || !a.TryGetProperty("kennung", out var sk) || sk.ValueKind != JsonValueKind.String)
+                        {
+                            return (null, Falsch("ausschluss"));
+                        }
+                        satzAusschluss.Add((satzStelle, sk.GetString()!));
+                        continue;
+                    }
                     if (a.ValueKind != JsonValueKind.Object || !a.TryGetProperty("datei", out var d) || d.ValueKind != JsonValueKind.String
                         || !a.TryGetProperty("stelle", out var s) || !s.TryGetInt32(out var stelle)
                         || !a.TryGetProperty("q", out var q) || q.ValueKind != JsonValueKind.String
@@ -151,6 +164,15 @@ public static class FachrichtungsPaket
                 {
                     return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, "kennung"));
                 }
+            }
+            foreach (var (stelle, kennung) in satzAusschluss)
+            {
+                if (satzListe.FirstOrDefault(e => e.Item1 == stelle) is not { Item2.ValueKind: JsonValueKind.Object } treffer
+                    || !treffer.Item2.TryGetProperty("kennung", out var tk) || tk.GetString() != kennung)
+                {
+                    return (null, Falsch("ausschluss"));
+                }
+                ausschluss.Add((Pruefung.Echt.EchtSaetze.DateiName, stelle, kennung));
             }
             // jeder Satz besteht dieselbe Ladepruefung wie die Saetze der App (EchtSaetze), nie still weglassen
             var probe = Pruefung.Echt.EchtSaetze.Laden(SaetzeBytes(sformat, satzListe.Select(s => s.Item2)));

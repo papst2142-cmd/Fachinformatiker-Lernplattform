@@ -24,6 +24,10 @@ public static class EchtTexte
     public const string SatzFehlt = "Der Prüfungssatz der gespeicherten Prüfung im echten Format fehlt in diesem Programm. "
         + "Sie bleibt gespeichert, bis das Programm den Satz wieder kennt.";
 
+    /// <summary>A 0.94.0 (Weisung P12-304): gespeicherte Pruefung eines ersetzten Satzes (ausschluss.json) geht weiter.</summary>
+    public const string SatzErsetzt = "Dieser Prüfungssatz wurde durch neue Sätze ersetzt. Du kannst die gespeicherte Prüfung "
+        + "noch zu Ende bearbeiten und abschließen, dein Stand bleibt erhalten. Danach wird der Satz nicht mehr angeboten.";
+
     public const string Ausgangssituation = "Ausgangssituation";
     public const string AufgabeKurz = "%d (%d)";
     public const string Zeitfrage = "Zeitfrage";

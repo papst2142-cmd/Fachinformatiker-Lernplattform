@@ -136,7 +136,10 @@ public static partial class AutoMessung
                 k.Probe(start + 2);
                 await ansicht.BildFertigAsync();
                 var vorher = e.ProbeStand.Summe;
-                var haken = e.ProbeInhalt?.GetVisualDescendants().OfType<CheckBox>().FirstOrDefault(c => c.IsChecked == false);
+                // A 0.94.0: hat Aufgabe 1 der Probe nur gesetzte Haekchen (ae_b2_06), wird ein gesetztes abgewaehlt; die Summe
+                // muss sich in beiden Faellen aendern
+                var boxen = e.ProbeInhalt?.GetVisualDescendants().OfType<CheckBox>().ToList() ?? [];
+                var haken = boxen.FirstOrDefault(c => c.IsChecked == false) ?? boxen.FirstOrDefault(c => c.IsChecked == true);
                 if (haken is null || !await TippenAsync(ansicht, haken, art) || e.ProbeStand.Summe == vorher)
                 {
                     Fund(name + ": Haekchen der Bewertung antippen aendert den Zwischenstand nicht (" + vorher + " / " + e.ProbeStand.Summe + ")");

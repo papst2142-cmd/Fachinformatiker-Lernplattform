@@ -34,7 +34,8 @@ public static partial class AutoMessung
 
         // 1. Inhalte laden (beim Start im Hintergrund gemessen, Zustand.InhalteLaden)
         // Phase 10 W1 (Weisung P9-13, Nico 5): beim Start nur die bisherigen Inhalte und die gewaehlte Fachrichtung
-        funde += Ergebnis("Inhalte laden (bisherige + gewaehlte Fachrichtung, kalt, einmalig)", Messwiederholung.Einmal(Zustand.InhalteLadenMs, Geraetegrenze));
+        funde += Ergebnis("Inhalte laden (bisherige + gewaehlte Fachrichtung, kalt, einmalig)", Messwiederholung.Einmal(Zustand.InhalteLadenMs, Geraetegrenze),
+            Zustand.InhalteLadenTeile);
 
         var gebaut = ansicht.GebauteSeiten.Keys.ToList();
         var vorher = ansicht.AktuelleSeite;

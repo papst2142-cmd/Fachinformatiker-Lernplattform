@@ -1083,7 +1083,9 @@ public sealed class EchtFormatTeil
     internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1, string? fachrichtung = null)
     {
         _probeBestand = null;
-        var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == bereich && (fachrichtung is null || s.Fachrichtung == fachrichtung));
+        // A 0.94.0: ersetzte Saetze (ausschluss.json) zeigt die Probe nicht mehr
+        var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == bereich && (fachrichtung is null || s.Fachrichtung == fachrichtung)
+            && !Zustand.EchtBestand.IstAusgeschlossen(s.Kennung));
         var art = bereich == EchtSaetze.Ap1 ? EchtArten.Praefix + EchtSaetze.Ap1 : EchtArten.Art(Fachrichtung.Nach(satz.Fachrichtung), bereich);
         var zustand = EchtAblauf.Neu(satz, art, DateTimeOffset.Now.AddSeconds(-754), TimeZoneInfo.Local);
         var antworten = (JsonObject)zustand["antworten"]!;

@@ -41,6 +41,9 @@ public static class Zustand
     /// <summary>Messpunkt "Inhalte laden" (alle Ordner, kalt, einmal je Programmstart); null bis fertig oder bei Fehler.</summary>
     public static double? InhalteLadenMs { get; private set; }
 
+    /// <summary>A 0.94.0: Teilzeiten von "Inhalte laden" (Datei lesen, JSON lesen, Sicht aufbauen), nur Ausgabe; null bis fertig.</summary>
+    public static string? InhalteLadenTeile { get; private set; }
+
     /// <summary>Gesamtzahlen und Zuordnungen fuer das Dashboard, nach den Lerninhalten.</summary>
     public static Task<DashboardInhalte?> DashboardInhalte { get; private set; } = Task.FromResult<DashboardInhalte?>(null);
 
@@ -297,6 +300,7 @@ public static class Zustand
                 return Fachrichtungen.Vorgabe;
             }
         }
+        Core.Diagnose.LadeTeile.Zuruecksetzen();
         var uhr = Stopwatch.StartNew();
         try
         {
@@ -304,7 +308,7 @@ public static class Zustand
             // inhalte_csharp/lernen nur die neuen Inhalte der gewaehlten Fachrichtung (die anderen beim Wechsel)
             var eingebaut = Eingebaut;
             eingebaut.Vorab();     // die Listen aus inhalte_csharp/lernen lesen schon, waehrend die bisherigen laden
-            var bisher = Lerninhalte.Laden(EingebauteDatei);
+            var bisher = Lerninhalte.Laden(n => Core.Diagnose.LadeTeile.Datei(() => EingebauteDatei(n)));
             // Welle A 0.91.0 (Weisung P12-300): gueltige Fachrichtungs-Pakete aus dem Datenordner (geprueft „nur angehaengt“)
             var lernen = MitPaketen(eingebaut);
             uhr.Stop();
@@ -317,8 +321,12 @@ public static class Zustand
                 Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
                 Messwerte.Notiere("Lerninhalte: FEHLER in inhalte_csharp/lernen " + fehler.GetType().Name + ", nur die bisherigen Inhalte");
             }, Sicht == Fachrichtungen.Systemintegration ? [Sicht] : [Fachrichtungen.Systemintegration, Sicht]);
+            var sichtUhr = Stopwatch.StartNew();
             _ersteSicht = inhalte.Fuer(Sicht);
             InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
+            // A 0.94.0 (Weisung P12-304 Punkt 3): Teilzeiten nur fuer die Ausgabe
+            InhalteLadenTeile = Core.Diagnose.LadeTeile.Text(Core.Diagnose.LadeTeile.DateiMs, Core.Diagnose.LadeTeile.JsonMs,
+                sichtUhr.Elapsed.TotalMilliseconds);
             Messpunktdienst.Notieren(Core.Diagnose.Messpunkte.Punkt.InhalteLaden, uhr.Elapsed.TotalMilliseconds);
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
                 $"Lerninhalte im Hintergrund geladen: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
@@ -333,7 +341,8 @@ public static class Zustand
     }
 
     /// <summary>Welle A 0.91.0: die Dateien aus inhalte_csharp/lernen, die die App selbst mitbringt (Grundstand), einmal gelesen.</summary>
-    internal static LernenOrdner Eingebaut => LazyInitializer.EnsureInitialized(ref _eingebaut, () => new LernenOrdner(LernenDatei));
+    internal static LernenOrdner Eingebaut => LazyInitializer.EnsureInitialized(ref _eingebaut,
+        () => new LernenOrdner(n => Core.Diagnose.LadeTeile.Datei(() => LernenDatei(n))));
 
     private static LernenOrdner? _eingebaut;
 
@@ -459,7 +468,8 @@ public static class Zustand
     private static Lazy<Core.Pruefung.Echt.EchtBestand> NeuerBestand()
     {
         var ordner = Aktuell;
-        return new(() => Core.Pruefung.Echt.EchtSaetze.Laden(ordner.Saetze()));
+        // A 0.94.0: ersetzte Saetze (ausschluss.json) bleiben fuer offene Laeufe im Bestand, werden aber nicht mehr angeboten
+        return new(() => Core.Pruefung.Echt.EchtSaetze.Laden(ordner.Saetze(), ordner.AusgeschlosseneSaetze()));
     }
 
     public static Core.Pruefung.Echt.EchtBestand EchtBestand => _echt.Value;

@@ -90,7 +90,7 @@ public sealed partial class Lerninhalte
             Einteilen(bisher, einteilung);
         }
 
-        var ausschluss = vorher?.Ausschluss ?? [.. lernen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : [], .. ordner.PaketAusschluss];
+        var ausschluss = vorher?.Ausschluss ?? NurListen([.. lernen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : [], .. ordner.PaketAusschluss]);
         // Welle A 0.91.0: mit Fachrichtungs-Paketen oder Platzhaltern laufen alle Listen ueber die gemischten Eintraege
         var gemischt = ordner.Gemischt;
         // Sammelliste 309 (Weisung P12-204, Nico a): beim Nachladen nur die neuen Fachrichtungen umwandeln, die schon
@@ -176,15 +176,29 @@ public sealed partial class Lerninhalte
     /// Je Eintrag Datei (ohne ".json"), Stelle in der Datei (ab 0) und genau der Text des Feldes "q". Steht an der
     /// Stelle ein anderer Text, wirkt der Ausschluss nicht (das Pruefskript pruefe_lerninhalte.py liest dieselbe Datei).
     /// Die Nummern der anderen Eintraege bleiben, wie sie sind.
+    /// A 0.94.0 (Weisung P12-304): auch Pruefungssaetze ("datei": "pruefungssaetze", "stelle" in der Liste "saetze", statt
+    /// "q" genau die "kennung" des Satzes); siehe <see cref="LernenOrdner.AusgeschlosseneSaetze"/>.
     /// </summary>
     public const string AusschlussDatei = "ausschluss";
 
     /// <summary>Phase 11 FW5b: die Eintraege aus <see cref="AusschlussDatei"/> (leer ohne Datei).</summary>
     public IReadOnlyList<(string Datei, int Stelle, string Frage)> Ausschluss { get; private init; } = [];
 
-    private static List<(string Datei, int Stelle, string Frage)> AusschlussLaden(byte[] inhalt) =>
+    /// <summary>
+    /// Eintraege der Ausschluss-Datei: (datei, stelle, q); bei Pruefungssaetzen steht an Stelle des Textes q die Kennung
+    /// des Satzes (Feld "kennung").
+    /// </summary>
+    internal static List<(string Datei, int Stelle, string Frage)> AusschlussLaden(byte[] inhalt) =>
         LadeObjekt(_ => inhalt, AusschlussDatei)["eintraege"]?.AsArray()
-            .Select(e => (e!["datei"]!.GetValue<string>(), e["stelle"]!.GetValue<int>(), e["q"]!.GetValue<string>())).ToList() ?? [];
+            .Select(e => (e!["datei"]!.GetValue<string>(), e["stelle"]!.GetValue<int>(),
+                (e["datei"]!.GetValue<string>() == Pruefung.Echt.EchtSaetze.DateiName ? e["kennung"] : e["q"])!.GetValue<string>())).ToList() ?? [];
+
+    /// <summary>
+    /// A 0.94.0: nur die Ausschluesse der Listen (Karten, Fragen ...); Eintraege der Pruefungssaetze wirken ueber
+    /// <see cref="LernenOrdner.AusgeschlosseneSaetze"/> und bleiben aus <see cref="Ausschluss"/> heraus (Zaehlungen wie bisher).
+    /// </summary>
+    private static List<(string Datei, int Stelle, string Frage)> NurListen(List<(string Datei, int Stelle, string Frage)> alle) =>
+        [.. alle.Where(a => a.Datei != Pruefung.Echt.EchtSaetze.DateiName)];
 
     /// <summary>Gilt fuer diesen Eintrag ein Ausschluss?</summary>
     public static bool Ausgeschlossen(IReadOnlyList<(string Datei, int Stelle, string Frage)> ausschluss, string datei, int stelle, JsonObject daten) =>
@@ -284,7 +298,7 @@ public sealed partial class Lerninhalte
         {
             Ordner = alle.Ordner,
             Einteilung = alle.Einteilung,
-            Ausschluss = [.. ordner.Lesen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : [], .. ordner.PaketAusschluss],
+            Ausschluss = NurListen([.. ordner.Lesen(AusschlussDatei) is { } aus ? AusschlussLaden(aus) : [], .. ordner.PaketAusschluss]),
             Geladen = geladen.Where(f => f != fachrichtung).ToHashSet(StringComparer.Ordinal),
             Neue = alle.Neue.ToDictionary(p => p.Key, p => (IReadOnlyList<Lerninhalt>)[.. p.Value.Where(e => e.Zugehoerigkeit != fachrichtung)]),
             Themen = alle.Themen,
@@ -558,7 +572,7 @@ public sealed class LernenOrdner
 
     /// <summary>Liste <paramref name="name"/> als Dokument (null = Datei fehlt); ein Lesefehler kommt hier an.</summary>
     public JsonDocument? Dokument(string name) =>
-        _dokumente.GetOrAdd(name, n => new Lazy<JsonDocument?>(() => Lesen(n) is { } datei ? JsonDocument.Parse(datei) : null)).Value;
+        _dokumente.GetOrAdd(name, n => new Lazy<JsonDocument?>(() => Lesen(n) is { } datei ? Diagnose.LadeTeile.Json(() => JsonDocument.Parse(datei)) : null)).Value;
 
     /// <summary>Alle Listen schon im Hintergrund lesen (je Datei eine Aufgabe); Fehler zeigen sich erst bei <see cref="Dokument"/>.</summary>
     public void Vorab()
@@ -675,6 +689,26 @@ public sealed class LernenOrdner
         var format = Dokument(Pruefung.Echt.EchtSaetze.DateiName) is { } d && d.RootElement.ValueKind == JsonValueKind.Object
             && d.RootElement.TryGetProperty("format", out var f) && f.TryGetInt32(out var n) ? n : Pruefung.Echt.EchtSaetze.Format;
         return Core.Pakete.FachrichtungsPaket.SaetzeBytes(format, Eintraege(Pruefung.Echt.EchtSaetze.DateiName).Select(e => e.Eintrag));
+    }
+
+    /// <summary>
+    /// A 0.94.0 (Weisung P12-304): Kennungen der Pruefungssaetze, die laut ausschluss.json der App oder eines Pakets nicht
+    /// mehr angeboten werden (Datei "pruefungssaetze", Stelle in der ganzen Liste, genau diese Kennung; steht an der Stelle
+    /// ein anderer Satz, wirkt der Ausschluss nicht).
+    /// </summary>
+    public IReadOnlyList<string> AusgeschlosseneSaetze()
+    {
+        IEnumerable<(string Datei, int Stelle, string Frage)> alle = Lesen(Lerninhalte.AusschlussDatei) is { } aus
+            ? Lerninhalte.AusschlussLaden(aus) : [];
+        var saetze = alle.Concat(PaketAusschluss).Where(a => a.Datei == Pruefung.Echt.EchtSaetze.DateiName).ToList();
+        if (saetze.Count == 0)
+        {
+            return [];
+        }
+        var eintraege = Eintraege(Pruefung.Echt.EchtSaetze.DateiName);
+        return eintraege.Where(e => e.Eintrag.ValueKind == JsonValueKind.Object && e.Eintrag.TryGetProperty("kennung", out var k)
+                && k.ValueKind == JsonValueKind.String && saetze.Any(a => a.Stelle == e.Index && a.Frage == k.GetString()))
+            .Select(e => e.Eintrag.GetProperty("kennung").GetString()!).ToList();
     }
 
     /// <summary>Ausschluesse aus den Paketen (zu denen aus ausschluss.json der App).</summary>

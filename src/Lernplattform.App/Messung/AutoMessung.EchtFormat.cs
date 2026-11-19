@@ -30,7 +30,7 @@ public static partial class AutoMessung
         }
         // Laden und Ladepruefung der eingebauten Datei (einmalig, streng): keine Meldung erlaubt
         var uhr = Stopwatch.StartNew();
-        var bestand = EchtSaetze.Laden(Zustand.LernenDateiFuerMessung(EchtSaetze.DateiName));
+        var bestand = EchtSaetze.Laden(Zustand.LernenDateiFuerMessung(EchtSaetze.DateiName), Zustand.Aktuell.AusgeschlosseneSaetze());
         funde += Ergebnis("Pruefungssaetze im echten Format laden und pruefen", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Abbruch));
         Messwerte.Notiere("Pruefung im echten Format: " + bestand.Saetze.Count + " Saetze, " + bestand.Fehler.Count + " Meldungen der Ladepruefung");
         foreach (var fehler in bestand.Fehler)

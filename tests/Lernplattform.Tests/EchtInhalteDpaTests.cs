@@ -33,7 +33,8 @@ public class EchtInhalteDpaTests
     [Fact]
     public void DPA_ZehnSaetze_JeBereichFuenf_SiAeUndAp1Gleich()
     {
-        var bestand = Bestand;
+        // A 0.94.0: wie in der App (die alten AE-Saetze schliesst ausschluss.json aus, die AE-Satzpaare stehen an ihrer Stelle)
+        var bestand = EchtTestDatei.App();
         Assert.Empty(bestand.Fehler);
         // ab A 0.86.0 folgen die DV-Saetze (EchtInhalteDvTests); die DPA-Saetze stehen unveraendert an Platz 27 bis 36
         Assert.Equal(Dpa, bestand.Saetze.Skip(27).Take(Dpa.Length).Select(s => s.Kennung));
@@ -57,7 +58,8 @@ public class EchtInhalteDpaTests
     [Fact]
     public void DPA_NurAngehaengt_DateiDavorBytegleich()
     {
-        var roh = File.ReadAllBytes(Datei);
+        // A 0.94.0: Datei seit Format 3, sonst bis hierher nur angehaengt (EchtTestDatei.AlsFormat2)
+        var roh = EchtTestDatei.AlsFormat2(File.ReadAllBytes(Datei));
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
         // direkt danach beginnt der erste DPA-Satz
@@ -72,7 +74,7 @@ public class EchtInhalteDpaTests
     public void DPA_JederSatzEigeneFirma_RichtigeFachrichtung_NieIhk_NenntDieAufgaben()
     {
         var alle = Bestand.Saetze;
-        Assert.Equal(alle.Count, alle.Select(s => s.Firma).Distinct(StringComparer.Ordinal).Count());
+        EchtTestDatei.FirmaJeSatzOderPaar(alle);
         foreach (var s in DpaSaetze)
         {
             var aus = string.Join(" ", s.Ausgangssituation);

@@ -105,7 +105,11 @@ public class EchtTausenderpunktTests
         {
             var punkt = MitPunkt(wert);
             Assert.True(EchtBewertung.Passt(feld.Art, punkt, feld.Loesung), $"{wo}: {punkt} muss richtig sein");
-            Assert.True(EchtBewertung.Passt(feld.Art, punkt + ",00", feld.Loesung), $"{wo}: {punkt},00 muss richtig sein");
+            // A 0.94.0: erste Feldwerte mit Nachkomma (ae_b2_10 3c, z. B. 1.296,22); ",00" nur an ganzen Zahlen (wie bei den Rechenwerten)
+            if (wert == Math.Truncate(wert))
+            {
+                Assert.True(EchtBewertung.Passt(feld.Art, punkt + ",00", feld.Loesung), $"{wo}: {punkt},00 muss richtig sein");
+            }
             foreach (var falsch in Falsch(punkt))
             {
                 Assert.False(EchtBewertung.Passt(feld.Art, falsch, feld.Loesung), $"{wo}: {falsch} muss falsch sein");
@@ -144,7 +148,9 @@ public class EchtTausenderpunktTests
     public void T346_Gegenprobe_AlterWeg_ZeigtDieFehlwertungen()
     {
         var rechnen = Rechenwerte().Where(w => w.Wert == Math.Truncate(w.Wert)).ToList();
-        var felder = Feldwerte();
+        // wie bei den Rechenwerten nur ganze Zahlen: "1.296,22" (Punkt und Komma) war schon auf dem alten Weg richtig
+        var felder = Feldwerte().Where(w => w.Wert == Math.Truncate(w.Wert)).ToList();
+        Assert.NotEmpty(felder);
         EchtBewertung.TausenderAltFuerTests(true);
         try
         {
