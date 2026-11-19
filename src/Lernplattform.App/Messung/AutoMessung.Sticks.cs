@@ -101,6 +101,13 @@ public static partial class AutoMessung
                 zeilen = spiel.Ablauf.Stand.Verlauf.Count;
                 fl.KameraAufFigur();
                 await fl.NaechstesBildAsync();
+                // nach dem Ankommen kann die Tafel gewachsen sein (Lauf 1095, Windows 384x681): liegt der Tipp-Punkt nicht mehr im
+                // Stick-Bereich, zieht die Gegenprobe am neuen linken Daumenpunkt
+                if (Sticks.SeiteFuer(tp.X, tp.Y, fl.StickBereich) is null)
+                {
+                    Punkte();
+                    tp = links;
+                }
                 id = ++finger;
                 fl.FingerAuf(id, tp);
                 fl.FingerBewegt(id, tp + new Point(Sticks.AnfangAb * 2, 0));
@@ -268,5 +275,22 @@ public static partial class AutoMessung
             fenster.Height = hoeheVorher;
             await ansicht.BildFertigAsync();
         }
+    }
+
+    /// <summary>
+    /// A 0.96.0: Mitte des freien Bereichs der Flaeche (zwischen Kopfzeile und Tafel). Die Pruefungen der Ein- und Zwei-Finger-Gesten
+    /// (Kamera, Ich-Sicht) setzen dort auf; die Mitte der ganzen Flaeche liegt am Handy mit grosser Tafel schon im Stick-Bereich unten,
+    /// wo ein Daumen nach Nicos Antwort 4 zum Stick wird (Lauf 1095, Windows 384x681). Liegt auch diese Mitte im Stick-Bereich (sehr
+    /// kleiner freier Bereich), nimmt sie den Punkt knapp darueber.
+    /// </summary>
+    private static Point MitteFrei(Lernplattform.Spiel.StadtFlaeche fl)
+    {
+        var b = fl.StickBereich;
+        var y = b.Oben + (b.FreiHoehe / 2);
+        if (Sticks.SeiteFuer(b.Breite / 4, y, b) is not null)
+        {
+            y = Sticks.ZoneOben(b) - 1;
+        }
+        return new Point(b.Breite / 2, y);
     }
 }

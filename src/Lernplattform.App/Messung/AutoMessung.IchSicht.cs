@@ -72,7 +72,8 @@ public static partial class AutoMessung
         var fl = seite.Flaeche;
         await fl.NaechstesBildAsync();
         var k = fl.AktuelleKamera!;
-        var mitte = new Point(fl.Bounds.Width / 2, fl.Bounds.Height / 2);
+        // A 0.96.0: Mitte des freien Bereichs (zwischen Kopfzeile und Tafel), nie im Stick-Bereich unten (Gesten wie bisher)
+        var mitte = MitteFrei(fl);
         async Task Bilder(int n)
         {
             for (var i = 0; i < n; i++)
