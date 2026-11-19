@@ -16,17 +16,18 @@ public static class Kamerabedienung
     /// <summary>Mausrad um <paramref name="delta"/> Rasten (positiv = naeher).</summary>
     public static void Mausrad(Kamera k, double delta) => SpielKamera.Zoomen(k, MathF.Pow(1.12f, (float)delta));
 
-    /// <summary>Rechte Maustaste: waagrecht drehen, senkrecht (nur fest) neigen; Maus nach oben = steiler.</summary>
+    /// <summary>Rechte Maustaste: waagrecht drehen, senkrecht (nur fest) neigen; Maus nach oben = steiler (Schalter <see cref="Umsehbedienung"/> kehren um).</summary>
     public static bool RechteMaus(Kamera k, bool fest, Kameragriff.Schritt s)
     {
         if (s.Art != Kameragriff.Art.Drehen)
         {
             return false;
         }
-        k.Drehen(s.Grad);
+        // Welle A 0.97.0 (Weisung P12-314): Schalter „Umsehen umkehren“ (Standard aus = wie bisher)
+        k.Drehen(s.Grad * Umsehbedienung.FaktorLinksRechts);
         if (fest || SpielKamera.ImIch(k))
         {
-            SpielKamera.Neigen(k, (float)-s.Dy * SpielKamera.NeigenJePunkt);
+            SpielKamera.Neigen(k, (float)-s.Dy * SpielKamera.NeigenJePunkt * Umsehbedienung.FaktorObenUnten);
         }
         return true;
     }
@@ -83,10 +84,10 @@ public static class Kamerabedienung
         switch (aufgabe)
         {
             case Tastenbelegung.DrehLinks:
-                k.Drehen(-15f);
+                k.Drehen(-15f * Umsehbedienung.FaktorLinksRechts);
                 return true;
             case Tastenbelegung.DrehRechts:
-                k.Drehen(15f);
+                k.Drehen(15f * Umsehbedienung.FaktorLinksRechts);
                 return true;
             case Tastenbelegung.Naeher:
                 SpielKamera.Zoomen(k, 1.15f);

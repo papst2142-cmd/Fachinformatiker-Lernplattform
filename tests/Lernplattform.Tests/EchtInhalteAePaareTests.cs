@@ -543,4 +543,25 @@ public class EchtInhalteAePaareTests
         LadeTeile.Zuruecksetzen();
         Assert.Equal(0, LadeTeile.JsonMs);
     }
+
+    [Fact]
+    public void InhalteLaden_TeileMitHauptfaden_NurAusgabe()
+    {
+        // Welle A 0.97.0 (Weisung P12-312 Punkt 6, E1): Arbeit im Hintergrund zaehlt nur bei "alle Threads"
+        LadeTeile.Zuruecksetzen();
+        var bytes = LadeTeile.Datei(() => File.ReadAllBytes(EchtTestDatei.Datei));
+        // eigener Faden (Task.Wait koennte die Aufgabe im wartenden Faden ausfuehren)
+        var faden = new Thread(() => LadeTeile.Json(() => JsonNode.Parse(bytes)));
+        faden.Start();
+        faden.Join();
+        Assert.True(LadeTeile.JsonMs > 0);
+        Assert.Equal(0, LadeTeile.JsonHauptMs);
+        Assert.True(LadeTeile.DateiHauptMs > 0 && LadeTeile.DateiHauptMs <= LadeTeile.DateiMs);
+        LadeTeile.Json(() => JsonNode.Parse(bytes));
+        Assert.True(LadeTeile.JsonHauptMs > 0 && LadeTeile.JsonHauptMs <= LadeTeile.JsonMs);
+        Assert.Equal("Teile: Datei lesen 12 ms, JSON lesen 140 ms, Sicht aufbauen 31 ms (Datei und JSON: Arbeitszeit aller Threads;"
+            + " davon im Hauptfaden: Datei lesen 3 ms, JSON lesen 61 ms)", LadeTeile.Text(12.4, 139.6, 30.6, 3.1, 60.6));
+        LadeTeile.Zuruecksetzen();
+        Assert.Equal(0, LadeTeile.JsonHauptMs);
+    }
 }

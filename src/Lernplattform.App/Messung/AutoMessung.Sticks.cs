@@ -185,7 +185,8 @@ public static partial class AutoMessung
                     await fl.NaechstesBildAsync();
                     sperreBeide |= Gesperrt();
                 }
-                var gedreht = Math.Abs(((k.Drehung - drehung0 + 540f) % 360f) - 180f);
+                // Welle A 0.97.0 (Weisung P12-313): Stick nach rechts dreht die Ansicht nach rechts (Drehung nimmt ab)
+                var gedreht = -(((k.Drehung - drehung0 + 540f) % 360f) - 180f);
                 fl.FingerAb(idL, links + new Point(0, -Sticks.Radius));
                 fl.FingerAb(idR, rechts + new Point(Sticks.Radius, 0));
                 await ansicht.BildFertigAsync();
@@ -235,7 +236,9 @@ public static partial class AutoMessung
                         await fl.NaechstesBildAsync();
                     }
                     fl.FingerAb(id, rechts + new Point(Sticks.Radius * 0.7, -Sticks.Radius * 0.7));
-                    pruefe("Ich-Sicht rechter Stick sieht um", SpielKamera.ImIch(k) && k.IchNeigung < neigung0 && Math.Abs(k.Drehung - drehungIch) > 1,
+                    // Welle A 0.97.0 (Weisung P12-313): Stick nach rechts = Blick nach rechts (Drehung nimmt ab), vorher nur „dreht“
+                    var gedrehtIch = ((k.Drehung - drehungIch + 540f) % 360f) - 180f;
+                    pruefe("Ich-Sicht rechter Stick sieht um", SpielKamera.ImIch(k) && k.IchNeigung < neigung0 && gedrehtIch < -1,
                         string.Create(inv, $"Neigung {neigung0:F1} -> {k.IchNeigung:F1}, Drehung {drehungIch:F0} -> {k.Drehung:F0}"));
                     fl.IchUmschalten();
                     for (var i = 0; i < 40 && k.IchAnteil > 0; i++)

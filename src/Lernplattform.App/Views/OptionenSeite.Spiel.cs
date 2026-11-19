@@ -20,6 +20,11 @@ public sealed partial class OptionenSeite
 {
     private readonly List<RadioButton> _miete = [];
     private ToggleSwitch? _antippenSchalter;
+    private ToggleSwitch? _umsehenLr;
+    private ToggleSwitch? _umsehenOb;
+
+    /// <summary>Start-Test: Schalter „Umsehen links/rechts umkehren“ und „oben/unten“ (null ohne aufgeklappte Karte).</summary>
+    public (ToggleSwitch? LinksRechts, ToggleSwitch? ObenUnten) UmsehenSchalter => (_umsehenLr, _umsehenOb);
 
     /// <summary>Start-Test: Schalter „Antippen zum Gehen“ (null ohne aufgeklappte Karte).</summary>
     public ToggleSwitch? AntippenSchalter => _antippenSchalter;
@@ -102,6 +107,43 @@ public sealed partial class OptionenSeite
         panel.Children.Add(schalter);
         panel.Children.Add(new LernText(SpielProbeTexte.AntippenGehenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
         panel.Children.Add(new LernText(SpielProbeTexte.SticksSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        // Welle A 0.97.0 (Weisung P12-314): zwei Schalter „Umsehen umkehren“, Standard aus
+        _umsehenLr = UmsehenSchalterBauen(panel, SpielProbeTexte.UmsehenLinksRechts, Umsehbedienung.SchluesselLinksRechts, an => Umsehbedienung.LinksRechts = an);
+        _umsehenOb = UmsehenSchalterBauen(panel, SpielProbeTexte.UmsehenObenUnten, Umsehbedienung.SchluesselObenUnten, an => Umsehbedienung.ObenUnten = an);
+        panel.Children.Add(new LernText(SpielProbeTexte.UmsehenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
+    }
+
+    private ToggleSwitch UmsehenSchalterBauen(Panel panel, string text, string schluessel, Action<bool> gilt)
+    {
+        var schalter = new ToggleSwitch
+        {
+            Content = Schrift.Text(text),
+            IsChecked = Umsehbedienung.Lesen(Zustand.Werte, schluessel),
+            OnContent = null,
+            OffContent = null,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(schalter, text);
+        schalter.IsCheckedChanged += (_, _) =>
+        {
+            if (_setzen)
+            {
+                return;
+            }
+            var an = schalter.IsChecked == true;
+            if (Ergebnis(Zustand.Aendere(werte => Umsehbedienung.Wert(werte, schluessel, an))))
+            {
+                gilt(an);
+            }
+            else
+            {
+                // nicht gespeichert: der Schalter zeigt wieder, was gilt (nie still verloren)
+                _setzen = true;
+                schalter.IsChecked = Umsehbedienung.Lesen(Zustand.Werte, schluessel);
+                _setzen = false;
+            }
+        };
+        panel.Children.Add(schalter);
+        return schalter;
     }
 
     /// <summary>Zeile zum Platz und Schwierigkeitsgrad neu lesen (Hintergrund); nur das Ergebnis des letzten Anstosses wird gezeigt.</summary>

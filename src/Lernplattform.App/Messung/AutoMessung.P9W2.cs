@@ -36,6 +36,8 @@ public static partial class AutoMessung
         // Phase 10 W1 (Weisung P9-13, Nico 5): beim Start nur die bisherigen Inhalte und die gewaehlte Fachrichtung
         funde += Ergebnis("Inhalte laden (bisherige + gewaehlte Fachrichtung, kalt, einmalig)", Messwiederholung.Einmal(Zustand.InhalteLadenMs, Geraetegrenze),
             Zustand.InhalteLadenTeile);
+        // Welle A 0.97.0 (Weisung P12-312 Punkt 5, Nico 3a): dasselbe mit AE, eigener kalter Programmstart (SI bleibt unveraendert)
+        funde += await InhalteLadenAeAsync();
 
         var gebaut = ansicht.GebauteSeiten.Keys.ToList();
         var vorher = ansicht.AktuelleSeite;

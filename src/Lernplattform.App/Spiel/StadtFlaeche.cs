@@ -316,15 +316,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         {
             // schraeg von vorn (Sueden) mit Blick in die Raeume, auf die Mitte des ganzen Innenraums (Nachtrag 2
             // zu P7-12: vorher auf die Figur an der Tuer, dann lag der Laden halb ausserhalb des Bildes)
-            _kameras[innen.Ansicht] = new Kamera(innen.Breite / 2, innen.Tiefe / 2, Math.Clamp(Math.Max(innen.Breite, innen.Tiefe) * 0.85f, 12f, 28f))
-            {
-                Neigung = 58f,
-                Grenzen = (0, 0, innen.Breite, innen.Tiefe),
-                // Welle A 0.92.0 (Weisung P12-301 Punkt 4): im Spiel auch drinnen Ich-Sicht (ohne Schulterblick)
-                IchErlaubt = FesteKamera,
-                IchNeigungBereich = (SpielKamera.IchNeigungMin, SpielKamera.IchNeigungMax),
-                IchNeigung = SpielKamera.IchNeigungStart,
-            };
+            // Welle A 0.97.0: dieselbe Kamera wie bisher, gebaut in SpielKamera.Drinnen (die Tests pruefen dieselbe Rechnung)
+            _kameras[innen.Ansicht] = SpielKamera.Drinnen(innen.Breite, innen.Tiefe, FesteKamera);
         }
         AnfordernBild();
     }
@@ -379,8 +372,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     private (double Oben, double Unten) _frei;
 
     /// <summary>Versatz der Kamera fuer den freien Bereich (Bildraum, hoechstens 0,6).</summary>
-    private float FreiVersatz() =>
-        Bounds.Height > 1 ? (float)Math.Clamp((_frei.Unten - _frei.Oben) / Bounds.Height, -0.6, 0.6) : 0f;
+    private float FreiVersatz() => SpielKamera.FreiVersatz(Bounds.Height, _frei.Oben, _frei.Unten);
 
     /// <summary>OpenGL steht (Pflicht-Messpunkt "GL-Zusammenhang erzeugt").</summary>
     public bool GlBereit { get; private set; }
@@ -415,6 +407,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             }
             var kamera = _kameras[_spiel.FlaecheId];
             kamera.Versatz = FreiVersatz();
+            if (FesteKamera && _spiel.ImInnenraum)
+            {
+                // Welle A 0.97.0 (Weisung P12-312 Punkt 1, Nico 1a, Sammelliste 392): drinnen nur so nah, dass die ganze Figur im
+                // freien Bereich bleibt (je Bildschirm, Kopfzeile und Tafel); naeher geht es nur in die Ich-Sicht. Werkzeug unveraendert.
+                SpielKamera.InnenBereich(kamera, Bounds.Height, _frei.Oben, _frei.Unten, Innenraum.FigurHoehe);
+            }
             return kamera;
         }
     }

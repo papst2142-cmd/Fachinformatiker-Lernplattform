@@ -64,8 +64,21 @@ public sealed class Kamera
     {
         var vorher = Bereich;
         Bereich = (AbstandMin, AbstandMax);
-        return new Zurueck(() => Bereich = vorher);
+        _messungen++;
+        return new Zurueck(() =>
+        {
+            _messungen--;
+            Bereich = vorher;
+        });
     }
+
+    private int _messungen;
+
+    /// <summary>
+    /// Welle A 0.97.0 (Weisung P12-312 Punkt 1): eine Messung haelt den Bereich gerade frei (<see cref="MessungFrei"/>); dann
+    /// setzt die Spielflaeche den Bereich drinnen nicht neu (die Messung misst ihre festen Abstaende).
+    /// </summary>
+    public bool MessungLaeuft => _messungen > 0;
 
     private sealed class Zurueck(Action ende) : IDisposable
     {

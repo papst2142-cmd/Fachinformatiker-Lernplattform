@@ -38,6 +38,17 @@ if [ "${LERNPLATTFORM_MESSUNG_TEIL:-}" = "stadtbau" ]; then
   programm_name=Stadtbau
 fi
 befehl=(bash -c '"$@"; r=$?; echo $r > "$0"; exit $r' "$rcdatei" dotnet run --no-build -c Release --project "$projekt")
+# Welle A 0.97.0 (Weisung P12-312 Punkt 4, W3): LERNPLATTFORM_STARTTEST_PROGRAMM = das wie ein Paket gebaute Programm
+# (dotnet publish -r <rid> --self-contained, vorab uebersetzt, setzt ci.yml); der Start-Test misst dann genau den
+# ausgelieferten Bau. Ohne Angabe wie bisher dotnet run des Builds. Gesetzt, aber nicht vorhanden: sofort rot.
+if [ -n "${LERNPLATTFORM_STARTTEST_PROGRAMM:-}" ] && [ "$projekt" = "src/Lernplattform.Desktop" ]; then
+  if [ ! -f "$LERNPLATTFORM_STARTTEST_PROGRAMM" ]; then
+    echo "FEHLER: LERNPLATTFORM_STARTTEST_PROGRAMM nicht gefunden: $LERNPLATTFORM_STARTTEST_PROGRAMM"
+    exit 1
+  fi
+  echo "Start-Test mit dem wie ein Paket gebauten Programm: $LERNPLATTFORM_STARTTEST_PROGRAMM"
+  befehl=(bash -c '"$@"; r=$?; echo $r > "$0"; exit $r' "$rcdatei" "$LERNPLATTFORM_STARTTEST_PROGRAMM")
+fi
 if [ "${RUNNER_OS:-Linux}" = "Linux" ]; then
   # Phase 7 W1: Xvfb hat nur den Mesa-Softwaretreiber llvmpipe, den Avalonia fuer OpenGL sperrt;
   # der Start-Test erlaubt ihn, damit der Pflicht-Messpunkt "GL-Zusammenhang erzeugt" messbar ist

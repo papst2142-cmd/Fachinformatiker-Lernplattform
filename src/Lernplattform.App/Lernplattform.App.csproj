@@ -27,6 +27,9 @@
     <EmbeddedResource Include="..\..\LICENSE.txt;..\..\THIRD_PARTY_NOTICES.txt;..\..\THIRD_PARTY_LICENSES.txt" LogicalName="texte/%(Filename)%(Extension)" Visible="false" />
   </ItemGroup>
 
+  <!-- Welle A 0.97.0 (Weisung P12-312 Punkt 3, W2): Lern-Dateien je Fachrichtung beim Bauen aufgeteilt (Quelle bleibt lernen/) -->
+  <Import Project="..\..\werkzeuge\bau\LernenTeile.targets" />
+
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />

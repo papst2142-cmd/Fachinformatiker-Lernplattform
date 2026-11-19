@@ -217,9 +217,10 @@ public sealed class Sticks
 
     /// <summary>
     /// Rechter Stick in einem Bild von <paramref name="sekunden"/>: Weg wie mit der rechten Maustaste gezogen (dx nach rechts,
-    /// dy nach unten, in Punkten); (0, 0) ohne Stick oder in der Totzone. Waagrecht wie die Maus (rechts = wie Taste E), senkrecht
-    /// wie ein Stick am Spielgeraet: nach oben = Blick hoch (in der Ich-Sicht) bzw. flacher (draussen, wie Taste F), also wie
-    /// die Maus nach unten gezogen.
+    /// dy nach unten, in Punkten); (0, 0) ohne Stick oder in der Totzone. Waagrecht wie ein Stick am Spielgeraet: Stick nach
+    /// rechts = der Blick dreht nach rechts (Welle A 0.97.0, Sammelliste 393, Weisung P12-313; bis A 0.96.0 war das Vorzeichen
+    /// der Maus uebernommen: die Maus zieht die Welt, nach rechts gezogen dreht der Blick nach links). Senkrecht: nach oben =
+    /// Blick hoch (in der Ich-Sicht) bzw. flacher (draussen, wie Taste F), also wie die Maus nach unten gezogen (unveraendert).
     /// </summary>
     public (double Dx, double Dy) Drehen(double sekunden)
     {
@@ -229,6 +230,6 @@ public sealed class Sticks
         }
         var (vor, seit) = r.Eingabe;
         var weg = PunkteJeSekunde * Math.Max(0, sekunden);
-        return (seit * weg, vor * weg);
+        return (-seit * weg, vor * weg);
     }
 }

@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 0.97.0
+Drinnen bleibt deine Figur beim Heranzoomen jetzt immer ganz im Bild, der rechte Stick dreht richtig herum, und die Lerninhalte laden beim Start schneller.
+
+- In Häusern und Läden kannst du nur noch so nah heranzoomen, dass deine Figur vom Kopf bis zu den Füßen zwischen der Zeile oben und der Tafel unten zu sehen ist. Wie nah das ist, rechnet das Spiel für deinen Bildschirm aus (Handy hoch oder quer, Tablet, PC). Drehst du das Gerät, rückt die Ansicht von selbst so weit zurück, dass die Figur wieder ganz zu sehen ist.
+- Zoomst du weiter heran, wechselst du wie bisher in die Ich-Sicht und siehst mit den Augen deiner Figur. Draußen, in der Ich-Sicht und beim Betreten eines Hauses bleibt die Ansicht, wie sie war.
+- Am Handy und Tablet dreht der rechte Stick die Ansicht jetzt in die richtige Richtung: Schiebst du ihn nach rechts, schaust du nach rechts, nach links schaust du nach links. Oben und unten bleibt, wie es war.
+- Neu in den Optionen, Karte „Steuerung“: zwei Schalter „Umsehen links/rechts umkehren“ und „Umsehen oben/unten umkehren“. Sie gelten für das Umsehen mit dem rechten Stick, der Maus und den Tasten zum Drehen. Beide sind zuerst aus. Gehen bleibt immer gleich.
+- Beim Start lädt das Programm nur noch die Lerninhalte deiner Fachrichtung, die es braucht, und das Programm am PC ist schon vorab übersetzt. Dadurch sind die Lerninhalte schneller da, vor allem bei Anwendungsentwicklung (AE).
+- Die Lerninhalte selbst bleiben genau gleich. Dein Lernstand, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+- Das Programm am PC ist dadurch etwas größer.
+
 ## A 0.96.0
 Im Spiel steuerst du deine Figur jetzt auch am Handy und Tablet frei, mit zwei Sticks unter deinen Daumen.
 

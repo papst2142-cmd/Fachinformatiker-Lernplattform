@@ -217,6 +217,16 @@ public static class SpielProbeTexte
     /// </summary>
     public const string SticksSatz = "Am Handy und Tablet: Setzt du einen Daumen links unten auf und ziehst ihn ein Stück, erscheint dort ein Stick zum Gehen. Rechts unten erscheint so ein Stick zum Drehen der Ansicht (in der Ich-Sicht zum Umsehen). Beide gehen zugleich und verschwinden beim Loslassen. Ein kurzer Tipp ohne Ziehen bleibt Antippen.";
 
+    /// <summary>
+    /// Welle A 0.97.0 (Sammelliste 394, Weisung P12-314, Wortlaut E1): zwei Schalter in der Karte „Steuerung“ (PC und Handy
+    /// gleich), Standard aus, und der Satz darunter.
+    /// </summary>
+    public const string UmsehenLinksRechts = "Umsehen links/rechts umkehren";
+
+    public const string UmsehenObenUnten = "Umsehen oben/unten umkehren";
+
+    public const string UmsehenSatz = "Gilt für das Umsehen mit dem rechten Stick, der Maus und den Tasten zum Drehen. An: Diese Richtung ist umgekehrt. Gehen bleibt immer gleich.";
+
     public const string StickGehen = "Stick zum Gehen";
 
     public const string StickDrehen = "Stick zum Drehen";

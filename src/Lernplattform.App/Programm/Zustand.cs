@@ -325,8 +325,9 @@ public static class Zustand
             _ersteSicht = inhalte.Fuer(Sicht);
             InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
             // A 0.94.0 (Weisung P12-304 Punkt 3): Teilzeiten nur fuer die Ausgabe
+            // Welle A 0.97.0 (Weisung P12-312 Punkt 6, E1): zusaetzlich die Zeit im Hauptfaden (nur Ausgabe)
             InhalteLadenTeile = Core.Diagnose.LadeTeile.Text(Core.Diagnose.LadeTeile.DateiMs, Core.Diagnose.LadeTeile.JsonMs,
-                sichtUhr.Elapsed.TotalMilliseconds);
+                sichtUhr.Elapsed.TotalMilliseconds, Core.Diagnose.LadeTeile.DateiHauptMs, Core.Diagnose.LadeTeile.JsonHauptMs);
             Messpunktdienst.Notieren(Core.Diagnose.Messpunkte.Punkt.InhalteLaden, uhr.Elapsed.TotalMilliseconds);
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
                 $"Lerninhalte im Hintergrund geladen: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
@@ -342,7 +343,8 @@ public static class Zustand
 
     /// <summary>Welle A 0.91.0: die Dateien aus inhalte_csharp/lernen, die die App selbst mitbringt (Grundstand), einmal gelesen.</summary>
     internal static LernenOrdner Eingebaut => LazyInitializer.EnsureInitialized(ref _eingebaut,
-        () => new LernenOrdner(n => Core.Diagnose.LadeTeile.Datei(() => LernenDatei(n))));
+        () => new LernenOrdner(n => Core.Diagnose.LadeTeile.Datei(() => LernenDatei(n)),
+            n => Core.Diagnose.LadeTeile.Datei(() => Ressource("inhalte_csharp/lernen_teile/" + n))));
 
     private static LernenOrdner? _eingebaut;
 
@@ -481,9 +483,12 @@ public static class Zustand
     internal static byte[]? LernenDateiFuerMessung(string name) => LernenDatei(name);
 
     /// <summary>inhalte_csharp/lernen/&lt;name&gt;.json aus dem Programm selbst, null wenn es die Datei nicht gibt.</summary>
-    private static byte[]? LernenDatei(string name)
+    private static byte[]? LernenDatei(string name) => Ressource("inhalte_csharp/lernen/" + name + ".json");
+
+    /// <summary>Datei aus dem Programm selbst (eingebettet), null wenn es sie nicht gibt.</summary>
+    private static byte[]? Ressource(string name)
     {
-        using var strom = typeof(Zustand).Assembly.GetManifestResourceStream("inhalte_csharp/lernen/" + name + ".json");
+        using var strom = typeof(Zustand).Assembly.GetManifestResourceStream(name);
         if (strom is null)
         {
             return null;
