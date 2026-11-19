@@ -124,7 +124,7 @@ public static class Figur
     /// <summary>Welle A 0.81.0 (Sammelliste 351): Bewegung des Sitzbilds der Spielfigur je Platz (am PC die Schreibtisch-Haltung).</summary>
     public static string SitzBild(SitzArt art) => art switch
     {
-        SitzArt.Zurueck => SitzenZurueck,
+        SitzArt.Zurueck => ZurueckAlt.Value ? SitzenZurueck : SitzenZurueck2,
         SitzArt.Sitzen when !SitzenAlt.Value => SitzenFrei,
         _ => Sitzen,
     };
@@ -142,6 +142,18 @@ public static class Figur
     public const string SitzenZurueck = "figur-sitzen-zurueck";
 
     /// <summary>
+    /// Welle A 0.98.0 (Weisung P12-315, Sammelliste 395: „Unterarme ragen waagerecht nach vorn“): zurueckgelehnt sitzend, die
+    /// Haende ruhen auf den Oberschenkeln, die Unterarme folgen dem Koerper (neues Modell hinten angehaengt, gewaehlt ueber
+    /// <see cref="SitzBild"/>; das alte <see cref="SitzenZurueck"/> bleibt fuer die Gegenprobe).
+    /// </summary>
+    public const string SitzenZurueck2 = "figur-sitzen-zurueck2";
+
+    private static readonly AsyncLocal<bool> ZurueckAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): zurueckgelehnt sitzen wie bis A 0.97.0 (Unterarme waagrecht in der Luft).</summary>
+    public static void ZurueckAltFuerTests(bool an) => ZurueckAlt.Value = an;
+
+    /// <summary>
     /// Welle A 0.93.0 (Weisung P12-303: „Wahl nur ueber eine Tabelle wie Figur.SitzBild“): Bild der Figur je Haltung im Stehen
     /// (null = stehend oder gehend wie bisher). Springen geht vor (auch im Gehen).
     /// </summary>
@@ -153,7 +165,7 @@ public static class Figur
     };
 
     /// <summary>Welle A 0.93.0: die neuen Haltungen, deren Teile am Koerper (Rock, Mantel, Kragen, Tasche) dem Koerper folgen (<see cref="Folgen"/>).</summary>
-    public static readonly IReadOnlySet<string> NeueHaltungen = new HashSet<string>(StringComparer.Ordinal) { Springen, Ducken, Kriechen, SitzenZurueck };
+    public static readonly IReadOnlySet<string> NeueHaltungen = new HashSet<string>(StringComparer.Ordinal) { Springen, Ducken, Kriechen, SitzenZurueck, SitzenZurueck2 };
 
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GrafikModell, Dictionary<string, float>> SenkungVorrat = new();
 

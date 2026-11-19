@@ -35,6 +35,10 @@ public class MainActivity : AvaloniaMainActivity
 #endif
         base.OnCreate(savedInstanceState);
         SystemmessungEinrichten();
+#if UPDATEPROBE
+        // Welle A 0.98.0 (Weisung P12-315, Sammelliste 391): Touch-Probe im Emulator (Start mit "--ez touch_probe true")
+        TouchProbe.Starten(Intent);
+#endif
 #if PROBE
         // Weisung P8-16 a: Ton-Probe mit SoundFlow (nur Probe-APK)
         Lernplattform.Spiel.TonProbe.Geraet = _tonprobe;
@@ -172,7 +176,10 @@ public class MainActivity : AvaloniaMainActivity
             RegisterReceiver(_empfaenger, filter);
         }
 #if UPDATEPROBE
-        UpdateProbe.Starten(installer);
+        if (!TouchProbe.An)
+        {
+            UpdateProbe.Starten(installer);
+        }
 #endif
     }
 

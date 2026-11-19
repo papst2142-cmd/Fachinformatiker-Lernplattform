@@ -853,6 +853,16 @@
    "arme": 84,
    "bewegung": "sitzen_zurueck",
    "sitz": 0.9
+  },
+  {
+   "name": "figur-sitzen-zurueck2",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "sitzen_zurueck2",
+   "sitz": 0.9
   }
  ]
 }

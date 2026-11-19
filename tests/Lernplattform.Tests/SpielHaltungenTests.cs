@@ -82,8 +82,178 @@ public class SpielHaltungenTests
         Assert.Equal(Figur.Ducken, Figur.HaltungBild(Koerperhaltung.Ducken, false));
         Assert.Equal(Figur.Kriechen, Figur.HaltungBild(Koerperhaltung.Kriechen, false));
         Assert.Null(Figur.HaltungBild(Koerperhaltung.Stehen, false));
-        Assert.Equal(Figur.SitzenZurueck, Figur.SitzBild(SitzArt.Zurueck));
+        Assert.Equal(Figur.SitzenZurueck2, Figur.SitzBild(SitzArt.Zurueck));
         Assert.True(Figur.KopfSenkung(g, Figur.Kriechen) > 0.15f && Figur.KopfSenkung(g, Figur.Ducken) > 0.15f);
+    }
+
+    /// <summary>
+    /// Welle A 0.98.0 (Weisung P12-315, Sammelliste 395): je Hand der Abstand ihrer tiefsten Ecke zum Oberschenkel darunter, in
+    /// Figurhoehen. Die Dreiecke gehoeren in jedem Bild derselben Figur zum selben Teil (gleiche Reihenfolge, Test
+    /// <see cref="Modelle_NurAngehaengt_WahlUeberDieTabelle_KopfSinkt"/>): Haende sind in der stehenden Figur die Dreiecke ganz
+    /// aussen und unten (|x| ab 0,496, y bis 1,3667, genau 224), Beine die uebrigen ganz unter der Huefte (y unter 1,30). Unter
+    /// einer Ecke der Hand liegt ein Bein, wenn eine Bein-Ecke waagrecht hoechstens 0,12 entfernt ist.
+    /// </summary>
+    internal static (float Links, float Rechts) HandUeberOberschenkel(string modell)
+    {
+        var g = SpielGrafikTests.Bibliothek.Value;
+        var steht = g.Modell(Figur.Modell)!.Ecken;
+        var sitzt = g.Modell(Figur.BildName(modell, 0))!.Ecken;
+        Assert.Equal(steht.Length, sitzt.Length);
+        var hoehe = Enumerable.Range(0, steht.Length / 3).Max(i => steht[(i * 3) + 1]);
+        var hand = new List<int>();
+        var bein = new List<int>();
+        for (var t = 0; t < steht.Length / 9; t++)
+        {
+            var ecken = Enumerable.Range(0, 3).Select(e => new Vector3(steht[(t * 9) + (e * 3)], steht[(t * 9) + (e * 3) + 1], steht[(t * 9) + (e * 3) + 2])).ToList();
+            if (ecken.All(e => MathF.Abs(e.X) >= 0.496f && e.Y <= 1.3667f))
+            {
+                hand.Add(t);
+            }
+            else if (ecken.All(e => e.Y < 1.30f))
+            {
+                bein.Add(t);
+            }
+        }
+        Assert.Equal(224, hand.Count);
+        IEnumerable<Vector3> Ecken(IEnumerable<int> dreiecke) =>
+            dreiecke.SelectMany(t => Enumerable.Range(0, 3).Select(e => new Vector3(sitzt[(t * 9) + (e * 3)], sitzt[(t * 9) + (e * 3) + 1], sitzt[(t * 9) + (e * 3) + 2])));
+        float Seite(int vorzeichen)
+        {
+            var beine = Ecken(bein).Where(e => e.X * vorzeichen > 0).ToList();
+            var abstaende = Ecken(hand).Where(e => e.X * vorzeichen > 0).Select(e =>
+            {
+                var unter = beine.Where(b => MathF.Sqrt(((b.X - e.X) * (b.X - e.X)) + ((b.Z - e.Z) * (b.Z - e.Z))) < 0.12f && b.Y < e.Y + 0.3f).ToList();
+                return unter.Count == 0 ? (float?)null : e.Y - unter.Max(b => b.Y);
+            }).Where(a => a is not null).Select(a => a!.Value).ToList();
+            Assert.True(abstaende.Count > 100, $"{modell}: nur {abstaende.Count} Hand-Ecken ueber dem Bein");
+            return abstaende.Min() / hoehe;
+        }
+        return (Seite(1), Seite(-1));
+    }
+
+    [Fact]
+    public void Zurueckgelehnt_HaendeRuhenAufDenOberschenkeln_KeineUnterarmeInDerLuft_GegenprobeAlteHaltung()
+    {
+        // Abnahmesatz 395: „Wer zurueckgelehnt sitzt, hat keine Unterarme in der Luft; die Haende ruhen auf Oberschenkel oder Lehne.“
+        // Grenze: die tiefste Ecke jeder Hand hoechstens 0,05 Figurhoehe ueber dem Oberschenkel und nicht tiefer als 0,05 darin.
+        // Durchdringung mit Sofa, Sessel und Liegestuhl (0 Ecken, ±0,02) prueft SpielHaltungTests an jedem Platz mit diesem Bild.
+        var (links, rechts) = HandUeberOberschenkel(Figur.SitzBild(SitzArt.Zurueck));
+        Assert.InRange(links, -0.05f, 0.05f);
+        Assert.InRange(rechts, -0.05f, 0.05f);
+        // Gegenprobe: die alte Haltung (bis A 0.97.0) haelt die Haende gut 0,1 Figurhoehe ueber den Beinen
+        Figur.ZurueckAltFuerTests(true);
+        try
+        {
+            Assert.Equal(Figur.SitzenZurueck, Figur.SitzBild(SitzArt.Zurueck));
+            var (altL, altR) = HandUeberOberschenkel(Figur.SitzBild(SitzArt.Zurueck));
+            Assert.True(altL > 0.05f && altR > 0.05f, $"alt {altL:0.000} {altR:0.000}");
+        }
+        finally
+        {
+            Figur.ZurueckAltFuerTests(false);
+        }
+    }
+
+    /// <summary>
+    /// Welle A 0.98.0 (Weisung P12-315, Sammelliste 396). Abnahmesatz: „Kriechen auf eine Tuer zu und hindurch aendert die
+    /// Blickrichtung der Figur nicht von selbst.“ An jeder Tuer der Stadt 1 (Fassung 2) mit geradem Zugang: draussen mit dem Stick
+    /// (freies Gehen) bis vor die Tuer, drinnen gleich hinter der Tuer mit Blick zur Tuer; je Stelle „Kriechen“ wie am PC (ohne Blick)
+    /// und wie mit Stick in der Ich-Sicht (mit Blick). Die Richtung bleibt immer gleich. Gegenprobe: mit der alten Regel (Drehung in
+    /// eine freie Richtung) dreht sich die Figur an Tueren von selbst.
+    /// </summary>
+    [Fact]
+    public void Kriechen_VorUndHinterJederTuer_BehaeltDieRichtung_GegenprobeAlteDrehung()
+    {
+        var (pruefungen, gekrochen, gedreht) = KriechenAnTueren(alt: false);
+        Assert.True(pruefungen >= 20, "geprueft: " + pruefungen);
+        Assert.True(gekrochen >= pruefungen / 2, $"gekrochen {gekrochen} von {pruefungen}");
+        Assert.Equal(0, gedreht);
+        var altGedreht = 0;
+        StadtSpiel.KoerperDrehenAltFuerTests(true);
+        try
+        {
+            altGedreht = KriechenAnTueren(alt: true).Gedreht;
+        }
+        finally
+        {
+            StadtSpiel.KoerperDrehenAltFuerTests(false);
+        }
+        Assert.True(altGedreht > 0, "Gegenprobe: die alte Regel dreht an keiner Tuer");
+    }
+
+    private static (int Pruefungen, int Gekrochen, int Gedreht) KriechenAnTueren(bool alt)
+    {
+        var gedreht = 0;
+        var s = SpielMitfahrtTests.StadtNachFassung(2, grafik: SpielGrafikTests.Bibliothek.Value);
+        var sz = s.Szene;
+        int pruefungen = 0, gekrochen = 0;
+        void Pruefen(string wo, float? blick)
+        {
+            var vorher = blick ?? s.FigurRichtung;
+            var (x, z) = (s.FigurX, s.FigurZ);
+            var ok = s.Kriechen(blick);
+            pruefungen++;
+            if (ok)
+            {
+                gekrochen++;
+                Assert.Equal(Koerperhaltung.Kriechen, s.Koerper);
+                // gerutscht hoechstens 0,4 Figurhoehen, nur laengs, nie zur Seite
+                var h = s.ImInnenraum ? Innenraum.FigurHoehe : Figur.StadtHoehe;
+                var b = vorher * MathF.PI / 180f;
+                var weg = new Vector2(s.FigurX - x, s.FigurZ - z);
+                Assert.True(weg.Length() <= (0.4f * h) + 1e-4f, $"{wo}: {weg.Length():0.000}");
+                Assert.True(MathF.Abs((weg.X * MathF.Cos(b)) - (weg.Y * MathF.Sin(b))) < 1e-3f, $"{wo}: seitlich");
+                Assert.True(s.Kriechen(blick));
+                Assert.Equal(Koerperhaltung.Stehen, s.Koerper);
+            }
+            else
+            {
+                Assert.Equal(SpielProbeTexte.KeinPlatzKriechen, s.HaltungHinweis);
+            }
+            var d = MathF.Abs((((s.FigurRichtung - vorher) % 360f) + 540f) % 360f - 180f);
+            if (d > 0.01f)
+            {
+                gedreht++;
+                Assert.True(alt, $"{wo}: Richtung {vorher:0} -> {s.FigurRichtung:0}");
+            }
+        }
+        foreach (var ort in sz.Orte.Where(o => s.HatInnenraum(o.Id)))
+        {
+            foreach (var g in Enumerable.Range(0, 24).Select(i => i * 15.0))
+            {
+                var (rx, rz) = (Math.Sin(g * Math.PI / 180), Math.Cos(g * Math.PI / 180));
+                var (sx, sz0) = (ort.StehX - (rx * 0.8), ort.StehZ - (rz * 0.8));
+                if (!Enumerable.Range(0, 41).All(i => sz.Laufraster.KannStehen(sx + (rx * i * 0.02), sz0 + (rz * i * 0.02))
+                    && !sz.Laufraster.FeinGesperrt(sx + (rx * i * 0.02), sz0 + (rz * i * 0.02)))
+                    || sz.Orte.Any(o => o != ort && Math.Abs(o.StehX - ort.StehX) + Math.Abs(o.StehZ - ort.StehZ) < 1.2))
+                {
+                    continue;
+                }
+                // draussen: mit dem Stick bis vor die Tuer, dann wie am PC und wie in der Ich-Sicht
+                s.StelleFuerTests(sx, sz0);
+                for (var i = 0; i < 6; i++)
+                {
+                    s.FreiGehen(rx, rz, 1.0 / 30);
+                }
+                s.FreiGehen(0, 0, 1);
+                // den kurzen Rest bis vor die Tuer zu Ende gehen
+                SpielHaltungBedienungTests.Ankommen(s);
+                Pruefen($"{ort.Id} draussen PC", null);
+                Pruefen($"{ort.Id} draussen Stick", s.FigurRichtung);
+                // drinnen: gleich hinter der Tuer, Blick zur Tuer (naechste Wand vom Startplatz)
+                if (!s.Betreten())
+                {
+                    break;
+                }
+                var innen = s.Innen!;
+                var tuer = new[] { (innen.StartX, 270f), (innen.Breite - innen.StartX, 90f), (innen.StartZ, 180f), (innen.Tiefe - innen.StartZ, 0f) }.MinBy(t => t.Item1).Item2;
+                Pruefen($"{ort.Id} drinnen Stick", tuer);
+                Pruefen($"{ort.Id} drinnen PC", null);
+                s.Verlassen();
+                break;
+            }
+        }
+        return (pruefungen, gekrochen, gedreht);
     }
 
     /// <summary>Alle Raeume, je Raum ein Raster von Stellen, an denen die Figur steht (Laufraster), Blick in 8 Richtungen.</summary>
@@ -319,7 +489,11 @@ public class SpielHaltungenTests
                     && s.GeheZu(x, z))
                 {
                     SpielHaltungBedienungTests.Ankommen(s);
-                    if (StadtSpiel.KoerperRichtungen.All(r => !innen.KoerperFrei(new Vector2(s.FigurX, s.FigurZ), (s.FigurRichtung + r) * MathF.PI / 180f, Koerperhaltung.Kriechen)))
+                    // A 0.98.0 (Sammelliste 396): die Figur dreht sich nicht mehr von selbst, sie rutscht nur zurueck; eng = auch das hilft nicht
+                    var b = s.FigurRichtung * MathF.PI / 180f;
+                    var zurueck = new Vector2(-MathF.Sin(b), -MathF.Cos(b)) * (StadtSpiel.KoerperZurueckSchritt * Innenraum.FigurHoehe);
+                    if (StadtSpiel.KoerperRichtungen.All(r => !innen.KoerperFrei(new Vector2(s.FigurX, s.FigurZ), (s.FigurRichtung + r) * MathF.PI / 180f, Koerperhaltung.Kriechen))
+                        && Enumerable.Range(-StadtSpiel.KoerperZurueckSchritte, (2 * StadtSpiel.KoerperZurueckSchritte) + 1).All(i => !innen.KoerperFrei(new Vector2(s.FigurX, s.FigurZ) + (zurueck * i), b, Koerperhaltung.Kriechen)))
                     {
                         eng = (s.FigurX, s.FigurZ);
                     }
@@ -327,7 +501,9 @@ public class SpielHaltungenTests
             }
         }
         Assert.NotNull(eng);
+        var richtung = s.FigurRichtung;
         Assert.False(s.Kriechen());
+        Assert.Equal(richtung, s.FigurRichtung);
         Assert.Equal(SpielProbeTexte.KeinPlatzKriechen, s.HaltungHinweis);
         Assert.StartsWith(SpielProbeTexte.KeinPlatzKriechen, s.Zeile, StringComparison.Ordinal);
         Assert.False(s.Kriechen());

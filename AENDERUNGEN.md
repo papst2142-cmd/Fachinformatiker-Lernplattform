@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 0.98.0
+Deine Figur sitzt auf Sofa, Sessel und Liegestuhl jetzt entspannt, und beim Kriechen vor einer Tür dreht sie sich nicht mehr von selbst weg.
+
+- Lehnt sich deine Figur auf einem Sofa, einem Sessel oder einem Liegestuhl zurück, ruhen ihre Hände jetzt auf den Oberschenkeln. Vorher hielt sie die Unterarme waagerecht in die Luft.
+- Duckst du dich oder kriechst du dicht vor einer Tür oder Wand, behält deine Figur ihre Blickrichtung. Ist vorn zu wenig Platz, rückt sie ein kleines Stück zurück, nie seitlich. Geht es auch so nicht, sagt das Spiel wie bisher, dass hier kein Platz ist. Vorher drehte sich die Figur in so einem Fall von selbst um 90 Grad.
+- In den Optionen, Karte „Steuerung“, steht zwischen der Erklärung der Sticks und dem Schalter „Umsehen links/rechts umkehren“ jetzt ein Abstand wie zwischen den anderen Teilen der Karte.
+- Für Handy und Tablet prüfen wir die Sticks jetzt zusätzlich bei jedem großen Testlauf auf einem nachgebildeten Android-Gerät mit echten Fingerbewegungen.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.97.0
 Drinnen bleibt deine Figur beim Heranzoomen jetzt immer ganz im Bild, der rechte Stick dreht richtig herum, und die Lerninhalte laden beim Start schneller.
 

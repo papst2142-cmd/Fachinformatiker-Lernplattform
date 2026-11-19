@@ -33,7 +33,7 @@ public sealed class SpielMitfahrtTests
     internal static StadtSpiel Stadt1(Spielablauf? ablauf = null) => StadtNachFassung(1, ablauf);
 
     /// <summary>Patch A 0.75.2: Stadt 1 in Fassung 1 oder 2 (Fassung 2 = Nicos Stadt mit 9 Zebrastreifen und Gelaende).</summary>
-    internal static StadtSpiel StadtNachFassung(long fassung, Spielablauf? ablauf = null)
+    internal static StadtSpiel StadtNachFassung(long fassung, Spielablauf? ablauf = null, GrafikBibliothek? grafik = null)
     {
         var f = fassung switch
         {
@@ -42,7 +42,7 @@ public sealed class SpielMitfahrtTests
             _ => throw new ArgumentOutOfRangeException(nameof(fassung)),
         };
         var inhalt = f.MitKarte(SpielInhaltTests.Inhalt);
-        return new StadtSpiel(f.StadtFuer(inhalt), ablauf ?? SpielQuestTests.AllesErledigt(inhalt), null, SpielInnenraumTests.Innenraeume.Value);
+        return new StadtSpiel(f.StadtFuer(inhalt), ablauf ?? SpielQuestTests.AllesErledigt(inhalt), grafik, SpielInnenraumTests.Innenraeume.Value);
     }
 
     /// <summary>Ein Bild: Verkehr weiter (sitzt die Figur im Bus, haelt kein Auto fuer sie), Figur weiter, Fahrt weiter.</summary>

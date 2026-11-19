@@ -111,8 +111,12 @@ public partial class MainView : UserControl
 
     public string AktuelleSeite { get; private set; } = Seiten.Dashboard;
 
+    /// <summary>Welle A 0.98.0 (Weisung P12-315, Sammelliste 391): die zuletzt gebaute Ansicht (nur fuer die Touch-Probe im Emulator).</summary>
+    public static MainView? Zuletzt { get; private set; }
+
     public MainView()
     {
+        Zuletzt = this;
         InitializeComponent();
         // Datenordner-Probe (Phase 0, Spike D) beim Start wie frueher mit der Startseite,
         // damit die Android-Update-Probe nicht erst das Oeffnen der Optionen braucht
