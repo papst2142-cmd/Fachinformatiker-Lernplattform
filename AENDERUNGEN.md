@@ -9,7 +9,7 @@ Im Spiel kannst du deine Figur am PC jetzt frei mit der Tastatur steuern: W, A, 
 - Ein angetippter Weg endet, sobald du eine Gehtaste drückst. Sitzt oder liegt deine Figur, steht sie auf. Im Bus geht frei Gehen nicht, steig zuerst aus.
 - In der Ich-Sicht geht W in Blickrichtung, und du siehst deinen Körper auch beim Rückwärts- und Seitwärtsgehen.
 - Die vier Gehtasten kannst du in den Optionen unter „Tastenbelegung“ ändern. Hattest du W, A, S oder D schon selbst für etwas anderes belegt, bleibt deine Belegung, und die Gehaufgabe bekommt keine Taste, bis du ihr eine gibst.
-- Neu in den Optionen unter „Spiel“: der Schalter „Antippen zum Gehen“ (Standard an). Ist er aus, geht deine Figur nicht mehr los, wenn du in die 3D-Ansicht tippst oder klickst; die Liste der Orte, die Karte und die Knöpfe gehen weiter. Mit Screenreader lass ihn am besten an.
+- Neu in den Optionen unter „Spiel“: der Schalter „Antippen zum Gehen“ (Standard an). Ist er aus, geht deine Figur nicht mehr los, wenn du in die 3D-Ansicht tippst oder klickst; die Liste der Orte, die Karte und die Knöpfe gehen weiter. Mit Screenreader lass ihn am besten an. Solange er aus ist, sagt dir die Zeile unten im Spiel statt „Tippe …“, dass du mit den Gehtasten gehst.
 - Wechselst du zu einem anderen Fenster, gelten alle Gehtasten als losgelassen.
 - Am Handy kommt die Steuerung mit dem Daumen in einer späteren Version. Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
 

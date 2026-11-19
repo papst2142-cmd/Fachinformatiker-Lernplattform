@@ -1209,7 +1209,8 @@ public sealed partial class SpielSeite : Grid
         // Welle A 0.81.0: Sitzen und Liegen nur mit 3D (ohne 3D Knoepfe wie bis A 0.80.0)
         spiel.OhneDreiDSetzen(_ersatz.IsVisible);
         _kopfzeile.Text = spiel.Kopfzeile;
-        _zeile.Text = spiel.Zeile;
+        // Weisung P12-307 Fund 2: mit „Antippen zum Gehen“ aus verspricht die Tafel kein Antippen (ohne 3D wie immer)
+        _zeile.Text = SpielProbeTexte.Tafelzeile(spiel.Zeile, AntippenGilt);
         HinweisfeldZeigen(spiel);
         _betreten.IsVisible = spiel.KannBetreten;
         // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss
@@ -1264,6 +1265,9 @@ public sealed partial class SpielSeite : Grid
     public bool HinweisZu => _hinweisZu && Spiel is not { Einrichten: true };
 
     /// <summary>Kurze Meldung neben dem zugeklappten Pfeil (Start-Test, Fotos); leer = keine.</summary>
+    /// <summary>Welle A 0.95.0 (Weisung P12-307): die Tafelzeile, wie sie gerade steht (Start-Test).</summary>
+    public string TafelText => _zeile.Text ?? "";
+
     public string KurzeMeldung => _kurz.IsVisible ? _kurz.Text ?? "" : "";
 
     /// <summary>Pfeil gedrueckt: auf- oder zuklappen und den Zustand merken (nur ueber Einstellungen.Aendern).</summary>
@@ -1277,6 +1281,9 @@ public sealed partial class SpielSeite : Grid
             Beschriften();
         }
     }
+
+    /// <summary>Weisung P12-307: Antippen gilt, wenn der Schalter an ist oder es keine 3D-Ansicht gibt (Ortsliste).</summary>
+    private bool AntippenGilt => Core.Spiel.Gehbedienung.AntippenAn || _ersatz.IsVisible;
 
     private void HinweisfeldZeigen(StadtSpiel spiel)
     {
@@ -1295,7 +1302,7 @@ public sealed partial class SpielSeite : Grid
         // Sammelliste 371 (Nico 17.11.2026: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
         // zugeklappt ist „Spiel verlassen“ mit den anderen Knoepfen weg, aufgeklappt wie seit A 0.81.0
         VerlassenKnopf.IsVisible = !zu || VerlassenZuAltFuerTests;
-        _kurz.Text = meldung;
+        _kurz.Text = SpielProbeTexte.Tafelzeile(meldung, AntippenGilt);
         _kurz.IsVisible = zu && meldung.Length > 0 && Stopwatch.GetTimestamp() < _kurzBis;
         QuestZeileSetzen();
         _klappSymbol.RenderTransform = new RotateTransform(zu ? 180 : 0);

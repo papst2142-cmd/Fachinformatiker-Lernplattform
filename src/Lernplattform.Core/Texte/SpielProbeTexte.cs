@@ -208,6 +208,23 @@ public static class SpielProbeTexte
 
     /// <summary>Erklaerung unter dem Schalter (mit dem Hinweis fuer den Screenreader, E1 Chat).</summary>
     public const string AntippenGehenSatz = "An: Ein Tipp oder Klick in die 3D-Ansicht lässt die Figur dorthin gehen. Aus: Die Figur geht nur mit den Gehtasten (Standard W, A, S, D, unter „Tastenbelegung“ änderbar). Die Liste der Orte, die Karte und die Knöpfe gehen immer. Mit Screenreader am besten anlassen.";
+
+    /// <summary>
+    /// Weisung P12-307 Fund 2 (Wortlaut Chat, E2): steht in der Tafel statt eines Satzes „Tippe …, um hinzugehen.“, solange
+    /// „Antippen zum Gehen“ aus ist (dann geht Antippen in der 3D-Ansicht nicht; ohne 3D bleibt die Tafel wie sie ist).
+    /// </summary>
+    public const string GehtastenStattTippen = "Gehe mit den Gehtasten (Standard W, A, S, D). Antippen zum Gehen ist in den Optionen ausgeschaltet.";
+
+    /// <summary>Ein Satz „Tippe …, um hinzugehen.“ (ohne Punkt dazwischen) in einer Tafelzeile.</summary>
+    public static readonly System.Text.RegularExpressions.Regex TippeHinzugehen =
+        new(@"Tippe [^.]*?, um hinzugehen\.", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// Tafelzeile wie gezeigt: ist Antippen an (oder gibt es keine 3D-Ansicht), wortgleich; sonst wird jeder Satz
+    /// „Tippe …, um hinzugehen.“ durch <see cref="GehtastenStattTippen"/> ersetzt, der Rest der Zeile bleibt.
+    /// </summary>
+    public static string Tafelzeile(string? zeile, bool antippenGilt) =>
+        zeile is null ? "" : antippenGilt ? zeile : TippeHinzugehen.Replace(zeile, GehtastenStattTippen);
     /// <summary>
     /// Weisung P12-74: Hinweis in einem Geschaeft auf einer Etage ohne Verkaufsperson (Obergeschoss); im Erdgeschoss bleibt
     /// „Tippe auf eine Ware oder sprich mit dem Verkauf.“

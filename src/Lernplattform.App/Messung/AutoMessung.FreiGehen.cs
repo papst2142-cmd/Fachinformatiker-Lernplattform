@@ -62,6 +62,8 @@ public static partial class AutoMessung
         return funde;
     }
 
+    private static string TafelKurz(string text) => text.Length <= 80 ? text : text[..80] + " …";
+
     private static async Task FreiBedienungAsync(MainView ansicht, SpielSeite seite, Action<string, bool, string> pruefe)
     {
         var inv = CultureInfo.InvariantCulture;
@@ -342,6 +344,25 @@ public static partial class AutoMessung
         spiel.SofortAnkommen();
         pruefe("Schalter Antippen zum Gehen", punkt is not null && punkt2 is not null && !ausGeht && listeGeht && anGeht,
             $"aus: Tippen geht {ausGeht}, Ortsliste geht {listeGeht}; an (Gegenprobe): Tippen geht {anGeht}");
+
+        // 8b Weisung P12-307 Fund 2: mit Antippen aus verspricht die Tafel kein Antippen; an = wortgleich wie bisher (Gegenprobe)
+        var tafelSpiel = Frisch(seite);
+        var tafelRoh = tafelSpiel.Zeile;
+        Gehbedienung.AntippenAn = false;
+        // die Tafel schreibt der Takt der Seite (alle 0,5 s) neu: wie ein Mensch einen Takt abwarten
+        await fl.NaechstesBildAsync();
+        await Task.Delay(700);
+        await ansicht.BildFertigAsync();
+        var tafelAus = seite.TafelText;
+        Gehbedienung.AntippenAn = true;
+        await fl.NaechstesBildAsync();
+        await Task.Delay(700);
+        await ansicht.BildFertigAsync();
+        var tafelAn = seite.TafelText;
+        pruefe("Tafel bei Antippen aus", SpielProbeTexte.TippeHinzugehen.IsMatch(tafelRoh)
+            && tafelAus.Contains(SpielProbeTexte.GehtastenStattTippen, StringComparison.Ordinal)
+            && !SpielProbeTexte.TippeHinzugehen.IsMatch(tafelAus) && tafelAn == tafelRoh,
+            $"aus: „{TafelKurz(tafelAus)}“; an (Gegenprobe): {(tafelAn == tafelRoh ? "wie bisher" : "anders: " + TafelKurz(tafelAn))}");
 
         // 9 der Schalter in den Optionen: Name fuer den Screenreader, Standard an, Hinweis darunter
         await ansicht.ZeigeAsync(Seiten.Optionen);
