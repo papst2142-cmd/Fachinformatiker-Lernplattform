@@ -9,6 +9,14 @@
     <ApplicationIcon>..\Lernplattform.App\Assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <!-- Welle A 0.97.0 (Weisung P12-312 Punkt 4, W3, Nico 2c): die ausgelieferten Pakete (dotnet publish -r <rid>: win-x64,
+       linux-x64, osx-arm64, osx-x64) werden vorab uebersetzt (ReadyToRun); der Start beginnt dann ohne Uebersetzen des
+       Programms. Der Start-Test misst denselben Bau (ci.yml, werkzeuge/starttest/lauf.sh). Android nutzt eine andere
+       Laufzeit (kein ReadyToRun). -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Velopack" />

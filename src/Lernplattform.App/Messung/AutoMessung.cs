@@ -141,6 +141,11 @@ public static partial class AutoMessung
         {
             Zustand.Aendere(w => Core.Spiel.Probe.Grafikstufen.Wert(w, Core.Spiel.Probe.Grafikstufe.Mittel));
         }
+        // Welle A 0.97.0 (Weisung P12-312 Punkt 5): zweiter Programmstart des Start-Tests, misst nur „Inhalte laden“ mit AE
+        if (Teil == TeilInhalteAe)
+        {
+            return await InhalteAeTeilAsync();
+        }
         // Phase 7 W1: eigener kurzer Lauf ohne OpenGL (CI-Schritt mit --software)
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilErsatz)
         {

@@ -1,24 +1,22 @@
-Im Spiel steuerst du deine Figur jetzt auch am Handy und Tablet frei, mit zwei Sticks unter deinen Daumen.
+Drinnen bleibt deine Figur beim Heranzoomen jetzt immer ganz im Bild, und die Lerninhalte laden beim Start schneller.
 
-- Setz einen Daumen links unten auf das Bild und zieh ihn ein Stück: Dort erscheint ein runder Stick, und deine Figur geht in die Richtung, in die du ziehst. Wenig ziehen geht langsam, ab etwa drei Vierteln geht sie mit vollem Tempo. Lässt du los, verschwindet der Stick, und deine Figur bleibt stehen.
-- Rechts unten erscheint genauso ein zweiter Stick. Mit ihm drehst du die Ansicht, in der Ich-Sicht schaust du dich damit um (nach oben ziehen: Blick nach oben). Beide Sticks gehen zugleich, mit beiden Daumen.
-- Ein kurzer Tipp ohne Ziehen bleibt Antippen: Deine Figur geht wie bisher dorthin, wenn „Antippen zum Gehen“ an ist. Zwei Finger zoomen, drehen und neigen wie bisher.
-- Die Sticks liegen nie über der Leiste unten oder der Zeile oben. Ist das Spiel-Handy offen, gibt es keine Sticks.
-- Für das Gehen mit dem Stick gelten dieselben Regeln wie mit den Gehtasten am PC: Gehwege, Zebrastreifen, Gleiten an Wänden, Spielzeit beim Stehenbleiben, Ansagen für den Screenreader.
-- In den Optionen heißt die Karte „Tastenbelegung“ jetzt „Steuerung“. Oben darin steht jetzt der Schalter „Antippen zum Gehen“ (vorher unter „Spiel“), darunter eine kurze Erklärung der Sticks und die Tastenliste. Deine Wahl beim Schalter bleibt, wie sie war.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+- In Häusern und Läden kannst du nur noch so nah heranzoomen, dass deine Figur vom Kopf bis zu den Füßen zwischen der Zeile oben und der Tafel unten zu sehen ist. Wie nah das ist, rechnet das Spiel für deinen Bildschirm aus (Handy hoch oder quer, Tablet, PC). Drehst du das Gerät, rückt die Ansicht von selbst so weit zurück, dass die Figur wieder ganz zu sehen ist.
+- Zoomst du weiter heran, wechselst du wie bisher in die Ich-Sicht und siehst mit den Augen deiner Figur. Draußen, in der Ich-Sicht und beim Betreten eines Hauses bleibt die Ansicht, wie sie war.
+- Beim Start lädt das Programm nur noch die Lerninhalte deiner Fachrichtung, die es braucht, und das Programm am PC ist schon vorab übersetzt. Dadurch sind die Lerninhalte schneller da, vor allem bei Anwendungsentwicklung (AE).
+- Die Lerninhalte selbst bleiben genau gleich. Dein Lernstand, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+- Das Programm am PC ist dadurch etwas größer.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.96.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.97.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.96.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.96.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.96.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.96.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.97.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.97.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.97.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.97.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
