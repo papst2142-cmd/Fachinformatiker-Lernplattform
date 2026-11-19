@@ -128,6 +128,8 @@ public sealed partial class SpielSeite : Grid
         _flaecheRahmen = new Border { Child = Flaeche, ClipToBounds = true };
         Children.Add(_flaecheRahmen);
         Children.Add(_schilder);
+        // Welle A 0.96.0 (Weisung P12-309): die Sticks liegen ueber Stadt und Namensschildern, unter Kopfzeile und Leiste
+        SticksAnlegen();
         // Weisung P8-55 (W12, Nico 1a): Ladeanzeige ueber der Stadt, solange vorgeladen wird (erst ab 0,3 s sichtbar)
         _ladeRing = new Views.VerlaufRing(0, "accent", "accent2", 5) { Width = 34, Height = 34 };
         _ladeanzeige = Schrift.Karte(new StackPanel

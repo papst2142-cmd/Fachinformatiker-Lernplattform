@@ -503,18 +503,25 @@ public sealed class FachrichtungsPaketTests : IDisposable
         var offenVorher = offen.ToJsonString();
         var sicht = Lerninhalte.MitLernen(bisher, ohne, ["si", "ae"]).Fuer("ae");
         using var stopp = new CancellationTokenSource();
+        // Weisung P12-310 (Lauf 1093): das Laden startet erst, wenn das Quiz nachweislich laeuft (Signal nach der ersten vollen
+        // Runde); sonst konnten die Lade-Aufgaben auf einem 2-Kern-Rechner fertig sein, bevor das Quiz anfing (n = 0, Test prueft
+        // nichts). Das Quiz laeuft bis nach Task.WhenAll; haengt es, macht die Zeitgrenze rot statt zu warten.
+        var quizLaeuft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var quiz = Task.Run(() =>
         {
             var n = 0;
-            while (!stopp.IsCancellationRequested)
+            do
             {
                 foreach (var f in sicht.Quizfragen.Take(200))
                 {
                     n += f.Frage?.Length ?? 0;
                 }
+                quizLaeuft.TrySetResult();
             }
+            while (!stopp.IsCancellationRequested);
             return n;
         }, TestContext.Current.CancellationToken);
+        await quizLaeuft.Task.WaitAsync(TimeSpan.FromSeconds(60), TestContext.Current.CancellationToken);
         var laeufe = Enumerable.Range(0, 12).Select(i => Task.Run(() =>
         {
             var ordner = i % 2 == 0 ? mit : ohne;

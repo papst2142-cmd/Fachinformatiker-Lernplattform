@@ -368,6 +368,8 @@ public sealed partial class OptionenSeite
     private Control Tasten()
     {
         var panel = new StackPanel { Spacing = 6 };
+        // Welle A 0.96.0 (Weisung P12-308): oben der Schalter „Antippen zum Gehen“ und der Satz zu den Sticks, dann die Tasten
+        AntippenSchalterAnhaengen(panel);
         foreach (var (aufgabe, text, _) in Tastenbelegung.Aufgaben)
         {
             var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };

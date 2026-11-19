@@ -148,7 +148,8 @@ public static partial class AutoMessung
         var fl = seite.Flaeche;
         await fl.NaechstesBildAsync();
         var k = fl.AktuelleKamera!;
-        var mitte = new Point(fl.Bounds.Width / 2, fl.Bounds.Height / 2);
+        // A 0.96.0: Mitte des freien Bereichs (zwischen Kopfzeile und Tafel), nie im Stick-Bereich unten (Gesten wie bisher)
+        var mitte = MitteFrei(fl);
         pruefe("Start", k.Abstand == SpielKamera.Abstand && k.Neigung == SpielKamera.NeigungStart && fl.KameraFest
             && k.Bereich == (SpielKamera.AbstandMin, SpielKamera.AbstandMax) && k.NeigungBereich == (SpielKamera.NeigungMin, SpielKamera.NeigungMax), Kam(k));
         var nieRaus = new List<string>();

@@ -62,10 +62,15 @@ public sealed partial class OptionenSeite
         }
         panel.Children.Add(reihe);
         panel.Children.Add(new LernText(Wohnung.MieteHilfe(Lernplattform.Spiel.SpielStart.Balancing()), "Winzig", FontWeight.Normal, "Pinsel.muted"));
-        // Welle A 0.95.0 (Weisung P12-306, Nico 1c): Schalter „Antippen zum Gehen“ (Standard an)
-        var gehen = Abschnitt(SpielProbeTexte.GehenTitel);
-        gehen.Margin = new Avalonia.Thickness(0, 8, 0, 0);
-        panel.Children.Add(gehen);
+        return panel;     // die Zeile oben liest erst das Aufklappen (alle Karten starten zugeklappt)
+    }
+
+    /// <summary>
+    /// Welle A 0.95.0 (Weisung P12-306, Nico 1c): Schalter „Antippen zum Gehen“ (Standard an); seit A 0.96.0 (Weisung P12-308,
+    /// Nico „Der Schalter gehört aber zur Steuerung“) nur noch oben in der Karte „Steuerung“, gleicher Wert und Standard.
+    /// </summary>
+    private void AntippenSchalterAnhaengen(Panel panel)
+    {
         var schalter = new ToggleSwitch
         {
             Content = Schrift.Text(SpielProbeTexte.AntippenGehen),
@@ -96,7 +101,7 @@ public sealed partial class OptionenSeite
         _antippenSchalter = schalter;
         panel.Children.Add(schalter);
         panel.Children.Add(new LernText(SpielProbeTexte.AntippenGehenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
-        return panel;     // die Zeile oben liest erst das Aufklappen (alle Karten starten zugeklappt)
+        panel.Children.Add(new LernText(SpielProbeTexte.SticksSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
     }
 
     /// <summary>Zeile zum Platz und Schwierigkeitsgrad neu lesen (Hintergrund); nur das Ergebnis des letzten Anstosses wird gezeigt.</summary>

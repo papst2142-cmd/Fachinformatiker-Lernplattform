@@ -1,26 +1,24 @@
-Im Spiel kannst du deine Figur am PC jetzt frei mit der Tastatur steuern: W, A, S und D.
+Im Spiel steuerst du deine Figur jetzt auch am Handy und Tablet frei, mit zwei Sticks unter deinen Daumen.
 
-- Halte W, um vom Bildschirm weg zu gehen, S für zurück, A und D für links und rechts. Zwei Tasten zugleich gehen schräg, aber nie schneller. Die Kamera bleibt dabei, wie sie ist; drehen kannst du sie wie bisher mit der Maus oder mit Q und E.
-- Deine Figur geht draußen wie beim Antippen nur auf Gehwegen und Plätzen und über die Straße nur an Zebrastreifen, Ampeln und Übergängen. Läuft sie gegen eine Wand, gleitet sie an ihr entlang; geht es gar nicht weiter, sagt ein Screenreader „Hier geht es nicht weiter.“
-- Die Spielzeit läuft wie beim Antippen: Bleibt deine Figur stehen, rückt die Uhr um die gegangenen Schritte weiter. Bleibt sie vor einer Tür stehen, kannst du gleich hineingehen; ein Screenreader sagt „Vor dir:“ und den Namen des Orts. In Häusern kostet Gehen keine Zeit.
-- Ein angetippter Weg endet, sobald du eine Gehtaste drückst. Sitzt oder liegt deine Figur, steht sie auf. Im Bus geht frei Gehen nicht, steig zuerst aus.
-- In der Ich-Sicht geht W in Blickrichtung, und du siehst deinen Körper auch beim Rückwärts- und Seitwärtsgehen.
-- Die vier Gehtasten kannst du in den Optionen unter „Tastenbelegung“ ändern. Hattest du W, A, S oder D schon selbst für etwas anderes belegt, bleibt deine Belegung, und die Gehaufgabe bekommt keine Taste, bis du ihr eine gibst.
-- Neu in den Optionen unter „Spiel“: der Schalter „Antippen zum Gehen“ (Standard an). Ist er aus, geht deine Figur nicht mehr los, wenn du in die 3D-Ansicht tippst oder klickst; die Liste der Orte, die Karte und die Knöpfe gehen weiter. Mit Screenreader lass ihn am besten an. Solange er aus ist, sagt dir die Zeile unten im Spiel statt „Tippe …“, dass du mit den Gehtasten gehst.
-- Wechselst du zu einem anderen Fenster, gelten alle Gehtasten als losgelassen.
-- Am Handy kommt die Steuerung mit dem Daumen in einer späteren Version. Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+- Setz einen Daumen links unten auf das Bild und zieh ihn ein Stück: Dort erscheint ein runder Stick, und deine Figur geht in die Richtung, in die du ziehst. Wenig ziehen geht langsam, ab etwa drei Vierteln geht sie mit vollem Tempo. Lässt du los, verschwindet der Stick, und deine Figur bleibt stehen.
+- Rechts unten erscheint genauso ein zweiter Stick. Mit ihm drehst du die Ansicht, in der Ich-Sicht schaust du dich damit um (nach oben ziehen: Blick nach oben). Beide Sticks gehen zugleich, mit beiden Daumen.
+- Ein kurzer Tipp ohne Ziehen bleibt Antippen: Deine Figur geht wie bisher dorthin, wenn „Antippen zum Gehen“ an ist. Zwei Finger zoomen, drehen und neigen wie bisher.
+- Die Sticks liegen nie über der Leiste unten oder der Zeile oben. Ist das Spiel-Handy offen, gibt es keine Sticks.
+- Für das Gehen mit dem Stick gelten dieselben Regeln wie mit den Gehtasten am PC: Gehwege, Zebrastreifen, Gleiten an Wänden, Spielzeit beim Stehenbleiben, Ansagen für den Screenreader.
+- In den Optionen heißt die Karte „Tastenbelegung“ jetzt „Steuerung“. Oben darin steht jetzt der Schalter „Antippen zum Gehen“ (vorher unter „Spiel“), darunter eine kurze Erklärung der Sticks und die Tastenliste. Deine Wahl beim Schalter bleibt, wie sie war.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 0.95.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 0.96.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-0.95.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.95.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.95.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.95.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-0.96.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-0.96.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-0.96.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-0.96.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

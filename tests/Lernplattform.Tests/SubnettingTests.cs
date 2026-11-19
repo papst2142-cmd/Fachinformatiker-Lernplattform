@@ -279,7 +279,16 @@ public class SubnettingTests
         }
         a.Pruefen(100);
     }
+}
 
+/// <summary>
+/// A 0.96.0: der Zeittest „2^64 Subnetze sofort“ (Grenze 400 ms) laeuft in der Sammlung „Haenger“ ohne parallele Tests (Regel:
+/// Tests mit harter Zeitgrenze in eine eigene Sammlung). Voller Lauf 1096 Versuch 2: auf ubuntu-latest 1345 ms, waehrend die
+/// uebrigen Tests parallel liefen; Grenze und Pruefung unveraendert.
+/// </summary>
+[Collection("Haenger")]
+public class SubnettingZeitTests
+{
     /// <summary>
     /// 2^64 Subnetze: Aufteilen, letzte Seite und Rechenweg sofort (nie alle Subnetze aufzaehlen).
     /// Die Arbeit laeuft nebenher, damit ein Aufzaehlen den Test rot macht statt ihn anzuhalten.

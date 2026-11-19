@@ -55,6 +55,12 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
   (`AusTasten`) oder Stick (`AusStick`, Totzone 0,15, volles Tempo ab 0,75), Gehrichtung am Boden aus der Kameradrehung
   (`Richtung`, schräg nie schneller) und ein Schritt in Teilschritten von 0,02 gegen eine beliebige Sperre mit Gleiten und
   begrenztem seitlichem Einrasten (`Schritt`, `Zustand`). Das Spiel gibt die Sperre, das Werkzeug nutzt den Baustein nicht.
+- **Sticks** (`Sticks.cs`, seit A 0.96.0, Sammelliste 385 Welle 2): die zwei Sticks am Handy und Tablet ohne Spielwissen. Ein
+  Daumen im unteren Drittel des freien Bereichs (zwischen Kopfzeile und Leiste, `Bereich`, `ZoneOben`: mindestens 2 Radien, höchstens die untere Hälfte; die Bildmitte bleibt für die Gesten von heute) ist erst ein Kandidat und wird ab
+  `AnfangAb` (8 Punkte) Weg zum Stick, links gehen, rechts drehen; ein kurzer Tipp bleibt Antippen. Mitte nach `Lage` immer ganz
+  im freien Bereich und in der eigenen Hälfte (Radius 60, bei wenig Platz kleiner, nie unter 30), Ausschlag ab der Stelle des
+  Aufsetzens (`Steuerung.AusStick`), rechter Stick wie die rechte Maustaste (`Drehen`, 300 Punkte je Sekunde, nach oben = Blick
+  hoch). Die Spielfläche führt die Finger (`StadtFlaeche.Sticks.cs`), das Werkzeug nutzt den Baustein nicht.
 - **Wasser** (`Wasser.cs`): Fluss, Teiche, Stege, Eis im Winter, als Flächen im Stadtnetz.
 - **Gelände** (`Gelaende.cs`, seit A 0.66.0): `stadtdaten.gelaende` mit Hügeln (`huegel`: Mitte, Radius 1–3, Höhe 0,2–1,5,
   rund oder länglich bis 6, Drehung in 15 Grad) und gemalten Höhen (`gemalt`: `[i, j, Hundertstel]` im Raster 0,5). Höhe =
