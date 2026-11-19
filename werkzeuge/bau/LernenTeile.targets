@@ -1,0 +1,45 @@
+<Project>
+  <!--
+    Welle A 0.97.0 (Weisung P12-312 Punkt 3, W2): Lern-Dateien je Fachrichtung beim Bauen aufteilen. Quelle bleibt allein
+    inhalte_csharp/lernen/*.json; die Teile entstehen bei jedem Bau neu (obj/.../lernen_teile, nie eingecheckt) und kommen als
+    inhalte_csharp/lernen_teile/<datei> ins Programm. Der Teiler steht in LernenTeile.cs (dieselbe Datei pruefen die Tests).
+  -->
+  <UsingTask TaskName="Lernplattform.Bau.LernenTeileBauen" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Quelle ParameterType="System.String" Required="true" />
+      <Ziel ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Class" Language="cs" Source="$(MSBuildThisFileDirectory)LernenTeile.cs" />
+    </Task>
+  </UsingTask>
+
+  <PropertyGroup>
+    <LernenTeileQuelle>$(MSBuildThisFileDirectory)../../inhalte_csharp/lernen/</LernenTeileQuelle>
+  </PropertyGroup>
+
+  <!-- IntermediateOutputPath steht erst nach dem Projekt fest: Ziel darum in einem eigenen Ziel vorab setzen -->
+  <Target Name="LernenTeileZielSetzen">
+    <PropertyGroup>
+      <LernenTeileZiel>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)lernen_teile/</LernenTeileZiel>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="LernenTeileErzeugen" BeforeTargets="BeforeBuild" DependsOnTargets="LernenTeileZielSetzen"
+          Inputs="@(LernenTeileQuellen);$(MSBuildThisFileDirectory)LernenTeile.cs"
+          Outputs="$(LernenTeileZiel)teile.json">
+    <Lernplattform.Bau.LernenTeileBauen Quelle="$(LernenTeileQuelle)" Ziel="$(LernenTeileZiel)" />
+  </Target>
+
+  <Target Name="LernenTeileEinbetten" AfterTargets="LernenTeileErzeugen" BeforeTargets="BeforeBuild" DependsOnTargets="LernenTeileZielSetzen">
+    <ItemGroup>
+      <LernenTeileDatei Include="$(LernenTeileZiel)*.json" />
+      <EmbeddedResource Include="@(LernenTeileDatei)" LogicalName="inhalte_csharp/lernen_teile/%(Filename)%(Extension)" Visible="false" />
+      <FileWrites Include="@(LernenTeileDatei)" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <LernenTeileQuellen Include="$(MSBuildThisFileDirectory)../../inhalte_csharp/lernen/*.json" />
+  </ItemGroup>
+</Project>

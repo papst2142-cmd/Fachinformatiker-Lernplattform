@@ -18,7 +18,12 @@
     <!-- A 0.53.2 (Sammelliste 256): stoerungsfeste Update-Quelle am PC und die alte Quelle fuer die Gegenprobe -->
     <Compile Include="..\..\src\Lernplattform.Desktop\LinienQuelle.cs" Link="LinienQuelle.cs" />
     <Compile Include="..\..\src\Lernplattform.Desktop\StoerungsfesteQuelle.cs" Link="StoerungsfesteQuelle.cs" />
+    <!-- Welle A 0.97.0 (Weisung P12-312 Punkt 3, W2): derselbe Teiler wie beim Bauen der App (ohne die MSBuild-Aufgabe) -->
+    <Compile Include="..\..\werkzeuge\bau\LernenTeile.cs" Link="LernenTeile.cs" />
   </ItemGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);LERNEN_TEILE_OHNE_MSBUILD</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <!-- Vergleichswerte und Lerninhalte neben die Testdateien kopieren -->
     <None Include="..\Vergleich\**\*" LinkBase="Vergleich" CopyToOutputDirectory="PreserveNewest" />

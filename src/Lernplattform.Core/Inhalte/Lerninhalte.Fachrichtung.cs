@@ -99,6 +99,13 @@ public sealed partial class Lerninhalte
             && geladen.IsSupersetOf(vorherGeladen) ? vorherGeladen : null;
         var umwandeln = wiederverwenden is null ? geladen : geladen!.Where(f => !wiederverwenden.Contains(f)).ToHashSet(StringComparer.Ordinal);
         var neue = new Dictionary<InhaltArt, IReadOnlyList<Lerninhalt>>();
+        // Welle A 0.97.0 (Weisung P12-312 Punkt 2, W1): Ausschluss ueber eine Nachschlagetabelle statt den Vergleich jedes
+        // Eintrags mit der ganzen Liste; gleiches Ergebnis (Gegenprobe gegen Ausgeschlossen in den Tests)
+        var tabelle = AusschlussTabelle.Aus(ausschluss);
+        if (!gemischt && umwandeln is not null && ordner.MitTeilen)
+        {
+            ordner.TeileVorab(umwandeln);
+        }
         foreach (var (art, name) in LernenListen)
         {
             var vorherAnzahl = art switch
@@ -112,8 +119,11 @@ public sealed partial class Lerninhalte
                 ? LadeListeFuer(ordner.Eintraege(name), name, umwandeln ?? AlleWerte)
                 : umwandeln is null
                 ? lernen(name) is { } dateiInhalt ? LadeListe(_ => dateiInhalt, name).Select((d, i) => (i, d)).ToList() : []
+                // Welle A 0.97.0 (Weisung P12-312 Punkt 3, W2): nur die beim Bauen aufgeteilten Eintraege der geladenen
+                // Fachrichtungen zerlegen (gleiche Eintraege, gleiche Stellen; ohne Teile wie bisher die ganze Datei)
+                : ordner.MitTeilen ? LadeListeFuer(ordner.TeilEintraege(name, umwandeln), name, umwandeln)
                 : ordner.Dokument(name) is { } dokument ? LadeListeFuer(dokument, name, umwandeln) : [];
-            var umgewandelt = daten.Where(d => !Ausgeschlossen(ausschluss, name, d.Index, d.Daten)).Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
+            var umgewandelt = daten.Where(d => !tabelle.Enthaelt(name, d.Index, d.Daten)).Select(d => new Lerninhalt(art, vorherAnzahl + d.Index + 1, d.Daten)
             {
                 Zugehoerigkeit = d.Daten[Fachrichtungen.Feld] is JsonValue v && v.GetValueKind() == JsonValueKind.String
                     && Fachrichtungen.Werte.Contains(v.GetValue<string>()) ? v.GetValue<string>() : Ungueltig,
@@ -204,6 +214,23 @@ public sealed partial class Lerninhalte
     public static bool Ausgeschlossen(IReadOnlyList<(string Datei, int Stelle, string Frage)> ausschluss, string datei, int stelle, JsonObject daten) =>
         ausschluss.Any(a => a.Datei == datei && a.Stelle == stelle
             && daten["q"] is JsonValue v && v.GetValueKind() == JsonValueKind.String && v.GetValue<string>() == a.Frage);
+
+    /// <summary>
+    /// Welle A 0.97.0 (Weisung P12-312 Punkt 2, W1): Ausschluesse als Menge (Datei, Stelle, Text); <see cref="Enthaelt"/> gibt
+    /// genau dasselbe wie <see cref="Ausgeschlossen"/> (gleiche Datei, gleiche Stelle und Feld "q" genau dieser Text).
+    /// </summary>
+    internal sealed class AusschlussTabelle
+    {
+        private readonly HashSet<(string Datei, int Stelle, string Frage)> _menge;
+
+        private AusschlussTabelle(HashSet<(string, int, string)> menge) => _menge = menge;
+
+        public static AusschlussTabelle Aus(IEnumerable<(string Datei, int Stelle, string Frage)> ausschluss) => new([.. ausschluss]);
+
+        public bool Enthaelt(string datei, int stelle, JsonObject daten) =>
+            _menge.Count > 0 && daten["q"] is JsonValue v && v.GetValueKind() == JsonValueKind.String
+            && _menge.Contains((datei, stelle, v.GetValue<string>()));
+    }
 
     private static List<NeueFachfrage> NeueFachfragenLaden(LernenOrdner ordner, HashSet<string>? geladen)
     {
@@ -555,14 +582,127 @@ public sealed class LernenOrdner
 {
     private readonly ConcurrentDictionary<string, Lazy<JsonDocument?>> _dokumente;
 
-    public LernenOrdner(Func<string, byte[]?> lesen) : this(lesen, new(StringComparer.Ordinal))
+    public LernenOrdner(Func<string, byte[]?> lesen) : this(lesen, null)
     {
     }
 
-    private LernenOrdner(Func<string, byte[]?> lesen, ConcurrentDictionary<string, Lazy<JsonDocument?>> dokumente)
+    /// <summary>
+    /// Welle A 0.97.0 (Weisung P12-312 Punkt 3, W2): mit den beim Bauen aufgeteilten Lern-Dateien (<paramref name="teile"/>
+    /// liefert eine Datei aus inhalte_csharp/lernen_teile, z. B. "teile.json" oder "quizfragen.si.json"; null = gibt es nicht).
+    /// </summary>
+    public LernenOrdner(Func<string, byte[]?> lesen, Func<string, byte[]?>? teile)
+        : this(lesen, new(StringComparer.Ordinal), teile, new Lazy<TeileIndex?>(() => TeileIndex.Laden(teile)))
+    {
+    }
+
+    private LernenOrdner(Func<string, byte[]?> lesen, ConcurrentDictionary<string, Lazy<JsonDocument?>> dokumente,
+        Func<string, byte[]?>? teile, Lazy<TeileIndex?> index)
     {
         Lesen = lesen;
         _dokumente = dokumente;
+        _teileLesen = teile;
+        _index = index;
+    }
+
+    private readonly Func<string, byte[]?>? _teileLesen;
+    private readonly Lazy<TeileIndex?> _index;
+
+    /// <summary>Welle A 0.97.0: gibt es die aufgeteilten Lern-Dateien (Index teile.json)?</summary>
+    public bool MitTeilen => _index.Value is not null;
+
+    /// <summary>
+    /// Welle A 0.97.0: Eintraege der Liste <paramref name="name"/> der <paramref name="fachrichtungen"/> mit ihrer Stelle in der
+    /// ganzen Datei, nach Stelle sortiert (gleich den Eintraegen dieser Fachrichtungen in <see cref="Dokument"/>).
+    /// </summary>
+    public IReadOnlyList<(int Index, JsonElement Eintrag)> TeilEintraege(string name, IEnumerable<string> fachrichtungen)
+    {
+        var liste = new List<(int Index, JsonElement Eintrag)>();
+        foreach (var fr in fachrichtungen)
+        {
+            if (Teil(name, fr) is not { } dokument)
+            {
+                continue;
+            }
+            if (dokument.RootElement.ValueKind != JsonValueKind.Array)
+            {
+                throw new InvalidDataException("lernen_teile/" + name + "." + fr + ".json enthaelt keine Liste");
+            }
+            foreach (var paar in dokument.RootElement.EnumerateArray())
+            {
+                liste.Add((paar[0].GetInt32(), paar[1]));
+            }
+        }
+        liste.Sort((a, b) => a.Index.CompareTo(b.Index));
+        return liste;
+    }
+
+    /// <summary>Welle A 0.97.0: die Teile der <paramref name="fachrichtungen"/> schon nebeneinander zerlegen (je Datei eine Aufgabe).</summary>
+    public void TeileVorab(IEnumerable<string> fachrichtungen)
+    {
+        foreach (var fr in fachrichtungen)
+        {
+            foreach (var name in Lerninhalte.LernenListen.Select(l => l.Name))
+            {
+                if (_index.Value?.Hat(name, fr) == true)
+                {
+                    _ = Task.Run(() =>
+                    {
+                        try
+                        {
+                            Teil(name, fr);
+                        }
+                        catch (Exception)
+                        {
+                            // Lazy merkt sich den Fehler, TeilEintraege meldet ihn
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    private JsonDocument? Teil(string name, string fr) =>
+        _index.Value?.Hat(name, fr) != true || _teileLesen is null ? null
+        : _dokumente.GetOrAdd("teil:" + name + "." + fr, _ => new Lazy<JsonDocument?>(() => _teileLesen(name + "." + fr + ".json") is { } datei
+            ? Diagnose.LadeTeile.Json(() => JsonDocument.Parse(datei))
+            : throw new InvalidDataException("lernen_teile/" + name + "." + fr + ".json fehlt"))).Value;
+
+    /// <summary>Welle A 0.97.0: Index der aufgeteilten Lern-Dateien (teile.json aus werkzeuge/bau/LernenTeile.cs).</summary>
+    public sealed class TeileIndex
+    {
+        private readonly Dictionary<string, (int Laenge, HashSet<string> Teile, HashSet<string> Platzhalter)> _listen;
+
+        private TeileIndex(Dictionary<string, (int, HashSet<string>, HashSet<string>)> listen) => _listen = listen;
+
+        public static TeileIndex? Laden(Func<string, byte[]?>? teile)
+        {
+            if (teile?.Invoke("teile.json") is not { } datei)
+            {
+                return null;
+            }
+            using var dokument = JsonDocument.Parse(datei);
+            if (dokument.RootElement.GetProperty("format").GetInt32() != 1)
+            {
+                throw new InvalidDataException("lernen_teile/teile.json: unbekanntes Format");
+            }
+            var listen = new Dictionary<string, (int, HashSet<string>, HashSet<string>)>(StringComparer.Ordinal);
+            foreach (var liste in dokument.RootElement.GetProperty("listen").EnumerateObject())
+            {
+                var teileJe = liste.Value.TryGetProperty("teile", out var t) ? t.EnumerateObject().Select(p => p.Name).ToHashSet(StringComparer.Ordinal) : [];
+                var platzhalter = liste.Value.GetProperty("platzhalter").EnumerateArray().Select(p => p.GetString()!).ToHashSet(StringComparer.Ordinal);
+                listen[liste.Name] = (liste.Value.GetProperty("laenge").GetInt32(), teileJe, platzhalter);
+            }
+            return new TeileIndex(listen);
+        }
+
+        /// <summary>Steht die Datei im Index?</summary>
+        public bool Kennt(string name) => _listen.ContainsKey(name);
+
+        /// <summary>Gibt es einen Teil dieser Fachrichtung?</summary>
+        public bool Hat(string name, string fr) => _listen.TryGetValue(name, out var l) && l.Teile.Contains(fr);
+
+        /// <summary>Hat die Datei Platzhalter dieser Fachrichtung?</summary>
+        public bool Platzhalter(string name, string fr) => _listen.TryGetValue(name, out var l) && l.Platzhalter.Contains(fr);
     }
 
     /// <summary>Ein Ordner ohne Dateien (Pruefung eines Fachrichtungs-Pakets ohne Inhalte der App).</summary>
@@ -577,6 +717,24 @@ public sealed class LernenOrdner
     /// <summary>Alle Listen schon im Hintergrund lesen (je Datei eine Aufgabe); Fehler zeigen sich erst bei <see cref="Dokument"/>.</summary>
     public void Vorab()
     {
+        if (MitTeilen)
+        {
+            // Welle A 0.97.0 (W2): nur die Teile von SI (immer geladen) und die kleine Datei des Fachgespraechs; die Teile der
+            // gewaehlten Fachrichtung zerlegt MitLernen nebeneinander (TeileVorab)
+            TeileVorab([Fachrichtungen.Systemintegration]);
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    Dokument(Lerninhalte.FachgespraechDatei);
+                }
+                catch (Exception)
+                {
+                    // Lazy merkt sich den Fehler, MitLernen meldet ihn
+                }
+            });
+            return;
+        }
         foreach (var name in Lerninhalte.LernenListen.Select(l => l.Name).Append(Lerninhalte.FachgespraechDatei))
         {
             _ = Task.Run(() =>
@@ -602,7 +760,7 @@ public sealed class LernenOrdner
         new Dictionary<string, Core.Pakete.FachrichtungsInhalt>(StringComparer.Ordinal);
 
     /// <summary>Derselbe Ordner (dieselben schon gelesenen Dateien der App) mit diesen Paketen.</summary>
-    public LernenOrdner MitPaketen(IEnumerable<Core.Pakete.FachrichtungsInhalt> pakete) => new(Lesen, _dokumente)
+    public LernenOrdner MitPaketen(IEnumerable<Core.Pakete.FachrichtungsInhalt> pakete) => new(Lesen, _dokumente, _teileLesen, _index)
     {
         Pakete = pakete.ToDictionary(p => p.Fachrichtung, StringComparer.Ordinal),
     };
@@ -613,8 +771,9 @@ public sealed class LernenOrdner
     public bool HatPlatzhalter(string fachrichtung) => _platzhalter.GetOrAdd(fachrichtung, fr =>
         Core.Pakete.FachrichtungsPaket.Listen.Any(name => Platzhalter(name, fr)));
 
-    private bool Platzhalter(string name, string fr) =>
-        Eingebaut(name).Any(e => Core.Pakete.FachrichtungsPaket.IstPlatzhalter(e) && Core.Pakete.FachrichtungsPaket.FachrichtungVon(e) == fr);
+    private bool Platzhalter(string name, string fr) => _index.Value is { } index && index.Kennt(name)
+        ? index.Platzhalter(name, fr)
+        : Eingebaut(name).Any(e => Core.Pakete.FachrichtungsPaket.IstPlatzhalter(e) && Core.Pakete.FachrichtungsPaket.FachrichtungVon(e) == fr);
 
     /// <summary>Gibt es Pakete oder Platzhalter? Dann laufen alle Listen ueber <see cref="Eintraege"/>.</summary>
     public bool Gemischt => Pakete.Count > 0 || Core.Pakete.FachrichtungsPaket.Fachrichtungen.Any(HatPlatzhalter);
