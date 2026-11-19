@@ -21,14 +21,16 @@ public sealed partial class StadtFlaeche
 
     /// <summary>
     /// Taste gedrueckt oder losgelassen: ist sie nach der Tastenbelegung eine Gehtaste, merkt die Flaeche sie (true). Ohne Spiel,
-    /// im Werkzeug (freie Kamera) oder ohne Gehen (<see cref="OhneGehen"/>) nimmt sie keine.
+    /// im Werkzeug (freie Kamera) oder ohne Gehen (<see cref="OhneGehen"/>) nimmt sie keine; ohne 3D (<see cref="GlBereit"/>
+    /// falsch, z. B. Mac ohne OpenGL) nimmt sie keine neue an (Loslassen geht immer).
     /// </summary>
     public bool GehTaste(Key taste, bool gedrueckt) => GehAufgabe(Tastenbelegung.Aktuell.AufgabeFuer(taste.ToString()), gedrueckt);
 
     /// <summary>Wie oben mit der Aufgabe statt der Taste (Start-Test).</summary>
     public bool GehAufgabe(string? aufgabe, bool gedrueckt)
     {
-        if (aufgabe is null || !Tastenbelegung.Gehen.Contains(aufgabe) || !FesteKamera || OhneGehen || _spiel is null)
+        if (aufgabe is null || !Tastenbelegung.Gehen.Contains(aufgabe) || !FesteKamera || OhneGehen || _spiel is null
+            || (gedrueckt && !GlBereit))
         {
             return false;
         }
