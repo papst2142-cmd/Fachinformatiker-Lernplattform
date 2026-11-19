@@ -99,9 +99,10 @@ public sealed class SpielSticksTests
         Assert.Equal(Sticks.Seite.Links, sticks.Links!.Art);
         Assert.Equal(Sticks.Seite.Rechts, sticks.Rechts!.Art);
         Assert.Equal(1.0, sticks.Links.Eingabe.Vor, 9);
-        // rechter Stick nach rechts: wie die rechte Maustaste nach rechts gezogen, 300 Punkte je Sekunde
+        // rechter Stick nach rechts: 300 Punkte je Sekunde, seit A 0.97.0 (Weisung P12-313) wie die Maus nach LINKS gezogen,
+        // damit der Blick nach rechts dreht (Richtung prueft SpielUmsehenTests)
         var (dx, dy) = sticks.Drehen(0.5);
-        Assert.Equal(150.0, dx, 9);
+        Assert.Equal(-150.0, dx, 9);
         Assert.Equal(0.0, dy, 9);
         sticks.Bewegen(2, 300, 450 - Sticks.Radius);
         Assert.True(sticks.Drehen(1).Dy > 0);                                // nach oben = wie die Maus nach unten
@@ -119,7 +120,7 @@ public sealed class SpielSticksTests
         var k = SpielKamera.Draussen(5, 5, 20, 20);
         var vorher = k.Drehung;
         Kamerabedienung.RechteMaus(k, true, new Kameragriff.Schritt(Kameragriff.Art.Drehen, Grad: (float)dx * Kameragriff.GradJePunkt));
-        Assert.Equal(60f, ((k.Drehung - vorher) + 360f) % 360f, 3);           // 0,5 s voll = 60 Grad
+        Assert.Equal(300f, ((k.Drehung - vorher) + 360f) % 360f, 3);          // 0,5 s voll = 60 Grad (nach rechts, also -60)
     }
 
     [Fact]

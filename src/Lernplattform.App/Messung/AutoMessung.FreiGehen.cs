@@ -386,6 +386,28 @@ public static partial class AutoMessung
             pruefe("Schalter in den Optionen", schalter is not null && schalter.IsChecked == true
                 && Avalonia.Automation.AutomationProperties.GetName(schalter) == SpielProbeTexte.AntippenGehen && Gehbedienung.Lesen(Zustand.Werte),
                 $"Schalter {schalter?.IsChecked}, Name \"{(schalter is null ? "" : Avalonia.Automation.AutomationProperties.GetName(schalter))}\"");
+            // Welle A 0.97.0 (Weisung P12-314): zwei Schalter „Umsehen umkehren“, Standard aus, Namen fuer den Screenreader;
+            // einschalten wirkt und bleibt gespeichert, ausschalten entfernt den Eintrag wieder (Gegenprobe)
+            var (lr, ob) = optionen.UmsehenSchalter;
+            var umsehenStandard = lr is not null && ob is not null && lr.IsChecked == false && ob.IsChecked == false
+                && Avalonia.Automation.AutomationProperties.GetName(lr) == SpielProbeTexte.UmsehenLinksRechts
+                && Avalonia.Automation.AutomationProperties.GetName(ob) == SpielProbeTexte.UmsehenObenUnten
+                && !Umsehbedienung.LinksRechts && !Umsehbedienung.ObenUnten;
+            var umsehenAn = false;
+            var umsehenAus = false;
+            if (lr is not null && ob is not null)
+            {
+                lr.IsChecked = true;
+                await ansicht.BildFertigAsync();
+                umsehenAn = Umsehbedienung.LinksRechts && !Umsehbedienung.ObenUnten
+                    && Umsehbedienung.Lesen(Zustand.Werte, Umsehbedienung.SchluesselLinksRechts)
+                    && !Umsehbedienung.Lesen(Zustand.Werte, Umsehbedienung.SchluesselObenUnten);
+                lr.IsChecked = false;
+                await ansicht.BildFertigAsync();
+                umsehenAus = !Umsehbedienung.LinksRechts && !Zustand.Werte.ContainsKey(Umsehbedienung.SchluesselLinksRechts);
+            }
+            pruefe("Schalter Umsehen umkehren", umsehenStandard && umsehenAn && umsehenAus,
+                $"Standard aus {umsehenStandard}, links/rechts an wirkt und gespeichert {umsehenAn}, wieder aus {umsehenAus}");
             klappe.IsExpanded = false;
         }
         else

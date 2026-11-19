@@ -36,6 +36,7 @@ public partial class App : Application
         // Phase 8 W8: Tastenbelegung, Toene und Vollbild aus den Einstellungen
         Core.Spiel.Probe.Tastenbelegung.Aktuell = Core.Spiel.Probe.Tastenbelegung.Lesen(Programm.Zustand.Werte);
         Core.Spiel.Gehbedienung.AntippenAn = Core.Spiel.Gehbedienung.Lesen(Programm.Zustand.Werte);
+        Core.Spiel.Umsehbedienung.Uebernehmen(Programm.Zustand.Werte);
         Spiel.TonDienst.Regler(Core.Spiel.Ton.TonEinstellungen.Lesen(Programm.Zustand.Werte));
         Spiel.TonDienst.Lieder = new Core.Spiel.Ton.EigeneLieder(Core.Daten.Ablage.Datenordner());
         Spiel.Vollbild.DauerhaftSetzen(Core.Spiel.Ton.VollbildWahl.Lesen(Programm.Zustand.Werte));
