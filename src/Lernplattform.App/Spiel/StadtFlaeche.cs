@@ -272,6 +272,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 _spiel.InnenGeaendert -= InnenNeu;
             }
             _spiel = value;
+            _gehTasten.Clear();
             _kameras.Clear();
             _ich.Neu();
             NachladenAusMerken();
@@ -289,6 +290,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                     };
                 value.Geaendert += SpielGeaendert;
                 value.SzeneGeaendert += SzeneNeu;
+                // Welle A 0.95.0: beim freien Gehen sperrt eine noch nicht geladene Kachel
+                value.GeladenAn = GeladenAn;
                 value.InnenGeaendert += InnenNeu;
                 _szeneNeu = true;
                 _spielNeu = true;
@@ -975,7 +978,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _satzUhr = Tageslicht.FesteUhr;
         var nachLaden = _uhr.Elapsed.TotalSeconds;
         // Welle A 0.73.0: mit dem Bus unterwegs (selbst gefahren) folgt die Kamera dem Bus wie der gehenden Figur
-        var geht = (_spiel?.Fortschreiten(dt) ?? false) | (_spiel?.MitfahrtAktiv ?? false);
+        // Welle A 0.95.0 (Sammelliste 385): gehaltene Gehtasten zuerst (sie beenden einen angetippten Weg)
+        var freiGeht = FreiTakt(dt);
+        var geht = (_spiel?.Fortschreiten(dt) ?? false) | (_spiel?.MitfahrtAktiv ?? false) | freiGeht;
         // Welle A 0.93.0 (Weisung P12-303): der Sprung laeuft je Bild weiter (nur Darstellung)
         var springt = _spiel?.HaltungTakt((float)dt) ?? false;
         VorBild?.Invoke();
@@ -2638,6 +2643,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     {
         if (OhneGehen || AktuelleKamera is not { } kamera || _spiel is not { } spiel)
         {
+            return;
+        }
+        if (FesteKamera && !Gehbedienung.AntippenAn)
+        {
+            // Welle A 0.95.0 (Weisung P12-306, Nico 1c): „Antippen zum Gehen“ ist aus, ein Tipp in die 3D-Ansicht laesst die Figur
+            // nicht gehen (Ortsliste, Karte und Knoepfe bleiben)
             return;
         }
         _folgenAb = 0;

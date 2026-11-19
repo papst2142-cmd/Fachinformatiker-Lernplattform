@@ -236,6 +236,8 @@ public static partial class AutoMessung
             funde += await HaltungAsync(ansicht);              // Welle A 0.81.0: Hinsetzen und Hinlegen (Sammelliste 349)
             Zeitplan("HaltungenAsync");
             funde += await HaltungenAsync(ansicht);            // Welle A 0.93.0: Springen, Ducken, Kriechen, Zuruecklehnen (Sammelliste 352)
+            Zeitplan("FreiGehenAsync");
+            funde += await FreiGehenAsync(ansicht);            // Welle A 0.95.0: frei gehen mit W/A/S/D (Sammelliste 385, PC-Teil)
             Zeitplan("TafelZurueckAsync");
             funde += await TafelZurueckAsync(ansicht);         // Welle A 0.81.0: Zurueck in der Spiel-Tafel fest oben (Nico 5a)
             Zeitplan("Einrichten382Async");

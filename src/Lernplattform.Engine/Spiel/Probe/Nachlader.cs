@@ -184,6 +184,12 @@ public sealed class Nachlader
         return frei;
     }
 
+    /// <summary>
+    /// Welle A 0.95.0 (Sammelliste 385): ist die Kachel unter (<paramref name="x"/>, <paramref name="z"/>) auf der Grafikkarte?
+    /// Beim freien Gehen zaehlt eine noch nicht geladene Kachel als gesperrt (die Figur faellt nie ins Leere).
+    /// </summary>
+    public bool IstGeladen(float x, float z) => _geladen.ContainsKey(Stadtteile.Von(x, z, Szene.Breite, Szene.Tiefe));
+
     /// <summary>Die naechste noetige Kachel, die vorbereitet und noch nicht hochgeladen ist (null = keine).</summary>
     public Paket? Naechste()
     {

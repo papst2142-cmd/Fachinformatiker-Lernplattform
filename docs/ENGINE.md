@@ -51,6 +51,10 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
 - **Busfahrt** (`Busfahrt.cs`, seit A 0.67.0): beste Fahrt zwischen zwei Haltestellen (zu Fuß zur Haltestelle über das Laufraster,
   Warten auf den Takt der Linie höchstens 15 Minuten, Fahrt 0,5 Minuten je Feld); das Spiel schreibt sie als EINE Zeile
   `stadt_gegangen` mit `mit: bus` (`Stadt.Bus`, keine neue Ereignisart), Zeitraffer höchstens 8 s.
+- **Steuerung** (`Steuerung.cs`, seit A 0.95.0, Sammelliste 385): freies Gehen ohne Spielwissen. Eingabe aus Tasten
+  (`AusTasten`) oder Stick (`AusStick`, Totzone 0,15, volles Tempo ab 0,75), Gehrichtung am Boden aus der Kameradrehung
+  (`Richtung`, schräg nie schneller) und ein Schritt in Teilschritten von 0,02 gegen eine beliebige Sperre mit Gleiten und
+  begrenztem seitlichem Einrasten (`Schritt`, `Zustand`). Das Spiel gibt die Sperre, das Werkzeug nutzt den Baustein nicht.
 - **Wasser** (`Wasser.cs`): Fluss, Teiche, Stege, Eis im Winter, als Flächen im Stadtnetz.
 - **Gelände** (`Gelaende.cs`, seit A 0.66.0): `stadtdaten.gelaende` mit Hügeln (`huegel`: Mitte, Radius 1–3, Höhe 0,2–1,5,
   rund oder länglich bis 6, Drehung in 15 Grad) und gemalten Höhen (`gemalt`: `[i, j, Hundertstel]` im Raster 0,5). Höhe =

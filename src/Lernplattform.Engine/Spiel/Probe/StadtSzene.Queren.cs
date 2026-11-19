@@ -49,6 +49,24 @@ public sealed partial class StadtSzene
     private IReadOnlyList<Zebra>? _querungen;
 
     /// <summary>
+    /// Welle A 0.95.0 (Sammelliste 385): liegt (<paramref name="x"/>, <paramref name="z"/>) auf einem Uebergang oder direkt davor
+    /// (laengs 0,15, quer bis 0,3 ueber den Fahrbahnrand, wie die Erkennung einer Querung)? Nur dort rastet die Figur beim freien
+    /// Gehen seitlich ein (hoechstens 0,1).
+    /// </summary>
+    public bool AnUebergang(double x, double z)
+    {
+        var p = new Vector2((float)x, (float)z);
+        foreach (var q in Querungen)
+        {
+            if (q.Drauf(p, 0.15f, 0.3f))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Feine Sperre: true, wo die Mitte der Figur auf der Fahrbahn einer Strasse mit Gehweg (ausser auf einem Uebergang) oder
     /// auf einem Gleis (ausser auf einer Strasse oder ihrem Gehweg: Bahnuebergang; und auf einem gezeichneten Fussweg, der das
     /// Gleis quert: <see cref="FusswegeUeberGleis"/>; Laufraster und feine Sperre bleiben darin gleich) laege. Ein Feld von <see cref="FeinRaster"/>

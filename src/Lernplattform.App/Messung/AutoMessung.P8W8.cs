@@ -185,9 +185,16 @@ public static partial class AutoMessung
             Pruefe("Rechte Maustaste dreht", keinTippen && Math.Abs(gedreht - (50 * Kameragriff.GradJePunkt)) < 0.01f && !spiel.Geht,
                 string.Create(inv, $"um {gedreht:F1} Grad bei 50 Punkten"));
 
-            // 5. eine neu belegte Taste wirkt im Spiel (W statt - fuer weiter weg), die alte nicht mehr; danach wieder wie vorher
-            var neu = new Tastenbelegung();
-            neu.Setzen(Tastenbelegung.Weiter, "W", out _);
+            // 5. eine neu belegte Taste wirkt im Spiel (W statt - fuer weiter weg), die alte nicht mehr; danach wieder wie vorher.
+            // Welle A 0.95.0 (Weisung P12-306): W ist jetzt die Standardtaste „Gehen: vorwärts“; eine eigene W-Belegung aus einer
+            // frueheren Fassung (gespeichert in einstellungen.json) behaelt Vorrang, darum wird sie hier wie gespeichert gelesen
+            var neu = Tastenbelegung.Lesen(new System.Text.Json.Nodes.JsonObject
+            {
+                [Tastenbelegung.Schluessel] = new System.Text.Json.Nodes.JsonObject { [Tastenbelegung.Weiter] = "W" },
+            });
+            Pruefe("Eigene W-Belegung behält Vorrang", neu.AufgabeFuer("W") == Tastenbelegung.Weiter
+                && neu.Tasten(Tastenbelegung.GehVor).SequenceEqual([Tastenbelegung.OhneTaste]),
+                $"W = {neu.AufgabeFuer("W")}, Gehen vorwärts = [{string.Join(",", neu.Tasten(Tastenbelegung.GehVor))}]");
             Tastenbelegung.Aktuell = neu;
             var abstand = kamera.Abstand;
             flaeche.Taste(Key.W);
@@ -322,11 +329,12 @@ public static partial class AutoMessung
         try
         {
             // Taste neu belegen
+            // Welle A 0.95.0: W ist jetzt „Gehen: vorwärts“, darum die freie Taste Y
             optionen.TasteWarten(Tastenbelegung.Naeher);
-            var ok = optionen.TasteNehmen("W");
+            var ok = optionen.TasteNehmen("Y");
             var knopf = optionen.TastenKnoepfe[Tastenbelegung.Naeher].GetVisualDescendants().OfType<TextBlock>().FirstOrDefault()?.Text;
-            Pruefe("Taste neu belegen", ok == Tastenbelegung.Ergebnis.Ok && Tastenbelegung.Aktuell.AufgabeFuer("W") == Tastenbelegung.Naeher
-                && Zustand.Werte[Tastenbelegung.Schluessel]?.ToJsonString() == "{\"naeher\":\"W\"}" && knopf == "W",
+            Pruefe("Taste neu belegen", ok == Tastenbelegung.Ergebnis.Ok && Tastenbelegung.Aktuell.AufgabeFuer("Y") == Tastenbelegung.Naeher
+                && Zustand.Werte[Tastenbelegung.Schluessel]?.ToJsonString() == "{\"naeher\":\"Y\"}" && knopf == "Y",
                 $"{ok}, Knopf {knopf}, gespeichert {Zustand.Werte[Tastenbelegung.Schluessel]?.ToJsonString()}");
             // doppelt: Meldung, nichts geaendert
             optionen.TasteWarten(Tastenbelegung.Hinein);

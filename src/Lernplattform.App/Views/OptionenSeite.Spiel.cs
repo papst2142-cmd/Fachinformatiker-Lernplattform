@@ -2,6 +2,8 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
+using Lernplattform.Core.Texte;
 using Lernplattform.Design;
 using Lernplattform.Programm;
 
@@ -17,6 +19,10 @@ namespace Lernplattform.Views;
 public sealed partial class OptionenSeite
 {
     private readonly List<RadioButton> _miete = [];
+    private ToggleSwitch? _antippenSchalter;
+
+    /// <summary>Start-Test: Schalter „Antippen zum Gehen“ (null ohne aufgeklappte Karte).</summary>
+    public ToggleSwitch? AntippenSchalter => _antippenSchalter;
     private TextBlock? _spielZeile;
     private int _spielZeileLauf;
 
@@ -56,6 +62,40 @@ public sealed partial class OptionenSeite
         }
         panel.Children.Add(reihe);
         panel.Children.Add(new LernText(Wohnung.MieteHilfe(Lernplattform.Spiel.SpielStart.Balancing()), "Winzig", FontWeight.Normal, "Pinsel.muted"));
+        // Welle A 0.95.0 (Weisung P12-306, Nico 1c): Schalter „Antippen zum Gehen“ (Standard an)
+        var gehen = Abschnitt(SpielProbeTexte.GehenTitel);
+        gehen.Margin = new Avalonia.Thickness(0, 8, 0, 0);
+        panel.Children.Add(gehen);
+        var schalter = new ToggleSwitch
+        {
+            Content = Schrift.Text(SpielProbeTexte.AntippenGehen),
+            IsChecked = Gehbedienung.Lesen(Zustand.Werte),
+            OnContent = null,
+            OffContent = null,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(schalter, SpielProbeTexte.AntippenGehen);
+        schalter.IsCheckedChanged += (_, _) =>
+        {
+            if (_setzen)
+            {
+                return;
+            }
+            var an = schalter.IsChecked == true;
+            if (Ergebnis(Zustand.Aendere(werte => Gehbedienung.Wert(werte, an))))
+            {
+                Gehbedienung.AntippenAn = an;
+            }
+            else
+            {
+                // nicht gespeichert: der Schalter zeigt wieder, was gilt (nie still verloren)
+                _setzen = true;
+                schalter.IsChecked = Gehbedienung.Lesen(Zustand.Werte);
+                _setzen = false;
+            }
+        };
+        _antippenSchalter = schalter;
+        panel.Children.Add(schalter);
+        panel.Children.Add(new LernText(SpielProbeTexte.AntippenGehenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
         return panel;     // die Zeile oben liest erst das Aufklappen (alle Karten starten zugeklappt)
     }
 

@@ -12,16 +12,20 @@ public static class SpielProbeTexte
     /// <summary>
     /// Hinweis draussen mit der Standardbelegung. Welle A 0.80.0 (Weisung P12-268): feste Kamera, kein Verschieben mehr;
     /// zwei Finger bzw. rechte Maustaste drehen und neigen, Rest-Zoom 7 bis 9, Ueberblick in der Karte im Handy (bis A 0.79.0:
-    /// „Ziehen verschiebt die Ansicht … Pfeiltasten verschieben …“).
+    /// „Ziehen verschiebt die Ansicht … Pfeiltasten verschieben …“). Seit A 0.95.0 nennt er die Gehtasten W, A, S und D.
     /// </summary>
-    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.";
+    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. Am PC: W, A, S und D gehen, rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.";
 
     /// <summary>Hinweis mit den gewaehlten Tasten (Tastenbelegung); mit Standard genau <see cref="Hinweis"/>.</summary>
     public static string HinweisFuer(Tasten tasten)
     {
         string T(string aufgabe) => tasten.AnzeigeFuer(aufgabe);
         return "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. "
-            + $"Am PC: rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, {T(Tasten.DrehLinks)} und {T(Tasten.DrehRechts)} drehen"
+            + "Am PC: "
+            // Welle A 0.95.0 (Sammelliste 385): die vier Gehtasten (fehlt einer eine Taste, nennt der Hinweis keine)
+            + (Tasten.Gehen.Any(g => tasten.Tasten(g).Contains(Tasten.OhneTaste)) ? ""
+                : $"{T(Tasten.GehVor)}, {T(Tasten.GehLinks)}, {T(Tasten.GehZurueck)} und {T(Tasten.GehRechts)} gehen, ")
+            + $"rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, {T(Tasten.DrehLinks)} und {T(Tasten.DrehRechts)} drehen"
             // ohne Taste fuers Neigen (Zusammenstoss mit einer eigenen Wahl aus frueherer Fassung) nennt der Hinweis keine
             + (tasten.Tasten(Tasten.Steiler).Contains(Tasten.OhneTaste) || tasten.Tasten(Tasten.Flacher).Contains(Tasten.OhneTaste)
                 ? "" : $", {T(Tasten.Steiler)} und {T(Tasten.Flacher)} neigen")
@@ -190,6 +194,20 @@ public static class SpielProbeTexte
     public const string DanachZu = "Danach geht es weiter zu {0}.";
     public const string DanachDorthin = "Danach geht es dorthin weiter.";
     public const string NichtErreichbar = "Dort kommst du nicht hin.";
+
+    /// <summary>Welle A 0.95.0 (Sammelliste 385): beim freien Gehen gegen eine Wand, ein Haus oder die Fahrbahn gelaufen (Ansage, einmal je Halt).</summary>
+    public const string NichtWeiter = "Hier geht es nicht weiter.";
+
+    /// <summary>Welle A 0.95.0: Ansage beim Halt nach freiem Gehen draussen, wenn ein Ort nah ist ({0} = sein Name).</summary>
+    public const string VorDir = "Vor dir: {0}.";
+
+    /// <summary>Welle A 0.95.0 (Weisung P12-306, Nico 1c): Abschnitt und Schalter in der Karte „Spiel“ der Optionen.</summary>
+    public const string GehenTitel = "Gehen";
+
+    public const string AntippenGehen = "Antippen zum Gehen";
+
+    /// <summary>Erklaerung unter dem Schalter (mit dem Hinweis fuer den Screenreader, E1 Chat).</summary>
+    public const string AntippenGehenSatz = "An: Ein Tipp oder Klick in die 3D-Ansicht lässt die Figur dorthin gehen. Aus: Die Figur geht nur mit den Gehtasten (Standard W, A, S, D, unter „Tastenbelegung“ änderbar). Die Liste der Orte, die Karte und die Knöpfe gehen immer. Mit Screenreader am besten anlassen.";
     /// <summary>
     /// Weisung P12-74: Hinweis in einem Geschaeft auf einer Etage ohne Verkaufsperson (Obergeschoss); im Erdgeschoss bleibt
     /// „Tippe auf eine Ware oder sprich mit dem Verkauf.“

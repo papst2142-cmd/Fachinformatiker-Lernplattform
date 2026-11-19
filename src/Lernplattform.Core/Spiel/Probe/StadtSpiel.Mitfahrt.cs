@@ -172,6 +172,7 @@ public sealed partial class StadtSpiel
     /// <summary>Knopf „Einsteigen“: geht nur, solange ein Bus an der Haltestelle der Figur haelt.</summary>
     public bool Einsteigen() => Gemessen(() =>
     {
+        FreiHalt();
         if (Mitfahrt != MitfahrtStufe.Keine || BusZumEinsteigen is not { } bus || WartetAn is not { } nr
             || Szene.Haltestellen.FirstOrDefault(h => h.Nr == nr) is not { } h)
         {
@@ -320,7 +321,7 @@ public sealed partial class StadtSpiel
     {
         int? an = null;
         int? bus = null;
-        if (verkehr is not null && !ImInnenraum && ImFreien && !Geht && Etage == 0 && !MitBusUnterwegs && Szene.Haltestellen.Count > 0)
+        if (verkehr is not null && !ImInnenraum && ImFreien && !Geht && !FreiUnterwegs && Etage == 0 && !MitBusUnterwegs && Szene.Haltestellen.Count > 0)
         {
             an = HaltestelleBei(FigurX, FigurZ);
             if (an is { } nr && verkehr.Autos.FirstOrDefault(a => a.Nummer >= Buslinie.ErsteNummer && a.HaeltAn == nr && a.HaltRest > 0
