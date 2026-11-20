@@ -217,10 +217,14 @@ jobs:
           global-json-file: global.json
       - name: Tests
         if: matrix.einzel
+        # Weisung P12-324 T1: eigene Schrittgrenze (Intel-Mac 60, sonst 30 Minuten), Wert aus werkzeuge/ci/zeitlimits.json
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 60 || 30 }}
         run: dotnet test --project tests/Lernplattform.Tests -c Release
       # Phase 13 Welle 2 (Weisung P12-17): Unit-Tests des Stadtbau-Werkzeugs (Projekt, Pruefungen, Grenzen, Export)
       - name: Tests Stadtbau-Werkzeug
         if: matrix.einzel
+        # Weisung P12-324 T1: eigene Schrittgrenze (Intel-Mac 60, sonst 30 Minuten), Wert aus werkzeuge/ci/zeitlimits.json
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 60 || 30 }}
         run: dotnet test --project tests/Stadtbau.Tests -c Release
       # Welle 4 (Weisung P2-11, R16/A3/A4/F5): Python 0.63.2 liest die Sicherungen fuer die
       # alte App, die der Test BelegDateienFuerPython eben geschrieben hat, und fuehrt sie zusammen
@@ -1031,4 +1035,19 @@ jobs:
         with:
           name: urteil-github-${{ github.run_attempt }}
           path: urteil_github.txt
+          if-no-files-found: warn
+      # Weisung P12-324 T1-T4c: Reserve jedes Pruefschritts bis zur Zeitgrenze, Vorschlaege fuer Zeitlimits und
+      #   Verschiebungen, INFO main fuer knapp rote einmalige Messpunkte; nur Hinweis, nie rot, aendert kein Urteil
+      - name: Reserve der Pruefschritte (reserve.py github)
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 6
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -I werkzeuge/ci/reserve.py github
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: reserve-${{ github.run_attempt }}
+          path: reserve.txt
           if-no-files-found: warn

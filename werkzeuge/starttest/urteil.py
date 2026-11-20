@@ -57,6 +57,8 @@ FEHLER = re.compile(r"FEHLER(?: \(([^)]*)\))?: ?(.*)")
 OHNE_ZEILE = "Rueckgabe 3 ohne erkannte Fehlerzeile"
 KONTRAST = re.compile(r"\s*(Kontrast [^:]*): .* UNTER ")
 ZIFFERN = re.compile(r"[0-9]")
+# Sammelliste 401: Vorsatz der Spiel-Messpunkte ("FEHLER: Spiel: <Messpunkt>: ...")
+SPIEL = "Spiel"
 AUSNAHME_INTEL_MAC = "macos-15-intel"
 # Sammelliste 199: Rueckgabe des Wachhunds in lauf.sh (Programm nach STARTTEST_WACHHUND_MINUTEN noch nicht fertig)
 HAENGER = 4
@@ -106,7 +108,10 @@ def punkte(zeilen):
         treffer = FEHLER.match(text)
         if treffer:
             vorne = treffer.group(1) + ": " if treffer.group(1) else ""
-            punkt = vorne + treffer.group(2).split(": ", 1)[0]
+            teile = treffer.group(2).split(": ", 2)
+            # Sammelliste 401 (Weisung P12-324 T5): "FEHLER: Spiel: <Messpunkt>: ..." hat den Messpunkt erst nach "Spiel: ";
+            # vorher galten zwei verschiedene Spiel-Messpunkte als derselbe ("Spiel")
+            punkt = vorne + (teile[0] + ": " + teile[1] if teile[0] == SPIEL and len(teile) == 3 else teile[0])
         else:
             punkt = text.split(": ", 1)[0]
         gefunden.setdefault(punkt, text)
@@ -699,6 +704,34 @@ def selbsttest():
                 rot = 1
             else:
                 print("Selbsttest Neustart Fall %d (Ausnahme '%s'): %s" % (nr, wert, "2. Lauf" if soll else "kein 2. Lauf"))
+        # Sammelliste 401 (Weisung P12-324 T5): verschiedene Spiel-Messpunkte sind verschiedene Punkte (gruen), derselbe
+        # Spiel-Messpunkt in beiden Laeufen bleibt rot (Gegenprobe); Zeilen wie in Lauf 1124
+        kaufhaus = "  FEHLER: Spiel: Kaufhaus Sortiment (erstes Oeffnen): 860 ms ueber Grenze 400 ms; Einzelmessungen 860 ms (einmaliger Messpunkt, nicht wiederholt)"
+        huegel = "  FEHLER: Spiel: Figur auf Huegel (erstes Bild): 450 ms ueber Grenze 400 ms; Einzelmessungen 450 ms (einmaliger Messpunkt, nicht wiederholt)"
+        info = "  INFO main: Spiel: Kaufhaus Sortiment (erstes Oeffnen) 860 ms, main 395 ms"
+        spiel_faelle = [  # (Zeilen 1. Lauf, Zeilen 2. Lauf, erwartet)
+            ([kaufhaus], [huegel], 0),
+            ([kaufhaus], [kaufhaus], 3),
+            ([huegel], [huegel], 3),
+            # Weisung P12-324 T4c: eine Info-Zeile main aendert das Urteil nie (gleicher Fall mit und ohne)
+            ([kaufhaus, info], [kaufhaus, info], 3),
+            ([kaufhaus, info], [huegel], 0),
+        ]
+        for nr, (eins, zwei, soll) in enumerate(spiel_faelle, 1):
+            os.environ["LERNPLATTFORM_ZEITEN_NUR_INFO"] = ""
+            dateien = []
+            for lauf, zeilen in ((1, eins), (2, zwei)):
+                pfad = os.path.join(ordner, "spiel%d_lauf%d.txt" % (nr, lauf))
+                with open(pfad, "w", encoding="utf-8") as d:
+                    d.write("\n".join(zeilen + ["URTEIL: rot (1 Funde)"]) + "\n")
+                dateien.append(pfad)
+            ist, text = still(lauf2, 3, dateien[0], dateien[1])
+            if ist != soll:
+                print(text, end="")
+                print("FEHLER: Selbsttest Spiel-Messpunkt Fall %d (Sammelliste 401): Rueckgabe %d statt %d" % (nr, ist, soll))
+                rot = 1
+            else:
+                print("Selbsttest Spiel-Messpunkt Fall %d (Sammelliste 401/T4c): Rueckgabe %d wie erwartet" % (nr, ist))
         # Sammelliste 199: Rueckgabe 4 (Wachhund) ist in beiden Laeufen sofort rot, auch mit gueltiger Messdatei
         pfad = os.path.join(ordner, "haenger.txt")
         with open(pfad, "w", encoding="utf-8") as d:
@@ -723,6 +756,13 @@ def selbsttest():
     rot |= hilfsjob_zaehlt_nicht(".github/workflows/stadtbau_release.yml")
     rot |= hilfsjob_gegenprobe()
     rot |= urteil_github.selbsttest()
+    # Weisung P12-324 (Nico 1a 2a 3a 4c): Zeitlimits aus werkzeuge/ci/zeitlimits.json gleich ci.yml, Vorschlagsregel und
+    # Reserve-Tabelle (je mit Gegenproben); beide aendern kein Urteil
+    for name in ("zeitlimits", "reserve"):
+        spec = importlib.util.spec_from_file_location(name, os.path.join("werkzeuge", "ci", name + ".py"))
+        modul = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modul)
+        rot |= modul.selbsttest()
     # Sammelliste 365 (Weisung P12-289): Release nimmt einen gruenen Lauf auf main oder mit gleichem Tree
     rot |= lauf_waehlen()
     # Welle A 0.89.0 (Weisung P12-297 W3-3): Paket-Release mit derselben Jobliste 18/18, Hinweis-Filter und eigenen Regeln

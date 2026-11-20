@@ -1,0 +1,210 @@
+{
+ "fassung": 1,
+ "regel": "Weisung P12-324 T2 (Nico 2a): Zeitlimits der Pruefschritte im Job tests, Minuten. Aendern nur per Commit mit python -I werkzeuge/ci/zeitlimits.py schreiben und Meldungszeile; nie kleiner als heute, hoechstens 2 x basis. basis = Stand A 0.99.0 (main 9ac8327) plus Unit-Tests 60/30.",
+ "schritte": [
+  {
+   "schritt": "Tests",
+   "limit": {
+    "standard": 30,
+    "macos-15-intel": 60
+   },
+   "basis": {
+    "standard": 30,
+    "macos-15-intel": 60
+   },
+   "wachhund": false
+  },
+  {
+   "schritt": "Tests Stadtbau-Werkzeug",
+   "limit": {
+    "standard": 30,
+    "macos-15-intel": 60
+   },
+   "basis": {
+    "standard": 30,
+    "macos-15-intel": 60
+   },
+   "wachhund": false
+  },
+  {
+   "schritt": "Start ohne Bedienung (1. Lauf)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Start ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)",
+   "limit": {
+    "standard": 10,
+    "macos-15-intel": 20
+   },
+   "basis": {
+    "standard": 10,
+    "macos-15-intel": 20
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)",
+   "limit": {
+    "standard": 10,
+    "macos-15-intel": 20
+   },
+   "basis": {
+    "standard": 10,
+    "macos-15-intel": 20
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Testkarte Nachladen ohne Bedienung (1. Lauf, frischer Datenordner)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Testkarte Nachladen ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Spiel ohne OpenGL (kurzer Lauf mit Zeichnen in Software)",
+   "limit": {
+    "standard": 5,
+    "macos-15-intel": 5
+   },
+   "basis": {
+    "standard": 5,
+    "macos-15-intel": 5
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Werkzeug ohne Bedienung (1. Lauf, frischer Datenordner)",
+   "limit": {
+    "standard": 10,
+    "macos-15-intel": 10
+   },
+   "basis": {
+    "standard": 10,
+    "macos-15-intel": 10
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Werkzeug ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)",
+   "limit": {
+    "standard": 10,
+    "macos-15-intel": 10
+   },
+   "basis": {
+    "standard": 10,
+    "macos-15-intel": 10
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Nur Messung macOS nur Metal, Lernteil (Notschalter, ohne Urteil)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 25
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Nur Messung macOS nur Metal, Spiel (Notschalter, ohne Urteil)",
+   "limit": {
+    "standard": 10,
+    "macos-15-intel": 20
+   },
+   "basis": {
+    "standard": 10,
+    "macos-15-intel": 20
+   },
+   "wachhund": true
+  },
+  {
+   "schritt": "Layout Windows 100 % (1. Lauf, frischer Datenordner)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "wachhund": false
+  },
+  {
+   "schritt": "Layout Windows 100 % (2. Lauf, neuer Prozess, frischer Datenordner)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "wachhund": false
+  },
+  {
+   "schritt": "Layout Windows 150 % (1. Lauf, frischer Datenordner)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "wachhund": false
+  },
+  {
+   "schritt": "Layout Windows 150 % (2. Lauf, neuer Prozess, frischer Datenordner)",
+   "limit": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "basis": {
+    "standard": 15,
+    "macos-15-intel": 15
+   },
+   "wachhund": false
+  }
+ ]
+}

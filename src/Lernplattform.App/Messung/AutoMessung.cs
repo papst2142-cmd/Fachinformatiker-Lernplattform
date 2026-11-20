@@ -159,7 +159,8 @@ public static partial class AutoMessung
         // Welle Nachladen A 0.82.0 (Weisung P12-280): eigener Teil mit der grossen Testkarte (eigener Schritt in der CI)
         if (Teil == TeilNachladen)
         {
-            var n = await LeisteUndDaumenAsync(ansicht);
+            var n = await SpielVerschobenAsync(ansicht);
+            n += await LeisteUndDaumenAsync(ansicht);
             Zeitplan("NachladenTeilAsync");
             n += await NachladenTeilAsync(ansicht);
             Messwerte.Notiere(n == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({n} Funde)"));
@@ -224,26 +225,12 @@ public static partial class AutoMessung
             funde += await Q2QuestgeberAsync(ansicht);         // Welle Q2: Questgeber draussen und im Laden, Nahansicht mit 12 draussen
             Zeitplan("GelaendeSpielAsync");
             funde += await GelaendeSpielAsync(ansicht);        // Welle A 0.66.0: Figur auf Huegel, Kamera folgt, Nahansicht mit 16 Huegeln
-            Zeitplan("QuestlogBusAsync");
-            funde += await QuestlogBusAsync(ansicht);          // Welle A 0.67.0: Questlog im Handy, Busfahrt
-            Zeitplan("MitfahrtAsync");
-            funde += await MitfahrtAsync(ansicht);             // Welle A 0.73.0: selbst mit dem Bus fahren (Stadt 1, echtes Tippen)
-            Zeitplan("GenauigkeitAsync");
-            funde += await GenauigkeitAsync(ansicht);          // Patch A 0.75.1: Ecken-Shader unter ES highp, Zeile Tiefe im Problembericht
-            Zeitplan("OrtslisteInnenAsync");
-            funde += await OrtslisteInnenAsync(ansicht);       // Patch A 0.75.1: offene Ortsliste schliesst beim Betreten (Handy und PC)
-            Zeitplan("KameraKarteAsync");
-            funde += await KameraKarteAsync(ansicht);          // Welle A 0.80.0: feste Kamera draussen, Karte im Spiel-Handy
-            Zeitplan("IchSichtAsync");
-            funde += await IchSichtAsync(ansicht);             // Welle A 0.92.0: Ich-Sicht (Zoom, Taste I, Menue, Umsehen, Gehen, Haus)
             Zeitplan("HandyKreuzAsync");
             funde += await HandyKreuzAsync(ansicht);           // Welle A 0.81.0: X oben rechts im Spiel-Handy (Sammelliste 348)
             Zeitplan("HaltungAsync");
             funde += await HaltungAsync(ansicht);              // Welle A 0.81.0: Hinsetzen und Hinlegen (Sammelliste 349)
             Zeitplan("HaltungenAsync");
             funde += await HaltungenAsync(ansicht);            // Welle A 0.93.0: Springen, Ducken, Kriechen, Zuruecklehnen (Sammelliste 352)
-            Zeitplan("FreiGehenAsync");
-            funde += await FreiGehenAsync(ansicht);            // Welle A 0.95.0: frei gehen mit W/A/S/D (Sammelliste 385, PC-Teil)
             Zeitplan("TafelZurueckAsync");
             funde += await TafelZurueckAsync(ansicht);         // Welle A 0.81.0: Zurueck in der Spiel-Tafel fest oben (Nico 5a)
             Zeitplan("Einrichten382Async");
@@ -257,6 +244,7 @@ public static partial class AutoMessung
             if (Teil is null)
             {
                 // lokal (ohne Teil) auch der Teil der Testkarte; die CI misst ihn als eigenen Schritt
+                funde += await SpielVerschobenAsync(ansicht);
                 funde += await LeisteUndDaumenAsync(ansicht);
                 Zeitplan("NachladenTeilAsync");
                 funde += await NachladenTeilAsync(ansicht);
@@ -297,6 +285,32 @@ public static partial class AutoMessung
     /// dort reichten die 9 Minuten mit ihnen nicht mehr (Laeufe 1120 und 1122, ubuntu, Spielansichten bis zur Layoutpruefung
     /// 326 s statt 279 s auf main). Lokal ohne Teil laufen sie wie bisher mit allem.
     /// </summary>
+    /// <summary>
+    /// Welle „Pruefverfahren waechst mit“ (Weisung P12-324 T3): diese Abschnitte liefen bis A 0.99.0 in den Spielansichten. Dort
+    /// blieb unter Linux nur 2 bis 15 % des Wachhunds (9 Minuten) uebrig (Laeufe 1105, 1116, 1126; Lauf 1122 rot am Wachhund).
+    /// Sie laufen unveraendert im Teil der Testkarte (14 Minuten, 42 bis 45 % frei), zusammen rund 125 s. Lokal ohne Teil laufen
+    /// sie wie bisher mit allem. Keine Pruefung und keine Grenze geaendert.
+    /// </summary>
+    private static async Task<int> SpielVerschobenAsync(MainView ansicht)
+    {
+        var funde = 0;
+        Zeitplan("QuestlogBusAsync");
+        funde += await QuestlogBusAsync(ansicht);          // Welle A 0.67.0: Questlog im Handy, Busfahrt
+        Zeitplan("MitfahrtAsync");
+        funde += await MitfahrtAsync(ansicht);             // Welle A 0.73.0: selbst mit dem Bus fahren (Stadt 1, echtes Tippen)
+        Zeitplan("GenauigkeitAsync");
+        funde += await GenauigkeitAsync(ansicht);          // Patch A 0.75.1: Ecken-Shader unter ES highp, Zeile Tiefe im Problembericht
+        Zeitplan("OrtslisteInnenAsync");
+        funde += await OrtslisteInnenAsync(ansicht);       // Patch A 0.75.1: offene Ortsliste schliesst beim Betreten (Handy und PC)
+        Zeitplan("KameraKarteAsync");
+        funde += await KameraKarteAsync(ansicht);          // Welle A 0.80.0: feste Kamera draussen, Karte im Spiel-Handy
+        Zeitplan("IchSichtAsync");
+        funde += await IchSichtAsync(ansicht);             // Welle A 0.92.0: Ich-Sicht (Zoom, Taste I, Menue, Umsehen, Gehen, Haus)
+        Zeitplan("FreiGehenAsync");
+        funde += await FreiGehenAsync(ansicht);            // Welle A 0.95.0: frei gehen mit W/A/S/D (Sammelliste 385, PC-Teil)
+        return funde;
+    }
+
     private static async Task<int> LeisteUndDaumenAsync(MainView ansicht)
     {
         Zeitplan("Leiste399Async");
