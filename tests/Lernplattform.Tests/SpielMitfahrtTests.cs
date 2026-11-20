@@ -499,7 +499,7 @@ public sealed class SpielMitfahrtBelastungTests
             // ab hier darf die Ich-Sicht nichts mehr aendern.
             var weg = new Vector2(s.FigurX - vorher.Item2, s.FigurZ - vorher.Item3);
             var b = richtung * MathF.PI / 180f;
-            if (s.FigurRichtung != richtung || s.Kopfzeile != vorher.Item1 || s.Geht != vorher.Item4
+            if (MathF.Abs((((s.FigurRichtung - richtung) % 360f) + 540f) % 360f - 180f) > 0.01f || s.Kopfzeile != vorher.Item1 || s.Geht != vorher.Item4
                 || weg.Length() > (0.4f * (s.ImInnenraum ? Innenraum.FigurHoehe : Figur.StadtHoehe)) + 1e-4f
                 || MathF.Abs((weg.X * MathF.Cos(b)) - (weg.Y * MathF.Sin(b))) >= 1e-3f)
             {
@@ -542,6 +542,9 @@ public sealed class SpielMitfahrtBelastungTests
             {
                 return "vor dem Gehen nicht in der Ich-Sicht";
             }
+            // Welle A 0.98.0: Ausgang fest (Blick wie die Figur, dann 123 Grad weg), nicht der zufaellige Blick aus den Aktionen davor;
+            // seit Kriechen die Figur nicht mehr von selbst dreht, lag der Blick hier sonst 65 statt 20 Grad neben der Figur
+            k.Drehung = IchSicht.DrehungZu(s.FigurRichtung);
             k.Drehen(123f);
             var hier = new Vector2(s.FigurX, s.FigurZ);
             if (!new[] { new Vector2(3f, 0f), new Vector2(-3f, 0f), new Vector2(0f, 3f), new Vector2(0f, -3f) }.Any(d => s.GeheZu(hier.X + d.X, hier.Y + d.Y) && s.Geht))
