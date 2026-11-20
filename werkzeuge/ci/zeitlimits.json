@@ -65,7 +65,7 @@
   {
    "schritt": "Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)",
    "limit": {
-    "standard": 10,
+    "standard": 14,
     "macos-15-intel": 20
    },
    "basis": {

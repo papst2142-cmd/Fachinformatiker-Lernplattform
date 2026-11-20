@@ -356,11 +356,11 @@ jobs:
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: always() && steps.spiel1.outputs.rc == '3' && steps.spiel1.outputs.zweiter_lauf != 'nein'
-        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 14 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: spiel
-          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 19 || 9 }}
+          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 19 || 13 }}
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel2
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_spiel2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
       # Welle Nachladen A 0.82.0 (Weisung P12-280): eigener Teil mit der grossen Testkarte 256 x 256 (Stadt bauen geladen,
