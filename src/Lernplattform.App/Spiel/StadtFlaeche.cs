@@ -1181,7 +1181,13 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 spieler = _spiel.HaltungModell is { } modell
                     ? FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, modell, 0, IchNah(kamera))
                     : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild, IchNah(kamera));
-                figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(IchSicht.FigurDrehung(kamera, _spiel) * MathF.PI / 180f)
+                // Welle A 0.99.0 (Sammelliste 400): geduckt oder kriechend gehend wiegt sich die Figur leicht im Schritt (die Haltung
+                // hat kein eigenes Gehbild; Wiegen um die Laengsachse und kleines Heben nach dem Weg, nur Darstellung)
+                var wiegen = _spiel.HaltungModell is not null && !_spiel.Springt && (_spiel.Geht || _spiel.FreiUnterwegs)
+                    ? Matrix4x4.CreateRotationZ(0.06f * MathF.Sin((float)(_spiel.Schrittweg / _spiel.Zyklus * 4 * Math.PI)))
+                        * Matrix4x4.CreateTranslation(0, 0.012f * MathF.Abs(MathF.Sin((float)(_spiel.Schrittweg / _spiel.Zyklus * 4 * Math.PI))), 0)
+                    : Matrix4x4.Identity;
+                figurLage = Matrix4x4.CreateScale(groesse) * wiegen * Matrix4x4.CreateRotationY(IchSicht.FigurDrehung(kamera, _spiel) * MathF.PI / 180f)
                     * Matrix4x4.CreateTranslation(_spiel.FigurX, (innen is null ? FigurHoehe(_spiel) : 0f) + (_spiel.SprungHoehe * groesse), _spiel.FigurZ);
             }
             if (!_busMitFigur)

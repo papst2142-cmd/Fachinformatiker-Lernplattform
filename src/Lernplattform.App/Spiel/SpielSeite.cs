@@ -374,6 +374,8 @@ public sealed partial class SpielSeite : Grid
         ebene.Children.Add(unten);
         Children.Add(ebene);
         Ebene = ebene;
+        // Welle A 0.99.0 (Sammelliste 400): runde Knoepfe am rechten Daumen ueber der Ebene (nur Handy und Tablet)
+        DaumenKnoepfeAnlegen();
         // Nachtrag 1 zu P7-13 (Wunsch 2): die Kamera haelt die Figur zwischen Kopfzeile und Textkarte
         ebene.LayoutUpdated += (_, _) =>
         {
@@ -812,6 +814,7 @@ public sealed partial class SpielSeite : Grid
             // Welle A 0.99.0 (Sammelliste 399): links und rechts neben der mittigen Leiste ist unten Platz fuer die Daumen
             Flaeche.LeisteX = _unten.IsVisible ? (unten.X, unten.X + _unten.Bounds.Width) : (0, 0);
         }
+        DaumenSetzen();
     }
 
     private void Anordnen()

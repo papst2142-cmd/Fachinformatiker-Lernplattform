@@ -7,6 +7,8 @@
 #   links_vor        linken Stick nach vorn ziehen und halten (input swipe)
 #   rechts_rechts    rechten Stick nach rechts ziehen und halten
 #   tippen           kurzer Tipp ohne Ziehen (input tap) auf ein Ziel im Stick-Bereich
+#   haltung_*        Welle A 0.99.0 (Sammelliste 400): runder Haltung-Knopf am rechten Daumen (Zeile HALTUNG = Mitte):
+#                    tippen (Ducken), tippen (Stehen), lang druecken (Kriechen), tippen (Stehen); je Zeile KOERPER der App
 #   rechts_umgekehrt zweiter Start mit "--ez touch_umkehren true" (Schalter Umsehen links/rechts umkehren), rechter Stick nach rechts
 # Zwei ganze Durchgaenge nacheinander (stabil = zwei von zwei). Das Urteil faellt werkzeuge/android/touch_urteil.py (zuerst dessen Selbsttest mit Gegenproben). Rueckgabe 1 = rot.
 # Aufruf: touch_probe.sh <ergebnisdatei> (haengt an die Datei an)
@@ -48,11 +50,13 @@ starten() {   # $1 = true/false fuer "Umsehen links/rechts umkehren"
   adb shell settings put secure immersive_mode_confirmations confirmed > /dev/null 2>&1 || true
   adb shell am start -n "$KOMP" --ez touch_probe true --ez touch_umkehren "$1" > /dev/null 2>&1
   warten "^BEREIT \|^FEHLER" 300 || { lesen; sed 's/^/  /' "$LOG" | tee -a "$ERGEBNIS"; zeile "FEHLER: keine Zeile BEREIT nach 300 s"; return 1; }
-  grep -E "^(START|3D|LAGE|UEBERLAGERUNG|TREFFER|BEREIT|FEHLER)" "$LOG" | sed 's/^/  /' | tee -a "$ERGEBNIS"
+  grep -E "^(START|3D|LAGE|UEBERLAGERUNG|TREFFER|HALTUNG|BEREIT|FEHLER)" "$LOG" | sed 's/^/  /' | tee -a "$ERGEBNIS"
   zeile "  Geraet: $(adb shell wm size | tr -d '\r' | tail -n 1), $(adb shell dumpsys power | tr -d '\r' | grep -m 1 -o 'mWakefulness=[A-Za-z]*'), $(adb shell dumpsys window | tr -d '\r' | grep -m 1 -o 'mCurrentFocus=.*')"
   if grep -q "^FEHLER" "$LOG"; then return 1; fi
   # BEREIT links LX LY rechts RX RY radius R tipp TX TY
   read -r _ _ LX LY _ RX RY _ R _ TX TY <<< "$(grep "^BEREIT " "$LOG" | tail -n 1)"
+  # HALTUNG HX HY durchmesser D haltung H (Mitte des runden Haltung-Knopfs)
+  read -r _ HX HY _ <<< "$(grep "^HALTUNG " "$LOG" | tail -n 1)"
   warten "^STAND 1 " 40 || { zeile "FEHLER: kein ruhiger Stand nach dem Start"; return 1; }
   return 0
 }
@@ -72,6 +76,20 @@ schritt() {   # $1 Name, Rest: Befehl fuer adb shell
   [ "$(zaehlen "^STICK aktiv ja")" -gt "$stick0" ] && stick=ja
   echo "SCHRITT $name VOR $(echo "$vor" | cut -d' ' -f3-6) NACH $(echo "$nach" | cut -d' ' -f3-6) GEHT $geht STICK $stick" | tee -a "$SCHRITTE" "$ERGEBNIS"
 }
+haltung_schritt() {   # $1 Name, $2 erwartete Haltung, Rest: Befehl fuer adb shell; wartet bis 10 s auf eine neue Zeile KOERPER
+  local name=$1 soll=$2; shift 2
+  local vor t=0 ist=-
+  vor=$(zaehlen "^KOERPER ")
+  adb shell "$*"
+  while [ "$t" -lt 10 ]; do
+    sleep 1; t=$((t + 1))
+    if [ "$(zaehlen "^KOERPER ")" -gt "$vor" ]; then lesen; ist=$(grep "^KOERPER " "$LOG" | tail -n 1 | awk '{print $2}'); break; fi
+  done
+  sleep 1
+  # eine zweite Aenderung in derselben Geste (z. B. Ducken und gleich wieder Stehen) waere ein Fehler: dann zaehlt die letzte
+  [ "$ist" != "-" ] && { lesen; ist=$(grep "^KOERPER " "$LOG" | tail -n 1 | awk '{print $2}'); }
+  echo "HALTUNG $name ERWARTET $soll IST $ist AENDERUNGEN $(( $(zaehlen "^KOERPER ") - vor ))" | tee -a "$SCHRITTE" "$ERGEBNIS"
+}
 rc=0
 # zwei ganze Durchgaenge im selben Lauf (Weisung P12-315: stabil = zwei von zwei); jeder Durchgang hat sein eigenes Urteil
 for DURCHGANG in 1 2; do
@@ -81,6 +99,11 @@ for DURCHGANG in 1 2; do
     zeile "  Befehle: links $LX,$LY rechts $RX,$RY Radius $R Tipp $TX,$TY"
     schritt links_vor "input swipe $LX $LY $LX $((LY - R)) 2500"
     schritt rechts_rechts "input swipe $RX $RY $((RX + R)) $RY 1500"
+    zeile "  Haltung-Knopf: $HX,$HY"
+    haltung_schritt haltung_tippen Ducken "input tap $HX $HY"
+    haltung_schritt haltung_tippen2 Stehen "input tap $HX $HY"
+    haltung_schritt haltung_lang Kriechen "input swipe $HX $HY $HX $HY 1200"
+    haltung_schritt haltung_auf Stehen "input tap $HX $HY"
     schritt tippen "input tap $TX $TY"
   else
     rc=1

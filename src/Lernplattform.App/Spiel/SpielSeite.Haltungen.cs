@@ -64,7 +64,9 @@ public sealed partial class SpielSeite
         {
             return;
         }
-        var an = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true };
+        // Welle A 0.99.0 (Sammelliste 400): am Handy und Tablet statt der drei Eintraege die runden Knoepfe am rechten Daumen
+        var an = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true } && !DaumenKnoepfeAn;
+        DaumenSetzen();
         var koerper = Spiel?.Koerper ?? Koerperhaltung.Stehen;
         Setzen(_springenKnopf, an, SpielProbeTexte.KnopfSpringen);
         Setzen(_duckenKnopf, an, koerper == Koerperhaltung.Ducken ? SpielProbeTexte.KnopfAufstehen : SpielProbeTexte.KnopfDucken);

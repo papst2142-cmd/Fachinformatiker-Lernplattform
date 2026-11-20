@@ -505,20 +505,22 @@ public sealed partial class StadtSpiel
     /// <summary>Figur um <paramref name="sekunden"/> weiterbewegen; true, solange sie geht.</summary>
     public bool Fortschreiten(double sekunden)
     {
-        // Welle A 0.93.0: Gehen beendet Ducken und Kriechen
+        // Welle A 0.93.0: Gehen beendete Ducken und Kriechen; seit A 0.99.0 (Sammelliste 400) geht die Haltung langsamer mit
         KoerperBeimGehen();
         if (_weg.Count == 0)
         {
             return false;
         }
         _imBild = true;
+        var haltung = Koerper;
         try
         {
-            return Weiter(sekunden);
+            return Weiter(sekunden * HaltungTempo(haltung));
         }
         finally
         {
             _imBild = false;
+            KoerperNachSchritt(haltung);
         }
     }
 

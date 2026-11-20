@@ -117,10 +117,10 @@ public static class SpielProbeTexte
     /// <summary>Knopf „Springen“ (Leertaste): kurzer Sprung an der Stelle oder im Gehen.</summary>
     public const string KnopfSpringen = "Springen";
 
-    /// <summary>Knopf „Ducken“ (nur an der Stelle; Gehen beendet die Haltung).</summary>
+    /// <summary>Knopf „Ducken“ (seit A 0.99.0 geht die Figur geduckt weiter, bis sie aufsteht).</summary>
     public const string KnopfDucken = "Ducken";
 
-    /// <summary>Knopf „Kriechen“ (nur an der Stelle; Gehen beendet die Haltung).</summary>
+    /// <summary>Knopf „Kriechen“ (seit A 0.99.0 kriecht die Figur weiter, bis sie aufsteht).</summary>
     public const string KnopfKriechen = "Kriechen";
 
     /// <summary>Knopf im Sitzen auf Sofa, Sessel oder Liegestuhl.</summary>
@@ -133,16 +133,19 @@ public static class SpielProbeTexte
     public const string DuSitztZurueck = "Du sitzt zurückgelehnt. Mit „Aufrichten“ setzt du dich wieder gerade hin.";
 
     /// <summary>Ansage und Zeile beim Ducken.</summary>
-    public const string DuDuckst = "Du duckst dich. Zum Aufstehen gehe los oder tippe noch einmal auf „Ducken“.";
+    public const string DuDuckst = "Du duckst dich und kannst so auch gehen. Zum Aufstehen tippe auf „Aufstehen“.";
 
     /// <summary>Ansage und Zeile beim Kriechen.</summary>
-    public const string DuKriechst = "Du gehst auf alle viere. Zum Aufstehen gehe los oder tippe noch einmal auf „Kriechen“.";
+    public const string DuKriechst = "Du gehst auf alle viere und kannst so auch kriechen. Zum Aufstehen tippe auf „Aufstehen“.";
 
     /// <summary>Ansage beim Aufstehen aus Ducken oder Kriechen.</summary>
     public const string DuStehst = "Du stehst wieder.";
 
     /// <summary>Ansage beim Springen.</summary>
     public const string DuSpringst = "Du springst.";
+
+    /// <summary>Welle A 0.99.0: beim Gehen in der Haltung ist vorn kein Platz mehr, die Figur steht auf.</summary>
+    public const string HaltungKeinPlatzMehr = "Hier ist für deine Haltung kein Platz. Du stehst auf.";
 
     /// <summary>Ducken geht hier nicht (die Figur wuerde etwas beruehren oder ueber eine Wand ragen).</summary>
     public const string KeinPlatzDucken = "Hier ist zum Ducken kein Platz.";

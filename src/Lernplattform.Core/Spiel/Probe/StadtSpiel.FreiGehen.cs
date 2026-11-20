@@ -122,7 +122,12 @@ public sealed partial class StadtSpiel
             return false;
         }
         Aufstehen();
-        _koerper = Koerperhaltung.Stehen;
+        // Welle A 0.99.0 (Sammelliste 400): geduckt und kriechend geht die Figur weiter (langsamer); bis A 0.98.0 stand sie auf
+        var haltung = HaltungGehenAlt.Value ? Koerperhaltung.Stehen : Koerper;
+        if (haltung == Koerperhaltung.Stehen)
+        {
+            _koerper = Koerperhaltung.Stehen;
+        }
         if (Geht)
         {
             // ein angetippter Weg endet hier (die geschriebenen Schritte zaehlen); draussen steht die Figur dann im Freien
@@ -140,9 +145,22 @@ public sealed partial class StadtSpiel
         var draussen = !ImInnenraum;
         _steuerung.Neu((rx, rz), draussen ? EinrastenDraussen : 0);
         var (vonX, vonZ) = ((double)FigurX, (double)FigurZ);
-        var schritt = Steuerung.Schritt(vonX, vonZ, rx, rz, Math.Max(0, sekunden) * Tempo, (x, z) => Frei(x, z, vonX, vonZ), _steuerung,
-            draussen ? Szene.AnUebergang : null);
-        FigurRichtung = blick ?? (float)(Math.Atan2(rx, rz) * 180 / Math.PI);
+        var richtung = blick ?? (float)(Math.Atan2(rx, rz) * 180 / Math.PI);
+        if (haltung != Koerperhaltung.Stehen && !KoerperFreiBei(FigurX, FigurZ, richtung, haltung))
+        {
+            // in der Haltung reicht der Platz fuer diese Richtung nicht (die Figur wuerde sich in eine Wand drehen): sie bleibt
+            FreiUnterwegs = false;
+            if (!_angestossenGesagt)
+            {
+                _angestossenGesagt = true;
+                GehAnsage?.Invoke(SpielProbeTexte.NichtWeiter);
+            }
+            return _freiBewegt;
+        }
+        var schritt = Steuerung.Schritt(vonX, vonZ, rx, rz, Math.Max(0, sekunden) * Tempo * HaltungTempo(haltung),
+            (x, z) => Frei(x, z, vonX, vonZ) && (haltung == Koerperhaltung.Stehen || KoerperFreiBei((float)x, (float)z, richtung, haltung)),
+            _steuerung, draussen ? Szene.AnUebergang : null);
+        FigurRichtung = richtung;
         if (schritt.Weg <= 1e-9)
         {
             FreiUnterwegs = false;
@@ -156,6 +174,11 @@ public sealed partial class StadtSpiel
         var halbVorher = Math.Floor(Schrittweg / (Zyklus / 2));
         FigurX = (float)schritt.X;
         FigurZ = (float)schritt.Z;
+        if (haltung != Koerperhaltung.Stehen)
+        {
+            // die Haltung geht mit (der Schritt hat ihren Platz schon geprueft)
+            _koerperStelle = (Innen, FigurX, FigurZ);
+        }
         Schrittweg += schritt.Weg;
         if (Ton is not null && Math.Floor(Schrittweg / (Zyklus / 2)) != halbVorher)
         {

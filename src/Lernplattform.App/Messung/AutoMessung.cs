@@ -251,6 +251,8 @@ public static partial class AutoMessung
             funde += await LeisteUebersichtAsync(ansicht);     // Welle A 0.81.0: Uebersicht im Handy, Leiste schlank (Sammelliste 350)
             Zeitplan("Leiste399Async");
             funde += await Leiste399Async(ansicht);            // Welle A 0.99.0: Leiste unten mittig, Daumen links = Stick (Sammelliste 399)
+            Zeitplan("Daumen400Async");
+            funde += await Daumen400Async(ansicht);            // Welle A 0.99.0: runde Knoepfe Springen/Haltung am rechten Daumen (Sammelliste 400)
             Zeitplan("PaketStaedteAsync");
             funde += await PaketStaedteAsync(ansicht);         // Welle A 0.88.0: Paket-Staedte, Zugfahrt, Sperre, zweites Geraet
             Zeitplan("PaketGithubAsync");

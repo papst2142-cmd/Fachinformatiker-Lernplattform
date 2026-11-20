@@ -121,6 +121,24 @@ public static partial class AutoMessung
             {
                 return;
             }
+            // Welle A 0.99.0 (Weisung P12-319/320, Sammelliste 400): der runde Haltung-Knopf am rechten Daumen. Seine Mitte in
+            // Bildpunkten (Zeile „HALTUNG“) muss den Knopf selbst treffen; die Probe tippt und drueckt ihn dort lang
+            await fl.NaechstesBildAsync();
+            var hk = seite.DaumenKnoepfe.Haltung;
+            if (seite.DaumenRechteck(hk) is not { } hr)
+            {
+                melden("FEHLER runder Haltung-Knopf nicht sichtbar");
+                return;
+            }
+            var hMitte = fl.TranslatePoint(hr.Center, oben!) ?? hr.Center;
+            var hTreffer = oben!.InputHitTest(hMitte) as Visual;
+            if (hTreffer is null || !(ReferenceEquals(hTreffer, hk) || hk.IsVisualAncestorOf(hTreffer)))
+            {
+                melden("FEHLER Mitte des Haltung-Knopfs trifft " + (hTreffer?.GetType().Name ?? "nichts"));
+                return;
+            }
+            var haltungPx = Pixel(hr.Center);
+            melden(string.Create(inv, $"HALTUNG {haltungPx.X} {haltungPx.Y} durchmesser {hr.Width:F0} haltung {spiel.Koerper}"));
             melden(string.Create(inv, $"BEREIT links {links.X} {links.Y} rechts {rechts.X} {rechts.Y} radius {radius} tipp {tipp.X} {tipp.Y}"));
             // Befund Lauf 1110: kein Stick und kein Gehen. Jeder echte Finger, der beim Fenster ankommt, steht darum im Protokoll
             // (ZEIGER ab/auf mit Bildpunkt), auch wenn ihn ein anderes Element schon behandelt hat
@@ -160,9 +178,16 @@ public static partial class AutoMessung
             var ruhig = Stopwatch.StartNew();
             var ging = false;
             var uhr = Stopwatch.StartNew();
+            var koerper = spiel.Koerper;
             while (uhr.Elapsed.TotalSeconds < 300)
             {
                 await Task.Delay(100);
+                // Sammelliste 400: jede neue Haltung (Ducken, Kriechen, Stehen) steht im Protokoll
+                if (spiel.Koerper != koerper)
+                {
+                    koerper = spiel.Koerper;
+                    melden("KOERPER " + koerper);
+                }
                 var geht = spiel.Geht || spiel.FreiUnterwegs;
                 if (geht && !ging)
                 {
