@@ -33,18 +33,26 @@ public static class HaltungKnopf
     /// <summary>
     /// Mittelpunkte (in Punkten der Spielflaeche) von Springen und Haltung (Nico 1a): Springen aussen rechts knapp ueber der Zone
     /// des rechten Sticks (<see cref="Sticks.ZoneOben"/>), Haltung schraeg links darueber auf dem Daumenbogen. Beide liegen ganz
-    /// ueber der Zone und unter der Kopfzeile; reicht der Platz nicht (sehr flaches Bild), null.
+    /// ueber der Zone und unter der Kopfzeile. In einem sehr flachen Bild (E1, Lauf 1118: Emulator 640 x 320 Punkte) steigt
+    /// Haltung nur so weit schraeg nach oben, wie Platz ist (bis gleich hoch wie Springen); reicht auch das nicht, null (dann
+    /// gelten die Menue-Eintraege). Alte Lage nur schraeg: <see cref="NurSchraegFuerTests"/>.
     /// </summary>
     public static ((double X, double Y) Springen, (double X, double Y) Haltung)? Lage(Sticks.Bereich b)
     {
         var (g, k) = Groesse(b.Breite, b.Hoehe);
         var zone = Sticks.ZoneOben(b);
         var springen = (X: b.Breite - 20 - (g / 2), Y: zone - 14 - (g / 2));
-        var haltung = (X: springen.X - (g / 2) - 18 - (k / 2), Y: springen.Y - 22);
+        var hoch = NurSchraeg.Value ? 22 : Math.Clamp(springen.Y - (k / 2) - (b.Oben + 4), 0, 22);
+        var haltung = (X: springen.X - (g / 2) - 18 - (k / 2), Y: springen.Y - hoch);
         if (Math.Min(springen.Y - (g / 2), haltung.Y - (k / 2)) < b.Oben + 4 || haltung.X - (k / 2) < b.Breite / 2)
         {
             return null;
         }
         return (springen, haltung);
     }
+
+    private static readonly AsyncLocal<bool> NurSchraeg = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Haltung immer 22 Punkte schraeg ueber Springen (Stand vor Lauf 1118).</summary>
+    public static bool NurSchraegFuerTests { get => NurSchraeg.Value; set => NurSchraeg.Value = value; }
 }

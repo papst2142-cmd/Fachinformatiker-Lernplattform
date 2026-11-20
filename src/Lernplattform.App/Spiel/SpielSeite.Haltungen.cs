@@ -65,7 +65,9 @@ public sealed partial class SpielSeite
             return;
         }
         // Welle A 0.99.0 (Sammelliste 400): am Handy und Tablet statt der drei Eintraege die runden Knoepfe am rechten Daumen
-        var an = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true } && !DaumenKnoepfeAn;
+        // passen die runden Knoepfe nicht ins Bild (sehr flach), bleiben die Menue-Eintraege (sonst gaebe es kein Ducken)
+        var an = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true }
+            && !(DaumenKnoepfeAn && HaltungKnopf.Lage(Flaeche.StickBereich) is not null);
         DaumenSetzen();
         var koerper = Spiel?.Koerper ?? Koerperhaltung.Stehen;
         Setzen(_springenKnopf, an, SpielProbeTexte.KnopfSpringen);

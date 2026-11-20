@@ -229,6 +229,34 @@ public sealed class SpielHaltungGehenTests
     }
 
     [Fact]
+    public void Lage_FlachesBild_EmulatorPasst_Gegenprobe()
+    {
+        // Lauf 1118: Emulator der Touch-Probe 640 x 320 Punkte, frei 170 (Kopfzeile 64, Leiste 86); dort lag Haltung schraeg
+        // ueber der Kopfzeile, die Knoepfe fehlten. Jetzt steigt Haltung nur so weit, wie Platz ist
+        var b = new Sticks.Bereich(640, 320, 64, 86, 230, 410);
+        var lage = HaltungKnopf.Lage(b);
+        Assert.True(lage is not null, "Emulator: keine Lage");
+        var (s, h) = lage!.Value;
+        Assert.True(h.X < s.X && h.Y <= s.Y, "Haltung links neben/ueber Springen");
+        var funde = LageFunde("Emulator", b, lage.Value);
+        Assert.True(funde.Count == 0, string.Join("\n", funde));
+        // an groesseren Bildern bleibt es genau wie im Bild (22 Punkte schraeg darueber)
+        var bq = new Sticks.Bereich(832, 384, 64, 86, 326, 506);
+        var q = HaltungKnopf.Lage(bq)!.Value;
+        Assert.Equal(22, q.Springen.Y - q.Haltung.Y, 6);
+        // Gegenprobe: nur schraeg (Stand vor Lauf 1118) gibt es im Emulator keine Lage
+        HaltungKnopf.NurSchraegFuerTests = true;
+        try
+        {
+            Assert.Null(HaltungKnopf.Lage(b));
+        }
+        finally
+        {
+            HaltungKnopf.NurSchraegFuerTests = false;
+        }
+    }
+
+    [Fact]
     public void Leuchten_SymbolAufGrundfarbe_KontrastInJederFarbwelt_Gegenprobe()
     {
         var funde = new List<string>();
