@@ -8,7 +8,7 @@
 #   rechts_rechts    rechten Stick nach rechts ziehen und halten
 #   tippen           kurzer Tipp ohne Ziehen (input tap) auf ein Ziel im Stick-Bereich
 #   rechts_umgekehrt zweiter Start mit "--ez touch_umkehren true" (Schalter Umsehen links/rechts umkehren), rechter Stick nach rechts
-# Das Urteil faellt werkzeuge/android/touch_urteil.py (zuerst dessen Selbsttest mit Gegenproben). Rueckgabe 1 = rot.
+# Zwei ganze Durchgaenge nacheinander (stabil = zwei von zwei). Das Urteil faellt werkzeuge/android/touch_urteil.py (zuerst dessen Selbsttest mit Gegenproben). Rueckgabe 1 = rot.
 # Aufruf: touch_probe.sh <ergebnisdatei> (haengt an die Datei an)
 set -u
 ERGEBNIS=$1
@@ -64,22 +64,28 @@ schritt() {   # $1 Name, Rest: Befehl fuer adb shell
   echo "SCHRITT $name VOR $(echo "$vor" | cut -d' ' -f3-6) NACH $(echo "$nach" | cut -d' ' -f3-6) GEHT $geht STICK $stick" | tee -a "$SCHRITTE" "$ERGEBNIS"
 }
 rc=0
-if starten false; then
-  zeile "  Befehle: links $LX,$LY rechts $RX,$RY Radius $R Tipp $TX,$TY"
-  schritt links_vor "input swipe $LX $LY $LX $((LY - R)) 2500"
-  schritt rechts_rechts "input swipe $RX $RY $((RX + R)) $RY 1500"
-  schritt tippen "input tap $TX $TY"
-else
-  rc=1
-fi
-if starten true; then
-  schritt rechts_umgekehrt "input swipe $RX $RY $((RX + R)) $RY 1500"
-else
-  rc=1
-fi
-adb shell am force-stop "$PAKET" > /dev/null 2>&1 || true
-python3 -I werkzeuge/android/touch_urteil.py "$SCHRITTE" | tee -a "$ERGEBNIS"
-[ "${PIPESTATUS[0]}" -eq 0 ] || rc=1
+# zwei ganze Durchgaenge im selben Lauf (Weisung P12-315: stabil = zwei von zwei); jeder Durchgang hat sein eigenes Urteil
+for DURCHGANG in 1 2; do
+  zeile "----- Durchgang $DURCHGANG von 2 -----"
+  : > "$SCHRITTE"
+  if starten false; then
+    zeile "  Befehle: links $LX,$LY rechts $RX,$RY Radius $R Tipp $TX,$TY"
+    schritt links_vor "input swipe $LX $LY $LX $((LY - R)) 2500"
+    schritt rechts_rechts "input swipe $RX $RY $((RX + R)) $RY 1500"
+    schritt tippen "input tap $TX $TY"
+  else
+    rc=1
+  fi
+  if starten true; then
+    schritt rechts_umgekehrt "input swipe $RX $RY $((RX + R)) $RY 1500"
+  else
+    rc=1
+  fi
+  adb shell am force-stop "$PAKET" > /dev/null 2>&1 || true
+  python3 -I werkzeuge/android/touch_urteil.py "$SCHRITTE" | tee -a "$ERGEBNIS"
+  [ "${PIPESTATUS[0]}" -eq 0 ] || rc=1
+  zeile "Durchgang $DURCHGANG: $([ $rc -eq 0 ] && echo gruen || echo rot)"
+done
 if [ $rc -ne 0 ]; then
   zeile "  Protokoll der App (letzter Start):"
   sed 's/^/    /' "$LOG" | tail -n 60 | tee -a "$ERGEBNIS"

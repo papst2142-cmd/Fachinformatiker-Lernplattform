@@ -488,11 +488,24 @@ public sealed class SpielMitfahrtBelastungTests
         {
             var k = K(s);
             var vorher = Stand(s);
+            var richtung = s.FigurRichtung;
             tun();
             if (pruefen() is { } fund)
             {
                 return fund;
             }
+            // Welle A 0.98.0 (Sammelliste 396): Ducken und Kriechen behalten die Richtung; fehlt Platz, rueckt die Figur dabei selbst
+            // hoechstens 0,4 Figurhoehen genau laengs ihrer Richtung (eigener Test SpielHaltungenTests). Uhr und Gehen bleiben gleich;
+            // ab hier darf die Ich-Sicht nichts mehr aendern.
+            var weg = new Vector2(s.FigurX - vorher.Item2, s.FigurZ - vorher.Item3);
+            var b = richtung * MathF.PI / 180f;
+            if (s.FigurRichtung != richtung || s.Kopfzeile != vorher.Item1 || s.Geht != vorher.Item4
+                || weg.Length() > (0.4f * (s.ImInnenraum ? Innenraum.FigurHoehe : Figur.StadtHoehe)) + 1e-4f
+                || MathF.Abs((weg.X * MathF.Cos(b)) - (weg.Y * MathF.Sin(b))) >= 1e-3f)
+            {
+                return $"Haltung aendert das Spiel: {vorher} Richtung {richtung} -> {Stand(s)} Richtung {s.FigurRichtung}";
+            }
+            vorher = Stand(s);
             for (var i = 0; i < 40; i++)
             {
                 s.HaltungTakt((float)SpielMitfahrtTests.Dt);
