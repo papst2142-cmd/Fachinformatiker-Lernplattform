@@ -40,9 +40,16 @@ neuer_stand() {   # $1 Nummer des Stands vorher; wartet bis 40 s auf einen spaet
 starten() {   # $1 = true/false fuer "Umsehen links/rechts umkehren"
   adb logcat -c
   adb shell am force-stop "$PAKET" > /dev/null 2>&1 || true
+  # Befund Lauf 1110 (alle vier Schritte ohne jede Wirkung, beide Durchgaenge): Bildschirm wach halten, Sperre weg und den
+  # Android-Hinweis zum Vollbild als gesehen markieren, damit kein Fenster die Finger abfaengt; Zustand ins Protokoll
+  adb shell svc power stayon true > /dev/null 2>&1 || true
+  adb shell input keyevent KEYCODE_WAKEUP > /dev/null 2>&1 || true
+  adb shell wm dismiss-keyguard > /dev/null 2>&1 || true
+  adb shell settings put secure immersive_mode_confirmations confirmed > /dev/null 2>&1 || true
   adb shell am start -n "$KOMP" --ez touch_probe true --ez touch_umkehren "$1" > /dev/null 2>&1
   warten "^BEREIT \|^FEHLER" 300 || { lesen; sed 's/^/  /' "$LOG" | tee -a "$ERGEBNIS"; zeile "FEHLER: keine Zeile BEREIT nach 300 s"; return 1; }
   grep -E "^(START|3D|LAGE|BEREIT|FEHLER)" "$LOG" | sed 's/^/  /' | tee -a "$ERGEBNIS"
+  zeile "  Geraet: $(adb shell wm size | tr -d '\r' | tail -n 1), $(adb shell dumpsys power | tr -d '\r' | grep -m 1 -o 'mWakefulness=[A-Za-z]*'), $(adb shell dumpsys window | tr -d '\r' | grep -m 1 -o 'mCurrentFocus=.*')"
   if grep -q "^FEHLER" "$LOG"; then return 1; fi
   # BEREIT links LX LY rechts RX RY radius R tipp TX TY
   read -r _ _ LX LY _ RX RY _ R _ TX TY <<< "$(grep "^BEREIT " "$LOG" | tail -n 1)"
@@ -58,6 +65,7 @@ schritt() {   # $1 Name, Rest: Befehl fuer adb shell
     nach=$vor
     zeile "  $name: kein neuer ruhiger Stand nach 40 s"
   fi
+  zeile "  $name: Finger beim Programm angekommen: $(zaehlen "^ZEIGER ab") ab, $(zaehlen "^ZEIGER auf") auf (Summe seit dem Start)"
   geht=nein; stick=nein
   [ "$(zaehlen "^GEHT")" -gt "$geht0" ] && geht=ja
   [ "$(zaehlen "^STICK aktiv ja")" -gt "$stick0" ] && stick=ja

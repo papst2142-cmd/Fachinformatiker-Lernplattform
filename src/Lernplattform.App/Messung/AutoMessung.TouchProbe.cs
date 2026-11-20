@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Spiel;
@@ -108,6 +110,15 @@ public static partial class AutoMessung
             }
             melden(string.Create(inv, $"LAGE flaeche {fl.Bounds.Width:F0}x{fl.Bounds.Height:F0} skala {skala:0.###} frei {b.FreiHoehe:F0} moeglich {fl.SticksMoeglich} fest {fl.FesteKamera}"));
             melden(string.Create(inv, $"BEREIT links {links.X} {links.Y} rechts {rechts.X} {rechts.Y} radius {radius} tipp {tipp.X} {tipp.Y}"));
+            // Befund Lauf 1110: kein Stick und kein Gehen. Jeder echte Finger, der beim Fenster ankommt, steht darum im Protokoll
+            // (ZEIGER ab/auf mit Bildpunkt), auch wenn ihn ein anderes Element schon behandelt hat
+            void Zeiger(string art, PointerEventArgs e)
+            {
+                var p = e.GetPosition(oben);
+                melden(string.Create(inv, $"ZEIGER {art} {p.X * skala:F0} {p.Y * skala:F0} {e.Pointer.Type}"));
+            }
+            oben?.AddHandler(InputElement.PointerPressedEvent, (_, e) => Zeiger("ab", e), RoutingStrategies.Tunnel, handledEventsToo: true);
+            oben?.AddHandler(InputElement.PointerReleasedEvent, (_, e) => Zeiger("auf", e), RoutingStrategies.Tunnel, handledEventsToo: true);
             fl.SticksGeaendert += () =>
             {
                 var z = fl.StickZustand;
