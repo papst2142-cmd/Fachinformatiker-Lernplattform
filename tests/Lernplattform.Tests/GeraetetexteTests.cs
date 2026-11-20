@@ -261,6 +261,7 @@ public partial class GeraetetexteTests
         // Phase 7 W6 (Weisung P7-11): Geraet im Spielprotokoll (Spalte geraet von spiel_ereignisse und spiel_plaetze)
         ("Spiel/SpielStart.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Spiel/SpielStart.cs", "var geraet = Pc ? \"PC\" : \"Handy\";", "Daten: Geraet im Spielprotokoll wie fg.Game(app.db, device=\"PC\"/\"Handy\") (fisi_game_gui 2863, spiel.py 1801), kein Anzeigetext"),
+        ("Spiel/SpielSeite.Daumen.cs", "public bool DaumenKnoepfeAn => DaumenKnoepfeFuerTests ?? OperatingSystem.IsAndroid();", "Bedienung: runde Knoepfe Springen/Haltung am rechten Daumen nur am Handy und Tablet, am PC Menue und Tasten (Sammelliste 400, Weisungen P12-319/P12-320); kein Text"),
         // Phase 11 W1 (Sammelliste 180): Erinnerung ans Tagesziel
         ("Programm/ErinnerungDienst.cs", "if (UpdateDienst.Pc) // alle 5 Minuten nur am PC", "Verhalten: PC prueft alle 5 Minuten (app_gui 11093), Handy beim Start und beim Zurueckholen (main.py 5983, 6044)"),
         ("Views/OptionenSeite.cs", "if (!Pc) // Uhrzeit beim Tippen", "Verhalten: Uhrzeit der Erinnerung am Handy beim Tippen speichern, sobald gueltig (main.py 4176, _reminder_changed 4474)"),

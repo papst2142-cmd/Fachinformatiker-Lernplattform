@@ -47,10 +47,54 @@ public sealed partial class StadtSpiel
     /// <summary>Die Figur kann gerade eine Haltung einnehmen (3D, steht, nicht im Bus, nicht beim Einrichten).</summary>
     public bool KoerperMoeglich => HaltungAn && !SitztOderLiegt && Mitfahrt == MitfahrtStufe.Keine && !ImBus && !Einrichten;
 
-    /// <summary>Haltung der stehenden Figur (Stehen, Ducken, Kriechen); Gehen, Sitzen, Bus und ein anderer Raum beenden sie.</summary>
+    /// <summary>
+    /// Haltung der Figur (Stehen, Ducken, Kriechen). Seit A 0.99.0 (Sammelliste 400, Weisung P12-319/320) geht die Figur in der
+    /// Haltung weiter (langsamer, <see cref="HaltungTempo"/>); Sitzen, Bus, ein anderer Raum und jedes Versetzen ohne Gehen beenden sie,
+    /// ein Hindernis, an dem die Haltung keinen Platz hat, ebenso (die Figur steht auf). Bis A 0.98.0 beendete jedes Gehen die Haltung
+    /// (Gegenprobe <see cref="HaltungGehenAltFuerTests"/>).
+    /// </summary>
     public Koerperhaltung Koerper =>
-        _koerper != Koerperhaltung.Stehen && KoerperMoeglich && !Geht && ReferenceEquals(Innen, _koerperStelle.Innen)
+        _koerper != Koerperhaltung.Stehen && KoerperMoeglich && (!HaltungGehenAlt.Value || !Geht) && ReferenceEquals(Innen, _koerperStelle.Innen)
         && FigurX == _koerperStelle.X && FigurZ == _koerperStelle.Z ? _koerper : Koerperhaltung.Stehen;
+
+    /// <summary>Welle A 0.99.0 (E1, in der Meldung P12-196 genannt): geduckt geht die Figur mit 60 % des Tempos.</summary>
+    public const float DuckenTempo = 0.6f;
+
+    /// <summary>Welle A 0.99.0 (E1): kriechend geht die Figur mit 35 % des Tempos.</summary>
+    public const float KriechenTempo = 0.35f;
+
+    /// <summary>Anteil des normalen Tempos in der Haltung <paramref name="haltung"/> (Stehen: 1).</summary>
+    public static float HaltungTempo(Koerperhaltung haltung) => haltung switch
+    {
+        Koerperhaltung.Ducken => DuckenTempo,
+        Koerperhaltung.Kriechen => KriechenTempo,
+        _ => 1f,
+    };
+
+    private static readonly AsyncLocal<bool> HaltungGehenAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Stand bis A 0.98.0, jedes Gehen beendet Ducken und Kriechen.</summary>
+    public static bool HaltungGehenAltFuerTests { get => HaltungGehenAlt.Value; set => HaltungGehenAlt.Value = value; }
+
+    /// <summary>
+    /// Nach einem Schritt in der Haltung <paramref name="haltung"/> (vor dem Schritt gemessen): hat die Haltung an der neuen Stelle
+    /// Platz, geht sie mit; sonst steht die Figur auf (das Hindernis erzwingt es, Durchdringung 0).
+    /// </summary>
+    private void KoerperNachSchritt(Koerperhaltung haltung)
+    {
+        if (haltung == Koerperhaltung.Stehen || _koerper != haltung || !ReferenceEquals(Innen, _koerperStelle.Innen) || !KoerperMoeglich)
+        {
+            return;
+        }
+        if (KoerperFreiBei(FigurX, FigurZ, FigurRichtung, haltung))
+        {
+            _koerperStelle = (Innen, FigurX, FigurZ);
+            return;
+        }
+        _koerper = Koerperhaltung.Stehen;
+        Hinweis(SpielProbeTexte.HaltungKeinPlatzMehr);
+        Geaendert?.Invoke();
+    }
 
     /// <summary>Die Figur ist gerade im Sprung.</summary>
     public bool Springt => _sprung is not null && KoerperMoeglich && Koerper == Koerperhaltung.Stehen;
@@ -108,9 +152,9 @@ public sealed partial class StadtSpiel
             Geaendert?.Invoke();
             return true;
         }
-        if (Geht)
+        if (Geht && HaltungGehenAlt.Value)
         {
-            // nur an der Stelle (P12-303): erst nach der Ankunft
+            // bis A 0.98.0 nur an der Stelle (P12-303): erst nach der Ankunft (seit A 0.99.0 auch im Gehen)
             return Abgelehnt(SpielProbeTexte.ErstAnkommenHaltung);
         }
         if (KoerperDrehenAlt.Value)
@@ -242,10 +286,10 @@ public sealed partial class StadtSpiel
         return true;
     }
 
-    /// <summary>Gehen beendet Ducken und Kriechen (aufgerufen, sobald die Figur einen Weg hat).</summary>
+    /// <summary>Gegenprobe bis A 0.98.0: Gehen beendet Ducken und Kriechen (aufgerufen, sobald die Figur einen Weg hat).</summary>
     private void KoerperBeimGehen()
     {
-        if (_koerper != Koerperhaltung.Stehen && Geht)
+        if (HaltungGehenAlt.Value && _koerper != Koerperhaltung.Stehen && Geht)
         {
             _koerper = Koerperhaltung.Stehen;
         }

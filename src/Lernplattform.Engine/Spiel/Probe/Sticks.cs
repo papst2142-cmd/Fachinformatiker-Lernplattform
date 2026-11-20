@@ -31,9 +31,18 @@ public sealed class Sticks
         Rechts,
     }
 
-    /// <summary>Freier Bereich der Flaeche: Breite und Hoehe in Punkten, oben die Kopfzeile, unten die Leiste (verdeckt).</summary>
-    public readonly record struct Bereich(double Breite, double Hoehe, double Oben, double Unten)
+    /// <summary>
+    /// Freier Bereich der Flaeche: Breite und Hoehe in Punkten, oben die Kopfzeile, unten die Leiste (verdeckt). Welle A 0.99.0
+    /// (Sammelliste 399): die Leiste steht mittig und reicht waagerecht nur von <paramref name="LeisteVon"/> bis
+    /// <paramref name="LeisteBis"/>; links und rechts daneben setzt ein Daumen auch ganz unten einen Stick (dort liegen die
+    /// Daumen). Ohne Angabe (0, 0) verdeckt die Leiste wie bis A 0.98.0 die ganze Breite.
+    /// </summary>
+    public readonly record struct Bereich(double Breite, double Hoehe, double Oben, double Unten, double LeisteVon = 0, double LeisteBis = 0)
     {
+        /// <summary>Liegt (x, y) unten neben der Leiste (frei fuer einen Daumen)?</summary>
+        public bool NebenLeiste(double x, double y) =>
+            LeisteBis > LeisteVon && y > Hoehe - Unten && y <= Hoehe && (x < LeisteVon || x > LeisteBis);
+
         public double FreiHoehe => Math.Max(0, Hoehe - Oben - Unten);
     }
 
@@ -118,7 +127,7 @@ public sealed class Sticks
     /// </summary>
     public static Seite? SeiteFuer(double x, double y, Bereich b)
     {
-        if (b.Breite < 2 * Radius || b.FreiHoehe < Radius || x < 0 || x > b.Breite || y > b.Hoehe - b.Unten || y < ZoneOben(b))
+        if (b.Breite < 2 * Radius || b.FreiHoehe < Radius || x < 0 || x > b.Breite || (y > b.Hoehe - b.Unten && !b.NebenLeiste(x, y)) || y < ZoneOben(b))
         {
             return null;
         }

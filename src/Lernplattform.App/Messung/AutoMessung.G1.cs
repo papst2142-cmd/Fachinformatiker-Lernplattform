@@ -71,6 +71,8 @@ public static partial class AutoMessung
                 }
                 // Welle A 0.92.0 (Weisung P12-301 Punkt 5): Ich-Sicht draussen an jeder Kachel und drinnen in jedem Raum
                 funde += await IchGrenzenAsync(seite, stufe);
+                // Welle A 0.99.0 (Weisung P12-317): Serverfarm mit Werkstatt-Teilen und offener Glastuer
+                funde += await WerkstattGrenzenAsync(seite, stufe);
                 if (stufe == Grafikstufe.Niedrig)
                 {
                     var g = flaeche.LetzteBildgroesse;

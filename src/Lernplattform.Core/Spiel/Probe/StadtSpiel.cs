@@ -505,20 +505,22 @@ public sealed partial class StadtSpiel
     /// <summary>Figur um <paramref name="sekunden"/> weiterbewegen; true, solange sie geht.</summary>
     public bool Fortschreiten(double sekunden)
     {
-        // Welle A 0.93.0: Gehen beendet Ducken und Kriechen
+        // Welle A 0.93.0: Gehen beendete Ducken und Kriechen; seit A 0.99.0 (Sammelliste 400) geht die Haltung langsamer mit
         KoerperBeimGehen();
         if (_weg.Count == 0)
         {
             return false;
         }
         _imBild = true;
+        var haltung = Koerper;
         try
         {
-            return Weiter(sekunden);
+            return Weiter(sekunden * HaltungTempo(haltung));
         }
         finally
         {
             _imBild = false;
+            KoerperNachSchritt(haltung);
         }
     }
 
@@ -997,7 +999,7 @@ public sealed partial class StadtSpiel
             }
             knoepfe = [.. knoepfe, (Charakter.Aktion, Charakter.KnopfOeffnen)];
         }
-        Knoepfe = [.. EtagenKnoepfe(HaltungKnoepfe(innen, SpielweltKnoepfe(innen, knoepfe, fx, fz)))];
+        Knoepfe = [.. EtagenKnoepfe(GlastuerKnoepfe(innen, HaltungKnoepfe(innen, SpielweltKnoepfe(innen, knoepfe, fx, fz))))];
     }
 
     /// <summary>
@@ -1171,6 +1173,11 @@ public sealed partial class StadtSpiel
         if (HaltungAktion(aktion))
         {
             // Welle A 0.81.0: Hinsetzen, Hinlegen, Aufstehen
+            return true;
+        }
+        if (GlastuerAktion(aktion))
+        {
+            // Welle A 0.99.0: Glastuer am Serverschrank (nur Darstellung)
             return true;
         }
         if (MitfahrtAktion(aktion))

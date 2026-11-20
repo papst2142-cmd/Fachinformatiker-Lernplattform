@@ -7,12 +7,25 @@ und prueft je Schritt Nicos Ziel:
   rechts_rechts    rechter Stick nach rechts: der Blick dreht nach rechts (393)
   tippen           Tippen ohne Ziehen: kein Stick, die Figur geht los (Antippen)
   rechts_umgekehrt rechter Stick nach rechts mit „Umsehen links/rechts umkehren“: der Blick dreht nach links (394)
+Welle A 0.99.0 (Sammelliste 400): dazu Zeilen "HALTUNG <name> ERWARTET <haltung> IST <haltung> AENDERUNGEN <n>" fuer den
+runden Haltung-Knopf: haltung_tippen (Ducken), haltung_tippen2 (Stehen), haltung_lang (Kriechen), haltung_auf (Stehen);
+gruen nur, wenn IST = ERWARTET und genau eine Aenderung kam.
 Rechts vom Blick (bx, bz) liegt (-bz, bx) wie in SpielUmsehenTests. Fehlt ein Schritt, ist das Urteil rot.
 Aufruf: touch_urteil.py <ergebnisdatei>  |  touch_urteil.py selbsttest (Gegenproben: jedes vertauschte Vorzeichen wird rot)
 """
 import sys
 
 SCHRITTE = ("links_vor", "rechts_rechts", "tippen", "rechts_umgekehrt")
+HALTUNGEN = (("haltung_tippen", "Ducken"), ("haltung_tippen2", "Stehen"), ("haltung_lang", "Kriechen"), ("haltung_auf", "Stehen"))
+
+
+def haltungen_lesen(zeilen):
+    aus = {}
+    for z in zeilen:
+        t = z.split()
+        if len(t) == 8 and t[0] == "HALTUNG" and t[2] == "ERWARTET" and t[4] == "IST" and t[6] == "AENDERUNGEN" and t[7].isdigit():
+            aus[t[1]] = (t[3], t[5], int(t[7]))
+    return aus
 
 
 def lesen(zeilen):
@@ -55,6 +68,16 @@ def urteil(zeilen):
         ok, text = pruefen(name, *schritte[name])
         aus.append(("OK" if ok else "FEHLER") + f": {name}: {text}")
         gruen = gruen and ok
+    haltungen = haltungen_lesen(zeilen)
+    for name, soll in HALTUNGEN:
+        if name not in haltungen:
+            aus.append(f"FEHLER: {name}: Schritt fehlt")
+            gruen = False
+            continue
+        erwartet, ist, n = haltungen[name]
+        ok = erwartet == soll and ist == soll and n == 1
+        aus.append(("OK" if ok else "FEHLER") + f": {name}: erwartet {soll}, ist {ist}, Aenderungen {n}")
+        gruen = gruen and ok
     aus.append("ERGEBNIS: " + ("gruen" if gruen else "rot"))
     return gruen, aus
 
@@ -64,6 +87,10 @@ GUT = [
     "SCHRITT rechts_rechts VOR 10.020 5.600 0.0000 1.0000 NACH 10.020 5.600 -0.5000 0.8660 GEHT nein STICK ja",
     "SCHRITT tippen VOR 10.020 5.600 -0.5000 0.8660 NACH 9.000 7.000 -0.5000 0.8660 GEHT ja STICK nein",
     "SCHRITT rechts_umgekehrt VOR 3.000 3.000 0.0000 1.0000 NACH 3.000 3.000 0.5000 0.8660 GEHT nein STICK ja",
+    "HALTUNG haltung_tippen ERWARTET Ducken IST Ducken AENDERUNGEN 1",
+    "HALTUNG haltung_tippen2 ERWARTET Stehen IST Stehen AENDERUNGEN 1",
+    "HALTUNG haltung_lang ERWARTET Kriechen IST Kriechen AENDERUNGEN 1",
+    "HALTUNG haltung_auf ERWARTET Stehen IST Stehen AENDERUNGEN 1",
 ]
 
 
@@ -85,8 +112,14 @@ def selbsttest():
         "Tippen zeigt einen Stick": ersetzt(2, "GEHT ja STICK nein", "GEHT ja STICK ja"),
         "Tippen geht nicht": ersetzt(2, "GEHT ja STICK nein", "GEHT nein STICK nein"),
         "rechter Stick ohne Drehung": ersetzt(1, "NACH 10.020 5.600 -0.5000 0.8660", "NACH 10.020 5.600 0.0000 1.0000"),
-        "Schritt fehlt": GUT[:3],
-        "kaputte Zeile": [GUT[0], GUT[1][:-3], GUT[2], GUT[3]],
+        "Schritt fehlt": GUT[:3] + GUT[4:],
+        "kaputte Zeile": [GUT[0], GUT[1][:-3]] + GUT[2:],
+        "Tippen auf Haltung ohne Wirkung": ersetzt(4, "IST Ducken AENDERUNGEN 1", "IST - AENDERUNGEN 0"),
+        "Lang druecken gibt Ducken": ersetzt(6, "IST Kriechen", "IST Ducken"),
+        "Lang druecken: erst Ducken, dann Kriechen": ersetzt(6, "AENDERUNGEN 1", "AENDERUNGEN 2"),
+        "Aufstehen bleibt liegen": ersetzt(7, "IST Stehen", "IST Kriechen"),
+        "Haltung-Schritt fehlt": GUT[:6] + GUT[7:],
+        "falsch erwartet": ersetzt(5, "ERWARTET Stehen IST Stehen", "ERWARTET Ducken IST Stehen"),
     }
     for name, zeilen in gegen.items():
         rot, aus = urteil(zeilen)

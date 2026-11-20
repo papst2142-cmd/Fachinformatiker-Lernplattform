@@ -15,7 +15,7 @@ namespace Lernplattform.Messung;
 /// <summary>
 /// Welle A 0.93.0 „Haltungen“ (Weisung P12-303, Sammelliste 352) ueber echte Bedienung in der Wohnung (frischer Probe-Ablauf mit
 /// Sofa, nur im Speicher): „Springen“ mit der Leertaste, „Ducken“ ueber die Automation (wie ein Screenreader), „Kriechen“ mit X,
-/// „Aufstehen“ mit Mausklick; Namen der Knoepfe wechseln, Ansagen stimmen; Gehen beendet die Haltung; in der Ich-Sicht sinkt das
+/// „Aufstehen“ mit Mausklick; Namen der Knoepfe wechseln, Ansagen stimmen; geduckt gehen haelt die Haltung (seit A 0.99.0, Gegenprobe Stand davor); in der Ich-Sicht sinkt das
 /// Auge geduckt; auf dem Sofa „Zurücklehnen“ und „Aufrichten“. Dreiecke und Zeichenaufrufe sind in jeder Haltung dieselben wie im
 /// Stehen (die Grenzen aller Stufen bleiben so unveraendert). Nur Darstellung: keine neue Zeile im Spielstand. Ohne 3D: keine Knoepfe.
 /// </summary>
@@ -114,14 +114,32 @@ public static partial class AutoMessung
             Pruefe("Aufstehen mit Klick", spiel.Koerper == Koerperhaltung.Stehen && Name(kriechen) == SpielProbeTexte.KnopfKriechen && Ansage.Zuletzt == SpielProbeTexte.DuStehst,
                 $"{spiel.Koerper}, Ansage \"{Ansage.Zuletzt}\"");
 
-            // Gehen beendet die Haltung
+            // seit A 0.99.0 (Weisung P12-319/320, Sammelliste 400): geduckt gehen, die Haltung bleibt bis „Aufstehen“
             Taste(Key.C);
             var geduckt = spiel.Koerper == Koerperhaltung.Ducken;
+            var start = (spiel.FigurX, spiel.FigurZ);
             spiel.GeheZu(stelle.X + 0.6, stelle.Y);
             await Bilder(2);
             spiel.SofortAnkommen();
             await Bilder(2);
-            Pruefe("Gehen beendet Ducken", geduckt && spiel.Koerper == Koerperhaltung.Stehen && spiel.HaltungModell is null, $"geduckt {geduckt}, danach {spiel.Koerper}");
+            var weg = MathF.Abs(spiel.FigurX - start.FigurX) + MathF.Abs(spiel.FigurZ - start.FigurZ);
+            Pruefe("Geduckt gehen, Haltung bleibt", geduckt && weg > 0.3f && spiel.Koerper == Koerperhaltung.Ducken && spiel.HaltungModell is not null,
+                string.Create(inv, $"geduckt {geduckt}, Weg {weg:0.00}, danach {spiel.Koerper}"));
+            // Gegenprobe: mit dem Stand bis A 0.98.0 (jedes Gehen beendet die Haltung) steht die Figur nach demselben Weg zurueck
+            // (ohne Warten zwischen Losgehen und Ankunft, damit der Schalter fuer diesen Ablauf gilt)
+            StadtSpiel.HaltungGehenAltFuerTests = true;
+            try
+            {
+                spiel.GeheZu(stelle.X, stelle.Y);
+                spiel.SofortAnkommen();
+                Pruefe("Gegenprobe Stand bis A 0.98.0: Gehen beendet Ducken", spiel.Koerper == Koerperhaltung.Stehen, $"danach {spiel.Koerper}");
+            }
+            finally
+            {
+                StadtSpiel.HaltungGehenAltFuerTests = false;
+            }
+            await Bilder(2);
+            Pruefe("Nach der Gegenprobe steht die Figur", spiel.Koerper == Koerperhaltung.Stehen && spiel.HaltungModell is null, $"{spiel.Koerper}");
 
             // Ich-Sicht: geduckt sinkt das Auge
             spiel.GeheZu(stelle.X, stelle.Y);

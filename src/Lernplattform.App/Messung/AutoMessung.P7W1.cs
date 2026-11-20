@@ -616,7 +616,9 @@ public static partial class AutoMessung
         var getroffen = mitte is { } m ? ansicht.InputHitTest(m) as Visual : null;
         var trifft = getroffen is not null && (getroffen == seite.Flaeche || getroffen.GetVisualAncestors().Contains(seite.Flaeche));
         Pruefe("Gesten erreichen die 3D-Flaeche", scroll == 0 && trifft,
-            "ScrollView darum " + scroll + ", Mitte trifft " + (getroffen?.GetType().Name ?? "nichts"));
+            "ScrollView darum " + scroll + ", Mitte trifft " + (getroffen?.GetType().Name ?? "nichts")
+            + (trifft || getroffen is null ? "" : " (" + (getroffen is TextBlock tb ? "\"" + tb.Text + "\" " : "")
+                + string.Join(" < ", getroffen.GetVisualAncestors().Take(4).Select(v => v.GetType().Name + (v is Control c && !string.IsNullOrEmpty(c.Name) ? "#" + c.Name : ""))) + ")"));
 
         // Tippen auf ein Haus geht hin (Bitweiche: Mitte ihres Kastens auf den Bildschirm gerechnet)
         var kamera = seite.Flaeche.AktuelleKamera!;

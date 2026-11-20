@@ -1266,6 +1266,9 @@ public sealed partial class Innenraum
         Kasten(r, 0.09f, 0.01f, b - 0.18f, 0.08f, GelaenderHoehe * 0.5f, (GelaenderHoehe * 0.5f) + 0.05f, Farben.Metall);
     }
 
+    /// <summary>Welle A 0.99.0: Kaesten der Werkstatt-Teile im Rahmen <paramref name="r"/>.</summary>
+    private KastenSetzen KastenIn(Rahmen r) => (lx, lz, lw, lt, unten, oben, farbe) => Kasten(r, lx, lz, lw, lt, unten, oben, farbe);
+
     private void Kasten(Rahmen r, float lx, float lz, float lw, float lt, float unten, float oben, Vector3 farbe)
     {
         var (x, z, w, t) = r.Rechteck(lx, lz, lw, lt);
@@ -1361,6 +1364,12 @@ public sealed partial class Innenraum
         else
         {
             dreh = AnDerWand.Contains(typ) ? AutoDrehung(typ, x, z, w, t) : 0;
+            if (typ == "rack" && w < t && !WerkstattAltFuerTests.Value)
+            {
+                // Welle A 0.99.0 (E1): Serverschraenke zeigen mit der Front zum Gang (lange Seite), nicht seitlich in die
+                // schmale Luecke zum Nachbarschrank; Rechteck und Laufraster bleiben gleich
+                dreh = AutoDrehung("bett", x, z, w, t);
+            }
         }
         var r = new Rahmen(x, z, w, t, dreh);
         var ohneStuhl = false;
@@ -1399,9 +1408,14 @@ public sealed partial class Innenraum
             case "tisch":
             case "werkbank":
                 Modell(r, "table", 0, 0, b, tt, (typ == "werkbank" ? 0.9f : 0.75f) * M, 0, Farben.Holz);
-                if (typ == "werkbank")
+                if (typ == "werkbank" && WerkstattAltFuerTests.Value)
                 {
                     Kasten(r, 0.3f, 0.2f, 0.8f, 0.6f, 0.9f * M, (0.9f + 0.4f) * M, Farben.GeraetHell);
+                }
+                else if (typ == "werkbank")
+                {
+                    // Welle A 0.99.0 (Sammelliste 356): PC-Tower, ESD-Matte, Mainboard, RAM, CPU, Werkzeug
+                    WerkbankBauen(KastenIn(r), b, tt, 0.9f * M);
                 }
                 break;
             case "besprechungstisch":
@@ -1926,6 +1940,16 @@ public sealed partial class Innenraum
         var wandOben = WandHoehe - 0.2f;
         switch (typ)
         {
+            case "rack" when !WerkstattAltFuerTests.Value:
+                RackBauen(KastenIn(r), b, t);
+                _glastueren.Add((r, b, t));
+                break;
+            case "usv" when !WerkstattAltFuerTests.Value:
+                UsvBauen(KastenIn(r), b, t);
+                break;
+            case "pc" when !WerkstattAltFuerTests.Value:
+                PcBauen(KastenIn(r), b * 0.3f, t * 0.2f, b * 0.4f, t * 0.6f, 0, 0.5f * M);
+                break;
             case "rack":
             {
                 Kasten(r, 0, 0, b, t, 0, 2.0f * M, Farben.Geraet);

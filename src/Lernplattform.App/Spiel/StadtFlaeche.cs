@@ -371,6 +371,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     private (double Oben, double Unten) _frei;
 
+    /// <summary>Welle A 0.99.0 (Sammelliste 399): waagerechte Lage der mittigen Leiste (von, bis) in Punkten der Flaeche; (0, 0) = keine.</summary>
+    public (double Von, double Bis) LeisteX { get; set; }
+
     /// <summary>Versatz der Kamera fuer den freien Bereich (Bildraum, hoechstens 0,6).</summary>
     private float FreiVersatz() => SpielKamera.FreiVersatz(Bounds.Height, _frei.Oben, _frei.Unten);
 
@@ -611,6 +614,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _neuNetze.Clear();
         _paket.Clear();
         _ampelLichter = null;
+        GlastuerenFrei(null);
         NachladenFrei(null);
         GrafikFrei(null);
         base.OnOpenGlLost();
@@ -624,6 +628,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             netz?.Freigeben(gl);
         }
         _ampelLichter = null;
+        GlastuerenFrei(gl);
         NachladenFrei(gl);
         GrafikFrei(gl);
         _innenGl.Clear();
@@ -1176,7 +1181,13 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 spieler = _spiel.HaltungModell is { } modell
                     ? FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, modell, 0, IchNah(kamera))
                     : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild, IchNah(kamera));
-                figurLage = Matrix4x4.CreateScale(groesse) * Matrix4x4.CreateRotationY(IchSicht.FigurDrehung(kamera, _spiel) * MathF.PI / 180f)
+                // Welle A 0.99.0 (Sammelliste 400): geduckt oder kriechend gehend wiegt sich die Figur leicht im Schritt (die Haltung
+                // hat kein eigenes Gehbild; Wiegen um die Laengsachse und kleines Heben nach dem Weg, nur Darstellung)
+                var wiegen = _spiel.HaltungModell is not null && !_spiel.Springt && (_spiel.Geht || _spiel.FreiUnterwegs)
+                    ? Matrix4x4.CreateRotationZ(0.06f * MathF.Sin((float)(_spiel.Schrittweg / _spiel.Zyklus * 4 * Math.PI)))
+                        * Matrix4x4.CreateTranslation(0, 0.012f * MathF.Abs(MathF.Sin((float)(_spiel.Schrittweg / _spiel.Zyklus * 4 * Math.PI))), 0)
+                    : Matrix4x4.Identity;
+                figurLage = Matrix4x4.CreateScale(groesse) * wiegen * Matrix4x4.CreateRotationY(IchSicht.FigurDrehung(kamera, _spiel) * MathF.PI / 180f)
                     * Matrix4x4.CreateTranslation(_spiel.FigurX, (innen is null ? FigurHoehe(_spiel) : 0f) + (_spiel.SprungHoehe * groesse), _spiel.FigurZ);
             }
             if (!_busMitFigur)
@@ -1208,6 +1219,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                         Zeichnen(gl, _ausruf, Matrix4x4.CreateTranslation(person.X, groesse + 0.25f, person.Z), sichtProj);
                     }
                 }
+                // Welle A 0.99.0: Glastueren der Serverschraenke (zu oder offen, Scheibe halb durchsichtig)
+                GlastuerenZeichnen(gl, innen, sichtProj);
                 // Waende vor der Kamera und zwischen Auge und Figur halb durchsichtig (Sammelliste 102); Welle A 0.92.0 (Nico 4a):
                 // in der Ich-Sicht keine Wand durchsichtig, Waende 2,5 m hoch und eine Decke darueber
                 var d0 = _uhr.Elapsed.TotalSeconds;

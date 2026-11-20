@@ -159,8 +159,9 @@ public static partial class AutoMessung
         // Welle Nachladen A 0.82.0 (Weisung P12-280): eigener Teil mit der grossen Testkarte (eigener Schritt in der CI)
         if (Teil == TeilNachladen)
         {
+            var n = await LeisteUndDaumenAsync(ansicht);
             Zeitplan("NachladenTeilAsync");
-            var n = await NachladenTeilAsync(ansicht);
+            n += await NachladenTeilAsync(ansicht);
             Messwerte.Notiere(n == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({n} Funde)"));
             return n;
         }
@@ -256,6 +257,7 @@ public static partial class AutoMessung
             if (Teil is null)
             {
                 // lokal (ohne Teil) auch der Teil der Testkarte; die CI misst ihn als eigenen Schritt
+                funde += await LeisteUndDaumenAsync(ansicht);
                 Zeitplan("NachladenTeilAsync");
                 funde += await NachladenTeilAsync(ansicht);
             }
@@ -286,6 +288,21 @@ public static partial class AutoMessung
         Zeitplan("Ende");
         funde += AbschlussAuswerten(reihenRot);
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
+        return funde;
+    }
+
+    /// <summary>
+    /// Welle A 0.99.0: Leiste unten mittig (Sammelliste 399) und runde Knoepfe am rechten Daumen (Sammelliste 400). Sie laufen
+    /// im Teil der Testkarte (eigener CI-Schritt mit 14 Minuten Wachhund) vor der Testkarte, nicht in den Spielansichten:
+    /// dort reichten die 9 Minuten mit ihnen nicht mehr (Laeufe 1120 und 1122, ubuntu, Spielansichten bis zur Layoutpruefung
+    /// 326 s statt 279 s auf main). Lokal ohne Teil laufen sie wie bisher mit allem.
+    /// </summary>
+    private static async Task<int> LeisteUndDaumenAsync(MainView ansicht)
+    {
+        Zeitplan("Leiste399Async");
+        var funde = await Leiste399Async(ansicht);
+        Zeitplan("Daumen400Async");
+        funde += await Daumen400Async(ansicht);
         return funde;
     }
 

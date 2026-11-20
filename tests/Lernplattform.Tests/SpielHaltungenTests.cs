@@ -11,7 +11,7 @@ namespace Lernplattform.Tests;
 /// <list type="number">
 /// <item>Springen: die Figur springt kurz in die Hoehe, an der Stelle und im Gehen; ihr Weg ist Bild fuer Bild derselbe wie ohne
 /// Sprung, sie kommt also nie ueber Hindernisse, Waende oder Fahrbahn; drinnen nur, wo ueber dem Kopf Platz ist.</item>
-/// <item>Ducken und Kriechen: nur an der Stelle, Gehen beendet sie; die Figur in der Haltung beruehrt nichts (Einrichtung,
+/// <item>Ducken und Kriechen: seit A 0.99.0 auch im Gehen, nur Aufstehen oder ein Hindernis beendet sie; die Figur in der Haltung beruehrt nichts (Einrichtung,
 /// Fest-Deko, Personen; 0 Ecken bei 0,02 Spiel) und reicht nicht ueber die Mitte einer Wand (Gegenprobe ohne Pruefung findet Funde).</item>
 /// <item>Zurueckgelehnt sitzen: auf Sofa, Sessel und Liegestuhl „Zurücklehnen“, zurueck mit „Aufrichten“ (Platzregeln: Test
 /// <c>SpielHaltungTests</c> prueft jeden Platz, auch die zurueckgelehnten).</item>
@@ -434,16 +434,24 @@ public class SpielHaltungenTests
         Assert.Equal(0f, mit.SprungHoehe);
     }
 
+    /// <summary>
+    /// Ducken und Kriechen, seit A 0.99.0 (Sammelliste 400) auch im Gehen: die Haltung geht beim angetippten Weg mit (langsamer), nur
+    /// Aufstehen oder ein Hindernis beendet sie; kein Ereignis. Gegenprobe 1: Stand bis A 0.98.0 (jedes Gehen beendet sie, im Gehen
+    /// geht sie nicht). Gegenprobe 2: ohne 3D keine Haltung.
+    /// </summary>
     [Fact]
-    public void DuckenKriechen_NurAnDerStelle_GehenBeendet_KeinEreignis_GegenprobeOhne3D()
+    public void DuckenKriechen_ImGehenMit_NurAufstehenBeendet_KeinEreignis_Gegenproben()
     {
         var spiel = Spiel();
         var s = SpielHaltungBedienungTests.ZuHause(spiel);
         var zeilen = spiel.Speicher.Ereignisse().Count;
-        // freie Stelle mitten im Raum suchen
+        // freie Stelle mitten im Raum suchen, von der aus 1,2 nach rechts (Blick 90 Grad) ueberall gekrochen werden kann
         var innen = s.Innen!;
+        var rechts = MathF.PI / 2;
         var stelle = Enumerable.Range(0, 400).Select(i => new Vector2(0.5f + (i % 20 * 0.4f), 0.5f + (i / 20 * 0.4f)))
-            .First(p => p.X < innen.Breite && p.Y < innen.Tiefe && innen.KoerperFrei(p, 0f, Koerperhaltung.Kriechen) && s.GeheZu(p.X, p.Y));
+            .First(p => p.X + 1.2f < innen.Breite && p.Y < innen.Tiefe && innen.KoerperFrei(p, 0f, Koerperhaltung.Kriechen)
+                && Enumerable.Range(0, 13).All(i => innen.KoerperFrei(p + new Vector2(i * 0.1f, 0), rechts, Koerperhaltung.Kriechen))
+                && s.GeheZu(p.X, p.Y));
         SpielHaltungBedienungTests.Ankommen(s);
         Assert.True(s.Ducken(), s.HaltungHinweis);
         Assert.Equal(Koerperhaltung.Ducken, s.Koerper);
@@ -455,18 +463,43 @@ public class SpielHaltungenTests
         Assert.True(s.Kriechen());
         Assert.Equal(Koerperhaltung.Stehen, s.Koerper);
         Assert.Equal(SpielProbeTexte.DuStehst, s.HaltungHinweis);
-        // Gehen beendet die Haltung, und waehrend des Gehens geht sie nicht
+        // kriechend einen Weg gehen: die Haltung bleibt unterwegs und nach der Ankunft
         Assert.True(s.Kriechen());
         Assert.True(s.GeheZu(stelle.X + 1.2, stelle.Y));
-        Assert.Equal(Koerperhaltung.Stehen, s.Koerper);
-        Assert.False(s.Ducken());
-        Assert.Equal(SpielProbeTexte.ErstAnkommenHaltung, s.HaltungHinweis);
-        Assert.StartsWith(SpielProbeTexte.ErstAnkommenHaltung, s.Zeile, StringComparison.Ordinal);
+        Assert.True(s.Fortschreiten(0.05));
+        Assert.Equal(Koerperhaltung.Kriechen, s.Koerper);
         SpielHaltungBedienungTests.Ankommen(s);
+        Assert.Equal(Koerperhaltung.Kriechen, s.Koerper);
+        Assert.Equal(Figur.Kriechen, s.HaltungModell);
+        Assert.True(Vector2.Distance(new Vector2(s.FigurX, s.FigurZ), stelle + new Vector2(1.2f, 0)) < 0.05f, $"{s.FigurX}/{s.FigurZ}");
+        // im Gehen ducken geht jetzt auch (vorher: „erst ankommen“)
+        Assert.True(s.Kriechen());
+        Assert.True(s.GeheZu(stelle.X, stelle.Y));
+        Assert.True(s.Ducken(), s.HaltungHinweis);
+        Assert.Equal(Koerperhaltung.Ducken, s.Koerper);
+        SpielHaltungBedienungTests.Ankommen(s);
+        Assert.Equal(Koerperhaltung.Ducken, s.Koerper);
+        Assert.True(s.Ducken());
         Assert.Equal(Koerperhaltung.Stehen, s.Koerper);
         // nur Darstellung
         Assert.Equal(zeilen, spiel.Speicher.Ereignisse().Count);
-        // Gegenprobe: ohne 3D gibt es keine Haltung
+        // Gegenprobe 1: Stand bis A 0.98.0, Gehen beendet die Haltung und im Gehen geht sie nicht
+        StadtSpiel.HaltungGehenAltFuerTests = true;
+        try
+        {
+            Assert.True(s.Kriechen());
+            Assert.True(s.GeheZu(stelle.X + 1.2, stelle.Y));
+            Assert.Equal(Koerperhaltung.Stehen, s.Koerper);
+            Assert.False(s.Ducken());
+            Assert.Equal(SpielProbeTexte.ErstAnkommenHaltung, s.HaltungHinweis);
+            SpielHaltungBedienungTests.Ankommen(s);
+            Assert.Equal(Koerperhaltung.Stehen, s.Koerper);
+        }
+        finally
+        {
+            StadtSpiel.HaltungGehenAltFuerTests = false;
+        }
+        // Gegenprobe 2: ohne 3D gibt es keine Haltung
         s.OhneDreiDSetzen(true);
         Assert.False(s.KoerperMoeglich);
         Assert.False(s.Ducken());

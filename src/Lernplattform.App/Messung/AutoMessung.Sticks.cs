@@ -121,12 +121,15 @@ public static partial class AutoMessung
                     && seite.StickRing(Sticks.Seite.Links) is null && seite.StickRing(Sticks.Seite.Rechts) is null,
                     string.Create(inv, $"Tipp bei {tp.X:F0},{tp.Y:F0} ({(tippPunkt is null ? "Boden" : "Haus")}): Stick {stickBeimTipp}, Figur geht {tippGeht}; gezogen (Gegenprobe): Stick {stickGezogen}, Figur geht {gezogenGeht}; danach Ring links {seite.StickRing(Sticks.Seite.Links) is not null}, rechts {seite.StickRing(Sticks.Seite.Rechts) is not null}"));
 
-                Punkte();
                 // b ziehen: Stick erscheint, die Figur geht nie auf eine Sperre; loslassen: Stick weg, genau ein Halt (frisches Spiel,
-                // die Figur steht wieder am Start und nicht am Haus des Tipps)
+                // die Figur steht wieder am Start und nicht am Haus des Tipps). Die Punkte erst nach dem frischen Spiel: die Tafel ist
+                // dann wieder klein, ein vorher berechneter Punkt laege in der oberen Haelfte, wo es nie einen Stick gibt (Lauf 1121,
+                // Windows 384x681)
                 spiel = Frisch(seite);
                 sz = spiel.Szene;
                 await fl.NaechstesBildAsync();
+                await fl.NaechstesBildAsync();
+                Punkte();
                 k = fl.AktuelleKamera!;
                 zeilen = spiel.Ablauf.Stand.Verlauf.Count;
                 var start = new Vector2(spiel.FigurX, spiel.FigurZ);
@@ -162,7 +165,7 @@ public static partial class AutoMessung
                 }
                 var halt = !spiel.FreiOffen && spiel.Ablauf.Stand.Verlauf.Count == zeilen + 1;
                 pruefe("Stick links gehen " + groesse, gehen && !sperre && weg && halt && ring is not null,
-                    string.Create(inv, $"geht {gehen} ({Vector2.Distance(start, new Vector2(spiel.FigurX, spiel.FigurZ)):F2} weit), Sperre {sperre}, nach dem Loslassen weg {weg}, Ereignisse {spiel.Ablauf.Stand.Verlauf.Count - zeilen}"));
+                    string.Create(inv, $"geht {gehen} ({Vector2.Distance(start, new Vector2(spiel.FigurX, spiel.FigurZ)):F2} weit), Sperre {sperre}, nach dem Loslassen weg {weg}, Ereignisse {spiel.Ablauf.Stand.Verlauf.Count - zeilen}; Daumen bei {links.X:F0},{links.Y:F0}, frei {b.Oben:F0} bis {b.Hoehe - b.Unten:F0}"));
                 var seiteBreite = seite.Bounds.Width;
                 pruefe("Stick nie ueber Kopfzeile oder Leiste " + groesse, ring is { } r && r.Top >= kopfUnten - 0.5 && r.Bottom <= leisteOben + 0.5 && r.Left >= -0.5 && r.Right <= seiteBreite + 0.5
                     && r.Width >= Sticks.Radius - 0.5,

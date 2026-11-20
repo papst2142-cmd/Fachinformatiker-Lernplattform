@@ -201,4 +201,32 @@ public sealed class SpielSticksTests
         Assert.True(Gehbedienung.Lesen(werte));
         Assert.Equal("{}", werte.ToJsonString());
     }
+
+    /// <summary>
+    /// Welle A 0.99.0 (Sammelliste 399, Nico: „Dadurch druecke ich immer das Handy zu erst“): die Leiste steht mittig; ein Daumen
+    /// links oder rechts unten neben ihr wird zum Stick (dort lag frueher das Spiel-Handy), auf der Leiste nie. Gegenprobe: die
+    /// Leiste ueber die ganze Breite (bis A 0.98.0) laesst unten keinen Stick zu.
+    /// </summary>
+    [Fact]
+    public void Leiste_Mittig_DaumenUntenDaneben_WirdStick_Gegenprobe()
+    {
+        foreach (var (name, breite, hoehe) in Groessen.Where(g => g.Name.StartsWith("Handy", StringComparison.Ordinal) || g.Name.StartsWith("Tablet", StringComparison.Ordinal)))
+        {
+            const double leisteBreite = 180, leisteHoehe = 60;
+            var (von, bis) = ((breite - leisteBreite) / 2, (breite + leisteBreite) / 2);
+            var b = new Sticks.Bereich(breite, hoehe, 64, leisteHoehe, von, bis);
+            var unten = hoehe - 20;
+            Assert.Equal(Sticks.Seite.Links, Sticks.SeiteFuer(40, unten, b));
+            Assert.Equal(Sticks.Seite.Rechts, Sticks.SeiteFuer(breite - 40, unten, b));
+            Assert.Null(Sticks.SeiteFuer(breite / 2, unten, b));
+            Assert.Null(Sticks.SeiteFuer(von + 5, unten, b));
+            // der Stick liegt trotzdem ganz im freien Bereich ueber der Leiste
+            var (_, my, r) = Sticks.Lage(40, unten, Sticks.Seite.Links, b);
+            Assert.True(my + r <= hoehe - leisteHoehe + 1e-9, name);
+            // Gegenprobe: Leiste ueber die ganze Breite wie bis A 0.98.0
+            var alt = new Sticks.Bereich(breite, hoehe, 64, leisteHoehe);
+            Assert.Null(Sticks.SeiteFuer(40, unten, alt));
+            Assert.Null(Sticks.SeiteFuer(breite - 40, unten, alt));
+        }
+    }
 }
