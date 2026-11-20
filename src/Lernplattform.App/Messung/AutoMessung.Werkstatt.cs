@@ -197,10 +197,14 @@ public static partial class AutoMessung
                         if (!zu)
                         {
                             // Welle A 1.0.0 (Sammelliste 402): „Ich-Sicht“ links und „Spiel verlassen“ rechts gleich breit und gleich weit
-                            // von der Mitte der zwei Symbole (±2 Punkte), nicht uebereinander
+                            // von der Mitte der zwei Symbole (±2 Punkte), nicht uebereinander; nur wenn beide nebeneinander nicht in die
+                            // Leiste passen (schmales Handy, grosse Schrift), steht „Ich-Sicht“ mittig ueber „Spiel verlassen“
                             var sk = seite.SeitenKnoepfe();
-                            var sym = sk is { } q && Math.Abs(q.Ich.Width - q.Verlassen.Width) <= 1 && Math.Abs((q.Mitte - q.Ich.Right) - (q.Verlassen.X - q.Mitte)) <= 2
-                                && Math.Abs(q.Ich.Y - q.Verlassen.Y) <= 2 && !q.Ich.Intersects(q.Verlassen) && q.Ich.Right <= q.Mitte && q.Verlassen.X >= q.Mitte;
+                            var sym = sk is { } q && Math.Abs(q.Ich.Width - q.Verlassen.Width) <= 1 && !q.Ich.Intersects(q.Verlassen)
+                                && (Math.Abs((q.Mitte - q.Ich.Right) - (q.Verlassen.X - q.Mitte)) <= 2 && Math.Abs(q.Ich.Y - q.Verlassen.Y) <= 2
+                                        && q.Ich.Right <= q.Mitte && q.Verlassen.X >= q.Mitte
+                                    || (seite.LeisteRechteck() is { } lr && (2 * q.Ich.Width) + 8 > lr.Width - 28 && q.Ich.Bottom <= q.Verlassen.Y
+                                        && Math.Abs(q.Ich.Center.X - q.Mitte) <= 2 && Math.Abs(q.Verlassen.Center.X - q.Mitte) <= 2));
                             Pruefe(punkt + " Ich-Sicht links (402)", sym, sk is { } q2
                                 ? string.Create(inv, $"Ich-Sicht {q2.Ich.X:0.0}..{q2.Ich.Right:0.0}, Spiel verlassen {q2.Verlassen.X:0.0}..{q2.Verlassen.Right:0.0}, Mitte {q2.Mitte:0.0}, Hoehe {q2.Ich.Y:0.0}/{q2.Verlassen.Y:0.0}")
                                 : "Knoepfe nicht gemessen");

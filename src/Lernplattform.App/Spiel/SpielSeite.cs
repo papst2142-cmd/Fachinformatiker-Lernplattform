@@ -275,7 +275,7 @@ public sealed partial class SpielSeite : Grid
         // gleich, die zwei Symbole bleiben an ihrer Stelle. Darueber die Knoepfe des Orts, rechts neben dem Pfeil „Spiel
         // verlassen“ (passt er nicht, in einer eigenen Zeile darunter). Bis A 0.98.0: Handy links, Pfeil rechts (Gegenprobe
         // <see cref="LeisteLinksAltFuerTests"/>).
-        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,*"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto") };
+        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,*"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto") };
         _klappZeile = klappZeile;
         klappZeile.SizeChanged += (_, _) => QuestZeileSetzen();
         var questKnopf = QuestKnopfBauen();

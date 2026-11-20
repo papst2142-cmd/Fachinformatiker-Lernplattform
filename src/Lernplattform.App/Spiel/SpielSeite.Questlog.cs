@@ -340,21 +340,23 @@ public sealed partial class SpielSeite
                 k.Width = knopfBreite;
             }
         }
-        Grid.SetRow(VerlassenKnopf, unten ? 3 : 2);
-        Grid.SetColumn(VerlassenKnopf, unten ? 2 : 3);
-        Grid.SetColumnSpan(VerlassenKnopf, unten ? 2 : 1);
-        VerlassenKnopf.HorizontalAlignment = HorizontalAlignment.Left;
-        VerlassenKnopf.Margin = unten ? new Thickness(4, 6, 0, 6) : new Thickness(4, 0, 0, 6);
+        // Reihe unten: beide nebeneinander, die Luecke zwischen ihnen genau unter der Mitte der Leiste (= Mitte der zwei Symbole);
+        // passen beide nicht nebeneinander (schmales Handy, grosse Schrift), steht „Ich-Sicht“ mittig ueber „Spiel verlassen“
+        var gestapelt = unten && ichDa && (2 * seiteBreite) + 4 > innen;
+        var versatz = double.IsNaN(knopfBreite) ? 0 : knopfBreite + 8;
+        Grid.SetRow(VerlassenKnopf, gestapelt ? 4 : unten ? 3 : 2);
+        Grid.SetColumn(VerlassenKnopf, unten ? 0 : 3);
+        Grid.SetColumnSpan(VerlassenKnopf, unten ? 4 : 1);
+        VerlassenKnopf.HorizontalAlignment = unten ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        VerlassenKnopf.Margin = gestapelt ? new Thickness(0, 0, 0, 6) : unten ? new Thickness(versatz, 6, 0, 6) : new Thickness(4, 0, 0, 6);
         Grid.SetRow(_ichHuelle, unten ? 3 : 2);
         Grid.SetColumn(_ichHuelle, 0);
-        Grid.SetColumnSpan(_ichHuelle, unten ? 2 : 1);
-        _ichKnopf.Margin = unten ? new Thickness(0, 6, 4, 6) : new Thickness(0, 0, 4, 6);
+        Grid.SetColumnSpan(_ichHuelle, unten ? 4 : 1);
+        _ichHuelle.HorizontalAlignment = unten ? HorizontalAlignment.Center : HorizontalAlignment.Right;
+        _ichKnopf.Margin = gestapelt ? new Thickness(0, 6, 0, 6) : unten ? new Thickness(0, 6, versatz, 6) : new Thickness(0, 0, 4, 6);
         if (unten && !ichDa)
         {
             // ohne „Ich-Sicht“ (kein 3D, Einrichten) steht „Spiel verlassen“ allein unten in der Mitte wie bis A 0.99.0
-            Grid.SetColumn(VerlassenKnopf, 0);
-            Grid.SetColumnSpan(VerlassenKnopf, 4);
-            VerlassenKnopf.HorizontalAlignment = HorizontalAlignment.Center;
             VerlassenKnopf.Margin = new Thickness(0, 6, 0, 6);
         }
     }
