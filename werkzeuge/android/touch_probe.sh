@@ -48,7 +48,7 @@ starten() {   # $1 = true/false fuer "Umsehen links/rechts umkehren"
   adb shell settings put secure immersive_mode_confirmations confirmed > /dev/null 2>&1 || true
   adb shell am start -n "$KOMP" --ez touch_probe true --ez touch_umkehren "$1" > /dev/null 2>&1
   warten "^BEREIT \|^FEHLER" 300 || { lesen; sed 's/^/  /' "$LOG" | tee -a "$ERGEBNIS"; zeile "FEHLER: keine Zeile BEREIT nach 300 s"; return 1; }
-  grep -E "^(START|3D|LAGE|BEREIT|FEHLER)" "$LOG" | sed 's/^/  /' | tee -a "$ERGEBNIS"
+  grep -E "^(START|3D|LAGE|UEBERLAGERUNG|TREFFER|BEREIT|FEHLER)" "$LOG" | sed 's/^/  /' | tee -a "$ERGEBNIS"
   zeile "  Geraet: $(adb shell wm size | tr -d '\r' | tail -n 1), $(adb shell dumpsys power | tr -d '\r' | grep -m 1 -o 'mWakefulness=[A-Za-z]*'), $(adb shell dumpsys window | tr -d '\r' | grep -m 1 -o 'mCurrentFocus=.*')"
   if grep -q "^FEHLER" "$LOG"; then return 1; fi
   # BEREIT links LX LY rechts RX RY radius R tipp TX TY
