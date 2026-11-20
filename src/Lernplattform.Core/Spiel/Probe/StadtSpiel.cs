@@ -997,7 +997,7 @@ public sealed partial class StadtSpiel
             }
             knoepfe = [.. knoepfe, (Charakter.Aktion, Charakter.KnopfOeffnen)];
         }
-        Knoepfe = [.. EtagenKnoepfe(HaltungKnoepfe(innen, SpielweltKnoepfe(innen, knoepfe, fx, fz)))];
+        Knoepfe = [.. EtagenKnoepfe(GlastuerKnoepfe(innen, HaltungKnoepfe(innen, SpielweltKnoepfe(innen, knoepfe, fx, fz))))];
     }
 
     /// <summary>
@@ -1171,6 +1171,11 @@ public sealed partial class StadtSpiel
         if (HaltungAktion(aktion))
         {
             // Welle A 0.81.0: Hinsetzen, Hinlegen, Aufstehen
+            return true;
+        }
+        if (GlastuerAktion(aktion))
+        {
+            // Welle A 0.99.0: Glastuer am Serverschrank (nur Darstellung)
             return true;
         }
         if (MitfahrtAktion(aktion))

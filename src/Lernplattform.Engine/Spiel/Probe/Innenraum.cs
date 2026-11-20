@@ -1942,6 +1942,7 @@ public sealed partial class Innenraum
         {
             case "rack" when !WerkstattAltFuerTests.Value:
                 RackBauen(KastenIn(r), b, t);
+                _glastueren.Add((r, b, t));
                 break;
             case "usv" when !WerkstattAltFuerTests.Value:
                 UsvBauen(KastenIn(r), b, t);

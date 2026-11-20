@@ -599,4 +599,148 @@ public sealed partial class Innenraum
         }
         return teile;
     }
+
+    // ---- Glastuer der Serverschraenke (Weisung P12-317 F2, Nico: „Erst zu und durch Oeffnen wird sie so geoeffnet wie auf dem Bild.“)
+
+    /// <summary>Lage der Glastuer: zu, oder 90 Grad offen mit dem Scharnier links bzw. rechts (von vorn gesehen, im Rahmen des Schranks).</summary>
+    public enum GlastuerLage
+    {
+        Zu,
+        OffenLinks,
+        OffenRechts,
+    }
+
+    private readonly List<(Rahmen R, float B, float T)> _glastueren = [];
+
+    /// <summary>Zahl der Serverschraenke mit Glastuer in diesem Raum.</summary>
+    public int GlastuerZahl => _glastueren.Count;
+
+    /// <summary>
+    /// Der Schrank, vor dessen Glastuer die Figur steht: in Reichweite (<see cref="SpielKern.MoebelReichweite"/> vom Rechteck) und
+    /// vor der Vorderseite; der naechste, sonst null.
+    /// </summary>
+    public int? GlastuerNahe(float x, float z)
+    {
+        int? beste = null;
+        var abstand = double.MaxValue;
+        for (var i = 0; i < _glastueren.Count; i++)
+        {
+            var (r, b, t) = _glastueren[i];
+            var mitte = r.Punkt(b / 2, t);
+            var normale = r.Punkt(b / 2, t + 1) - mitte;
+            var a = SpielKern.Abstand(r.X, r.Z, r.W, r.T, x, z);
+            if (a <= SpielKern.MoebelReichweite && Vector2.Dot(new Vector2(x, z) - mitte, normale) > 0 && a < abstand)
+            {
+                (beste, abstand) = (i, a);
+            }
+        }
+        return beste;
+    }
+
+    /// <summary>
+    /// Kaesten der Glastuer Nummer <paramref name="nummer"/> (Weltlage): Rahmen, Griff und Scharniere (<paramref name="glas"/> false)
+    /// oder nur die Scheibe (true, wird halb durchsichtig gezeichnet). Zu: in der Front des Schranks. Offen: um 90 Grad um das
+    /// Scharnier nach vorn gedreht (wie im Entwurfsbild P12-194 „355 Serverschrank neu“).
+    /// </summary>
+    public List<Teil> GlastuerTeile(int nummer, GlastuerLage lage, bool glas)
+    {
+        var (r, b, t) = _glastueren[nummer];
+        var teile = new List<Teil>();
+        var (x0, x1, _, _, hoehe) = RackMasse(b, t);
+        var tm = t / Meter;
+        float xl = x0 + 0.004f, xr = x1 - 0.004f, zc = tm - 0.024f;
+        var scharnier = lage == GlastuerLage.OffenRechts ? xr : xl;
+        void K(float ax, float az, float bx, float bz, float y0, float y1, Vector3 f)
+        {
+            // in Metern, zu; offen um das Scharnier gedreht
+            (float X, float Z) Drehen(float px, float pz)
+            {
+                float dx = px - scharnier, dz = pz - zc;
+                return lage switch
+                {
+                    GlastuerLage.OffenLinks => (scharnier - dz, zc + dx),
+                    GlastuerLage.OffenRechts => (scharnier + dz, zc - dx),
+                    _ => (px, pz),
+                };
+            }
+            var (p1, p2) = (Drehen(ax, az), Drehen(bx, bz));
+            var (wa, wb) = (r.Punkt(MathF.Min(p1.X, p2.X) * Meter, MathF.Min(p1.Z, p2.Z) * Meter), r.Punkt(MathF.Max(p1.X, p2.X) * Meter, MathF.Max(p1.Z, p2.Z) * Meter));
+            teile.Add(Quader(MathF.Min(wa.X, wb.X), y0 * Meter, MathF.Min(wa.Y, wb.Y), MathF.Max(wa.X, wb.X), y1 * Meter, MathF.Max(wa.Y, wb.Y), f));
+        }
+        const float dick = 0.009f;
+        float unten = 0.11f, oben = hoehe - 0.01f;
+        if (glas)
+        {
+            K(xl + 0.04f, zc - 0.003f, xr - 0.04f, zc + 0.003f, unten + 0.04f, oben - 0.04f, WFarbe.Glas);
+            return teile;
+        }
+        K(xl, zc - dick, xl + 0.04f, zc + dick, unten, oben, WFarbe.Rahmen);
+        K(xr - 0.04f, zc - dick, xr, zc + dick, unten, oben, WFarbe.Rahmen);
+        K(xl + 0.04f, zc - dick, xr - 0.04f, zc + dick, oben - 0.04f, oben, WFarbe.Rahmen);
+        K(xl + 0.04f, zc - dick, xr - 0.04f, zc + dick, unten, unten + 0.04f, WFarbe.Rahmen);
+        // Griff und Schloss auf der Seite gegenueber dem Scharnier (zu: rechts)
+        var griff = lage == GlastuerLage.OffenRechts ? xl + 0.012f : xr - 0.028f;
+        K(griff, zc + dick, griff + 0.016f, zc + dick + 0.011f, 0.95f, 1.2f, WFarbe.Schraube);
+        K(griff, zc + dick, griff + 0.016f, zc + dick + 0.004f, 1.24f, 1.27f, WFarbe.Schwarz);
+        // drei Scharniere
+        foreach (var y in new[] { 0.3f, 1.0f, 1.7f })
+        {
+            K(scharnier - 0.006f, zc - dick - 0.004f, scharnier + 0.006f, zc + dick, y, y + 0.06f, WFarbe.Schraube);
+        }
+        return teile;
+    }
+
+    /// <summary>
+    /// Welche Seite die Glastuer oeffnet, ohne die Figur (Stelle, Blick in Bogenmass, Haltung) oder ein anderes Stueck zu
+    /// beruehren (Spiel 0,02): zuerst die Seite weiter weg von der Figur; geht keine, bleibt sie zu.
+    /// </summary>
+    public GlastuerLage GlastuerWahl(int nummer, Vector2 figur, float blick, Koerperhaltung haltung)
+    {
+        var (r, b, t) = _glastueren[nummer];
+        var links = r.Punkt(0, t);
+        var rechts = r.Punkt(b, t);
+        var seiten = Vector2.Distance(figur, links) >= Vector2.Distance(figur, rechts)
+            ? new[] { GlastuerLage.OffenLinks, GlastuerLage.OffenRechts }
+            : [GlastuerLage.OffenRechts, GlastuerLage.OffenLinks];
+        foreach (var lage in seiten)
+        {
+            if (GlastuerFrei(nummer, lage, figur, blick, haltung))
+            {
+                return lage;
+            }
+        }
+        return GlastuerLage.Zu;
+    }
+
+    /// <summary>Beruehrt die Glastuer in dieser Lage weder die Figur noch ein anderes Stueck des Raums (Spiel 0,02)?</summary>
+    public bool GlastuerFrei(int nummer, GlastuerLage lage, Vector2 figur, float blick, Koerperhaltung haltung)
+    {
+        var tuer = GlastuerTeile(nummer, lage, false).Concat(GlastuerTeile(nummer, lage, true)).ToList();
+        var quader = KoerperQuader(haltung);
+        foreach (var t in tuer)
+        {
+            var (lo, hi) = (new Vector3(MathF.Min(t.X1, t.X2), MathF.Min(t.Y1, t.Y2), MathF.Min(t.Z1, t.Z2)), new Vector3(MathF.Max(t.X1, t.X2), MathF.Max(t.Y1, t.Y2), MathF.Max(t.Z1, t.Z2)));
+            if (QuaderBeruehrt(new Vector3(figur.X, 0, figur.Y), blick, quader, FigurHoehe, lo, hi))
+            {
+                return false;
+            }
+            if (Hindernisse().Any(k => Durchdringt(lo, hi, k.Lo, k.Hi)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>Durchdringen sich zwei achsgleiche Kaesten um mehr als 0,02 in jeder Richtung?</summary>
+    internal static bool Durchdringt(Vector3 alo, Vector3 ahi, Vector3 blo, Vector3 bhi)
+    {
+        const float spiel = 0.02f;
+        return MathF.Min(ahi.X, bhi.X) - MathF.Max(alo.X, blo.X) > spiel && MathF.Min(ahi.Y, bhi.Y) - MathF.Max(alo.Y, blo.Y) > spiel
+            && MathF.Min(ahi.Z, bhi.Z) - MathF.Max(alo.Z, blo.Z) > spiel;
+    }
+
+    /// <summary>Alle Glastueren in ihrer Lage als ein Netz (Rahmen) bzw. die Scheiben (<paramref name="glas"/>).</summary>
+    public Netz GlastuerNetz(IReadOnlyList<GlastuerLage> lagen, bool glas) =>
+        Netz.Aus(Enumerable.Range(0, _glastueren.Count).SelectMany(i => GlastuerTeile(i, i < lagen.Count ? lagen[i] : GlastuerLage.Zu, glas)).ToList());
 }

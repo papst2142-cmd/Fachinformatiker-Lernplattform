@@ -93,6 +93,13 @@ public static class SpielProbeTexte
     /// <summary>Knopf im Sitzen und im Liegen.</summary>
     public const string KnopfAufstehen = "Aufstehen";
 
+    /// <summary>Welle A 0.99.0 (Weisung P12-317 F2): Glastuer am Serverschrank (nur Darstellung).</summary>
+    public const string KnopfGlastuerOeffnen = "Glastür öffnen";
+
+    public const string KnopfGlastuerSchliessen = "Glastür schließen";
+
+    public const string GlastuerKeinPlatz = "Hier geht die Glastür nicht auf. Tritt einen Schritt zur Seite.";
+
     /// <summary>Erste Zeile im Sitzen.</summary>
     public const string DuSitzt = "Du sitzt. Zum Aufstehen tippe woanders hin oder auf „Aufstehen“.";
 

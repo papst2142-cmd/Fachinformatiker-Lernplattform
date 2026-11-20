@@ -614,6 +614,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _neuNetze.Clear();
         _paket.Clear();
         _ampelLichter = null;
+        GlastuerenFrei(null);
         NachladenFrei(null);
         GrafikFrei(null);
         base.OnOpenGlLost();
@@ -627,6 +628,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             netz?.Freigeben(gl);
         }
         _ampelLichter = null;
+        GlastuerenFrei(gl);
         NachladenFrei(gl);
         GrafikFrei(gl);
         _innenGl.Clear();
@@ -1211,6 +1213,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                         Zeichnen(gl, _ausruf, Matrix4x4.CreateTranslation(person.X, groesse + 0.25f, person.Z), sichtProj);
                     }
                 }
+                // Welle A 0.99.0: Glastueren der Serverschraenke (zu oder offen, Scheibe halb durchsichtig)
+                GlastuerenZeichnen(gl, innen, sichtProj);
                 // Waende vor der Kamera und zwischen Auge und Figur halb durchsichtig (Sammelliste 102); Welle A 0.92.0 (Nico 4a):
                 // in der Ich-Sicht keine Wand durchsichtig, Waende 2,5 m hoch und eine Decke darueber
                 var d0 = _uhr.Elapsed.TotalSeconds;
