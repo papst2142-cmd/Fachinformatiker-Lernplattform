@@ -117,6 +117,7 @@ baum_beenden() {
   return 0
 }
 wachhund=${STARTTEST_WACHHUND_MINUTEN:-0}
+start_sekunden=$(date +%s)
 if [ "$wachhund" -gt 0 ] 2>/dev/null && [ "${RUNNER_OS:-Linux}" != "Windows" ]; then
   "${befehl[@]}" &
   wurzel=$!
@@ -147,6 +148,29 @@ if [ -s "$rcdatei" ]; then
   rc=$programm
 fi
 echo "Rueckgabe ${nr}. Lauf: $rc"
+# Weisung P12-324 T1 (Nico 1a): Reserve bis zur Grenze, auch lokal. Grenze = Wachhund (Schrittzeit minus 1 Minute),
+# unter Windows ohne Wachhund die Schrittzeit selbst. Unter 25 % Reserve nur eine Warnung (nie rot, aendert kein Urteil);
+# dazu die drei laengsten Abschnitte aus den ZEITPLAN-Zeilen der Messdatei (Grundlage fuer Verschiebungen, T3).
+dauer=$(( $(date +%s) - start_sekunden ))
+teil=${LERNPLATTFORM_MESSUNG_TEIL:-alle}
+if [ "$wachhund" -gt 0 ] 2>/dev/null; then
+  grenze=$(( wachhund * 60 ))
+  [ "${RUNNER_OS:-Linux}" = "Windows" ] && grenze=$(( grenze + 60 ))
+  reserve=$(( (grenze - dauer) * 100 / grenze ))
+  echo "RESERVE: $teil ${nr}. Lauf $dauer s von $grenze s ($reserve % Reserve)"
+  if [ "$reserve" -lt 25 ]; then
+    echo "WARNUNG Reserve: $teil ${nr}. Lauf nur $reserve % bis zur Grenze (unter 25 %, Weisung P12-324)"
+  fi
+else
+  echo "RESERVE: $teil ${nr}. Lauf $dauer s (ohne Grenze, STARTTEST_WACHHUND_MINUTEN nicht gesetzt)"
+fi
+if [ -s "$datei" ]; then
+  awk -v ende="$dauer" '
+    /^ZEITPLAN [0-9.]+ s: / { t = $2 + 0; if (n) d[n] = t - s[n]; n++; s[n] = t; name[n] = substr($0, index($0, ": ") + 2) }
+    END { if (n) { d[n] = ende - s[n]; if (d[n] < 0) d[n] = 0 }
+          for (k = 1; k <= 3; k++) { b = 0; for (i = 1; i <= n; i++) if (!(i in fertig) && (b == 0 || d[i] > d[b])) b = i
+            if (b) { fertig[b] = 1; printf "RESERVE Abschnitt: %s %.1f s\n", name[b], d[b] } } }' "$datei" || true
+fi
 if [ "$nr" = "1" ]; then
   # genau eine Quelle fuer die Ausgabe rc, aus bash ohne \r (Weisung P4-14 b)
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
