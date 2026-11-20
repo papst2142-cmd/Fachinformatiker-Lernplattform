@@ -275,6 +275,20 @@ public sealed partial class SpielSeite
     public bool VerlassenUnten => Grid.GetRow(VerlassenKnopf) == 3;
 
     /// <summary>
+    /// Start-Test (Sammelliste 402): Rechtecke von „Ich-Sicht“ und „Spiel verlassen“ und die Mitte der zwei Symbole in Punkten der
+    /// Seite (null, solange etwas fehlt oder nicht angeordnet ist).
+    /// </summary>
+    public (Rect Ich, Rect Verlassen, double Mitte)? SeitenKnoepfe()
+    {
+        if (!_ichKnopf.IsEffectivelyVisible || !VerlassenKnopf.IsEffectivelyVisible || LeisteMitten() is not { } m
+            || _ichKnopf.TranslatePoint(default, this) is not { } i || VerlassenKnopf.TranslatePoint(default, this) is not { } v)
+        {
+            return null;
+        }
+        return (new Rect(i, _ichKnopf.Bounds.Size), new Rect(v, VerlassenKnopf.Bounds.Size), m.Symbole);
+    }
+
+    /// <summary>
     /// Gegenprobe Sammelliste 399 (Start-Test, je Seite wie <see cref="OrtslisteAltFuerTests"/>): Leiste links wie bis A 0.98.0
     /// (Handy-Knopf am linken Rand, dort wo der linke Daumen liegt).
     /// </summary>
@@ -310,13 +324,39 @@ public sealed partial class SpielSeite
         // Breite ohne den eigenen Rand (der wechselt mit der Lage) auf Bildpunkte gerundet, plus Rand in der Zeile (4)
         // Breite in einer Zeile: die Spalte rechts ist schmaler als der Knopf (Stern), sein DesiredSize waere schon umgebrochen
         // (Lauf lokal A 0.99.0: „Spiel verlassen“ getrennt bei 384 Punkten Breite ab Schrift gross)
+        // Welle A 1.0.0 (Sammelliste 402, Nico c): links neben dem Handy-Knopf steht „Ich-Sicht“, gleich breit wie „Spiel verlassen“
+        // rechts neben dem Pfeil; so ist die Reihe um die zwei mittigen Symbole symmetrisch
+        var ichDa = _ichKnopf.IsVisible && _ichHuelle.IsVisible;
         var verlassenBreite = !VerlassenKnopf.IsVisible ? 0 : (Math.Ceiling(EinzeiligBreite(VerlassenKnopf) * skala) / skala) + 4;
-        var verlassenUnten = VerlassenKnopf.IsVisible && verlassenBreite > (innen - mitte) / 2;
-        Grid.SetRow(VerlassenKnopf, verlassenUnten ? 3 : 2);
-        Grid.SetColumn(VerlassenKnopf, verlassenUnten ? 0 : 3);
-        Grid.SetColumnSpan(VerlassenKnopf, verlassenUnten ? 4 : 1);
-        VerlassenKnopf.HorizontalAlignment = verlassenUnten ? HorizontalAlignment.Center : HorizontalAlignment.Left;
-        VerlassenKnopf.Margin = verlassenUnten ? new Thickness(0, 6, 0, 6) : new Thickness(4, 0, 0, 6);
+        var ichBreite = !ichDa ? 0 : (Math.Ceiling(EinzeiligBreite(_ichKnopf) * skala) / skala) + 4;
+        var seiteBreite = Math.Max(verlassenBreite, ichBreite);
+        var unten = seiteBreite > 0 && seiteBreite > (innen - mitte) / 2;
+        // beide gleich breit (ohne den eigenen Rand von 4)
+        var knopfBreite = seiteBreite > 0 ? seiteBreite - 4 : double.NaN;
+        foreach (var k in new[] { VerlassenKnopf, _ichKnopf })
+        {
+            if (!(double.IsNaN(knopfBreite) && double.IsNaN(k.Width)) && k.Width != knopfBreite)
+            {
+                k.Width = knopfBreite;
+            }
+        }
+        Grid.SetRow(VerlassenKnopf, unten ? 3 : 2);
+        Grid.SetColumn(VerlassenKnopf, unten ? 2 : 3);
+        Grid.SetColumnSpan(VerlassenKnopf, unten ? 2 : 1);
+        VerlassenKnopf.HorizontalAlignment = HorizontalAlignment.Left;
+        VerlassenKnopf.Margin = unten ? new Thickness(4, 6, 0, 6) : new Thickness(4, 0, 0, 6);
+        Grid.SetRow(_ichHuelle, unten ? 3 : 2);
+        Grid.SetColumn(_ichHuelle, 0);
+        Grid.SetColumnSpan(_ichHuelle, unten ? 2 : 1);
+        _ichKnopf.Margin = unten ? new Thickness(0, 6, 4, 6) : new Thickness(0, 0, 4, 6);
+        if (unten && !ichDa)
+        {
+            // ohne „Ich-Sicht“ (kein 3D, Einrichten) steht „Spiel verlassen“ allein unten in der Mitte wie bis A 0.99.0
+            Grid.SetColumn(VerlassenKnopf, 0);
+            Grid.SetColumnSpan(VerlassenKnopf, 4);
+            VerlassenKnopf.HorizontalAlignment = HorizontalAlignment.Center;
+            VerlassenKnopf.Margin = new Thickness(0, 6, 0, 6);
+        }
     }
 
     /// <summary>

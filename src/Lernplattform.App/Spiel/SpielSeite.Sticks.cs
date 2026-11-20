@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Threading;
+using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Core.Texte;
 
@@ -44,6 +45,8 @@ public sealed partial class SpielSeite
             _stickBilder[seite] = (ring, knopf);
         }
         Children.Add(_stickEbene);
+        // Welle A 1.0.0 (Sammelliste 405): die runden Knoepfe stehen unten rechts in der Ecke; dort setzt kein Stick auf
+        Flaeche.KnopfSperre = b => DaumenKnoepfeAn && (_springenRund?.IsVisible ?? false) ? HaltungKnopf.Sperre(b) : default;
         Flaeche.SticksGesperrt = () => HandyOffen || (Tafel?.IsVisible ?? false) || _ersatz.IsVisible || !Ebene.IsVisible;
         Flaeche.SticksGeaendert += () =>
         {

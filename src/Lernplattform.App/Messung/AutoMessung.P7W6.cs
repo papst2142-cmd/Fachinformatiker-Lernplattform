@@ -11,6 +11,51 @@ namespace Lernplattform.Messung;
 /// </summary>
 public static partial class AutoMessung
 {
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 357): Werkbank-Ansicht wie mit dem Finger bedienen; Funde nach <c>P7W1AnsichtFehler</c>.
+    /// Liefert die Namen der Zustaende, die als eigene Ansicht geprueft werden. Am Ende ist die Belegung wieder leer.
+    /// </summary>
+    private static IEnumerable<string> WerkbankPruefen(Spiel.Tafel.BauteileBrett b)
+    {
+        void Fund(string text) => P7W1AnsichtFehler.Add("spiel/werkbank: " + text);
+        if (b.Ansicht != Spiel.Tafel.BauAnsicht.Werkbank)
+        {
+            Fund("startet nicht mit der Werkbank");
+        }
+        var teil = b.Bereit.FirstOrDefault(t => b.PlatzVon(t) is not null);
+        if (teil is null)
+        {
+            Fund("kein bereitgelegtes Teil mit Steckplatz");
+            yield break;
+        }
+        var platz = b.PlatzVon(teil)!;
+        b.TeilAntippen(teil);
+        if (b.GewaehltesTeil != Core.Spiel.Py.Str(teil))
+        {
+            Fund("Teil antippen waehlt es nicht");
+        }
+        yield return "gewaehlt";
+        if (b.Plaetze.FirstOrDefault(p => p != platz) is { } falsch && (b.ZielAntippen(falsch) || b.Meldung is null || b.Belegung.ContainsKey(falsch)))
+        {
+            Fund("falscher Steckplatz " + falsch + " nimmt das Teil oder meldet nichts");
+        }
+        if (!b.ZielAntippen(platz) || !Core.Spiel.Py.Gleich(b.Belegung.GetValueOrDefault(platz), teil))
+        {
+            Fund("richtiger Steckplatz " + platz + " nimmt das Teil nicht");
+        }
+        yield return "eingesetzt";
+        b.TeilAntippen(teil);
+        if (!b.Ablegen() || b.Belegung.Count != 0)
+        {
+            Fund("Ablegen nimmt das Teil nicht heraus");
+        }
+        b.AnsichtSetzen(Spiel.Tafel.BauAnsicht.Regal);
+        yield return "regal";
+        b.AnsichtSetzen(Spiel.Tafel.BauAnsicht.Liste);
+        yield return "liste";
+        b.AnsichtSetzen(Spiel.Tafel.BauAnsicht.Werkbank);
+    }
+
     /// <summary>Die 9 Aufgabentypen (TYPES in fisi_game) fuer je ein Ticket-Brett.</summary>
     private static readonly string[] P7W6Typen =
         ["auswahl", "zuordnung", "bauteile", "bestellung", "rack", "formular", "terminal", "diagnose", "wartung"];
@@ -74,6 +119,16 @@ public static partial class AutoMessung
             }
             await ansicht.BildFertigAsync();
             yield return "spiel/ticket-" + typ;
+            if (typ == "bauteile" && tafel.ProbeBrett is Spiel.Tafel.BauteileBrett werkbank)
+            {
+                // Welle A 1.0.0 (Sammelliste 357): Werkbank (Start), Teil antippen, falsches und richtiges Ziel, Ablegen,
+                // Regal und Liste als eigene Ansichten (je mit Layoutpruefung)
+                foreach (var schritt in WerkbankPruefen(werkbank))
+                {
+                    await ansicht.BildFertigAsync();
+                    yield return "spiel/ticket-bauteile-" + schritt;
+                }
+            }
         }
         var reiterListe = Core.Spiel.Betrieb.Reiter(tafel.Sitzung.Stand);
         if (reiterListe.Count != 9)

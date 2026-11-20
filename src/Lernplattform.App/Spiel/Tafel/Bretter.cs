@@ -235,8 +235,11 @@ public sealed class ZuordnungBrett : Brett
     }
 }
 
-/// <summary>SlotBoard: Steckplatz antippen, darunter klappen die passenden Bauteile auf.</summary>
-public sealed class BauteileBrett : Brett
+/// <summary>
+/// SlotBoard: Steckplatz antippen, darunter klappen die passenden Bauteile auf. Welle A 1.0.0 (Sammelliste 357): dazu die
+/// Werkbank (Draufsicht) und das Regal (Lager), siehe Bretter.Werkbank.cs; die Liste bleibt als zweiter Weg.
+/// </summary>
+public sealed partial class BauteileBrett : Brett
 {
     private readonly List<object?> _verfuegbar;
     private readonly HashSet<string> _ausLager;
@@ -252,6 +255,7 @@ public sealed class BauteileBrett : Brett
         _ausLager = [.. _verfuegbar.Where(t => !teile.Any(x => Py.Gleich(x, t)) && lager.Get(t) is not null).Select(Py.Str)];
         _plaetze = [.. Liste(auftrag["slots"]).Select(Py.Str)];
         _aktuell = _plaetze.FirstOrDefault();
+        _lager = lager;
         Malen();
     }
 
@@ -295,6 +299,21 @@ public sealed class BauteileBrett : Brett
         {
             yield return T("Vorgaben: " + vorgaben, 13, "accent", true);
         }
+        yield return AnsichtWahl();
+        var weitere = Ansicht switch
+        {
+            BauAnsicht.Werkbank => BauenWerkbank(),
+            BauAnsicht.Regal => BauenRegal(),
+            _ => BauenListe(),
+        };
+        foreach (var teil in weitere)
+        {
+            yield return teil;
+        }
+    }
+
+    private IEnumerable<Control?> BauenListe()
+    {
         yield return Label("Steckplatz antippen, dann das Bauteil");
         var optional = ListeOderLeer(Auftrag, "optional");
         foreach (var platz in _plaetze)

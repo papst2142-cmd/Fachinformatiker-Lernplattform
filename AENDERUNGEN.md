@@ -1,5 +1,21 @@
 # Änderungen
 
+## A 1.0.0
+In der Werkstatt baust du einen PC jetzt auf einer Werkbank von oben gesehen zusammen und siehst im Regal, was im Lager liegt. Dazu ist vieles im Spiel aufgeräumt: am Steg, in der Leiste, bei den Knöpfen, an Sessel, Tisch und Drucker.
+
+- Bei der Aufgabe „PC zusammenbauen“ öffnet sich zuerst die Werkbank: Du siehst die Unterlage von oben, darauf die Hauptplatine mit Prozessor-Sockel, Arbeitsspeicher-Bänken, Platz für die SSD und die Grafikkarte, daneben Netzteil und Gehäuse. Darunter liegen die bereitgelegten Teile. Tipp ein Teil an, dann den Platz, in den es soll, oder „Einsetzen“. Der passende Platz ist gelb umrandet. „Ablegen“ nimmt ein eingesetztes Teil wieder heraus, „Nächstes Teil“ wählt das nächste, und „Prüfen“ zeigt, wie viele Plätze belegt sind und welche noch fehlen. Ob deine Wahl richtig ist, sagt wie bisher erst die Abgabe.
+- Unter den Arbeitsspeicher-Bänken steht, wie viele noch frei sind, zum Beispiel „RAM frei: 2 von 4“. Ohne Hauptplatine steht dort, dass zuerst eine eingesetzt werden muss, und sind mehr Riegel als Bänke gewählt, sagt das Spiel das deutlich.
+- Über „Regal“ siehst du, was im Lager der Werkstatt liegt, nach Art geordnet und mit Anzahl. Tippst du ein Teil an, liegt es auf der Werkbank bereit. Die bisherige Liste gibt es weiter unter „Liste“, zum Beispiel für den Screenreader oder kleine Geräte.
+- Am Ende eines Stegs bleibt deine Figur jetzt stehen und geht nicht mehr über den Rand aufs Wasser. Auch am Ufer kommt sie nie ins Wasser.
+- In der aufgeklappten Leiste steht „Ich-Sicht“ jetzt links, genauso breit wie „Spiel verlassen“ rechts. Die Einträge „Springen“, „Ducken“ und „Kriechen“ gibt es dort nicht mehr, auch am PC nicht. Am PC nutzt du dafür die Tasten (Leertaste, C und X, in der Tastenbelegung frei änderbar), am Handy und Tablet die runden Knöpfe rechts.
+- Die runden Knöpfe am Handy und Tablet sind etwas kleiner und sitzen weiter unten in der rechten Ecke. Auch die beiden Sticks erscheinen weiter unten in ihren Ecken. Knöpfe, Sticks und Leiste überdecken sich nie.
+- Der Sessel im Büro der Chefin bei der Bitweiche steht jetzt richtig herum und schaut in den Raum. Alle Sessel ohne feste Richtung stellen ihre Lehne an die nächste Wand und schauen dorthin, wo Platz ist.
+- Unter dem Tisch in der Werkstatt stecken die PCs nicht mehr in Tischbeinen und Querstreben: Steht ein PC unter einem Tisch, hat der Tisch nur Beine an den Ecken.
+- Die Drucker in den Büros sind jetzt richtige Etagendrucker: mit Rollen, zwei Papierfächern, Frontklappe, Ausgabefach mit Papier, Scanner mit Einzug obenauf und einem Bedienfeld mit Anzeige.
+- Nachtrag zu A 0.99.0: Im Hochformat endet die Karte unten im Spiel jetzt unter der Bildmitte. Der Text darin bleibt rollbar.
+- Das Spiel bleibt dabei auf allen Grafikstufen so flüssig wie vorher.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.99.0
 Am Handy und Tablet sitzen das Spiel-Handy und das Dreieck jetzt unten in der Mitte, rechts gibt es zwei runde Knöpfe zum Springen und für die Haltung, und in der Serverfarm sind Serverschränke, USV und Werkbank viel genauer gebaut.
 

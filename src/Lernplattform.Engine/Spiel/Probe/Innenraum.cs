@@ -934,7 +934,9 @@ public sealed partial class Innenraum
             // Phase 8 W6: die ersten Puppen im Flur tragen die Festkleidung
             _festPuppen = [.. ListeOderLeer(flur, "deko").Select(Objekt).Where(d => Py.Gleich(d["typ"], "puppe")).Take(FestDeko.Puppen(_festDaten))];
         }
-        foreach (var d in deko)
+        var dekoListe = deko.ToList();
+        _alleDeko = dekoListe;
+        foreach (var d in dekoListe)
         {
             var (teileVorher, stueckeVorher) = (_teile.Count, _stuecke.Count);
             _dekoJetzt = d;
@@ -1314,6 +1316,102 @@ public sealed partial class Innenraum
     /// <summary>Sammelliste 380: Liegemoebel, deren Kopfteil (Rueckseite des Modells) an der kurzen Seite steht.</summary>
     private static readonly HashSet<string> Liegemoebel = ["bett", "matratze"];
 
+    /// <summary>Welle A 1.0.0 (Sammelliste 408), Gegenprobe: Tisch ueber einem PC wie bis A 0.99.0 (Modell mit Querstreben).</summary>
+    internal static readonly AsyncLocal<bool> PcTischAltFuerTests = new();
+
+    /// <summary>Beinstaerke und Abstand der Beine vom Rand eines Tischs ohne Streben.</summary>
+    internal const float TischBein = 0.07f, TischBeinRand = 0.04f;
+
+    /// <summary>Steht ein PC (Grundriss) unter dem Rechteck (x, z, w, t)?</summary>
+    private bool PcDarunter(float x, float z, float w, float t) => _alleDeko.Any(d => Py.Gleich(d["typ"], "pc")
+        && Py.F(d["x"]) < x + w && x < Py.F(d["x"]) + Py.F(d["w"]) && Py.F(d["y"]) < z + t && z < Py.F(d["y"]) + Py.F(d["h"]));
+
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 408): Tisch aus Platte, Zarge und vier Beinen an den Ecken, darunter ganz frei (Platz fuer
+    /// PC-Tower). Hoehe wie das Modell „table“, Farbe Holz.
+    /// </summary>
+    private void TischOhneStreben(Rahmen r, float b, float t, float hoehe)
+    {
+        const float platte = 0.05f, zarge = 0.08f;
+        Kasten(r, 0, 0, b, t, hoehe - platte, hoehe, Farben.Holz);
+        var unten = hoehe - platte - zarge;
+        Kasten(r, TischBeinRand, TischBeinRand, b - (2 * TischBeinRand), 0.03f, unten, hoehe - platte, Farben.HolzDunkel);
+        Kasten(r, TischBeinRand, t - TischBeinRand - 0.03f, b - (2 * TischBeinRand), 0.03f, unten, hoehe - platte, Farben.HolzDunkel);
+        Kasten(r, TischBeinRand, TischBeinRand, 0.03f, t - (2 * TischBeinRand), unten, hoehe - platte, Farben.HolzDunkel);
+        Kasten(r, b - TischBeinRand - 0.03f, TischBeinRand, 0.03f, t - (2 * TischBeinRand), unten, hoehe - platte, Farben.HolzDunkel);
+        foreach (var (bx, bz) in new[] { (TischBeinRand, TischBeinRand), (b - TischBeinRand - TischBein, TischBeinRand), (TischBeinRand, t - TischBeinRand - TischBein), (b - TischBeinRand - TischBein, t - TischBeinRand - TischBein) })
+        {
+            Kasten(r, bx, bz, TischBein, TischBein, 0, hoehe - platte, Farben.Holz);
+        }
+    }
+
+    /// <summary>Alle Einrichtungsstuecke des Hauses (fuer <see cref="SesselDrehung"/>), gesetzt vor dem Einrichten.</summary>
+    private List<PyObjekt> _alleDeko = [];
+
+    /// <summary>Welle A 1.0.0 (Sammelliste 407), Gegenprobe: Sessel ohne eigene Drehung wie bis A 0.99.0 (immer Blick nach Sueden).</summary>
+    internal static readonly AsyncLocal<bool> SesselAltFuerTests = new();
+
+    /// <summary>Flache Stuecke am Boden, die vor einem Sessel nicht stoeren.</summary>
+    private static readonly HashSet<string> SesselFlach = ["teppich", "fussmatte"];
+
+    /// <summary>Tiefe des Streifens vor einem Sessel, der frei sein soll (Platz fuer die Beine).</summary>
+    internal const float SesselVorn = 0.6f;
+
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 407, Nico: „Sessel im Buero der Chefin verkehrt herum“): ein Sessel ohne eigene Drehung stellt
+    /// die Rueckseite an die naechste Wand seines Raums und blickt in den Raum; ist der Streifen vor ihm (<see cref="SesselVorn"/>)
+    /// durch ein anderes Stueck oder die Wand belegt, nimmt er die naechste Wand, deren Vorderseite frei ist. Bis A 0.99.0 blickte
+    /// jeder Sessel nach Sueden, auch mit dem Gesicht zur Wand. Drehung wie <see cref="AutoDrehung"/>: 0 Blick Sueden, 1 Westen,
+    /// 2 Norden, 3 Osten.
+    /// </summary>
+    private int SesselDrehung(PyObjekt selbst, float x, float z, float w, float t)
+    {
+        var cx = x + (w / 2);
+        var cz = z + (t / 2);
+        var flaeche = Liste(Gebaeude["raeume"]).Select(Objekt).FirstOrDefault(r =>
+            Py.F(r["x"]) <= cx && cx <= Py.F(r["x"]) + Py.F(r["w"]) && Py.F(r["y"]) <= cz && cz <= Py.F(r["y"]) + Py.F(r["h"]));
+        float rx, rz, rw, rt;
+        if (flaeche is not null)
+        {
+            (rx, rz, rw, rt) = ((float)Py.F(flaeche["x"]), (float)Py.F(flaeche["y"]), (float)Py.F(flaeche["w"]), (float)Py.F(flaeche["h"]));
+        }
+        else
+        {
+            var flur = Objekt(Gebaeude["flur"]);
+            (rx, rz, rw, rt) = (0, (float)Py.F(flur["y"]), Breite, (float)Py.F(flur["h"]));
+        }
+        // (Drehung, Abstand der Rueckseite zur Wand, Streifen vor dem Sessel)
+        var wahl = new List<(int Dreh, float Abstand, (float X, float Z, float W, float T) Vorn)>
+        {
+            (0, z - rz, (x, z + t, w, SesselVorn)),
+            (2, rz + rt - (z + t), (x, z - SesselVorn, w, SesselVorn)),
+            (3, x - rx, (x + w, z, SesselVorn, t)),
+            (1, rx + rw - (x + w), (x - SesselVorn, z, SesselVorn, t)),
+        };
+        bool Belegt((float X, float Z, float W, float T) q)
+        {
+            if (q.X < rx || q.Z < rz || q.X + q.W > rx + rw || q.Z + q.T > rz + rt || InWand(q))
+            {
+                return true;
+            }
+            foreach (var d in _alleDeko)
+            {
+                if (ReferenceEquals(d, selbst) || SesselFlach.Contains(Py.Str(d["typ"])))
+                {
+                    continue;
+                }
+                float dx = (float)Py.F(d["x"]), dz = (float)Py.F(d["y"]), dw = (float)Py.F(d["w"]), dt = (float)Py.F(d["h"]);
+                if (dx < q.X + q.W && q.X < dx + dw && dz < q.Z + q.T && q.Z < dz + dt)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        var geordnet = wahl.OrderBy(v => v.Abstand).ThenBy(v => v.Dreh).ToList();
+        return geordnet.FirstOrDefault(v => !Belegt(v.Vorn), geordnet[0]).Dreh;
+    }
+
     private int AutoDrehung(string typ, float x, float z, float w, float t)
     {
         var cx = x + (w / 2);
@@ -1363,7 +1461,7 @@ public sealed partial class Innenraum
         }
         else
         {
-            dreh = AnDerWand.Contains(typ) ? AutoDrehung(typ, x, z, w, t) : 0;
+            dreh = AnDerWand.Contains(typ) ? AutoDrehung(typ, x, z, w, t) : typ == "sessel" && !SesselAltFuerTests.Value ? SesselDrehung(d, x, z, w, t) : 0;
             if (typ == "rack" && w < t && !WerkstattAltFuerTests.Value)
             {
                 // Welle A 0.99.0 (E1): Serverschraenke zeigen mit der Front zum Gang (lange Seite), nicht seitlich in die
@@ -1404,6 +1502,11 @@ public sealed partial class Innenraum
                 {
                     Modell(r, "computerScreen", (b * (i + 0.5f) / 3) - 0.5f, 0.08f, 1.0f, 0.25f, 0.45f * M, 0.75f * M, Farben.Geraet);
                 }
+                break;
+            case "tisch" when !PcTischAltFuerTests.Value && PcDarunter(x, z, w, t):
+                // Welle A 1.0.0 (Sammelliste 408, Nico: „PCs unter dem Tisch stecken im Tisch“): steht ein PC unter dem Tisch,
+                // ein Tisch ohne Querstreben (Platte, Zarge, vier Beine an den Ecken); das Modell „table“ hat Streben in der Mitte
+                TischOhneStreben(r, b, tt, 0.75f * M);
                 break;
             case "tisch":
             case "werkbank":
@@ -1972,6 +2075,9 @@ public sealed partial class Innenraum
                 {
                     Kasten(r, 0.05f, t - 0.01f, b - 0.1f, 0.02f, h, h + 0.05f, Farben.Metall);
                 }
+                break;
+            case "drucker" when !DruckerAltFuerTests.Value:
+                DruckerBauen(KastenIn(r), b, t);
                 break;
             case "drucker":
                 Kasten(r, 0, 0, b, t, 0, 0.75f * M, Farben.Hell);

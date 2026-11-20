@@ -26,30 +26,75 @@ public static class HaltungKnopf
         _ => Tastenbelegung.Ducken,
     };
 
-    /// <summary>Durchmesser (Punkte) von Springen und Haltung: Handy 64/46, Tablet (kuerzere Seite ab 600) 72/52 (Nico 2a).</summary>
-    public static (double Springen, double Haltung) Groesse(double breite, double hoehe) =>
-        Math.Min(breite, hoehe) >= 600 ? (72, 52) : (64, 46);
+    /// <summary>
+    /// Durchmesser (Punkte) von Springen und Haltung: Handy 56/40, Tablet (kuerzere Seite ab 600) 64/46. Welle A 1.0.0 (Sammelliste
+    /// 405, Nico: „etwas kleiner“); bis A 0.99.0 64/46 und 72/52 (<see cref="AltFuerTests"/>).
+    /// </summary>
+    public static (double Springen, double Haltung) Groesse(double breite, double hoehe) => Alt.Value
+        ? (Math.Min(breite, hoehe) >= 600 ? (72, 52) : (64, 46))
+        : (Math.Min(breite, hoehe) >= 600 ? (64, 46) : (56, 40));
+
+    /// <summary>Abstand der Knoepfe zum Rand des Bilds und zur Leiste (Punkte).</summary>
+    public const double Rand = 16;
 
     /// <summary>
-    /// Mittelpunkte (in Punkten der Spielflaeche) von Springen und Haltung (Nico 1a): Springen aussen rechts knapp ueber der Zone
-    /// des rechten Sticks (<see cref="Sticks.ZoneOben"/>), Haltung schraeg links darueber auf dem Daumenbogen. Beide liegen ganz
-    /// ueber der Zone und unter der Kopfzeile. In einem sehr flachen Bild (E1, Lauf 1118: Emulator 640 x 320 Punkte) steigt
-    /// Haltung nur so weit schraeg nach oben, wie Platz ist (bis gleich hoch wie Springen); reicht auch das nicht, null (dann
-    /// gelten die Menue-Eintraege). Alte Lage nur schraeg: <see cref="NurSchraegFuerTests"/>.
+    /// Mittelpunkte (in Punkten der Spielflaeche) von Springen und Haltung. Welle A 1.0.0 (Sammelliste 405, Nico: „weiter nach unten
+    /// in die Ecken“): Springen unten rechts in der Ecke (<see cref="Rand"/> zum Rand), Haltung links daneben etwas hoeher auf dem
+    /// Daumenbogen. Ragt Haltung dort bis an die Leiste (schmales Bild oder aufgeklappte Leiste), stehen beide ueber der Leiste.
+    /// Den Platz der Knoepfe haelt der rechte Stick frei (<see cref="Sperre"/>). Kein Platz (sehr flaches Bild, Haltung in der
+    /// linken Haelfte): null. Bis A 0.99.0 (Gegenprobe <see cref="AltFuerTests"/>): ueber der Zone des rechten Sticks.
     /// </summary>
     public static ((double X, double Y) Springen, (double X, double Y) Haltung)? Lage(Sticks.Bereich b)
     {
         var (g, k) = Groesse(b.Breite, b.Hoehe);
-        var zone = Sticks.ZoneOben(b);
-        var springen = (X: b.Breite - 20 - (g / 2), Y: zone - 14 - (g / 2));
-        var hoch = NurSchraeg.Value ? 22 : Math.Clamp(springen.Y - (k / 2) - (b.Oben + 4), 0, 22);
-        var haltung = (X: springen.X - (g / 2) - 18 - (k / 2), Y: springen.Y - hoch);
+        if (Alt.Value)
+        {
+            var zone = Sticks.ZoneOben(b);
+            var sAlt = (X: b.Breite - 20 - (g / 2), Y: zone - 14 - (g / 2));
+            var hochAlt = NurSchraeg.Value ? 22 : Math.Clamp(sAlt.Y - (k / 2) - (b.Oben + 4), 0, 22);
+            var hAlt = (X: sAlt.X - (g / 2) - 18 - (k / 2), Y: sAlt.Y - hochAlt);
+            return Math.Min(sAlt.Y - (g / 2), hAlt.Y - (k / 2)) < b.Oben + 4 || hAlt.X - (k / 2) < b.Breite / 2 ? null : (sAlt, hAlt);
+        }
+        const double neben = 14;
+        const double hoch = 18;
+        var springen = (X: b.Breite - Rand - (g / 2), Y: b.Hoehe - Rand - (g / 2));
+        var haltung = (X: springen.X - (g / 2) - neben - (k / 2), Y: springen.Y - hoch);
+        // steht die Leiste unter Haltung oder reicht die Leiste ueber die ganze Breite: beide ueber die Leiste
+        var leisteDa = b.LeisteBis <= b.LeisteVon || haltung.X - (k / 2) < b.LeisteBis + Rand;
+        if (leisteDa && b.Unten > 0)
+        {
+            springen.Y = b.Hoehe - b.Unten - Rand - (g / 2);
+            haltung.Y = springen.Y - hoch;
+        }
         if (Math.Min(springen.Y - (g / 2), haltung.Y - (k / 2)) < b.Oben + 4 || haltung.X - (k / 2) < b.Breite / 2)
         {
             return null;
         }
         return (springen, haltung);
     }
+
+    /// <summary>
+    /// Flaeche der zwei Knoepfe mit <see cref="Rand"/> rundherum (Punkte der Spielflaeche: x1, y1, x2, y2), die der rechte Stick frei
+    /// haelt; default = keine Knoepfe.
+    /// </summary>
+    public static (double X1, double Y1, double X2, double Y2) Sperre(Sticks.Bereich b)
+    {
+        if (Lage(b) is not { } l)
+        {
+            return default;
+        }
+        var (g, k) = Groesse(b.Breite, b.Hoehe);
+        var x1 = Math.Min(l.Springen.X - (g / 2), l.Haltung.X - (k / 2)) - Rand;
+        var y1 = Math.Min(l.Springen.Y - (g / 2), l.Haltung.Y - (k / 2)) - Rand;
+        var x2 = Math.Max(l.Springen.X + (g / 2), l.Haltung.X + (k / 2)) + Rand;
+        var y2 = Math.Max(l.Springen.Y + (g / 2), l.Haltung.Y + (k / 2)) + Rand;
+        return (x1, y1, x2, y2);
+    }
+
+    private static readonly AsyncLocal<bool> Alt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Groesse und Lage wie bis A 0.99.0.</summary>
+    public static bool AltFuerTests { get => Alt.Value; set => Alt.Value = value; }
 
     private static readonly AsyncLocal<bool> NurSchraeg = new();
 

@@ -351,6 +351,9 @@ public sealed partial class SpielTafel
         _s.Geschaefte is { } g ? [.. g.Waren("elektromarkt").Where(w => w.Art == Geschaefte.ArtTeil).Select(w => w.Typ).Distinct()] : [];
 
     /// <summary>Ein Ticket des Typs als Seite (ohne Einreichen); false, wenn es keins gibt.</summary>
+    /// <summary>Welle A 1.0.0 (Sammelliste 357): das Brett des offenen Tickets (Start-Test der Werkbank).</summary>
+    internal Brett? ProbeBrett => _ticket?.Brett;
+
     internal bool ProbeTicket(string typ)
     {
         _waehlen = false;

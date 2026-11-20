@@ -194,6 +194,17 @@ public static partial class AutoMessung
                             && !m.UnterDaumen && (!zu || m.Stick == Sticks.Seite.Links);
                         Pruefe(punkt, ok, string.Create(inv,
                             $"Mitte Symbole {m.Symbole:0.0}, Leiste {m.Leiste:0.0}, Bild {m.Seite:0.0} (±2), zugeklappt {symboleZu:0.0}; Daumen links unten: {(m.UnterDaumen ? "SYMBOL" : "kein Symbol")}, {(m.Stick is { } s ? "Stick " + s : "KEIN Stick")}"));
+                        if (!zu)
+                        {
+                            // Welle A 1.0.0 (Sammelliste 402): „Ich-Sicht“ links und „Spiel verlassen“ rechts gleich breit und gleich weit
+                            // von der Mitte der zwei Symbole (±2 Punkte), nicht uebereinander
+                            var sk = seite.SeitenKnoepfe();
+                            var sym = sk is { } q && Math.Abs(q.Ich.Width - q.Verlassen.Width) <= 1 && Math.Abs((q.Mitte - q.Ich.Right) - (q.Verlassen.X - q.Mitte)) <= 2
+                                && Math.Abs(q.Ich.Y - q.Verlassen.Y) <= 2 && !q.Ich.Intersects(q.Verlassen) && q.Ich.Right <= q.Mitte && q.Verlassen.X >= q.Mitte;
+                            Pruefe(punkt + " Ich-Sicht links (402)", sym, sk is { } q2
+                                ? string.Create(inv, $"Ich-Sicht {q2.Ich.X:0.0}..{q2.Ich.Right:0.0}, Spiel verlassen {q2.Verlassen.X:0.0}..{q2.Verlassen.Right:0.0}, Mitte {q2.Mitte:0.0}, Hoehe {q2.Ich.Y:0.0}/{q2.Verlassen.Y:0.0}")
+                                : "Knoepfe nicht gemessen");
+                        }
                     }
                 }
             }

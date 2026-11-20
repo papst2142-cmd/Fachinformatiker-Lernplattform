@@ -179,7 +179,9 @@ public sealed class SpielHaltungGehenTests
         foreach (var (wer, (x, y), d) in new[] { ("Springen", lage.S, g), ("Haltung", lage.H, k) })
         {
             var r = d / 2;
-            if (x - r < 0 || x + r > b.Breite || y - r < b.Oben || y + r > b.Hoehe - b.Unten)
+            // A 1.0.0 (Sammelliste 405): bis in die Ecke neben der Leiste, nie auf der Leiste, Rand zum Bild
+            var leiste = b.LeisteBis > b.LeisteVon ? (b.LeisteVon, b.Hoehe - b.Unten, b.LeisteBis, b.Hoehe) : (0, b.Hoehe - b.Unten, b.Breite, b.Hoehe);
+            if (x - r < 0 || x + r > b.Breite || y - r < b.Oben || y + r > b.Hoehe - HaltungKnopf.Rand + 1e-9 || Sticks.KreisInRechteck(x, y, r, leiste))
             {
                 funde.Add($"{name} {wer}: ausserhalb des freien Bereichs");
             }
@@ -189,7 +191,7 @@ public sealed class SpielHaltungGehenTests
                 {
                     var px = x + (a * Math.Cos(w * Math.PI / 180));
                     var py = y + (a * Math.Sin(w * Math.PI / 180));
-                    if (Sticks.SeiteFuer(px, py, b) is { } seite)
+                    if (Sticks.SeiteFuer(px, py, b with { Sperre = HaltungKnopf.Sperre(b) }) is { } seite)
                     {
                         funde.Add(string.Create(CultureInfo.InvariantCulture, $"{name} {wer}: bei {px:F0}/{py:F0} beginnt der Stick {seite}"));
                         w = 360;
@@ -207,25 +209,43 @@ public sealed class SpielHaltungGehenTests
     }
 
     [Fact]
-    public void Lage_RechtsUeberDemStick_KeinStickBereich_Gegenprobe()
+    public void Lage_RechtsUnten_InDerEcke_KeinStickBereich_Gegenprobe()
     {
         var funde = new List<string>();
+        var ecken = 0;
         foreach (var (name, w, h) in new[] { ("S24 quer", 832.0, 384.0), ("S24 hoch", 384.0, 832.0), ("Tab quer", 1280.0, 800.0), ("Tab hoch", 800.0, 1280.0), ("PC", 1360.0, 880.0) })
         {
             var b = new Sticks.Bereich(w, h, 64, 86, (w / 2) - 90, (w / 2) + 90);
             var lage = HaltungKnopf.Lage(b);
             Assert.True(lage is not null, name + ": keine Lage");
             var (s, hl) = lage!.Value;
-            // rechts (Daumen rechts), Springen aussen, Haltung links darueber
+            // A 1.0.0 (Sammelliste 405): Springen unten rechts in der Ecke, Haltung links daneben etwas hoeher; kleiner als bis A 0.99.0
+            var (g, _) = HaltungKnopf.Groesse(w, h);
             Assert.True(s.X > w * 0.8 && hl.X < s.X && hl.Y < s.Y, name);
+            Assert.Equal(w - HaltungKnopf.Rand, s.X + (g / 2), 6);
+            // in der Ecke; nur wenn Haltung dort an die Leiste reichte (schmales Hochformat), ueber der Leiste
+            Assert.True(Math.Abs(h - HaltungKnopf.Rand - (s.Y + (g / 2))) < 1e-6 || Math.Abs(h - b.Unten - HaltungKnopf.Rand - (s.Y + (g / 2))) < 1e-6, name + " nicht unten");
+            ecken += Math.Abs(h - HaltungKnopf.Rand - (s.Y + (g / 2))) < 1e-6 ? 1 : 0;
             funde.AddRange(LageFunde(name, b, lage.Value));
-            Assert.Equal(Math.Min(w, h) >= 600 ? (72.0, 52.0) : (64.0, 46.0), HaltungKnopf.Groesse(w, h));
+            Assert.Equal(Math.Min(w, h) >= 600 ? (64.0, 46.0) : (56.0, 40.0), HaltungKnopf.Groesse(w, h));
         }
         Assert.True(funde.Count == 0, string.Join("\n", funde));
-        // Gegenprobe: 40 Punkte tiefer laege Springen im Bereich des rechten Sticks
+        Assert.True(ecken >= 3, $"nur {ecken} Groessen in der Ecke");
+        // Gegenprobe: ohne Sperre beginnt auf den Knoepfen der rechte Stick
         var bq = new Sticks.Bereich(832, 384, 64, 86, 326, 506);
         var l = HaltungKnopf.Lage(bq)!.Value;
-        Assert.Contains(LageFunde("Gegenprobe", bq, ((l.Springen.X, l.Springen.Y + 40), l.Haltung)), f => f.Contains("Stick", StringComparison.Ordinal));
+        Assert.NotNull(Sticks.SeiteFuer(l.Springen.X, l.Springen.Y, bq));
+        // Gegenprobe Stand A 0.99.0: groesser und ueber der Zone des Sticks (nicht in der Ecke)
+        HaltungKnopf.AltFuerTests = true;
+        try
+        {
+            Assert.Equal((64.0, 46.0), HaltungKnopf.Groesse(832, 384));
+            Assert.True(HaltungKnopf.Lage(bq)!.Value.Springen.Y + 32 < 384 - HaltungKnopf.Rand - 40);
+        }
+        finally
+        {
+            HaltungKnopf.AltFuerTests = false;
+        }
     }
 
     [Fact]
@@ -240,11 +260,8 @@ public sealed class SpielHaltungGehenTests
         Assert.True(h.X < s.X && h.Y <= s.Y, "Haltung links neben/ueber Springen");
         var funde = LageFunde("Emulator", b, lage.Value);
         Assert.True(funde.Count == 0, string.Join("\n", funde));
-        // an groesseren Bildern bleibt es genau wie im Bild (22 Punkte schraeg darueber)
-        var bq = new Sticks.Bereich(832, 384, 64, 86, 326, 506);
-        var q = HaltungKnopf.Lage(bq)!.Value;
-        Assert.Equal(22, q.Springen.Y - q.Haltung.Y, 6);
-        // Gegenprobe: nur schraeg (Stand vor Lauf 1118) gibt es im Emulator keine Lage
+        // Gegenprobe: Stand A 0.99.0 nur schraeg (vor Lauf 1118) gibt es im Emulator keine Lage
+        HaltungKnopf.AltFuerTests = true;
         HaltungKnopf.NurSchraegFuerTests = true;
         try
         {
@@ -253,6 +270,7 @@ public sealed class SpielHaltungGehenTests
         finally
         {
             HaltungKnopf.NurSchraegFuerTests = false;
+            HaltungKnopf.AltFuerTests = false;
         }
     }
 

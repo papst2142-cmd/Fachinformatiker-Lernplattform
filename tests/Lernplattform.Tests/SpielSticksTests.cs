@@ -156,7 +156,10 @@ public sealed class SpielSticksTests
                     var (mx, my, r) = Sticks.Lage(x, y, s, b);
                     Assert.True(r >= Sticks.Radius / 2 && r <= Sticks.Radius, $"Radius {r} bei {b}");
                     Assert.True(my - r >= b.Oben - 1e-9, $"ueber der Kopfzeile: {my - r} < {b.Oben} ({b})");
-                    Assert.True(my + r <= b.Hoehe - b.Unten + 1e-9, $"ueber der Leiste: {my + r} > {b.Hoehe - b.Unten} ({b})");
+                    // A 1.0.0 (Sammelliste 405): neben einer mittigen Leiste bis in die Ecke, nie auf der Leiste, nie unter dem Bild
+                    var leiste = b.LeisteBis > b.LeisteVon ? (b.LeisteVon, b.Hoehe - b.Unten, b.LeisteBis, b.Hoehe) : (0, b.Hoehe - b.Unten, b.Breite, b.Hoehe);
+                    Assert.False(Sticks.KreisInRechteck(mx, my, r, leiste), $"auf der Leiste: ({mx}, {my}, {r}) ({b})");
+                    Assert.True(my + r <= b.Hoehe - Sticks.EckRand + 1e-9 || my + r <= b.Hoehe - b.Unten + 1e-9, $"unter dem Bild: {my + r} ({b})");
                     Assert.True(mx - r >= (s == Sticks.Seite.Links ? 0 : b.Breite / 2) - 1e-9 && mx + r <= (s == Sticks.Seite.Links ? b.Breite / 2 : b.Breite) + 1e-9,
                         $"nicht in seiner Haelfte ({mx}, {r}, {b})");
                     gepruefte++;
@@ -220,13 +223,89 @@ public sealed class SpielSticksTests
             Assert.Equal(Sticks.Seite.Rechts, Sticks.SeiteFuer(breite - 40, unten, b));
             Assert.Null(Sticks.SeiteFuer(breite / 2, unten, b));
             Assert.Null(Sticks.SeiteFuer(von + 5, unten, b));
-            // der Stick liegt trotzdem ganz im freien Bereich ueber der Leiste
-            var (_, my, r) = Sticks.Lage(40, unten, Sticks.Seite.Links, b);
-            Assert.True(my + r <= hoehe - leisteHoehe + 1e-9, name);
+            // A 1.0.0 (Sammelliste 405, Nico: „Sticks weiter nach unten in die Ecken“): der Stick liegt unten in der Ecke neben der
+            // Leiste (Abstand EckRand zum Rand), beruehrt die Leiste nicht; Gegenprobe Stand A 0.99.0: er endete ueber der Leiste
+            var (mx, my, r) = Sticks.Lage(40, unten, Sticks.Seite.Links, b);
+            Assert.Equal(hoehe - Sticks.EckRand, my + r, 6);
+            Assert.True(mx + r <= von - Sticks.EckRand + 1e-9, name);
+            var (mxr, myr, rr) = Sticks.Lage(breite - 40, unten, Sticks.Seite.Rechts, b);
+            Assert.Equal(hoehe - Sticks.EckRand, myr + rr, 6);
+            Assert.True(mxr - rr >= bis + Sticks.EckRand - 1e-9, name);
+            Sticks.AltFuerTests = true;
+            try
+            {
+                var (_, myAlt, rAlt) = Sticks.Lage(40, unten, Sticks.Seite.Links, b);
+                Assert.True(myAlt + rAlt <= hoehe - leisteHoehe + 1e-9, name);
+                Assert.True(myAlt + rAlt < my + r - 30, name + ": Gegenprobe greift nicht");
+            }
+            finally
+            {
+                Sticks.AltFuerTests = false;
+            }
             // Gegenprobe: Leiste ueber die ganze Breite wie bis A 0.98.0
             var alt = new Sticks.Bereich(breite, hoehe, 64, leisteHoehe);
             Assert.Null(Sticks.SeiteFuer(40, unten, alt));
             Assert.Null(Sticks.SeiteFuer(breite - 40, unten, alt));
         }
+    }
+
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 405): die runden Knoepfe stehen unten rechts in der Ecke. Auf ihnen beginnt kein Stick, und der
+    /// rechte Stick ragt nie in ihre Flaeche (er rueckt nach links oder oben), an jeder Stelle der rechten Zone und in jeder Groesse.
+    /// Gegenprobe: ohne Sperre (Stand A 0.99.0) laegen Sticks auf den Knoepfen.
+    /// </summary>
+    [Fact]
+    public void Sticks_Knoepfe_InDerEcke_NieUeberlappt_Gegenprobe()
+    {
+        var gepruefte = 0;
+        var ohneSperre = 0;
+        foreach (var (name, breite, hoehe) in Groessen.Where(g => g.Name.StartsWith("Handy", StringComparison.Ordinal) || g.Name.StartsWith("Tablet", StringComparison.Ordinal)))
+        {
+            foreach (var leisteBreite in new[] { 180.0, 420.0 })
+            {
+                var leer = new Sticks.Bereich(breite, hoehe, 64, 60, (breite - leisteBreite) / 2, (breite + leisteBreite) / 2);
+                var b = leer with { Sperre = HaltungKnopf.Sperre(leer) };
+                if (b.Sperre.X2 <= b.Sperre.X1)
+                {
+                    continue;
+                }
+                for (var x = breite / 2; x <= breite; x += 8)
+                {
+                    for (var y = 0.0; y <= hoehe; y += 8)
+                    {
+                        if (b.Gesperrt(x, y))
+                        {
+                            Assert.Null(Sticks.SeiteFuer(x, y, b));
+                        }
+                        if (Sticks.SeiteFuer(x, y, b) is not { } s)
+                        {
+                            continue;
+                        }
+                        var (mx, my, r) = Sticks.Lage(x, y, s, b);
+                        Assert.False(Sticks.KreisInRechteck(mx, my, r, b.Sperre), $"{name} {leisteBreite}: Stick ({mx:F0}, {my:F0}, {r:F0}) auf den Knoepfen");
+                        gepruefte++;
+                        Sticks.AltFuerTests = true;
+                        try
+                        {
+                            if (Sticks.SeiteFuer(x, y, leer) is { } sa && Sticks.Lage(x, y, sa, leer) is var (ax, ay, ar) && Sticks.KreisInRechteck(ax, ay, ar, b.Sperre))
+                            {
+                                ohneSperre++;
+                            }
+                        }
+                        finally
+                        {
+                            Sticks.AltFuerTests = false;
+                        }
+                    }
+                }
+            }
+        }
+        Assert.True(gepruefte > 200, $"nur {gepruefte} Stellen");
+        Assert.True(ohneSperre > 0, "Gegenprobe greift nicht");
+        // Gegenprobe deutlich: ohne Sperre beginnt auf dem Knopf Springen ein Stick
+        var g0 = new Sticks.Bereich(915, 412, 64, 60, 367, 547);
+        var l0 = HaltungKnopf.Lage(g0)!.Value;
+        Assert.NotNull(Sticks.SeiteFuer(l0.Springen.X, l0.Springen.Y, g0));
+        Assert.Null(Sticks.SeiteFuer(l0.Springen.X, l0.Springen.Y, g0 with { Sperre = HaltungKnopf.Sperre(g0) }));
     }
 }

@@ -21,7 +21,12 @@ public sealed partial class Innenraum
     {
         ["rack"] = 5000, ["usv"] = 640, ["pc"] = 720, ["werkbank"] = 2800,
         ["mainboard"] = 900, ["ram"] = 480, ["cpu"] = 240,
+        // Welle A 1.0.0 (Sammelliste 410): Etagendrucker; Grund wie beim PC (ein Geraet je Buero, mehrere je Haus)
+        ["drucker"] = 720,
     };
+
+    /// <summary>Gegenprobe Welle A 1.0.0 (Sammelliste 410): Drucker wie bis A 0.99.0 (zwei graue Kaesten).</summary>
+    internal static readonly AsyncLocal<bool> DruckerAltFuerTests = new();
 
     /// <summary>Ein Kasten im Rahmen eines Stuecks (Masse in Spiel-Einheiten): lx, lz, lw, lt, unten, oben, Farbe.</summary>
     internal delegate void KastenSetzen(float lx, float lz, float lw, float lt, float unten, float oben, Vector3 farbe);
@@ -52,6 +57,8 @@ public sealed partial class Innenraum
         public static readonly Vector3 Glas = Netz.Farbe("#93C5FD");
         public static readonly Vector3 Rot = Netz.Farbe("#DC2626");
         public static readonly Vector3 Weiss = Netz.Farbe("#E5E7EB");
+        public static readonly Vector3 Druck = Netz.Farbe("#D9DDE3");
+        public static readonly Vector3 DruckGrau = Netz.Farbe("#9CA3AF");
         public static readonly Vector3[] Kabel = [Netz.Farbe("#2563EB"), Netz.Farbe("#F59E0B"), Netz.Farbe("#22C55E"), Netz.Farbe("#DC2626")];
     }
 
@@ -441,6 +448,67 @@ public sealed partial class Innenraum
         K(0.12f, 0.76f, 0.06f, 0.1f, 0.6f, 0.64f, WFarbe.Schwarz);
     }
 
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 410, Nico: „Drucker neu im realistischen Stil wie Server und PC“): Etagendrucker
+    /// (Multifunktionsgeraet) im Rechteck des Stuecks, Vorderseite nach lz = t: Rollen, Unterschrank mit zwei Papierfaechern,
+    /// Druckwerk mit Frontklappe und Bypass-Einzug rechts, Ausgabefach mit Papier, Scanner mit Vorlageneinzug und Papier oben,
+    /// Bedienfeld mit Anzeige und Leuchten, Lueftung hinten. Masse in Metern nach echten Geraeten (gut 1 m hoch).
+    /// </summary>
+    internal static void DruckerBauen(KastenSetzen kasten, float b, float t)
+    {
+        var m = new InMetern(kasten);
+        float bm = b / Meter, tm = t / Meter;
+        float x0 = 0.01f, x1 = bm - 0.01f, z0 = 0.02f, z1 = tm - 0.012f;
+        var breite = x1 - x0;
+        var mitte = (x0 + x1) / 2;
+        // Rollen
+        foreach (var rx in new[] { x0 + 0.02f, x1 - 0.06f })
+        {
+            foreach (var rz in new[] { z0 + 0.02f, z1 - 0.06f })
+            {
+                m.K(rx, rz, 0.04f, 0.04f, 0f, 0.03f, WFarbe.Schwarz);
+            }
+        }
+        // Unterschrank mit zwei Papierfaechern (Fronten leicht vorstehend, Griffmulden, Fuellanzeige)
+        m.K(x0, z0, breite, z1 - z0, 0.03f, 0.42f, WFarbe.Druck);
+        foreach (var (u, o) in new[] { (0.04f, 0.22f), (0.23f, 0.41f) })
+        {
+            m.K(x0 + 0.01f, z1, breite - 0.02f, 0.012f, u, o, WFarbe.Druck);
+            m.K(mitte - 0.07f, z1 + 0.004f, 0.14f, 0.008f, o - 0.05f, o - 0.03f, WFarbe.Schwarz);
+            m.K(x0 + 0.04f, z1 + 0.004f, 0.03f, 0.008f, u + 0.03f, o - 0.03f, WFarbe.DruckGrau);
+            m.K(x0 + 0.045f, z1 + 0.006f, 0.02f, 0.006f, u + 0.04f, u + 0.09f, WFarbe.Weiss);
+        }
+        // Druckwerk: Gehaeuse, Frontklappe mit Fugen, Bypass rechts, Lueftung hinten
+        m.K(x0, z0, breite - 0.025f, z1 - z0, 0.42f, 0.78f, WFarbe.Druck);
+        m.K(x0 + 0.01f, z1, breite - 0.045f, 0.01f, 0.45f, 0.74f, WFarbe.Druck);
+        m.K(x0 + 0.01f, z1 + 0.004f, breite - 0.045f, 0.008f, 0.6f, 0.605f, WFarbe.DruckGrau);
+        m.K(mitte - 0.1f, z1 + 0.004f, 0.2f, 0.008f, 0.7f, 0.72f, WFarbe.Schwarz);
+        m.K(x1 - 0.025f, z0 + 0.05f, 0.025f, z1 - z0 - 0.1f, 0.5f, 0.7f, WFarbe.DruckGrau);
+        m.K(x1 - 0.02f, z0 + 0.08f, 0.02f, z1 - z0 - 0.16f, 0.69f, 0.7f, WFarbe.Weiss);
+        for (var i = 0; i < 5; i++)
+        {
+            m.K(x0 + 0.06f, z0 - 0.004f, breite - 0.12f, 0.004f, 0.48f + (i * 0.05f), 0.495f + (i * 0.05f), WFarbe.Loch);
+        }
+        // Ausgabefach: hinten und links Stuetzen, dazwischen frei, Papierstapel
+        m.K(x0, z0, breite, 0.1f, 0.78f, 0.86f, WFarbe.Druck);
+        m.K(x0, z0, 0.06f, z1 - z0, 0.78f, 0.86f, WFarbe.Druck);
+        m.K(x0 + 0.06f, z0 + 0.1f, breite - 0.06f, z1 - z0 - 0.1f, 0.78f, 0.785f, WFarbe.Loch);
+        m.K(x0 + 0.1f, z0 + 0.14f, breite - 0.18f, Math.Min(0.3f, z1 - z0 - 0.18f), 0.785f, 0.805f, WFarbe.Weiss);
+        // Scanner mit Deckel, Vorlageneinzug und Papier, Bedienfeld vorn
+        m.K(x0, z0, breite, z1 - z0, 0.86f, 0.93f, WFarbe.Druck);
+        m.K(x0 + 0.01f, z0 + 0.01f, breite - 0.02f, z1 - z0 - 0.02f, 0.93f, 0.95f, WFarbe.DruckGrau);
+        m.K(x0 + 0.05f, z0 + 0.04f, breite - 0.1f, (z1 - z0) * 0.6f, 0.95f, 0.99f, WFarbe.DruckGrau);
+        m.K(x0 + 0.08f, z0 + 0.07f, breite - 0.16f, (z1 - z0) * 0.45f, 0.99f, 0.996f, WFarbe.Weiss);
+        m.K(mitte - 0.12f, z1 - 0.08f, 0.24f, 0.08f, 0.93f, 0.955f, WFarbe.Schwarz);
+        m.K(mitte - 0.1f, z1 - 0.07f, 0.12f, 0.06f, 0.955f, 0.958f, WFarbe.Anzeige);
+        m.K(mitte - 0.09f, z1 - 0.055f, 0.08f, 0.012f, 0.958f, 0.96f, WFarbe.AnzeigeHell);
+        m.K(mitte + 0.04f, z1 - 0.06f, 0.025f, 0.02f, 0.955f, 0.96f, WFarbe.LedGruen);
+        m.K(mitte + 0.075f, z1 - 0.06f, 0.025f, 0.02f, 0.955f, 0.96f, WFarbe.LedBlau);
+        m.K(mitte + 0.04f, z1 - 0.03f, 0.06f, 0.015f, 0.955f, 0.958f, WFarbe.ServerDunkel);
+        // Netzkabel hinten zum Boden
+        m.K(x1 - 0.1f, z0 - 0.015f, 0.015f, 0.015f, 0f, 0.5f, WFarbe.Schwarz);
+    }
+
     /// <summary>Mainboard (ATX, 30,5 x 24,4 cm) flach im Rechteck, Sockel nach +lz.</summary>
     internal static void MainboardBauen(KastenSetzen kasten, float lx, float lz, float unten)
     {
@@ -595,6 +663,7 @@ public sealed partial class Innenraum
             case "mainboard": MainboardBauen(K, 0, 0, 0); break;
             case "ram": RamBauen(K, 0, 0, 0); break;
             case "cpu": CpuBauen(K, 0, 0, 0); break;
+            case "drucker": DruckerBauen(K, b, t); break;
             default: throw new ArgumentException(art);
         }
         return teile;
