@@ -207,8 +207,9 @@ public class PruefungTests
             ["elektromarkt"] = (15282, 12),
             ["bank"] = (7468, 12),
             // A 0.68.0: Frisuren an der 3D-Figur; im Amt langes Haar (3 Quader, vorher 9259), im Kaufhaus Locken (29 Quader mit den
-            // Locken an Seiten, hinten und vorn nach Weisung P12-209, vorher 17796)
-            ["amt"] = (9295, 12),
+            // Locken an Seiten, hinten und vorn nach Weisung P12-209, vorher 17796); A 1.0.0 (Sammelliste 410): der Drucker im Amt
+            // ist ein Etagendrucker (468 statt 24 Dreiecke, vorher 9295, Gegenprobe unten)
+            ["amt"] = (9739, 12),
             ["kaufhaus"] = (18144, 12),
         };
         foreach (var ort in D.Orte)
@@ -227,6 +228,18 @@ public class PruefungTests
         finally
         {
             Innenraum.BettQuerAltFuerTests.Value = false;
+        }
+        // Gegenprobe Sammelliste 410: mit dem Drucker wie bis A 0.99.0 (ein Kasten) wieder der alte Wert
+        Innenraum.DruckerAltFuerTests.Value = true;
+        try
+        {
+            var alt = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht("amt"), Grundriss("amt"),
+                InnenGrundriss.Personen(D.Fassung.Innenraeume, "amt"), D.Grafik);
+            Assert.Equal((9295L, 12), StadtbauGrenzen.Innen(alt));
+        }
+        finally
+        {
+            Innenraum.DruckerAltFuerTests.Value = false;
         }
     }
 

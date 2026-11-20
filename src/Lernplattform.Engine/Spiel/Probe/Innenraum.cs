@@ -1354,6 +1354,9 @@ public sealed partial class Innenraum
     /// <summary>Flache Stuecke am Boden, die vor einem Sessel nicht stoeren.</summary>
     private static readonly HashSet<string> SesselFlach = ["teppich", "fussmatte"];
 
+    /// <summary>Kleinste gezeichnete Breite eines Sessels (wie der Sessel im Moebelhaus), damit die Figur zwischen den Lehnen sitzt.</summary>
+    internal const float SesselMinBreite = 1.1f;
+
     /// <summary>Tiefe des Streifens vor einem Sessel, der frei sein soll (Platz fuer die Beine).</summary>
     internal const float SesselVorn = 0.6f;
 
@@ -1621,6 +1624,12 @@ public sealed partial class Innenraum
                 break;
             case "pflanze":
                 Modell(r, "pottedPlant", 0, 0, b, tt, 1.0f * M, 0, Farben.Pflanze);
+                break;
+            case "sessel" when !SesselAltFuerTests.Value && b < SesselMinBreite:
+                // Welle A 1.0.0 (Sammelliste 407): ein schmaler Sessel (0,95) blickt jetzt in den Raum und wird damit zum Sitzplatz;
+                // zwischen seinen Lehnen braucht die sitzende Figur die Breite des Sessels aus dem Moebelhaus. Er wird darum
+                // mittig auf diese Breite gezeichnet (Grundriss und Laufraster bleiben gleich)
+                Modell(r, "loungeChair", (b - SesselMinBreite) / 2, 0, SesselMinBreite, tt, 0.8f * M, 0, Farben.Polster);
                 break;
             case "sessel":
                 Modell(r, "loungeChair", 0, 0, b, tt, 0.8f * M, 0, Farben.Polster);

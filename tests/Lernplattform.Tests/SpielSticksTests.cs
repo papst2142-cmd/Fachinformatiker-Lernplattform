@@ -213,6 +213,7 @@ public sealed class SpielSticksTests
     [Fact]
     public void Leiste_Mittig_DaumenUntenDaneben_WirdStick_Gegenprobe()
     {
+        var ecken = 0;
         foreach (var (name, breite, hoehe) in Groessen.Where(g => g.Name.StartsWith("Handy", StringComparison.Ordinal) || g.Name.StartsWith("Tablet", StringComparison.Ordinal)))
         {
             const double leisteBreite = 180, leisteHoehe = 60;
@@ -225,18 +226,36 @@ public sealed class SpielSticksTests
             Assert.Null(Sticks.SeiteFuer(von + 5, unten, b));
             // A 1.0.0 (Sammelliste 405, Nico: „Sticks weiter nach unten in die Ecken“): der Stick liegt unten in der Ecke neben der
             // Leiste (Abstand EckRand zum Rand), beruehrt die Leiste nicht; Gegenprobe Stand A 0.99.0: er endete ueber der Leiste
+            // Ist neben der Leiste fuer den ganzen Kreis kein Platz (Handy hoch: 102 Punkte neben der Leiste, Kreis 120), bleibt
+            // er ueber der Leiste: nie Ueberlappung (Nico: „Nichts darf ueberlappen“)
             var (mx, my, r) = Sticks.Lage(40, unten, Sticks.Seite.Links, b);
-            Assert.Equal(hoehe - Sticks.EckRand, my + r, 6);
-            Assert.True(mx + r <= von - Sticks.EckRand + 1e-9, name);
+            var platz = von - Sticks.EckRand >= 2 * r;
+            if (platz)
+            {
+                ecken++;
+                Assert.Equal(hoehe - Sticks.EckRand, my + r, 6);
+                Assert.True(mx + r <= von - Sticks.EckRand + 1e-9, name);
+            }
+            else
+            {
+                Assert.True(my + r <= hoehe - leisteHoehe + 1e-9, name + ": ohne Platz neben der Leiste ueber ihr");
+            }
             var (mxr, myr, rr) = Sticks.Lage(breite - 40, unten, Sticks.Seite.Rechts, b);
-            Assert.Equal(hoehe - Sticks.EckRand, myr + rr, 6);
-            Assert.True(mxr - rr >= bis + Sticks.EckRand - 1e-9, name);
+            if (platz)
+            {
+                Assert.Equal(hoehe - Sticks.EckRand, myr + rr, 6);
+                Assert.True(mxr - rr >= bis + Sticks.EckRand - 1e-9, name);
+            }
+            else
+            {
+                Assert.True(myr + rr <= hoehe - leisteHoehe + 1e-9, name + ": ohne Platz neben der Leiste ueber ihr");
+            }
             Sticks.AltFuerTests = true;
             try
             {
                 var (_, myAlt, rAlt) = Sticks.Lage(40, unten, Sticks.Seite.Links, b);
                 Assert.True(myAlt + rAlt <= hoehe - leisteHoehe + 1e-9, name);
-                Assert.True(myAlt + rAlt < my + r - 30, name + ": Gegenprobe greift nicht");
+                Assert.True(!platz || myAlt + rAlt < my + r - 30, name + ": Gegenprobe greift nicht");
             }
             finally
             {
@@ -247,6 +266,8 @@ public sealed class SpielSticksTests
             Assert.Null(Sticks.SeiteFuer(40, unten, alt));
             Assert.Null(Sticks.SeiteFuer(breite - 40, unten, alt));
         }
+        // Handy quer, Tablet hoch und quer: in der Ecke
+        Assert.True(ecken >= 3, "zu wenige Groessen mit Stick in der Ecke: " + ecken);
     }
 
     /// <summary>

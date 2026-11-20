@@ -62,6 +62,11 @@ public sealed class SpielSesselTests
                     {
                         funde.Add("Sessel blickt zur Wand oder in ein Moebel: " + zeile);
                     }
+                    // in den Raum blickend ist er ein Sitzplatz (bis A 0.99.0 blickten diese Sessel zur Wand: kein Platz)
+                    if (!innen.Sitzgelegenheiten.Any(s => s.Modell == m.Name && Vector2.Distance(new Vector2(s.Ort.X, s.Ort.Z), mitte) < 0.6f))
+                    {
+                        funde.Add("Sessel ohne Sitzplatz: " + zeile);
+                    }
                 }
                 else if (Stuehle.Contains(m.Name) && innen.Stuehle.Count > 0)
                 {
@@ -85,10 +90,10 @@ public sealed class SpielSesselTests
     // Chefbuero der Bitweiche (buero): Rueckseite zur Suedwand, Blick nach Norden zum Schreibtisch (bis A 0.99.0 Blick zur Wand)
     private static readonly string[] Soll =
     [
-        "neu buero loungeChair 0.82/4.78 n",
+        "neu buero loungeChair 0.83/4.78 n",
         "neu geschaeft:moebelhaus loungeChair 24.45/0.85 s",
         "neu kunde:lindenau loungeChair 19.08/5.07 w",
-        "tag200 buero loungeChair 0.82/4.78 n",
+        "tag200 buero loungeChair 0.83/4.78 n",
         "tag200 geschaeft:moebelhaus loungeChair 24.45/0.85 s",
         "tag200 kunde:lindenau loungeChair 19.08/5.07 w",
         "gespielt geschaeft:moebelhaus loungeChair 24.45/0.85 s",
