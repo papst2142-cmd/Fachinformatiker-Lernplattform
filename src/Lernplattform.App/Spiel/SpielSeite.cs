@@ -267,23 +267,38 @@ public sealed partial class SpielSeite : Grid
         _kurz.VerticalAlignment = VerticalAlignment.Center;
         _kurz.Margin = new Thickness(4, 0, 8, 6);
         _kurz.IsVisible = false;
-        // Welle A 0.67.0 (Sammelliste 301): links der Handy-Knopf (Questlog), der Klapp-Pfeil rueckt an den rechten Rand
-        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto") };
+        // Welle A 0.99.0 (Sammelliste 399, Nico 20.11.2026: „die Symbole muessen in die Mitte verlegt werden und beim aufklappen
+        // erweitern sie sich gleichmaessig nach links und rechts“): Handy-Knopf und Klapp-Pfeil stehen unten in der Mitte (zwei
+        // gleich breite Spalten links und rechts, die Leiste steht mittig); aufgeklappt waechst die Leiste nach beiden Seiten
+        // gleich, die zwei Symbole bleiben an ihrer Stelle. Darueber die Knoepfe des Orts, rechts neben dem Pfeil „Spiel
+        // verlassen“ (passt er nicht, in einer eigenen Zeile darunter). Bis A 0.98.0: Handy links, Pfeil rechts (Gegenprobe
+        // <see cref="LeisteLinksAltFuerTests"/>).
+        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,*"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto") };
         _klappZeile = klappZeile;
         klappZeile.SizeChanged += (_, _) => QuestZeileSetzen();
-        klappZeile.Children.Add(QuestKnopfBauen());
-        Grid.SetColumn(verlassenKnopf, 2);
+        var questKnopf = QuestKnopfBauen();
+        Grid.SetRow(questKnopf, 2);
+        Grid.SetColumn(questKnopf, 1);
+        klappZeile.Children.Add(questKnopf);
+        Grid.SetRow(verlassenKnopf, 2);
+        Grid.SetColumn(verlassenKnopf, 3);
         klappZeile.Children.Add(verlassenKnopf);
-        Grid.SetColumn(_klapp, 3);
+        Grid.SetRow(_klapp, 2);
+        Grid.SetColumn(_klapp, 2);
         klappZeile.Children.Add(_klapp);
-        Grid.SetColumn(_kurz, 1);
+        Grid.SetRow(_kurz, 1);
+        Grid.SetColumnSpan(_kurz, 4);
+        _kurz.HorizontalAlignment = HorizontalAlignment.Center;
+        _kurz.TextAlignment = TextAlignment.Center;
         klappZeile.Children.Add(_kurz);
+        _knoepfe.HorizontalAlignment = HorizontalAlignment.Center;
         _knoepfeRolle = new ScrollViewer
         {
             Content = _knoepfe,
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+            Margin = new Thickness(0, 0, 0, 6),
         };
-        Grid.SetColumn(_knoepfeRolle, 1);
+        Grid.SetColumnSpan(_knoepfeRolle, 4);
         klappZeile.Children.Add(_knoepfeRolle);
         // lange Zeilen (Hinweis zur Bedienung) rollen in der Karte, die Knoepfe bleiben immer zu sehen
         // (Handy quer: wenig Hoehe); die Rolle umfasst nur den Text, nie die 3D-Flaeche
@@ -298,7 +313,7 @@ public sealed partial class SpielSeite : Grid
         var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, klappZeile } });
         unten.Padding = new Thickness(14, 10, 14 - Dialog.RandFuerLeiste, 2);
         unten.MaxWidth = UntenBreite;
-        unten.HorizontalAlignment = HorizontalAlignment.Left;
+        unten.HorizontalAlignment = HorizontalAlignment.Center;
         _unten = unten;
 
         _ortsliste = Schrift.Karte(new ScrollViewer
@@ -791,6 +806,8 @@ public sealed partial class SpielSeite : Grid
             && _unten.TranslatePoint(default, Flaeche) is { } unten && Flaeche.Bounds.Height > 1)
         {
             Flaeche.Frei = (Math.Clamp(oben.Y, 0, Flaeche.Bounds.Height), _unten.IsVisible ? Math.Clamp(Flaeche.Bounds.Height - unten.Y, 0, Flaeche.Bounds.Height) : 0);
+            // Welle A 0.99.0 (Sammelliste 399): links und rechts neben der mittigen Leiste ist unten Platz fuer die Daumen
+            Flaeche.LeisteX = _unten.IsVisible ? (unten.X, unten.X + _unten.Bounds.Width) : (0, 0);
         }
     }
 

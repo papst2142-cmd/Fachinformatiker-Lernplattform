@@ -267,56 +267,73 @@ public sealed partial class SpielSeite
 
     private Grid? _klappZeile;
 
-    /// <summary>Start-Test: stehen die Knoepfe des Orts unter dem Handy-Knopf (schmale Karte, grosse Schrift)?</summary>
-    public bool KnoepfeUnten => _knoepfeRolle is { } r && Grid.GetRow(r) == 1;
+    /// <summary>Start-Test: stehen die Knoepfe des Orts unter dem Handy-Knopf? Seit A 0.99.0 (Sammelliste 399) stehen sie immer in
+    /// eigener Zeile ueber den mittigen Symbolen, nie gequetscht neben ihnen; die Antwort ist darum immer nein.</summary>
+    public bool KnoepfeUnten => false;
 
     /// <summary>Start-Test, Fotos (Sammelliste 350): steht „Spiel verlassen“ in einer eigenen Zeile unten (zu wenig Platz neben dem Pfeil)?</summary>
-    public bool VerlassenUnten => Grid.GetRow(VerlassenKnopf) == 2;
+    public bool VerlassenUnten => Grid.GetRow(VerlassenKnopf) == 3;
 
     /// <summary>
-    /// Zwischen Handy-Knopf und Klapp-Pfeil bleibt weniger Platz als vorher neben dem Pfeil allein. Passt dort das laengste
-    /// Wort eines Knopfs nicht (schmales Handy, grosse Schrift), stehen die Knoepfe in einer eigenen Zeile darunter ueber die
-    /// ganze Breite (sonst wuerden Woerter getrennt, Layoutpruefung); der Kurztext bleibt in der Mitte.
+    /// Gegenprobe Sammelliste 399 (Start-Test, je Seite wie <see cref="OrtslisteAltFuerTests"/>): Leiste links wie bis A 0.98.0
+    /// (Handy-Knopf am linken Rand, dort wo der linke Daumen liegt).
+    /// </summary>
+    internal bool LeisteLinksAltFuerTests { get; set; }
+
+    /// <summary>
+    /// Welle A 0.99.0 (Sammelliste 399): „Spiel verlassen“ steht rechts neben dem Pfeil; passt er dort nicht (schmales Handy, grosse
+    /// Schrift: die rechte Spalte ist halb so breit wie die Leiste ohne die zwei Symbole), steht er in einer eigenen Zeile ganz
+    /// unten in der Mitte. Aufgeklappt ist die Leiste so breit wie moeglich (hoechstens <see cref="UntenBreite"/>), zugeklappt
+    /// nur so breit wie ihr Inhalt; sie steht immer mittig.
     /// </summary>
     private void QuestZeileSetzen()
     {
-        if (_klappZeile is not { } zeile || _questKnopf is null || zeile.Bounds.Width <= 0)
+        if (_klappZeile is not { } zeile || _questKnopf is null)
         {
             return;
         }
-        var frei = zeile.Bounds.Width - (_questKnopf.IsVisible ? _questKnopf.DesiredSize.Width + _questKnopf.Margin.Left + _questKnopf.Margin.Right : 0)
-            - (_klapp.IsVisible ? _klapp.DesiredSize.Width + _klapp.Margin.Left + _klapp.Margin.Right : 0);
-        // Welle A 0.81.0 (Sammelliste 350): „Spiel verlassen“ steht vor dem Pfeil; passt er dort nicht (schmales Handy, grosse
-        // Schrift), steht er in einer eigenen Zeile ganz unten (sonst ragte der Pfeil ueber den Rand, Layoutpruefung)
-        // Breite ohne den eigenen Rand (der wechselt mit der Lage) auf Bildpunkte gerundet, plus Rand in der Zeile (4)
+        _unten.HorizontalAlignment = LeisteLinksAltFuerTests ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+        var hoechstens = Math.Min(_unten.MaxWidth, Ebene.Bounds.Width);
+        var breite = HinweisZu || hoechstens <= 0 ? double.NaN : hoechstens;
+        if (!(double.IsNaN(breite) && double.IsNaN(_unten.Width)) && breite != _unten.Width)
+        {
+            _unten.Width = breite;
+        }
+        if (zeile.Bounds.Width <= 0)
+        {
+            return;
+        }
         var skala = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-        // Sammelliste 371: zugeklappt ist der Knopf weg und braucht keinen Platz
+        var mitte = (_questKnopf.IsVisible ? _questKnopf.DesiredSize.Width : 0) + (_klapp.IsVisible ? _klapp.DesiredSize.Width : 0);
+        var innen = hoechstens - _unten.Padding.Left - _unten.Padding.Right - _unten.BorderThickness.Left - _unten.BorderThickness.Right
+            - zeile.Margin.Left - zeile.Margin.Right;
+        // Breite ohne den eigenen Rand (der wechselt mit der Lage) auf Bildpunkte gerundet, plus Rand in der Zeile (4)
         var verlassenBreite = !VerlassenKnopf.IsVisible ? 0
             : (Math.Ceiling((VerlassenKnopf.DesiredSize.Width - VerlassenKnopf.Margin.Left - VerlassenKnopf.Margin.Right) * skala) / skala) + 4;
-        // gemessen am groessten Platz der Leiste (ihre Breite haengt vom Inhalt ab: sonst bliebe der Knopf nach einem schmalen
-        // Fenster unten und die Leiste schmal)
-        var hoechstens = Math.Min(_unten.MaxWidth, Ebene.Bounds.Width) - _unten.Padding.Left - _unten.Padding.Right
-            - _unten.BorderThickness.Left - _unten.BorderThickness.Right - zeile.Margin.Left - zeile.Margin.Right;
-        var nebenan = zeile.Bounds.Width - frei;   // Handy-Knopf und Pfeil
-        var verlassenUnten = VerlassenKnopf.IsVisible && verlassenBreite > hoechstens - nebenan;
-        Grid.SetRow(VerlassenKnopf, verlassenUnten ? 2 : 0);
-        Grid.SetColumn(VerlassenKnopf, verlassenUnten ? 0 : 2);
+        var verlassenUnten = VerlassenKnopf.IsVisible && verlassenBreite > (innen - mitte) / 2;
+        Grid.SetRow(VerlassenKnopf, verlassenUnten ? 3 : 2);
+        Grid.SetColumn(VerlassenKnopf, verlassenUnten ? 0 : 3);
         Grid.SetColumnSpan(VerlassenKnopf, verlassenUnten ? 4 : 1);
-        VerlassenKnopf.HorizontalAlignment = HorizontalAlignment.Left;
-        VerlassenKnopf.Margin = verlassenUnten ? new Thickness(0, 6, 0, 6) : new Thickness(0, 0, 4, 6);
-        // Platz zwischen Handy-Knopf und Pfeil ebenso am groessten Platz der Leiste gemessen
-        frei = hoechstens - nebenan - (verlassenUnten ? 0 : verlassenBreite);
-        var unten = LaengsterKnopf() > frei;
-        Grid.SetRow(_knoepfeRolle, unten ? 1 : 0);
-        Grid.SetColumn(_knoepfeRolle, unten ? 0 : 1);
-        Grid.SetColumnSpan(_knoepfeRolle, unten ? 4 : 1);
-        _knoepfeRolle.Margin = new Thickness(0, unten ? 6 : 0, 0, 0);
-        // der Kurztext (zugeklappt) ebenso, wenn sein laengstes Wort nicht dazwischen passt
-        var kurzUnten = _kurz.IsVisible && LaengstesWort(_kurz) + _kurz.Margin.Left + _kurz.Margin.Right > frei;
-        Grid.SetRow(_kurz, kurzUnten ? 1 : 0);
-        Grid.SetColumn(_kurz, kurzUnten ? 0 : 1);
-        Grid.SetColumnSpan(_kurz, kurzUnten ? 4 : 1);
+        VerlassenKnopf.HorizontalAlignment = verlassenUnten ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        VerlassenKnopf.Margin = verlassenUnten ? new Thickness(0, 6, 0, 6) : new Thickness(4, 0, 0, 6);
     }
+
+    /// <summary>
+    /// Start-Test (Sammelliste 399): Mitte der zwei Symbole (Handy und Pfeil) und Mitte der Leiste, waagerecht in Punkten der
+    /// Seite; null, solange nicht angeordnet.
+    /// </summary>
+    public (double Symbole, double Leiste, double Seite)? LeisteMitten()
+    {
+        if (_questKnopf is not { } q || q.TranslatePoint(default, this) is not { } a || _klapp.TranslatePoint(new Point(_klapp.Bounds.Width, 0), this) is not { } e
+            || _unten.TranslatePoint(default, this) is not { } u || Bounds.Width <= 0)
+        {
+            return null;
+        }
+        return ((a.X + e.X) / 2, u.X + (_unten.Bounds.Width / 2), Bounds.Width / 2);
+    }
+
+    /// <summary>Start-Test (Sammelliste 399): die Leiste (Karte unten) in Punkten der Seite.</summary>
+    public Rect? LeisteRechteck() => _unten.IsVisible && _unten.TranslatePoint(default, this) is { } p ? new Rect(p, _unten.Bounds.Size) : null;
 
     private double LaengstesWort(TextBlock t)
     {

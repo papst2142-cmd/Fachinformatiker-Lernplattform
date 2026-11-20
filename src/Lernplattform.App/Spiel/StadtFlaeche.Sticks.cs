@@ -32,7 +32,7 @@ public sealed partial class StadtFlaeche
     public bool SticksMoeglich => FesteKamera && !OhneGehen && _spiel is not null && GlBereit && !(SticksGesperrt?.Invoke() ?? false);
 
     /// <summary>Freier Bereich fuer die Sticks (zwischen Kopfzeile und Leiste, in Punkten der Flaeche).</summary>
-    public Sticks.Bereich StickBereich => new(Bounds.Width, Bounds.Height, Frei.Oben, Frei.Unten);
+    public Sticks.Bereich StickBereich => new(Bounds.Width, Bounds.Height, Frei.Oben, Frei.Unten, LeisteX.Von, LeisteX.Bis);
 
     /// <summary>Finger setzt auf (Touch und Stift; auch der Start-Test mit gedachten Fingern).</summary>
     public void FingerAuf(long id, Point p)

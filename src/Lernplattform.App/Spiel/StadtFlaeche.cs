@@ -371,6 +371,9 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
 
     private (double Oben, double Unten) _frei;
 
+    /// <summary>Welle A 0.99.0 (Sammelliste 399): waagerechte Lage der mittigen Leiste (von, bis) in Punkten der Flaeche; (0, 0) = keine.</summary>
+    public (double Von, double Bis) LeisteX { get; set; }
+
     /// <summary>Versatz der Kamera fuer den freien Bereich (Bildraum, hoechstens 0,6).</summary>
     private float FreiVersatz() => SpielKamera.FreiVersatz(Bounds.Height, _frei.Oben, _frei.Unten);
 
