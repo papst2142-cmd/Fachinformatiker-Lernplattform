@@ -776,14 +776,23 @@ public sealed partial class SpielSeite : Grid
     {
         var hoehe = Ebene.Bounds.Height;
         var ueber = _unten.Bounds.Bottom - hoehe;
-        if (!_unten.IsVisible || !_zeileRolle.IsVisible || hoehe <= 0 || ueber <= 0.5)
+        // Welle A 0.99.0 (Sammelliste 399): seit die Knoepfe des Orts eine eigene Zeile ueber Handy und Pfeil haben, ist die
+        // Karte hoeher; am schmalen Handy hoch reichte sie mit offenem Hinweis bis ueber die Mitte der 3D-Flaeche (Gesten in der
+        // Mitte trafen den Text). Im Hochformat wird die Textrolle darum auch kuerzer, bis die Karte unter der Mitte endet
+        // (hoechstens bis 40); quer bleibt es wie bisher
+        var ueberMitte = Ebene.Bounds.Width < hoehe ? (hoehe / 2) + 8 - _unten.Bounds.Top : 0;
+        if (!_unten.IsVisible || !_zeileRolle.IsVisible || hoehe <= 0 || (ueber <= 0.5 && ueberMitte <= 0.5))
         {
             return;
         }
-        var neu = Math.Max(40, Math.Floor(_zeileRolle.Bounds.Height - ueber));
+        var neu = Math.Max(40, Math.Floor(_zeileRolle.Bounds.Height - Math.Max(ueber, ueberMitte)));
         if (neu < _zeileRolle.MaxHeight - 0.5)
         {
             _zeileRolle.MaxHeight = neu;
+            return;
+        }
+        if (ueber <= 0.5)
+        {
             return;
         }
         // Phase 12 Welle 2: der Text ist schon so kurz wie moeglich, dann rollen die Knoepfe (rechts Platz fuer die Leiste)
