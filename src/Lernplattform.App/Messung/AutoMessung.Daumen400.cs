@@ -52,6 +52,8 @@ public static partial class AutoMessung
         var vorher = seite.Spiel;
         var (breiteVorher, hoeheVorher) = (fenster.Width, fenster.Height);
         var tafelVorher = seite.Tafel?.IsVisible ?? false;
+        // der Zustand „zugeklappt“ ist eine Einstellung: danach wie vorher (sonst fehlen spaeteren Pruefungen die Knoepfe)
+        var zuVorher = seite.HinweisZu;
         var (springen, haltung) = seite.DaumenKnoepfe;
         var (mSpringen, mDucken, mKriechen) = seite.HaltungKnoepfe;
         string Name(Control c) => Avalonia.Automation.AutomationProperties.GetName(c) ?? "";
@@ -176,6 +178,10 @@ public static partial class AutoMessung
             seite.DaumenKnoepfeFuerTests = null;
             fenster.Width = breiteVorher;
             fenster.Height = hoeheVorher;
+            if (seite.HinweisZu != zuVorher)
+            {
+                seite.HinweisUmschalten();
+            }
             seite.SpielSetzen(vorher);
             if (seite.Tafel is { } t1)
             {

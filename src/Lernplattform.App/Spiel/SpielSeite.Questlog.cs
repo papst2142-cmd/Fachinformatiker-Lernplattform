@@ -308,8 +308,9 @@ public sealed partial class SpielSeite
         var innen = hoechstens - _unten.Padding.Left - _unten.Padding.Right - _unten.BorderThickness.Left - _unten.BorderThickness.Right
             - zeile.Margin.Left - zeile.Margin.Right;
         // Breite ohne den eigenen Rand (der wechselt mit der Lage) auf Bildpunkte gerundet, plus Rand in der Zeile (4)
-        var verlassenBreite = !VerlassenKnopf.IsVisible ? 0
-            : (Math.Ceiling((VerlassenKnopf.DesiredSize.Width - VerlassenKnopf.Margin.Left - VerlassenKnopf.Margin.Right) * skala) / skala) + 4;
+        // Breite in einer Zeile: die Spalte rechts ist schmaler als der Knopf (Stern), sein DesiredSize waere schon umgebrochen
+        // (Lauf lokal A 0.99.0: „Spiel verlassen“ getrennt bei 384 Punkten Breite ab Schrift gross)
+        var verlassenBreite = !VerlassenKnopf.IsVisible ? 0 : (Math.Ceiling(EinzeiligBreite(VerlassenKnopf) * skala) / skala) + 4;
         var verlassenUnten = VerlassenKnopf.IsVisible && verlassenBreite > (innen - mitte) / 2;
         Grid.SetRow(VerlassenKnopf, verlassenUnten ? 3 : 2);
         Grid.SetColumn(VerlassenKnopf, verlassenUnten ? 0 : 3);
@@ -334,6 +335,19 @@ public sealed partial class SpielSeite
 
     /// <summary>Start-Test (Sammelliste 399): die Leiste (Karte unten) in Punkten der Seite.</summary>
     public Rect? LeisteRechteck() => _unten.IsVisible && _unten.TranslatePoint(default, this) is { } p ? new Rect(p, _unten.Bounds.Size) : null;
+
+    /// <summary>Breite eines Knopfs, wenn sein ganzer Text in einer Zeile steht (ohne den eigenen Rand).</summary>
+    private static double EinzeiligBreite(Button knopf)
+    {
+        var breit = 0.0;
+        foreach (var t in knopf.GetLogicalDescendants().OfType<TextBlock>().Where(t => !string.IsNullOrEmpty(t.Text)))
+        {
+            var mass = new TextBlock { Text = t.Text, FontFamily = t.FontFamily, FontSize = t.FontSize, FontWeight = t.FontWeight, FontStyle = t.FontStyle };
+            mass.Measure(Size.Infinity);
+            breit = Math.Max(breit, mass.DesiredSize.Width + t.Margin.Left + t.Margin.Right);
+        }
+        return breit + knopf.Padding.Left + knopf.Padding.Right + knopf.BorderThickness.Left + knopf.BorderThickness.Right + 1;
+    }
 
     private double LaengstesWort(TextBlock t)
     {
