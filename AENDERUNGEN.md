@@ -1,5 +1,17 @@
 # Änderungen
 
+## A 0.99.0
+Am Handy und Tablet sitzen das Spiel-Handy und das Dreieck jetzt unten in der Mitte, und in der Serverfarm sind Serverschränke, USV und Werkbank viel genauer gebaut.
+
+- Das Symbol für das Spiel-Handy und das Dreieck zum Aufklappen stehen im Spiel jetzt unten in der Mitte, nicht mehr links unten. Klappst du das Menü auf, wächst es gleichmäßig nach links und rechts, die beiden Symbole bleiben dabei an ihrer Stelle. Setzt du den linken Daumen links unten auf das Bild, erscheint dort immer der Stick zum Gehen und nicht mehr das Spiel-Handy. Am PC sieht es genauso aus.
+- Die Sticks erscheinen jetzt auch ganz unten neben dem Menü, also genau dort, wo deine Daumen liegen.
+- In der Serverfarm sind die Serverschränke genauer gebaut: mit Füßen, Lüftern im Dach, gelochter Rücktür, Einbauschienen und echten Geräten wie Server, Switch mit Anschlüssen, Patchfeld mit Kabeln, Speichergerät und USV. Die Front der Schränke zeigt jetzt zum Gang.
+- Auch die USV-Geräte und der PC auf der Werkbank sind genauer. Auf der Werkbank liegen jetzt eine Hauptplatine, zwei Arbeitsspeicher-Riegel und ein Prozessor, dazu eine Unterlage gegen statische Aufladung, ein Schraubendreher und ein Erdungsband.
+- Jeder Serverschrank hat eine Glastür. Sie ist zu, bis du vor dem Schrank auf „Glastür öffnen“ tippst. Dann steht sie halb offen, und deine Figur schaut zum Schrank. Gehst du weiter oder drehst dich, geht die Tür wieder zu. „Glastür schließen“ macht sie sofort zu.
+- Das Spiel bleibt dabei auf allen Grafikstufen so flüssig wie vorher.
+- Für Handy und Tablet ist die Prüfung der Sticks auf einem nachgebildeten Android-Gerät jetzt bei jedem großen Testlauf Pflicht.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 0.98.0
 Deine Figur sitzt auf Sofa, Sessel und Liegestuhl jetzt entspannt, und beim Kriechen vor einer Tür dreht sie sich nicht mehr von selbst weg.
 

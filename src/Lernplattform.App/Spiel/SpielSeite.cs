@@ -261,6 +261,9 @@ public sealed partial class SpielSeite : Grid
         _klapp = Schrift.Knopf("");
         _klapp.Content = _klappSymbol;
         _klapp.VerticalAlignment = VerticalAlignment.Top;
+        // Sammelliste 399: rechts kein Rand (der Handy-Knopf links haelt mit seinem Rand 8 den Abstand), sonst stuenden die
+        // zwei Symbole 4 Punkte links der Mitte
+        _klapp.Margin = new Thickness(0, 0, 0, 8);
         _klapp.Click += (_, _) => HinweisUmschalten();
         _kurz = Schrift.Text("");
         _kurz.TextWrapping = TextWrapping.Wrap;
