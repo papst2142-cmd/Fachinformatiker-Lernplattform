@@ -9,7 +9,10 @@ set -u
 rc=0
 if [ "${1:-}" = success ]; then
   bash werkzeuge/android/update_probe.sh updateprobe-0/*-Signed.apk updateprobe-1/*-Signed.apk updateprobe-2/*-Signed.apk emulator_probe_update.txt || rc=1
-  bash werkzeuge/android/touch_probe.sh emulator_probe_update.txt || rc=1
+  # Touch-Probe noch nicht Pflicht (Weisung P12-315: stabil = zwei von zwei, sonst ehrlich melden und nicht Pflicht machen;
+  # Laeufe 1110 und 1113 je 0 von 2): Ergebnis steht in emulator_probe_update.txt, rot macht den Job nicht rot
+  bash werkzeuge/android/touch_probe.sh emulator_probe_update.txt \
+    || echo "HINWEIS: Touch-Probe rot, noch nicht Pflicht (Weisung P12-315), Einzelheiten in emulator_probe_update.txt" | tee -a emulator_probe_update.txt
 fi
 if [ "${2:-}" = success ]; then
   adb uninstall io.github.papst2142cmd.lernplattform > /dev/null 2>&1 || true

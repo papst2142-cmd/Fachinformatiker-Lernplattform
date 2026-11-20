@@ -59,13 +59,14 @@ starten() {   # $1 = true/false fuer "Umsehen links/rechts umkehren"
 schritt() {   # $1 Name, Rest: Befehl fuer adb shell
   local name=$1; shift
   local vor nach geht0 stick0 geht stick
-  vor=$(stand); geht0=$(zaehlen "^GEHT"); stick0=$(zaehlen "^STICK aktiv ja")
+  vor=$(stand); geht0=$(zaehlen "^GEHT"); stick0=$(zaehlen "^STICK aktiv ja"); zeiger0=$(zaehlen "^ZEIGER")
   adb shell "$*"
   if ! nach=$(neuer_stand "$(nummer "$vor")"); then
     nach=$vor
     zeile "  $name: kein neuer ruhiger Stand nach 40 s"
   fi
   zeile "  $name: Finger beim Programm angekommen: $(zaehlen "^ZEIGER ab") ab, $(zaehlen "^ZEIGER auf") auf (Summe seit dem Start)"
+  lesen; grep "^ZEIGER" "$LOG" | tail -n "+$((zeiger0 + 1))" | sed 's/^/    /' | tee -a "$ERGEBNIS"
   geht=nein; stick=nein
   [ "$(zaehlen "^GEHT")" -gt "$geht0" ] && geht=ja
   [ "$(zaehlen "^STICK aktiv ja")" -gt "$stick0" ] && stick=ja

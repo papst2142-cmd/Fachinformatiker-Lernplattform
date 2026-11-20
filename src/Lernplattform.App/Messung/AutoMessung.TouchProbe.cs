@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Spiel;
@@ -112,12 +113,22 @@ public static partial class AutoMessung
             melden(string.Create(inv, $"BEREIT links {links.X} {links.Y} rechts {rechts.X} {rechts.Y} radius {radius} tipp {tipp.X} {tipp.Y}"));
             // Befund Lauf 1110: kein Stick und kein Gehen. Jeder echte Finger, der beim Fenster ankommt, steht darum im Protokoll
             // (ZEIGER ab/auf mit Bildpunkt), auch wenn ihn ein anderes Element schon behandelt hat
+            // Lauf 1113: die Finger kommen an (ZEIGER), aber kein Stick. Darum je Finger auch, welches Element ihn trifft, ob es in
+            // der Flaeche liegt, wie viele Bewegungen ankamen und den Zustand der Sticks gleich danach
+            var bewegt = 0;
             void Zeiger(string art, PointerEventArgs e)
             {
                 var p = e.GetPosition(oben);
-                melden(string.Create(inv, $"ZEIGER {art} {p.X * skala:F0} {p.Y * skala:F0} {e.Pointer.Type}"));
+                var ziel = oben?.InputHitTest(p) as Visual;
+                var inFlaeche = ziel is not null && (ReferenceEquals(ziel, fl) || fl.IsVisualAncestorOf(ziel));
+                var zielName = ziel is null ? "-" : ziel.GetType().Name + (ziel is Control c && !string.IsNullOrEmpty(c.Name) ? "#" + c.Name : "");
+                var q = e.GetPosition(fl);
+                melden(string.Create(inv, $"ZEIGER {art} {p.X * skala:F0} {p.Y * skala:F0} {e.Pointer.Type} id {e.Pointer.Id} ziel {zielName} flaeche {(inFlaeche ? "ja" : "nein")} inFlaeche {q.X:F0} {q.Y:F0} bewegt {bewegt} moeglich {fl.SticksMoeglich} kandidaten {fl.StickZustand.Kandidaten} aktiv {fl.StickZustand.Aktiv} seite {Sticks.SeiteFuer(q.X, q.Y, fl.StickBereich)?.ToString() ?? "-"}"));
+                bewegt = 0;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => melden(string.Create(inv, $"ZEIGER danach {art} kandidaten {fl.StickZustand.Kandidaten} aktiv {fl.StickZustand.Aktiv}")));
             }
             oben?.AddHandler(InputElement.PointerPressedEvent, (_, e) => Zeiger("ab", e), RoutingStrategies.Tunnel, handledEventsToo: true);
+            oben?.AddHandler(InputElement.PointerMovedEvent, (_, _) => bewegt++, RoutingStrategies.Tunnel, handledEventsToo: true);
             oben?.AddHandler(InputElement.PointerReleasedEvent, (_, e) => Zeiger("auf", e), RoutingStrategies.Tunnel, handledEventsToo: true);
             fl.SticksGeaendert += () =>
             {
