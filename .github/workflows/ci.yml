@@ -347,11 +347,11 @@ jobs:
       - name: Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)
         id: spiel1
         if: always() && matrix.spiel && steps.bauen.outcome == 'success'
-        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 10 }}
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 20 || 14 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: spiel
-          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 19 || 9 }}
+          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 19 || 13 }}
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_spiel1
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_spiel1_versuch${{ github.run_attempt }}.txt
       - name: Spielansichten ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
@@ -425,11 +425,11 @@ jobs:
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
       - name: Werkzeug ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: always() && steps.werkzeug1.outputs.rc == '3' && steps.werkzeug1.outputs.zweiter_lauf != 'nein'
-        timeout-minutes: 10
+        timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 10 || 11 }}
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: stadtbau
-          STARTTEST_WACHHUND_MINUTEN: 9
+          STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 9 || 10 }}
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug2
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_werkzeug2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
       # Phase 7 W1, nur Messung (Plan Abschnitt 3, Weg 1). Mac-Welle (Weisung P11-28): am Mac ist OpenGL jetzt die

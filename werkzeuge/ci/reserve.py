@@ -30,6 +30,7 @@ import urteil_github  # noqa: E402
 
 VOLL_JOBS = 18          # voller Lauf: 18 Jobs ohne den Hinweis-Job
 INFO_SPANNE = 1.10      # T4c: hoechstens 10 % ueber der Grenze
+STEMPEL = re.compile(r"^\ufeff?(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(\.\d+)?Z ?")
 ZEITPLAN = re.compile(r"^ZEITPLAN (\d+(?:\.\d+)?) s: (.+)$")
 EINMALIG = re.compile(r"^FEHLER: (.+?): (\d+(?:\.\d+)?) ms ueber Grenze (\d+) ms;.*\(einmaliger Messpunkt, nicht wiederholt\)")
 START_TEST = ("Start ohne Bedienung (1. Lauf", "Spielansichten ohne Bedienung (1. Lauf", "Testkarte Nachladen ohne Bedienung (1. Lauf")
@@ -68,20 +69,46 @@ def tabelle_zeilen(zeilen):
 
 
 def abschnitte(log, schritt):
-    """[(abschnitt, sekunden)] aus den ZEITPLAN-Zeilen eines Schritts; der letzte Abschnitt laeuft bis zum Schrittende."""
-    marken = []
-    for z in urteil_github.schrittzeilen(log, schritt):
-        m = ZEITPLAN.match(z)
-        if m:
-            marken.append((float(m.group(1)), m.group(2)))
+    """[(abschnitt, sekunden)] aus den ZEITPLAN-Zeilen eines Schritts. Weisung P12-325 (Fund aus P12-199): das Programm
+    schreibt die ZEITPLAN-Zeilen am Ende noch einmal (Messdatei) ins Protokoll, und das Zeitfenster eines Schritts
+    ueberlappt den Nachbarschritt um 1 s. Darum zaehlt nur die laufend geschriebene Folge: Marken mit steigender Zeit,
+    getrennt bei jedem Ruecksprung; gewaehlt wird die Folge mit der laengsten Spanne im Protokoll (eine Wiederholung
+    steht in Millisekunden da). Der letzte Abschnitt laeuft bis zum Schrittende (Zeit im Protokoll)."""
+    anfang, ende = urteil_github.zeit(schritt.get("started_at")), urteil_github.zeit(schritt.get("completed_at"))
+    if not anfang or not ende:
+        return []
+    folgen, gruppe = [], False
+    for roh in log.splitlines():
+        m = STEMPEL.match(roh)
+        if not m:
+            continue
+        stempel = datetime.datetime.strptime(m.group(1), "%Y-%m-%dT%H:%M:%S") + \
+            datetime.timedelta(seconds=float("0" + (m.group(2) or "")))
+        text = urteil_github.FARBE.sub("", roh[m.end():]).strip()
+        if text.startswith("##[group]Run "):
+            gruppe = True
+            continue
+        if gruppe:
+            gruppe = not text.startswith("##[endgroup]")
+            continue
+        if not (anfang <= stempel.replace(microsecond=0) <= ende + datetime.timedelta(seconds=1)):
+            continue
+        z = ZEITPLAN.match(text)
+        if not z:
+            continue
+        t = float(z.group(1))
+        if not folgen or t < folgen[-1][-1][0]:
+            folgen.append([])
+        folgen[-1].append((t, z.group(2), stempel))
+    if not folgen:
+        return []
+    marken = max(folgen, key=lambda f: (f[-1][2] - f[0][2]).total_seconds())
     raus = []
-    for i, (t, name) in enumerate(marken):
+    for i, (t, name, stempel) in enumerate(marken):
         if i + 1 < len(marken):
             raus.append((name, marken[i + 1][0] - t))
         else:
-            start = urteil_github.zeit(schritt.get("started_at"))
-            rest = (dauer(schritt) or 0) - t
-            raus.append((name, max(rest, 0.0) if start else 0.0))
+            raus.append((name, max((ende - stempel).total_seconds(), 0.0)))
     return raus
 
 
@@ -236,7 +263,9 @@ def selbsttest():
         if not bedingung:
             fehler.append(text)
 
+    # feste Grenzen fuer die Faelle: Stand basis (A 0.99.0), unabhaengig von spaeteren Erhoehungen in zeitlimits.json
     daten = zeitlimits.laden()
+    daten = {"schritte": [dict(e, limit=dict(e["basis"])) for e in daten["schritte"]]}
     sp1 = "Spielansichten ohne Bedienung (1. Lauf, frischer Datenordner)"
     tk1 = "Testkarte Nachladen ohne Bedienung (1. Lauf, frischer Datenordner)"
     ub = {"id": 1, "name": "tests (ubuntu-latest)", "conclusion": "success", "steps": [
@@ -267,7 +296,24 @@ def selbsttest():
         "2026-11-20T10:03:00.1Z ZEITPLAN 170.0 s: LayoutAsync",
         "2026-11-20T10:07:00.1Z ZEITPLAN 410.0 s: Ende"])
     teile = abschnitte(log, ub["steps"][0])
-    soll(teile == [("SpielMessen", 50.0), ("Mitfahrt", 120.0), ("LayoutAsync", 240.0), ("Ende", 70.0)], "Abschnitte %s" % teile)
+    # der letzte Abschnitt laeuft von seiner Zeile im Protokoll (10:07:00.1) bis zum Schrittende (10:08:00)
+    soll([(n, round(x, 1)) for n, x in teile] == [("SpielMessen", 50.0), ("Mitfahrt", 120.0), ("LayoutAsync", 240.0), ("Ende", 59.9)],
+         "Abschnitte %s" % teile)
+    # Gegenprobe Fund P12-199: Wiederholung der Marken am Schrittende und Rest des Vorschritts in der ersten Sekunde
+    # (gleiche Zeit im Protokoll) aendern nichts
+    doppelt = "\n".join([
+        "2026-11-20T10:00:00.2Z ZEITPLAN 0.0 s: VorschrittA",
+        "2026-11-20T10:00:00.3Z ZEITPLAN 300.0 s: VorschrittB",
+        log,
+        "2026-11-20T10:07:59.1Z ZEITPLAN 0.0 s: SpielMessen",
+        "2026-11-20T10:07:59.1Z ZEITPLAN 50.0 s: Mitfahrt",
+        "2026-11-20T10:07:59.1Z ZEITPLAN 170.0 s: LayoutAsync",
+        "2026-11-20T10:07:59.1Z ZEITPLAN 410.0 s: Ende"])
+    teile2 = abschnitte(doppelt, ub["steps"][0])
+    soll(teile2 == teile, "Abschnitte mit Wiederholung %s" % teile2)
+    # Gegenprobe: ohne die Auswahl der laufenden Folge zaehlte die alte Rechnung jede Marke doppelt
+    alt = [z for z in urteil_github.schrittzeilen(doppelt, ub["steps"][0]) if ZEITPLAN.match(z)]
+    soll(len(alt) == 10 and len(teile2) == 4, "Gegenprobe: alte Rechnung %d Marken, neue %d" % (len(alt), len(teile2)))
     vor = verschieben(tab, "tests (ubuntu-latest)", sp1, teile)
     # Ziel 600/840: kein Abschnitt passt, ohne dass das Ziel unter 25 % faellt
     soll(vor and all("LayoutAsync" not in z for z in vor), "Verschieben nimmt zu Grosses %s" % vor)
