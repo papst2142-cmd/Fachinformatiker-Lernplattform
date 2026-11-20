@@ -1328,20 +1328,22 @@ public sealed partial class Innenraum
 
     /// <summary>
     /// Welle A 1.0.0 (Sammelliste 408): Tisch aus Platte, Zarge und vier Beinen an den Ecken, darunter ganz frei (Platz fuer
-    /// PC-Tower). Hoehe wie das Modell „table“, Farbe Holz.
+    /// PC-Tower). Hoehe und Farbe wie das Modell „table“ (#D4A76C, eine Farbe), damit der Stil bleibt.
     /// </summary>
+    private static readonly Vector3 TischHolz = Netz.Farbe("#D4A76C");
+
     private void TischOhneStreben(Rahmen r, float b, float t, float hoehe)
     {
         const float platte = 0.05f, zarge = 0.08f;
-        Kasten(r, 0, 0, b, t, hoehe - platte, hoehe, Farben.Holz);
+        Kasten(r, 0, 0, b, t, hoehe - platte, hoehe, TischHolz);
         var unten = hoehe - platte - zarge;
-        Kasten(r, TischBeinRand, TischBeinRand, b - (2 * TischBeinRand), 0.03f, unten, hoehe - platte, Farben.HolzDunkel);
-        Kasten(r, TischBeinRand, t - TischBeinRand - 0.03f, b - (2 * TischBeinRand), 0.03f, unten, hoehe - platte, Farben.HolzDunkel);
-        Kasten(r, TischBeinRand, TischBeinRand, 0.03f, t - (2 * TischBeinRand), unten, hoehe - platte, Farben.HolzDunkel);
-        Kasten(r, b - TischBeinRand - 0.03f, TischBeinRand, 0.03f, t - (2 * TischBeinRand), unten, hoehe - platte, Farben.HolzDunkel);
+        Kasten(r, TischBeinRand, TischBeinRand, b - (2 * TischBeinRand), 0.03f, unten, hoehe - platte, TischHolz);
+        Kasten(r, TischBeinRand, t - TischBeinRand - 0.03f, b - (2 * TischBeinRand), 0.03f, unten, hoehe - platte, TischHolz);
+        Kasten(r, TischBeinRand, TischBeinRand, 0.03f, t - (2 * TischBeinRand), unten, hoehe - platte, TischHolz);
+        Kasten(r, b - TischBeinRand - 0.03f, TischBeinRand, 0.03f, t - (2 * TischBeinRand), unten, hoehe - platte, TischHolz);
         foreach (var (bx, bz) in new[] { (TischBeinRand, TischBeinRand), (b - TischBeinRand - TischBein, TischBeinRand), (TischBeinRand, t - TischBeinRand - TischBein), (b - TischBeinRand - TischBein, t - TischBeinRand - TischBein) })
         {
-            Kasten(r, bx, bz, TischBein, TischBein, 0, hoehe - platte, Farben.Holz);
+            Kasten(r, bx, bz, TischBein, TischBein, 0, hoehe - platte, TischHolz);
         }
     }
 
