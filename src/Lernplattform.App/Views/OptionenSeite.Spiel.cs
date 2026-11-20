@@ -109,9 +109,14 @@ public sealed partial class OptionenSeite
         panel.Children.Add(new LernText(SpielProbeTexte.SticksSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
         // Welle A 0.97.0 (Weisung P12-314): zwei Schalter „Umsehen umkehren“, Standard aus
         _umsehenLr = UmsehenSchalterBauen(panel, SpielProbeTexte.UmsehenLinksRechts, Umsehbedienung.SchluesselLinksRechts, an => Umsehbedienung.LinksRechts = an);
+        // Welle A 0.98.0 (Weisung P12-315, Sammelliste 397): Abstand zur Gruppe darueber wie zwischen den Gruppen der Optionen
+        _umsehenLr.Margin = new Avalonia.Thickness(0, GruppenAbstand, 0, 0);
         _umsehenOb = UmsehenSchalterBauen(panel, SpielProbeTexte.UmsehenObenUnten, Umsehbedienung.SchluesselObenUnten, an => Umsehbedienung.ObenUnten = an);
         panel.Children.Add(new LernText(SpielProbeTexte.UmsehenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
     }
+
+    /// <summary>Welle A 0.98.0 (Sammelliste 397): Abstand ueber einer neuen Gruppe in einer Karte (wie die Ueberschriften in <c>OptionenSeite</c>).</summary>
+    internal const double GruppenAbstand = 10;
 
     private ToggleSwitch UmsehenSchalterBauen(Panel panel, string text, string schluessel, Action<bool> gilt)
     {

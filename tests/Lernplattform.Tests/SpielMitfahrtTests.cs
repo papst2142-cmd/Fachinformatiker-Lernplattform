@@ -33,7 +33,7 @@ public sealed class SpielMitfahrtTests
     internal static StadtSpiel Stadt1(Spielablauf? ablauf = null) => StadtNachFassung(1, ablauf);
 
     /// <summary>Patch A 0.75.2: Stadt 1 in Fassung 1 oder 2 (Fassung 2 = Nicos Stadt mit 9 Zebrastreifen und Gelaende).</summary>
-    internal static StadtSpiel StadtNachFassung(long fassung, Spielablauf? ablauf = null)
+    internal static StadtSpiel StadtNachFassung(long fassung, Spielablauf? ablauf = null, GrafikBibliothek? grafik = null)
     {
         var f = fassung switch
         {
@@ -42,7 +42,7 @@ public sealed class SpielMitfahrtTests
             _ => throw new ArgumentOutOfRangeException(nameof(fassung)),
         };
         var inhalt = f.MitKarte(SpielInhaltTests.Inhalt);
-        return new StadtSpiel(f.StadtFuer(inhalt), ablauf ?? SpielQuestTests.AllesErledigt(inhalt), null, SpielInnenraumTests.Innenraeume.Value);
+        return new StadtSpiel(f.StadtFuer(inhalt), ablauf ?? SpielQuestTests.AllesErledigt(inhalt), grafik, SpielInnenraumTests.Innenraeume.Value);
     }
 
     /// <summary>Ein Bild: Verkehr weiter (sitzt die Figur im Bus, haelt kein Auto fuer sie), Figur weiter, Fahrt weiter.</summary>
@@ -488,11 +488,24 @@ public sealed class SpielMitfahrtBelastungTests
         {
             var k = K(s);
             var vorher = Stand(s);
+            var richtung = s.FigurRichtung;
             tun();
             if (pruefen() is { } fund)
             {
                 return fund;
             }
+            // Welle A 0.98.0 (Sammelliste 396): Ducken und Kriechen behalten die Richtung; fehlt Platz, rueckt die Figur dabei selbst
+            // hoechstens 0,4 Figurhoehen genau laengs ihrer Richtung (eigener Test SpielHaltungenTests). Uhr und Gehen bleiben gleich;
+            // ab hier darf die Ich-Sicht nichts mehr aendern.
+            var weg = new Vector2(s.FigurX - vorher.Item2, s.FigurZ - vorher.Item3);
+            var b = richtung * MathF.PI / 180f;
+            if (MathF.Abs((((s.FigurRichtung - richtung) % 360f) + 540f) % 360f - 180f) > 0.01f || s.Kopfzeile != vorher.Item1 || s.Geht != vorher.Item4
+                || weg.Length() > (0.4f * (s.ImInnenraum ? Innenraum.FigurHoehe : Figur.StadtHoehe)) + 1e-4f
+                || MathF.Abs((weg.X * MathF.Cos(b)) - (weg.Y * MathF.Sin(b))) >= 1e-3f)
+            {
+                return $"Haltung aendert das Spiel: {vorher} Richtung {richtung} -> {Stand(s)} Richtung {s.FigurRichtung}";
+            }
+            vorher = Stand(s);
             for (var i = 0; i < 40; i++)
             {
                 s.HaltungTakt((float)SpielMitfahrtTests.Dt);
@@ -529,6 +542,9 @@ public sealed class SpielMitfahrtBelastungTests
             {
                 return "vor dem Gehen nicht in der Ich-Sicht";
             }
+            // Welle A 0.98.0: Ausgang fest (Blick wie die Figur, dann 123 Grad weg), nicht der zufaellige Blick aus den Aktionen davor;
+            // seit Kriechen die Figur nicht mehr von selbst dreht, lag der Blick hier sonst 65 statt 20 Grad neben der Figur
+            k.Drehung = IchSicht.DrehungZu(s.FigurRichtung);
             k.Drehen(123f);
             var hier = new Vector2(s.FigurX, s.FigurZ);
             if (!new[] { new Vector2(3f, 0f), new Vector2(-3f, 0f), new Vector2(0f, 3f), new Vector2(0f, -3f) }.Any(d => s.GeheZu(hier.X + d.X, hier.Y + d.Y) && s.Geht))

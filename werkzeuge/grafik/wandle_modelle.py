@@ -620,6 +620,31 @@ def sitzen_zurueck_haltung(sk, arme):
     return G
 
 
+def sitzen_zurueck2_haltung(sk, arme):
+    """Welle A 0.98.0 (Weisung P12-315, Sammelliste 395): zurueckgelehnt sitzen wie sitzen_zurueck, aber die Unterarme ragen
+    nicht mehr waagrecht nach vorn: Oberarme liegen am zurueckgelehnten Koerper (15 Grad vor), Unterarme 25 Grad weiter vor und
+    12 Grad nach innen, Haende 15 Grad abgeknickt; so ruhen die Haende auf den Oberschenkeln (Werte gesucht: tiefste Ecke der Hand
+    hoechstens 0,05 Figurhoehe ueber dem Oberschenkel darunter, Test SpielHaltungenTests). Das alte Modell bleibt (nur angehaengt)."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, -15)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -15)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -25)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -25)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 1, -12)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 1, 12)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -92)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, -92)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 70)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 70)
+    welt_drehen(G, sk.eltern, 'Spine', 0, -25)
+    welt_drehen(G, sk.eltern, 'Neck', 0, 25)
+    welt_drehen(G, sk.eltern, 'LeftHand', 0, 15)
+    welt_drehen(G, sk.eltern, 'RightHand', 0, 15)
+    return G
+
+
 def am_boden_kopf_fest(dreiecke, ruhe):
     """Welle A 0.93.0: Haltung auf den Boden stellen (tiefste Ecke wie die stehende Figur) und waagrecht so schieben, dass der
     Kopf (Dreiecke der Ruhehaltung ganz ueber 75 % der Hoehe) ueber derselben Stelle steht wie im Stehen. So bleibt die Figur
@@ -699,7 +724,7 @@ def fbx_figur_haltung(z, pfad, haut_png, G):
 def bewegung_bilder(z, eintrag):
     """Bilder einer Bewegung: "lauf" aus Animations/run.fbx (Paket), "gehen" (eigene Gelenk-Bewegung), "sitzen"
     (ein Bild, Phase 9 W1), "sitzen_frei" (ein Bild, Sammelliste 351) oder seit A 0.93.0 (Sammelliste 352) "springen", "ducken",
-    "kriechen", "sitzen_zurueck" (je ein Bild)."""
+    "kriechen", "sitzen_zurueck" (je ein Bild), seit A 0.98.0 (Sammelliste 395) "sitzen_zurueck2"."""
     bilder = eintrag["bilder"]
     modell = Skelett(fbx_lesen(z.read(eintrag["datei"])))
     erg = []
@@ -712,8 +737,9 @@ def bewegung_bilder(z, eintrag):
         G = haltungen[eintrag["bewegung"]](modell, eintrag.get("arme", 72))
         ruhe = fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], modell.global_())
         return [am_boden_kopf_fest(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), ruhe)]
-    if eintrag["bewegung"] == "sitzen_zurueck":
-        G = sitzen_zurueck_haltung(modell, eintrag.get("arme", 72))
+    if eintrag["bewegung"] in ("sitzen_zurueck", "sitzen_zurueck2"):
+        # A 0.98.0 (Sammelliste 395): "sitzen_zurueck2" = Haende auf den Oberschenkeln, neues Modell hinten angehaengt
+        G = (sitzen_zurueck_haltung if eintrag["bewegung"] == "sitzen_zurueck" else sitzen_zurueck2_haltung)(modell, eintrag.get("arme", 72))
         return [auf_sitz(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), G, eintrag["sitz"])]
     if eintrag["bewegung"] == "gehen":
         for b in range(bilder):

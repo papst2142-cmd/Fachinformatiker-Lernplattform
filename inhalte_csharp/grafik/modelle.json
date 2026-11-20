@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "03673b1adfe9617373d25d555d3e62eec0ca725efd2768b953da973507b30f51",
- "bytes": 10480052,
+ "sha256": "7df74542ad7b5fc9b6ab3d17bc83e06aff14dfb614a021c585368546f7acfa80",
+ "bytes": 10563489,
  "modelle": [
   {
    "name": "building-e",
@@ -2754,6 +2754,23 @@
   },
   {
    "name": "figur-sitzen-zurueck00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.4547,
+    0.4267,
+    -0.8911
+   ],
+   "max": [
+    0.4552,
+    3.589,
+    1.0876
+   ]
+  },
+  {
+   "name": "figur-sitzen-zurueck200",
    "paket": "characters",
    "datei": "Model/characterMedium.fbx",
    "atlas": "Skins/humanMaleA.png",

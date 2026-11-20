@@ -507,9 +507,11 @@ public sealed class FachrichtungsPaketTests : IDisposable
         // Runde); sonst konnten die Lade-Aufgaben auf einem 2-Kern-Rechner fertig sein, bevor das Quiz anfing (n = 0, Test prueft
         // nichts). Das Quiz laeuft bis nach Task.WhenAll; haengt es, macht die Zeitgrenze rot statt zu warten.
         var quizLaeuft = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        // Lauf 1114 (A 0.98.0): n als long; mit int lief die Summe ueber, wenn das Quiz auf einem langsamen Rechner Sekunden lang
+        // Runden drehte (rund 20 000 je Runde, ab gut 100 000 Runden negativ), und die Pruefung n > 0 wurde falsch rot
         var quiz = Task.Run(() =>
         {
-            var n = 0;
+            var n = 0L;
             do
             {
                 foreach (var f in sicht.Quizfragen.Take(200))

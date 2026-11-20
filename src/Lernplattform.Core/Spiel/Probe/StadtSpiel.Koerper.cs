@@ -9,7 +9,8 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// <item>Springen (Leertaste und Knopf): kurzer Sprung an der Stelle und im Gehen. Der Weg bleibt derselbe (die Figur springt nur
 /// in die Hoehe, nie ueber Hindernisse, Waende oder Fahrbahn); drinnen nur, wo ueber dem Kopf Platz ist.</item>
 /// <item>Ducken und Kriechen (Knoepfe, Tasten frei belegbar): nur an der Stelle; Gehen beendet die Haltung. Die Haltung braucht
-/// mehr Platz als das Stehen; die Figur dreht sich dafuer bei Bedarf in eine freie Richtung, sonst Hinweis „kein Platz“.</item>
+/// mehr Platz als das Stehen; seit A 0.98.0 (Sammelliste 396) behaelt die Figur dabei ihre Richtung und rutscht bei Bedarf ein Stueck
+/// zurueck (vor einer Tuer oder Wand), sonst Hinweis „kein Platz“.</item>
 /// </list>
 /// Nur Darstellung: kein Spielschritt, kein Ereignis, keine Spielzeit (Fingerabdruecke gleich); die Figur steht logisch weiter an
 /// ihrer Stelle. Ohne 3D und ohne Grafik gibt es keine Haltungen (wie bis A 0.92.0).
@@ -28,7 +29,10 @@ public sealed partial class StadtSpiel
     /// <summary>Dauer eines Sprungs in Sekunden.</summary>
     public const float SprungDauer = 0.6f;
 
-    /// <summary>In diese Richtungen (Grad zur jetzigen) dreht sich die Figur der Reihe nach, wenn fuer Ducken oder Kriechen vor ihr kein Platz ist.</summary>
+    /// <summary>
+    /// In diese Richtungen (Grad zur jetzigen) drehte sich die Figur bis A 0.97.0 der Reihe nach, wenn fuer Ducken oder Kriechen vor ihr
+    /// kein Platz war; seit A 0.98.0 (Sammelliste 396) nur noch in der Gegenprobe <see cref="KoerperDrehenAltFuerTests"/>.
+    /// </summary>
     public static readonly IReadOnlyList<float> KoerperRichtungen = [0f, 45f, -45f, 90f, -90f, 135f, -135f, 180f];
 
     private static readonly AsyncLocal<bool> KoerperFreiAlt = new();
@@ -109,21 +113,66 @@ public sealed partial class StadtSpiel
             // nur an der Stelle (P12-303): erst nach der Ankunft
             return Abgelehnt(SpielProbeTexte.ErstAnkommenHaltung);
         }
-        foreach (var dreh in KoerperRichtungen)
+        if (KoerperDrehenAlt.Value)
         {
-            var grad = (blick ?? FigurRichtung) + dreh;
-            if (KoerperFreiBei(FigurX, FigurZ, grad, haltung))
+            // Gegenprobe (Stand bis A 0.97.0): ohne Platz vor ihr drehte sich die Figur von selbst (vor einer Tuer um 90 Grad)
+            foreach (var dreh in KoerperRichtungen)
             {
-                FigurRichtung = ((grad % 360f) + 360f) % 360f;
-                _koerper = haltung;
-                _koerperStelle = (Innen, FigurX, FigurZ);
-                _sprung = null;
-                Hinweis(haltung == Koerperhaltung.Ducken ? SpielProbeTexte.DuDuckst : SpielProbeTexte.DuKriechst);
-                Geaendert?.Invoke();
-                return true;
+                var grad = (blick ?? FigurRichtung) + dreh;
+                if (KoerperFreiBei(FigurX, FigurZ, grad, haltung))
+                {
+                    return Eingenommen(haltung, grad, FigurX, FigurZ);
+                }
+            }
+            return Abgelehnt(haltung == Koerperhaltung.Ducken ? SpielProbeTexte.KeinPlatzDucken : SpielProbeTexte.KeinPlatzKriechen);
+        }
+        // Welle A 0.98.0 (Weisung P12-315, Sammelliste 396): die Figur behaelt ihre Richtung. Reicht vor ihr der Platz nicht (vor einer
+        // Tuer oder Wand steht sie dicht davor), rutscht sie in kleinen Schritten zurueck (oder, steht hinter ihr etwas, vor), bis die
+        // Haltung passt; sonst „kein Platz“.
+        var richtung = blick ?? FigurRichtung;
+        var b = richtung * MathF.PI / 180f;
+        var zurueck = new Vector2(-MathF.Sin(b), -MathF.Cos(b));
+        var h = Innen is not null ? Probe.Innenraum.FigurHoehe : Figur.StadtHoehe;
+        for (var j = 0; j <= 2 * KoerperZurueckSchritte; j++)
+        {
+            // der Reihe nach: an der Stelle, 1 Schritt zurueck, 1 vor, 2 zurueck, 2 vor ... (zuerst zurueck: vor einer Tuer oder Wand)
+            var i = (j + 1) / 2 * (j % 2 == 1 ? 1 : -1);
+            var p = new Vector2(FigurX, FigurZ) + (zurueck * (i * KoerperZurueckSchritt * h));
+            if (KoerperFreiBei(p.X, p.Y, richtung, haltung) && (i == 0 || StehenKoennen(p.X, p.Y)))
+            {
+                return Eingenommen(haltung, richtung, p.X, p.Y);
             }
         }
         return Abgelehnt(haltung == Koerperhaltung.Ducken ? SpielProbeTexte.KeinPlatzDucken : SpielProbeTexte.KeinPlatzKriechen);
+    }
+
+    /// <summary>Welle A 0.98.0: Schrittweite (Anteil der Figurhoehe), um die die Figur fuer eine Haltung zurueck- oder vorrutscht.</summary>
+    public const float KoerperZurueckSchritt = 0.02f;
+
+    /// <summary>Welle A 0.98.0: hoechstens so viele Schritte je Richtung (zusammen 0,4 Figurhoehen, mehr als der Koerper nach vorn braucht).</summary>
+    public const int KoerperZurueckSchritte = 20;
+
+    private static readonly AsyncLocal<bool> KoerperDrehenAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): ohne Platz vor ihr dreht sich die Figur von selbst (Stand bis A 0.97.0, Sammelliste 396).</summary>
+    public static void KoerperDrehenAltFuerTests(bool an) => KoerperDrehenAlt.Value = an;
+
+    /// <summary>Kann die Figur an dieser Stelle stehen (drinnen frei von Einrichtung und Waenden, draussen auf dem Laufraster)?</summary>
+    private bool StehenKoennen(float x, float z) => Innen is { } innen
+        ? innen.KoerperFrei(new Vector2(x, z), FigurRichtung * MathF.PI / 180f, Koerperhaltung.Stehen)
+        : Szene.Laufraster.KannStehen(x, z) && !Szene.Laufraster.FeinGesperrt(x, z);
+
+    private bool Eingenommen(Koerperhaltung haltung, float grad, float x, float z)
+    {
+        FigurRichtung = ((grad % 360f) + 360f) % 360f;
+        FigurX = x;
+        FigurZ = z;
+        _koerper = haltung;
+        _koerperStelle = (Innen, x, z);
+        _sprung = null;
+        Hinweis(haltung == Koerperhaltung.Ducken ? SpielProbeTexte.DuDuckst : SpielProbeTexte.DuKriechst);
+        Geaendert?.Invoke();
+        return true;
     }
 
     /// <summary>
