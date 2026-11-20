@@ -67,10 +67,12 @@ public static partial class AutoMessung
             }
             string Name(Button b) => Avalonia.Automation.AutomationProperties.GetName(b) ?? "";
             void Taste(Key taste) => seite.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = taste, Source = fl });
-            // eine Stelle mitten im Raum, an der Ducken und Kriechen Platz haben
+            // eine Stelle mitten im Raum, an der Ducken und Kriechen Platz haben; seit A 0.98.0 (Sammelliste 396) dreht sich die Figur
+            // dafuer nicht mehr von selbst, darum in jeder Richtung (15 Grad), in der sie nach dem Hingehen stehen kann
             var stelle = Enumerable.Range(0, 900).Select(i => new Vector2(0.6f + (i % 30 * 0.3f), 0.6f + (i / 30 * 0.3f)))
-                .FirstOrDefault(p => p.X < innen.Breite && p.Y < innen.Tiefe && innen.KoerperFrei(p, 0f, Koerperhaltung.Kriechen)
-                    && innen.KoerperFrei(p, 0f, Koerperhaltung.Ducken) && Enumerable.Range(0, 8).All(r => innen.SprungFrei(p, r * MathF.PI / 4f)) && spiel.GeheZu(p.X, p.Y));
+                .FirstOrDefault(p => p.X < innen.Breite && p.Y < innen.Tiefe
+                    && Enumerable.Range(0, 24).All(r => innen.KoerperFrei(p, r * MathF.PI / 12f, Koerperhaltung.Kriechen)
+                        && innen.KoerperFrei(p, r * MathF.PI / 12f, Koerperhaltung.Ducken)) && Enumerable.Range(0, 8).All(r => innen.SprungFrei(p, r * MathF.PI / 4f)) && spiel.GeheZu(p.X, p.Y));
             spiel.SofortAnkommen();
             await ansicht.BildFertigAsync();
             await Bilder(3);
