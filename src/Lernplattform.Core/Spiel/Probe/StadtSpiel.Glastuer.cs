@@ -7,7 +7,7 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// <summary>
 /// Welle A 0.99.0 (Weisung P12-317 F2, Nico: „Erst zu und durch Oeffnen wird sie so geoeffnet wie auf dem Bild.“): die Glastuer
 /// des Serverschranks ist zu, bis die Figur sie vor dem Schrank oeffnet (Knopf „Glastür öffnen“); dann steht sie 90 Grad offen
-/// zu der Seite, auf der sie weder die Figur noch ein anderes Stueck beruehrt. Nur Darstellung: kein Ereignis, kein Spielstand,
+/// zu der Seite, auf der sie weder die Figur noch ein anderes Stueck beruehrt; die Figur dreht sich dabei zur Tuer. Nur Darstellung: kein Ereignis, kein Spielstand,
 /// keine Bewertung. E1: sie geht wieder zu mit „Glastür schließen“ und sobald die Figur sich bewegt, dreht oder die Haltung
 /// wechselt (so kann die offene Tuer die Figur nie beruehren), beim Verlassen des Raums ebenso.
 /// </summary>
@@ -68,7 +68,13 @@ public sealed partial class StadtSpiel
         }
         else
         {
-            var lage = innen.GlastuerWahl(nr, new Vector2(FigurX, FigurZ), FigurRichtung * MathF.PI / 180f, Koerper);
+            // wer eine Tuer oeffnet, schaut zu ihr: die Figur dreht sich zur Front des Schranks (nur Darstellung)
+            var blick = innen.GlastuerBlick(nr);
+            var lage = innen.GlastuerWahl(nr, new Vector2(FigurX, FigurZ), blick * MathF.PI / 180f, Koerper);
+            if (lage != GlastuerLage.Zu)
+            {
+                FigurRichtung = blick;
+            }
             _glastuer = lage == GlastuerLage.Zu ? null : (innen, nr, lage, new Vector2(FigurX, FigurZ), FigurRichtung, Koerper);
             _glastuerHinweis = lage == GlastuerLage.Zu ? SpielProbeTexte.GlastuerKeinPlatz : null;
         }

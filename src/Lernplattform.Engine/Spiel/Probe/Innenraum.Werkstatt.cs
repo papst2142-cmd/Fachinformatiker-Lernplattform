@@ -637,6 +637,14 @@ public sealed partial class Innenraum
         return beste;
     }
 
+    /// <summary>Blick (Grad, wie <c>FigurRichtung</c>: 0 = +z, im Uhrzeigersinn von oben) einer Figur, die zur Front des Schranks schaut.</summary>
+    public float GlastuerBlick(int nummer)
+    {
+        var (r, b, t) = _glastueren[nummer];
+        var n = r.Punkt(b / 2, t) - r.Punkt(b / 2, t + 1);
+        return MathF.Atan2(n.X, n.Y) * 180f / MathF.PI;
+    }
+
     /// <summary>
     /// Kaesten der Glastuer Nummer <paramref name="nummer"/> (Weltlage): Rahmen, Griff und Scharniere (<paramref name="glas"/> false)
     /// oder nur die Scheibe (true, wird halb durchsichtig gezeichnet). Zu: in der Front des Schranks. Offen: um 90 Grad um das
