@@ -45,14 +45,15 @@ public sealed record InnenPerson(string Id, string Name, float X, float Z, PyObj
 public sealed partial class Innenraum
 {
     /// <summary>
-    /// Eine Einheit des Grundrisses sind 0,75 m (Tuer 1,4 = 1,05 m, Schreibtisch 2,4 x 1,0 = 1,8 x 0,75 m). Bis A 1.0.0 waren es
-    /// 0,6 m; Welle A 1.1.0 (Sammelliste 409, Weisung P12-328 Punkt 1, „Gaenge zu eng“): nur Darstellung, Grundriss, Wege und
-    /// Plaetze bleiben, Figur, Waende und Moebel werden im Verhaeltnis kleiner (Diele 1,13 m, Bueroflur 1,50 m).
+    /// Eine Einheit des Grundrisses sind 0,6 m (Tuer 1,2 = 0,72 m, Schreibtisch 2,4 x 1,0 = 1,44 x 0,6 m). Welle A 1.1.0
+    /// (Sammelliste 409) hatte 0,75 m: der ganze Raum wurde groesser, die Flure vor allem laenger (Nico: „Der Flur wurde laenger,
+    /// aber nicht breiter“). Welle A 1.2.0 (Weisung P12-332, Nico 2c): wieder 0,6 m, dafuer werden die Flure wirklich breiter
+    /// (<see cref="Flurbreite"/>: Diele 1,32 m, Flure 1,80 m) und die Laengen sind wie bis A 1.0.0.
     /// </summary>
-    public const float Meter = 1f / 0.75f;
+    public const float Meter = 1f / 0.6f;
 
-    /// <summary>Welle A 1.1.0: Massstab bis A 1.0.0 (nur fuer die Gegenprobe der Gangbreiten in den Tests).</summary>
-    public const float MeterBisA100 = 1f / 0.6f;
+    /// <summary>Welle A 1.2.0: Massstab von A 1.1.0 (nur fuer die Gegenprobe der Gangbreiten und -laengen in den Tests).</summary>
+    public const float MeterA110 = 1f / 0.75f;
 
     /// <summary>Hoehe der Waende (1,8 m): niedriger als echt, damit die schraege Kamera in die Raeume sieht.</summary>
     public const float WandHoehe = 1.8f * Meter;
@@ -102,8 +103,10 @@ public sealed partial class Innenraum
     private readonly List<(Netz Netz, Matrix4x4 Lage)> _puppen = [];
 
     private Innenraum(string ansicht, string ort, PyObjekt gebaeude, List<InnenPerson> personen, GrafikBibliothek? grafik, PyObjekt? boeden,
-        PyObjekt? kleider = null, string? fest = null, PyObjekt? feste = null)
+        PyObjekt? kleider = null, string? fest = null, PyObjekt? feste = null, Flurbreite.Umrechnung? umrechnung = null, PyObjekt? grundrissAlt = null)
     {
+        Umrechnung = umrechnung ?? Flurbreite.Umrechnung.Keine;
+        GrundrissAlt = grundrissAlt ?? gebaeude;
         Fest = fest;
         _festDaten = feste;
         Kleiderdaten = kleider;
@@ -407,12 +410,54 @@ public sealed partial class Innenraum
 
     private static Innenraum? BauenOhneJahreszeit(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte,
         string? fest, PyObjekt? feste) =>
-        EingabenFuer(ansicht, stand, innenraeume, geschaefte) is { } e
-            ? new Innenraum(e.Ansicht, e.Ort, e.Gebaeude, e.Personen, grafik, e.Boeden, e.Kleider, fest, feste)
+        Breiter(EingabenFuer(ansicht, stand, innenraeume, geschaefte)) is { } e
+            ? new Innenraum(e.Ansicht, e.Ort, e.Gebaeude, e.Personen, grafik, e.Boeden, e.Kleider, fest, feste, e.Umrechnung, e.GrundrissAlt)
             : null;
 
     /// <summary>Weisung P8-55 (W12): alles, was ein Innenraum aus dem Spielstand liest (Grundriss, Personen, Boeden, Kleidung).</summary>
-    private sealed record Eingaben(string Ansicht, string Ort, PyObjekt Gebaeude, List<InnenPerson> Personen, PyObjekt? Boeden, PyObjekt? Kleider);
+    private sealed record Eingaben(string Ansicht, string Ort, PyObjekt Gebaeude, List<InnenPerson> Personen, PyObjekt? Boeden, PyObjekt? Kleider)
+    {
+        /// <summary>Welle A 1.2.0: Umrechnung zwischen altem und breitem Grundriss (Keine = gleich).</summary>
+        public Flurbreite.Umrechnung Umrechnung { get; init; } = Flurbreite.Umrechnung.Keine;
+
+        /// <summary>Welle A 1.2.0: der Grundriss in den alten Zahlen (Spiel-Kern, Spielstand, Quest-Ebene).</summary>
+        public PyObjekt? GrundrissAlt { get; init; }
+    }
+
+    /// <summary>
+    /// Welle A 1.2.0 (Weisung P12-332): Flur breiter (<see cref="Flurbreite"/>), Personen mit, Innentueren mindestens 0,90 m
+    /// (<see cref="Flurbreite.Tueren"/>); Laeden, Schalter und Obergeschosse bleiben.
+    /// </summary>
+    private static Eingaben? Breiter(Eingaben? e)
+    {
+        if (e is null || !Flurbreite.Gilt(e.Ansicht, e.Ort))
+        {
+            return e;
+        }
+        // Innentueren mindestens 0,90 m (Chat 3a), auch wo der Flur schon breit genug ist
+        var u = Flurbreite.Fuer(e.Ort, e.Gebaeude);
+        var g = Flurbreite.Tueren(Flurbreite.Anwenden(e.Gebaeude, u));
+        if (ReferenceEquals(g, e.Gebaeude))
+        {
+            return e;
+        }
+        return e with
+        {
+            Gebaeude = g,
+            Personen = [.. e.Personen.Select(p => Flurbreite.Person(p, u))],
+            Umrechnung = u,
+            GrundrissAlt = e.Gebaeude,
+        };
+    }
+
+    /// <summary>
+    /// Welle A 1.2.0 (Weisung P12-332): Umrechnung zwischen dem Grundriss des Spiel-Kerns (alte Zahlen, Spielstand) und diesem
+    /// Innenraum (breiter Flur). <see cref="Flurbreite.Umrechnung.Keine"/> in Laeden, Schaltern, Obergeschossen und im Werkzeug.
+    /// </summary>
+    public Flurbreite.Umrechnung Umrechnung { get; }
+
+    /// <summary>Welle A 1.2.0: der Grundriss in den alten Zahlen (gleich <see cref="Gebaeude"/>, wenn nichts umgerechnet wird).</summary>
+    public PyObjekt GrundrissAlt { get; }
 
     /// <summary>
     /// Weisung P8-55 (W12, Selbstfund 3.4 im Teilplan): Inhalt des Innenraums zur Ansicht als Text, ohne ihn zu bauen
@@ -422,7 +467,7 @@ public sealed partial class Innenraum
     /// </summary>
     public static string? InhaltSignatur(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, PyObjekt? geschaefte, string? fest, Jahreszeit jahreszeit)
     {
-        if (EingabenFuer(ansicht, stand, innenraeume, geschaefte) is not { } e)
+        if (Breiter(EingabenFuer(ansicht, stand, innenraeume, geschaefte)) is not { } e)
         {
             return null;
         }
@@ -1330,7 +1375,10 @@ public sealed partial class Innenraum
     internal const float TischBein = 0.07f, TischBeinRand = 0.04f;
 
     /// <summary>Steht ein PC (Grundriss) unter dem Rechteck (x, z, w, t)?</summary>
-    private bool PcDarunter(float x, float z, float w, float t) => _alleDeko.Any(d => Py.Gleich(d["typ"], "pc")
+    private bool PcDarunter(float x, float z, float w, float t) => Darunter("pc", x, z, w, t);
+
+    /// <summary>Steht ein Stueck vom Typ <paramref name="typ"/> (Grundriss) unter dem Rechteck (x, z, w, t)?</summary>
+    private bool Darunter(string typ, float x, float z, float w, float t) => _alleDeko.Any(d => Py.Gleich(d["typ"], typ)
         && Py.F(d["x"]) < x + w && x < Py.F(d["x"]) + Py.F(d["w"]) && Py.F(d["y"]) < z + t && z < Py.F(d["y"]) + Py.F(d["h"]));
 
     /// <summary>
@@ -1515,7 +1563,8 @@ public sealed partial class Innenraum
                     Modell(r, "computerScreen", (b * (i + 0.5f) / 3) - 0.5f, 0.08f, 1.0f, 0.25f, 0.45f * M, 0.75f * M, Farben.Geraet);
                 }
                 break;
-            case "tisch" when !PcTischAltFuerTests.Value && PcDarunter(x, z, w, t):
+            case "tisch" when (!PcTischAltFuerTests.Value && PcDarunter(x, z, w, t)) || (!KartonsAltFuerTests.Value && Darunter("kartons", x, z, w, t)):
+                // Welle A 1.2.0 (Sammelliste 411): auch ueber Kartons ein Tisch ohne Querstreben (die Streben steckten im Karton)
                 // Welle A 1.0.0 (Sammelliste 408, Nico: „PCs unter dem Tisch stecken im Tisch“): steht ein PC unter dem Tisch,
                 // ein Tisch ohne Querstreben (Platte, Zarge, vier Beine an den Ecken); das Modell „table“ hat Streben in der Mitte
                 TischOhneStreben(r, b, tt, 0.75f * M);
@@ -1684,7 +1733,7 @@ public sealed partial class Innenraum
                 Modell(r, "rugRectangle", 0, 0, b, tt, 0.02f, 0.04f, Netz.Farbe("#F472B6"));
                 break;
             case "kartons":
-                Kartons(r, b, tt);
+                Kartons(r, b, tt, !KartonsAltFuerTests.Value && TischDarueber(x, z, w, t));
                 break;
             case "bett":
                 Modell(r, b >= 2.4f ? "bedDouble" : "bedSingle", 0, 0, b, tt, 0.55f * M, 0, Farben.Holz);
@@ -1973,9 +2022,22 @@ public sealed partial class Innenraum
         _teile.Add(Quader(x + (w / 2) - 0.25f, 0, z + (t / 2) - 0.25f, x + (w / 2) + 0.25f, 0.1f, z + (t / 2) + 0.25f, Farben.Metall));
     }
 
-    private void Kartons(Rahmen r, float b, float t)
+    /// <summary>Welle A 1.2.0 (Sammelliste 411), Gegenprobe: Kartons unter einem Tisch wie bis A 1.1.0 (zwei uebereinander).</summary>
+    internal static readonly AsyncLocal<bool> KartonsAltFuerTests = new();
+
+    /// <summary>Tische, unter denen etwas stehen kann (Platte oben, darunter frei).</summary>
+    private static readonly HashSet<string> TischTypen = ["tisch", "werkbank", "schreibtisch", "besprechungstisch", "esstisch"];
+
+    /// <summary>Welle A 1.2.0 (Sammelliste 411): steht ein Tisch ueber dem Rechteck (x, z, w, t)?</summary>
+    private bool TischDarueber(float x, float z, float w, float t) => _alleDeko.Any(d => TischTypen.Contains(Py.Str(Get(d, "typ", "")))
+        && Py.F(d["x"]) < x + w && x < Py.F(d["x"]) + Py.F(d["w"]) && Py.F(d["y"]) < z + t && z < Py.F(d["y"]) + Py.F(d["h"]));
+
+    /// <summary>
+    /// Gestapelte Umzugskartons: so viele, wie in das Rechteck passen (hoechstens zwei uebereinander). Welle A 1.2.0 (Sammelliste
+    /// 411, Nico: „der Karton glitcht durch den Tisch“): unter einem Tisch nur eine Lage, sie endet unter der Tischplatte.
+    /// </summary>
+    private void Kartons(Rahmen r, float b, float t, bool unterTisch = false)
     {
-        // gestapelte Umzugskartons: so viele, wie in das Rechteck passen (hoechstens zwei uebereinander)
         var nx = Math.Max(1, (int)(b / 0.6f));
         var nz = Math.Max(1, (int)(t / 0.6f));
         float kb = b / nx, kt = t / nz;
@@ -1985,7 +2047,7 @@ public sealed partial class Innenraum
             for (var j = 0; j < nz; j++)
             {
                 Modell(r, "cardboardBoxClosed", (i * kb) + 0.03f, (j * kt) + 0.03f, kb - 0.06f, kt - 0.06f, 0.5f * Meter, 0, Farben.Karton);
-                if (k++ % 2 == 0)
+                if (k++ % 2 == 0 && !unterTisch)
                 {
                     Modell(r, "cardboardBoxClosed", (i * kb) + 0.08f, (j * kt) + 0.08f, kb - 0.16f, kt - 0.16f, 0.4f * Meter, 0.5f * Meter, Farben.Karton);
                 }

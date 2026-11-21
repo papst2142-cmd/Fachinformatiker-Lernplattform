@@ -149,26 +149,19 @@ public sealed class SpielInnenKameraTests
     [Fact]
     public void KleinsterAbstand_JeBildschirm_WieGemessen_UndIchSichtBleibt()
     {
-        // Meldung P12-191: Kopf ganz sichtbar ab Abstand 10 (Handy hoch), 9 (Tablet hoch und quer), 15 (Handy quer) bei der
-        // Figur bis A 1.0.0 (0,6 m je Einheit); seit A 1.1.0 (Massstab innen 0,75 m, Weisung P12-328) ist die Figur in Einheiten
-        // im Verhaeltnis 0,8 kleiner, der kleinste Abstand ebenso (7,66 / 11,97 / 6,44 / 7,17), die Figur fuellt das Bild gleich
-        float Min((string Name, float Breite, float Hoehe, float Oben, float Unten) b, float figur) =>
-            SpielKamera.InnenAbstandMin(b.Hoehe, b.Oben, b.Unten, 58f, 40f, figur);
-        var bisher = 1.75f * Innenraum.MeterBisA100;
-        Assert.InRange(Min(Bildschirme[0], bisher), 9f, 10f);
-        Assert.InRange(Min(Bildschirme[1], bisher), 14f, 15f);
-        Assert.InRange(Min(Bildschirme[2], bisher), 8f, 9f);
-        Assert.InRange(Min(Bildschirme[3], bisher), 8f, 9f);
-        Assert.InRange(Min(Bildschirme[0], Innenraum.FigurHoehe), 7.6f, 7.7f);
-        Assert.InRange(Min(Bildschirme[1], Innenraum.FigurHoehe), 11.9f, 12f);
-        Assert.InRange(Min(Bildschirme[2], Innenraum.FigurHoehe), 6.4f, 6.5f);
-        Assert.InRange(Min(Bildschirme[3], Innenraum.FigurHoehe), 7.1f, 7.2f);
+        // Meldung P12-191: Kopf ganz sichtbar ab Abstand 10 (Handy hoch), 9 (Tablet hoch und quer), 15 (Handy quer)
+        float Min((string Name, float Breite, float Hoehe, float Oben, float Unten) b) =>
+            SpielKamera.InnenAbstandMin(b.Hoehe, b.Oben, b.Unten, 58f, 40f, Innenraum.FigurHoehe);
+        Assert.InRange(Min(Bildschirme[0]), 9f, 10f);
+        Assert.InRange(Min(Bildschirme[1]), 14f, 15f);
+        Assert.InRange(Min(Bildschirme[2]), 8f, 9f);
+        Assert.InRange(Min(Bildschirme[3]), 8f, 9f);
         // naeher als der kleinste Abstand fuehrt weiter in die Ich-Sicht und zurueck
         var b = Bildschirme[0];
         var k = SpielKamera.Drinnen(20, 20, true);
         SpielKamera.InnenBereich(k, b.Hoehe, b.Oben, b.Unten, Innenraum.FigurHoehe);
         Kamerabedienung.Mausrad(k, 100);
-        Assert.Equal(Min(b, Innenraum.FigurHoehe), k.Abstand);
+        Assert.Equal(Min(b), k.Abstand);
         Assert.Equal(0f, k.IchZiel);
         Kamerabedienung.Mausrad(k, 1);
         Assert.Equal(1f, k.IchZiel);

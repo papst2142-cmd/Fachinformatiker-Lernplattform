@@ -1918,12 +1918,15 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         if (spiel.Vorschau is { } v)
         {
             var farbe = Netz.Farbe(spiel.VorschauFarbe switch { "gruen" => "#34D399", "gelb" => "#FBBF24", _ => "#F87171" });
-            float x = (float)Py.F(v["x"]), z = (float)Py.F(v["y"]), w = (float)Py.F(v["w"]), t = (float)Py.F(v["h"]);
+            // Welle A 1.2.0: Vorschau in den Zahlen des Spiel-Kerns, gezeichnet im Innenraum (breiter Flur)
+            float x = (float)Py.F(v["x"]), w = (float)Py.F(v["w"]), t = (float)Py.F(v["h"]);
+            var z = (float)spiel.InnenRechteckZ(Py.F(v["y"]), t);
             teile.Add(new Teil(TeilArt.Quader, x, 0.04f, z, x + w, 0.9f, z + t, farbe));
         }
         else if (spiel.Ausgewaehlt is { } stueck && Wohnung.AufgestellteMoebel(spiel.Ablauf.Stand).FirstOrDefault(m => m.Stueck == stueck) is { } m)
         {
-            float x = (float)m.X, z = (float)m.Y, w = (float)Py.F(m.W), t = (float)Py.F(m.H);
+            float x = (float)m.X, w = (float)Py.F(m.W), t = (float)Py.F(m.H);
+            var z = (float)spiel.InnenRechteckZ(m.Y, t);
             var farbe = Netz.Farbe("#22D3EE");
             teile.Add(new Teil(TeilArt.Quader, x - 0.08f, 0.04f, z - 0.08f, x + w + 0.08f, 0.07f, z + t + 0.08f, farbe));
         }

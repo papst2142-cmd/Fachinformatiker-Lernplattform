@@ -208,44 +208,78 @@ public sealed class SpielHaltungGehenTests
         return funde;
     }
 
+    /// <summary>
+    /// Welle A 1.2.0 (Sammelliste 412, Weisung P12-332, Nico: „Der Joystick sollte da sitzen und die Knoepfe darueber“): der rechte
+    /// Stick liegt unten rechts in der Ecke (wie seit A 1.0.0), Springen steht ueber seinem Kreis am rechten Rand, Haltung links
+    /// daneben etwas hoeher. Abnahmesatz: der Daumen erreicht den Stick in der Ecke voll, kein Knopf (mit Rand) liegt in seinem
+    /// Kreis, und ein Daumen in der Ecke setzt dort den Stick. Gegenprobe Stand A 1.0.0 bis A 1.1.0 (Knoepfe in der Ecke): der
+    /// Stick kommt nicht in die Ecke, die Knoepfe liegen in seinem Kreis.
+    /// </summary>
     [Fact]
-    public void Lage_RechtsUnten_InDerEcke_KeinStickBereich_Gegenprobe()
+    public void Lage_UeberDemRechtenStick_EckeFrei_Gegenprobe()
     {
         var funde = new List<string>();
-        var ecken = 0;
-        foreach (var (name, w, h) in new[] { ("S24 quer", 832.0, 384.0), ("S24 hoch", 384.0, 832.0), ("Tab quer", 1280.0, 800.0), ("Tab hoch", 800.0, 1280.0), ("PC", 1360.0, 880.0) })
+        var gegen = 0;
+        var groessen = new[] { ("S24 quer", 832.0, 384.0), ("S24 hoch", 384.0, 832.0), ("Tab quer", 1280.0, 800.0), ("Tab hoch", 800.0, 1280.0), ("PC", 1360.0, 880.0), ("Emulator", 640.0, 320.0) };
+        foreach (var (name, w, h) in groessen)
         {
-            var b = new Sticks.Bereich(w, h, 64, 86, (w / 2) - 90, (w / 2) + 90);
-            var lage = HaltungKnopf.Lage(b);
-            Assert.True(lage is not null, name + ": keine Lage");
-            var (s, hl) = lage!.Value;
-            // A 1.0.0 (Sammelliste 405): Springen unten rechts in der Ecke, Haltung links daneben etwas hoeher; kleiner als bis A 0.99.0
-            var (g, _) = HaltungKnopf.Groesse(w, h);
-            Assert.True(s.X > w * 0.8 && hl.X < s.X && hl.Y < s.Y, name);
-            Assert.Equal(w - HaltungKnopf.Rand, s.X + (g / 2), 6);
-            // in der Ecke; nur wenn Haltung dort an die Leiste reichte (schmales Hochformat), ueber der Leiste
-            Assert.True(Math.Abs(h - HaltungKnopf.Rand - (s.Y + (g / 2))) < 1e-6 || Math.Abs(h - b.Unten - HaltungKnopf.Rand - (s.Y + (g / 2))) < 1e-6, name + " nicht unten");
-            ecken += Math.Abs(h - HaltungKnopf.Rand - (s.Y + (g / 2))) < 1e-6 ? 1 : 0;
-            funde.AddRange(LageFunde(name, b, lage.Value));
+            foreach (var leiste in new[] { 180.0, 420.0, 0.0 })
+            {
+                var b = leiste > 0 ? new Sticks.Bereich(w, h, 64, 86, (w - leiste) / 2, (w + leiste) / 2) : new Sticks.Bereich(w, h, 64, 86);
+                var wo = $"{name} Leiste {leiste}";
+                if (HaltungKnopf.Lage(b) is not { } lage)
+                {
+                    funde.Add(wo + ": keine Lage");
+                    continue;
+                }
+                var (s, hl) = lage;
+                var (g, k) = HaltungKnopf.Groesse(w, h);
+                Assert.True(hl.X < s.X && hl.Y <= s.Y, wo + ": Haltung links neben/ueber Springen");
+                funde.AddRange(LageFunde(wo, b, lage));
+                // der rechte Stick in der Ecke: ein Daumen ganz unten rechts setzt ihn dort, kein Knopf liegt in seinem Kreis
+                var mit = b with { Sperre = HaltungKnopf.Sperre(b) };
+                var (ex, ey, er) = Sticks.Lage(w, h, Sticks.Seite.Rechts, b);
+                // Springen am rechten Rand ueber dem Stick, nur im sehr flachen Bild (Emulator) links neben seinem Kreis
+                if (Math.Abs(w - HaltungKnopf.Rand - (s.X + (g / 2))) > 1e-6 && (name != "Emulator" || s.X + (g / 2) > ex - er - HaltungKnopf.Rand + 1e-6))
+                {
+                    funde.Add(wo + $": Springen nicht am rechten Rand ueber dem Stick ({s.X:F0}/{s.Y:F0})");
+                }
+                var daumen = (X: ex + (er / 2), Y: ey + (er / 2));
+                if (Sticks.SeiteFuer(daumen.X, daumen.Y, mit) != Sticks.Seite.Rechts)
+                {
+                    funde.Add(wo + ": in der Ecke beginnt kein Stick");
+                }
+                var (mx, my, mr) = Sticks.Lage(daumen.X, daumen.Y, Sticks.Seite.Rechts, mit);
+                if (Math.Abs(mx - ex) > 1e-6 || Math.Abs(my - ey) > 1e-6 || Math.Abs(mr - er) > 1e-6)
+                {
+                    funde.Add(wo + $": Stick nicht in der Ecke ({mx:F0}/{my:F0} statt {ex:F0}/{ey:F0})");
+                }
+                foreach (var ((x, y), d) in new[] { (s, g), (hl, k) })
+                {
+                    if (Math.Sqrt(((x - ex) * (x - ex)) + ((y - ey) * (y - ey))) < er + (d / 2) + HaltungKnopf.Rand - 1e-6)
+                    {
+                        funde.Add(wo + ": Knopf im Kreis des Sticks");
+                    }
+                }
+                // Gegenprobe Stand A 1.0.0 bis A 1.1.0: Knoepfe in der Ecke, dort hat der Stick keinen Platz
+                HaltungKnopf.EckeFuerTests = true;
+                try
+                {
+                    if (HaltungKnopf.Lage(b) is { } alt
+                        && new[] { (alt.Springen, g), (alt.Haltung, k) }.Any(p => Math.Sqrt(((p.Item1.X - ex) * (p.Item1.X - ex)) + ((p.Item1.Y - ey) * (p.Item1.Y - ey))) < er + (p.Item2 / 2)))
+                    {
+                        gegen++;
+                    }
+                }
+                finally
+                {
+                    HaltungKnopf.EckeFuerTests = false;
+                }
+            }
             Assert.Equal(Math.Min(w, h) >= 600 ? (64.0, 46.0) : (56.0, 40.0), HaltungKnopf.Groesse(w, h));
         }
         Assert.True(funde.Count == 0, string.Join("\n", funde));
-        Assert.True(ecken >= 3, $"nur {ecken} Groessen in der Ecke");
-        // Gegenprobe: ohne Sperre beginnt auf den Knoepfen der rechte Stick
-        var bq = new Sticks.Bereich(832, 384, 64, 86, 326, 506);
-        var l = HaltungKnopf.Lage(bq)!.Value;
-        Assert.NotNull(Sticks.SeiteFuer(l.Springen.X, l.Springen.Y, bq));
-        // Gegenprobe Stand A 0.99.0: groesser und ueber der Zone des Sticks (nicht in der Ecke)
-        HaltungKnopf.AltFuerTests = true;
-        try
-        {
-            Assert.Equal((64.0, 46.0), HaltungKnopf.Groesse(832, 384));
-            Assert.True(HaltungKnopf.Lage(bq)!.Value.Springen.Y + 32 < 384 - HaltungKnopf.Rand - 40);
-        }
-        finally
-        {
-            HaltungKnopf.AltFuerTests = false;
-        }
+        Assert.True(gegen >= 6, "Gegenprobe greift nicht: " + gegen);
     }
 
     [Fact]
