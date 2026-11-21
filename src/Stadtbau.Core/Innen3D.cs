@@ -44,6 +44,17 @@ public static class Innen3D
         var spiel = spielNeu
             ? Ansicht3D.Bauen(Aussen.Fassung(a.Aussen, a.Basis, a.Innenraeume, 1, 0, Werkzeug.Kennzeile, "", ""), a.Daten, Ansicht3D.Einstellung.Standard, vorrat)
             : vorher!.Spiel;
+        if (SpielRaeume.Ist(a.Schluessel))
+        {
+            // Welle S 0.60.0 (Weisung P12-337): Raum aus den Spieldaten (Wohnung, Buero, Serverfarm, Zweigstelle, Kunde), gebaut
+            // mit demselben Weg wie das Spiel beim Betreten
+            var inhalt = spiel.Ablauf.Stand.Inhalt;
+            var raum = SpielRaeume.Finden(a.Schluessel, inhalt, a.Innenraeume) ?? throw new InvalidDataException(Texte.SpielRaumFehlt);
+            var spielRaum = SpielRaeume.Bauen(raum, inhalt, a.Innenraeume, spiel.Grafik, spiel.GeschaefteDaten, spiel.Feste)
+                ?? throw new InvalidDataException(Texte.SpielRaumFehlt);
+            spielRaum.Vorbereiten();
+            return new Ergebnis(spiel, spielNeu, text, spielRaum, Start(a.Innenraeume, a.Schluessel, 0, spielRaum));
+        }
         var (ort, etage) = Etagen.Teilen(a.Schluessel);
         var innen = Innenraum.Bauen(StadtbauPruefung.Ansicht(ort, etage), spiel.Ablauf.Stand, a.Innenraeume, spiel.Grafik, spiel.GeschaefteDaten, null,
             spiel.Feste, Jahreszeit.Sommer) ?? throw new InvalidDataException(Texte.Innen3DFehlt);

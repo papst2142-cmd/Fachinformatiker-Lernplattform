@@ -209,4 +209,116 @@ public class WerkzeugGleichSpielTests
         var zweimal = GrundrisseBreit.Fassung(GrundrisseBreit.Fassung(alt, breit), breit);
         Assert.Equal(GrundrisseBreit.Pruefsumme(D.Fassung.Innenraeume), GrundrisseBreit.Pruefsumme(zweimal.Innenraeume));
     }
+
+    /// <summary>
+    /// Welle S 0.60.0 (Weisung P12-337 Punkt 2): die Raeume des Spiels, die das Werkzeug jetzt zeigt (jede Wohnung, Buero der
+    /// Bitweiche, eigene Firma jeder Stufe, Serverfarm, Zweigstelle jeder Stufe, jeder Kunde), liegen im Werkzeug-Grundriss
+    /// (2D), im Werkzeug-3D und im Spiel an denselben Stellen (+-0,01). Das Spiel baut hier mit einem eigenen Spielstand (nicht
+    /// ueber <see cref="SpielRaeume.Stand"/>), damit der Test nicht nur die Regel des Werkzeugs mit sich selbst vergleicht.
+    /// Gegenprobe: das Werkzeug ohne die breiten Grundrisse weicht in Wohnung, Bitweiche, Firma, Zweigstelle und Serverfarm ab.
+    /// </summary>
+    [Fact]
+    public void SpielRaeume_Werkzeug2DUnd3D_GleichSpiel_GegenprobeOhneDatei()
+    {
+        var (spielInhalt, spielInnen) = Spiel.Value;
+        var p = Projekt.Neu("Spiel-Raeume", D, Daten.NeueAblage(), "moebelhaus");
+        var raeume = p.SpielRaeumeListe();
+        // Abnahmesatz: alle Wohnungsarten, Bitweiche, eigene Firma (5 Stufen), Serverfarm, Zweigstelle (2 Stufen), alle Kunden
+        var wohnungen = SpielDaten.Liste(SpielDaten.Objekt(spielInhalt["wohnungen"])["wohnungen"]).Select(w => Py.Str(SpielDaten.Objekt(w)["id"])).ToList();
+        var kunden = SpielDaten.Liste(SpielDaten.Objekt(spielInhalt["kunden"])["orte"]).Select(k => Py.Str(SpielDaten.Objekt(k)["id"])).ToList();
+        var erwartet = wohnungen.Select(w => "spiel:zuhause:" + w)
+            .Concat(["spiel:buero:bitweiche", "spiel:buero:firma1", "spiel:buero:firma2", "spiel:buero:firma3", "spiel:buero:firma4", "spiel:buero:firma5",
+                "spiel:serverfarm", "spiel:filiale1", "spiel:filiale2"])
+            .Concat(kunden.Select(k => "spiel:kunde:" + k)).ToList();
+        Assert.Equal(erwartet, raeume.Select(r => r.Schluessel).ToList());
+        Assert.Equal(4, wohnungen.Count);
+
+        Innenraum? ImSpiel(SpielRaeume.Raum r)
+        {
+            var stand = StadtbauSpiel.Probestand(spielInhalt).Stand;
+            switch (r.Ansicht)
+            {
+                case "zuhause":
+                    stand.Wohnung = r.Wohnung;
+                    break;
+                case "buero" when r.Schluessel.EndsWith(":bitweiche", StringComparison.Ordinal):
+                    stand.Firma = null;
+                    break;
+                case "buero":
+                    stand.Firma = new PyObjekt { { "stufe", long.Parse(r.Schluessel[^1..], System.Globalization.CultureInfo.InvariantCulture) }, { "name", "Probe" }, { "tag", 1L } };
+                    break;
+                case "filiale":
+                    stand.Zweigstelle = new PyObjekt { { "stufe", long.Parse(r.Schluessel[^1..], System.Globalization.CultureInfo.InvariantCulture) }, { "tag", 1L } };
+                    break;
+            }
+            return Innenraum.Bauen(r.Ansicht, stand, spielInnen, D.Grafik, D.Geschaefte.Daten);
+        }
+
+        var funde = new List<string>();
+        var gebaut = new Dictionary<string, Innenraum>();
+        foreach (var r in raeume)
+        {
+            var spiel = ImSpiel(r);
+            Assert.True(spiel is not null, r.Schluessel + ": im Spiel nicht gebaut");
+            gebaut[r.Schluessel] = spiel!;
+            // Werkzeug 3D (Bau ueber das Projekt) und Werkzeug 2D (der Grundriss, den die Flaeche zeichnet, und die Personen)
+            funde.AddRange(Abweichungen(r.Schluessel + " 3D", p.SpielRaum(r.Schluessel), spiel));
+            Vergleichen(r.Schluessel + " 2D", p.Grundriss(r.Schluessel), spiel!.Gebaeude, funde);
+            var personen = p.Personen(r.Schluessel);
+            if (personen.Count != spiel.Personen.Count)
+            {
+                funde.Add($"{r.Schluessel} 2D: {personen.Count} gegen {spiel.Personen.Count} Personen");
+            }
+            for (var i = 0; i < Math.Min(personen.Count, spiel.Personen.Count); i++)
+            {
+                var pl = (List<object?>)personen[i]["platz"]!;
+                if (Weit(Py.F(pl[0]), spiel.Personen[i].X) || Weit(Py.F(pl[1]), spiel.Personen[i].Z))
+                {
+                    funde.Add($"{r.Schluessel} 2D: Person {spiel.Personen[i].Id} an anderer Stelle");
+                }
+            }
+        }
+        Assert.Empty(funde);
+        // die Bitweiche ist wirklich ein anderes Haus als die eigene Firma (sonst waere der Vergleich oben leer)
+        Assert.NotEmpty(Abweichungen("bitweiche gegen firma5", gebaut["spiel:buero:bitweiche"], gebaut["spiel:buero:firma5"]));
+
+        // Werkzeug 3D ueber den Weg der Oberflaeche (Innen3D, mit dem Spiel der 3D-Ansicht) fuer die Raeume der Bilder
+        Innen3D.Ergebnis? vorher = null;
+        foreach (var s in new[] { "spiel:zuhause:" + wohnungen[0], "spiel:buero:bitweiche", "spiel:serverfarm" })
+        {
+            vorher = Innen3D.Bauen(Innen3D.Vorbereiten(p, s), vorher);
+            Assert.Empty(Abweichungen(s + " Innen3D", vorher.Innen, gebaut[s]));
+        }
+
+        // Gegenprobe: das Werkzeug ohne die breiten Grundrisse (Stand bis S 0.58.0) zeigt diese Raeume anders als das Spiel
+        var alt = Spieldaten.Laden(pfad => pfad == GrundrisseBreit.Datei ? null : Daten.Lesen(pfad));
+        var pAlt = Projekt.Neu("Spiel-Raeume alt", alt, Daten.NeueAblage(), "moebelhaus");
+        foreach (var s in new[] { "spiel:zuhause:" + wohnungen[0], "spiel:buero:bitweiche", "spiel:buero:firma5", "spiel:filiale1", "spiel:serverfarm" })
+        {
+            Assert.True(Abweichungen(s + " alt", pAlt.SpielRaum(s), gebaut[s]).Count > 0, s + ": Gegenprobe ohne Abweichung");
+        }
+    }
+
+    /// <summary>
+    /// Welle S 0.60.0 (Weisung P12-337 Punkt 3): Raeume des Spiels nur ansehen. Jede Aenderung lehnt das Projekt ab, und
+    /// das Ansehen aendert nichts an der Stadt-Datei (Export gleich wie vorher, keiner der Schluessel steht darin).
+    /// </summary>
+    [Fact]
+    public void SpielRaeume_NurAnsehen_ExportUnveraendert()
+    {
+        var p = Projekt.Neu("Spiel-Raeume ansehen", D, Daten.NeueAblage(), "moebelhaus");
+        var vorher = p.Stand("2026-11-21T12:00:00+01:00").Schreiben();
+        foreach (var r in p.SpielRaeumeListe())
+        {
+            Assert.NotNull(p.SpielRaum(r.Schluessel));
+            Assert.NotNull(p.Grundriss(r.Schluessel));
+            Assert.False(p.GibtInnenort(r.Schluessel));
+            Assert.Throws<InvalidOperationException>(() => p.Aendern(r.Schluessel, "Boden", g => Bearbeitung.Boden(g, "flur", "teppich")));
+        }
+        Assert.Equal(0, p.SchritteZurueck);
+        Assert.DoesNotContain(p.Innenorte, o => SpielRaeume.Ist(o));
+        var nachher = p.Stand("2026-11-21T12:00:00+01:00").Schreiben();
+        Assert.Equal(vorher, nachher);
+        Assert.DoesNotContain("spiel:", System.Text.Encoding.UTF8.GetString(nachher), StringComparison.Ordinal);
+    }
 }

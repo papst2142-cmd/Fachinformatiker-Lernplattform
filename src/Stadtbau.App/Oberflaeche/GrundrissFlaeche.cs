@@ -84,6 +84,12 @@ public sealed class GrundrissFlaeche : Control
         InvalidateVisual();
     }
 
+    /// <summary>
+    /// Nur ansehen: Projekt nur zum Lesen oder ein Raum des Spiels (Welle S 0.60.0, <see cref="SpielRaeume"/>); dann waehlt ein
+    /// Tipp nur, nichts wird verschoben, gesetzt, gedreht, kopiert oder geloescht.
+    /// </summary>
+    public bool Gesperrt => _projekt is null || _projekt.NurLesen || SpielRaeume.Ist(_ort);
+
     private PyObjekt? Gebaeude => _projekt is not null && _ort is not null ? _projekt.Grundriss(_ort) : null;
 
     public void Waehlen(Stelle? stelle)
@@ -414,7 +420,7 @@ public sealed class GrundrissFlaeche : Control
             e.Handled = true;
             return;
         }
-        if (!_geste.Aktiv && SetzenTyp is null && !_projekt.NurLesen && AnkunftBei(w.X, w.Y) is { } ankunft)
+        if (!_geste.Aktiv && SetzenTyp is null && !Gesperrt && AnkunftBei(w.X, w.Y) is { } ankunft)
         {
             // Welle W5: den Pfeil der Ankunft ziehen (ein Finger oder die Maus)
             _ankunft = (ankunft, e.Pointer.Id, w.X, w.Y);
@@ -509,7 +515,7 @@ public sealed class GrundrissFlaeche : Control
                 _ziehen = false;
                 InvalidateVisual();
                 break;
-            case Fingergeste.Art.StueckFertig when Auswahl is not null && _projekt is not null && _ort is not null && !_projekt.NurLesen:
+            case Fingergeste.Art.StueckFertig when Auswahl is not null && _projekt is not null && _ort is not null && !Gesperrt:
                 var (dx, dy) = (s.Dx / _zoom, s.Dy / _zoom);
                 _ziehWelt = default;
                 _ziehen = false;
@@ -544,7 +550,7 @@ public sealed class GrundrissFlaeche : Control
     /// <summary>Tasten (vom Fenster weitergereicht): Pfeile schieben, R dreht, Entf loescht, Strg+D kopiert.</summary>
     public bool Taste(Key taste, KeyModifiers mod)
     {
-        if (_projekt is null || _ort is null || Auswahl is not { } a || _projekt.NurLesen)
+        if (_projekt is null || _ort is null || Auswahl is not { } a || Gesperrt)
         {
             return false;
         }
@@ -584,7 +590,7 @@ public sealed class GrundrissFlaeche : Control
     /// </summary>
     public Stelle? VerschiebenUm(double dx, double dy)
     {
-        if (_projekt is null || _ort is null || Auswahl is not { } a || _projekt.NurLesen)
+        if (_projekt is null || _ort is null || Auswahl is not { } a || Gesperrt)
         {
             return null;
         }
@@ -605,7 +611,7 @@ public sealed class GrundrissFlaeche : Control
 
     public void Drehen()
     {
-        if (_projekt is not null && _ort is not null && Auswahl is { } a && !_projekt.NurLesen)
+        if (_projekt is not null && _ort is not null && Auswahl is { } a && !Gesperrt)
         {
             _projekt.Aendern(_ort, "Drehen", g => Bearbeitung.Drehen(g, a));
             Waehlen(a);
@@ -615,7 +621,7 @@ public sealed class GrundrissFlaeche : Control
 
     public void Kopieren()
     {
-        if (_projekt is not null && _ort is not null && Auswahl is { } a && !_projekt.NurLesen)
+        if (_projekt is not null && _ort is not null && Auswahl is { } a && !Gesperrt)
         {
             Waehlen(_projekt.Aendern(_ort, "Kopie", g => Bearbeitung.Kopieren(g, a)));
             Gemeldet?.Invoke("Kopie angelegt");
@@ -624,7 +630,7 @@ public sealed class GrundrissFlaeche : Control
 
     public void Loeschen()
     {
-        if (_projekt is not null && _ort is not null && Auswahl is { } a && !_projekt.NurLesen)
+        if (_projekt is not null && _ort is not null && Auswahl is { } a && !Gesperrt)
         {
             _projekt.Aendern(_ort, "Löschen", g => Bearbeitung.Loeschen(g, a));
             Waehlen(null);
@@ -635,7 +641,7 @@ public sealed class GrundrissFlaeche : Control
     /// <summary>Das Stueck aus dem Katalog (<see cref="SetzenTyp"/>) mit der Mitte bei (x, y) setzen und waehlen.</summary>
     public Stelle? SetzenAn(double x, double y)
     {
-        if (_projekt is null || _ort is null || SetzenTyp is not { } typ || _projekt.NurLesen)
+        if (_projekt is null || _ort is null || SetzenTyp is not { } typ || Gesperrt)
         {
             return null;
         }
@@ -678,7 +684,7 @@ public sealed class GrundrissFlaeche : Control
 
     private void AnkunftAblegen(string id, double x, double y)
     {
-        if (_projekt is null || _ort is null || _projekt.NurLesen)
+        if (_projekt is null || _ort is null || Gesperrt)
         {
             InvalidateVisual();
             return;
