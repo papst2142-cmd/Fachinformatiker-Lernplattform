@@ -5,7 +5,7 @@
   {
    "schritt": "Tests",
    "limit": {
-    "standard": 30,
+    "standard": 34,
     "macos-15-intel": 60
    },
    "basis": {

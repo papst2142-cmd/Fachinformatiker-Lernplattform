@@ -190,12 +190,11 @@ public sealed partial class SpielSeite : Grid
             Views.Ansage.Sagen(text);
             IchKnopfSetzen();
         });
-        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf, _ichKnopf } };
-        // Welle A 0.93.0 (Weisung P12-303): Springen, Ducken, Kriechen neben der Ich-Sicht
-        foreach (var knopf in HaltungKnoepfeAnlegen())
-        {
-            _knoepfe.Children.Add(knopf);
-        }
+        // Welle A 1.0.0 (Sammelliste 402, Nico c): „Ich-Sicht“ steht nicht mehr bei den Knoepfen des Orts, sondern in der Reihe der
+        // zwei mittigen Symbole links, gleich breit wie „Spiel verlassen“ rechts (die Reihe ist symmetrisch). Sammelliste 404 (Nico:
+        // „Tastatur und Tastenbelegung reichen“): Springen, Ducken und Kriechen stehen nicht mehr im Menue (Tasten, am Handy die
+        // runden Knoepfe am rechten Daumen).
+        _knoepfe = new WrapPanel { Children = { _ortKnoepfe, _betreten, _einrichten, _zurStadt, _warten, _orteKnopf } };
         if (Leistungsprobe.An)
         {
             // Weisung P8-52: nur in der Probe-APK; waehrend der Probe nicht antippbar
@@ -276,7 +275,7 @@ public sealed partial class SpielSeite : Grid
         // gleich, die zwei Symbole bleiben an ihrer Stelle. Darueber die Knoepfe des Orts, rechts neben dem Pfeil „Spiel
         // verlassen“ (passt er nicht, in einer eigenen Zeile darunter). Bis A 0.98.0: Handy links, Pfeil rechts (Gegenprobe
         // <see cref="LeisteLinksAltFuerTests"/>).
-        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,*"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto") };
+        var klappZeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,*"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto") };
         _klappZeile = klappZeile;
         klappZeile.SizeChanged += (_, _) => QuestZeileSetzen();
         var questKnopf = QuestKnopfBauen();
@@ -286,6 +285,14 @@ public sealed partial class SpielSeite : Grid
         Grid.SetRow(verlassenKnopf, 2);
         Grid.SetColumn(verlassenKnopf, 3);
         klappZeile.Children.Add(verlassenKnopf);
+        // Sammelliste 402: „Ich-Sicht“ links neben dem Handy-Knopf (in einer Huelle, die zugeklappt mit den Knoepfen verschwindet;
+        // der Knopf selbst zeigt weiter, ob es die Ich-Sicht gerade gibt)
+        _ichKnopf.Margin = new Thickness(0, 0, 4, 6);
+        _ichKnopf.VerticalAlignment = VerticalAlignment.Top;
+        _ichHuelle = new Panel { Children = { _ichKnopf }, HorizontalAlignment = HorizontalAlignment.Right };
+        Grid.SetRow(_ichHuelle, 2);
+        Grid.SetColumn(_ichHuelle, 0);
+        klappZeile.Children.Add(_ichHuelle);
         Grid.SetRow(_klapp, 2);
         Grid.SetColumn(_klapp, 2);
         klappZeile.Children.Add(_klapp);
@@ -1276,6 +1283,9 @@ public sealed partial class SpielSeite : Grid
 
     private readonly Button _ichKnopf;
 
+    /// <summary>Sammelliste 402: Huelle des Knopfs „Ich-Sicht“ in der Reihe der mittigen Symbole (zugeklappt unsichtbar).</summary>
+    private Panel _ichHuelle = new();
+
     /// <summary>Welle A 0.92.0: Knopf „Ich-Sicht“ (nur mit 3D, nicht beim Einrichten) mit dem Text nach dem Zustand.</summary>
     private void IchKnopfSetzen()
     {
@@ -1290,6 +1300,8 @@ public sealed partial class SpielSeite : Grid
             _ichKnopf.Content = text;
         }
         Avalonia.Automation.AutomationProperties.SetName(_ichKnopf, text);
+        // Sammelliste 402: Text und Sichtbarkeit aendern die gemeinsame Breite der zwei Knoepfe neben den Symbolen
+        QuestZeileSetzen();
     }
 
     /// <summary>Welle A 0.92.0: Start-Test: der Knopf „Ich-Sicht“ (Name, sichtbar, Klick).</summary>
@@ -1336,6 +1348,7 @@ public sealed partial class SpielSeite : Grid
         // Sammelliste 371 (Nico 17.11.2026: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
         // zugeklappt ist „Spiel verlassen“ mit den anderen Knoepfen weg, aufgeklappt wie seit A 0.81.0
         VerlassenKnopf.IsVisible = !zu || VerlassenZuAltFuerTests;
+        _ichHuelle.IsVisible = !zu;
         _kurz.Text = SpielProbeTexte.Tafelzeile(meldung, AntippenGilt);
         _kurz.IsVisible = zu && meldung.Length > 0 && Stopwatch.GetTimestamp() < _kurzBis;
         QuestZeileSetzen();

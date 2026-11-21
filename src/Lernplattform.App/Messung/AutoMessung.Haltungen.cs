@@ -41,11 +41,11 @@ public static partial class AutoMessung
             return 1;
         }
         var vorher = seite.Spiel;
-        var (springen, ducken, kriechen) = seite.HaltungKnoepfe;
+        // Welle A 1.0.0 (Sammelliste 404, Nico: „Tastatur und Tastenbelegung reichen“): keine Menue-Eintraege mehr
+        var drei = new[] { SpielProbeTexte.KnopfSpringen, SpielProbeTexte.KnopfDucken, SpielProbeTexte.KnopfKriechen, SpielProbeTexte.KnopfAufstehen };
         if (!await GlAbwartenAsync(seite))
         {
-            Pruefe("ohne 3D keine Knoepfe", !springen.IsVisible && !ducken.IsVisible && !kriechen.IsVisible,
-                $"sichtbar {springen.IsVisible}/{ducken.IsVisible}/{kriechen.IsVisible}");
+            Pruefe("ohne 3D keine Knoepfe", !seite.LeisteKnoepfe.Any(drei.Contains), string.Join(", ", seite.LeisteKnoepfe));
             return funde;
         }
         try
@@ -65,7 +65,6 @@ public static partial class AutoMessung
                     await fl.NaechstesBildAsync();
                 }
             }
-            string Name(Button b) => Avalonia.Automation.AutomationProperties.GetName(b) ?? "";
             void Taste(Key taste) => seite.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = taste, Source = fl });
             // eine Stelle mitten im Raum, an der Ducken und Kriechen Platz haben; seit A 0.98.0 (Sammelliste 396) dreht sich die Figur
             // dafuer nicht mehr von selbst, darum in jeder Richtung (15 Grad), in der sie nach dem Hingehen stehen kann
@@ -76,9 +75,17 @@ public static partial class AutoMessung
             spiel.SofortAnkommen();
             await ansicht.BildFertigAsync();
             await Bilder(3);
-            Pruefe("Knoepfe und Namen", springen.IsVisible && ducken.IsVisible && kriechen.IsVisible && Name(springen) == SpielProbeTexte.KnopfSpringen
-                && Name(ducken) == SpielProbeTexte.KnopfDucken && Name(kriechen) == SpielProbeTexte.KnopfKriechen,
-                $"\"{Name(springen)}\", \"{Name(ducken)}\", \"{Name(kriechen)}\" an ({stelle.X:0.00}, {stelle.Y:0.00})");
+            if (seite.HinweisZu)
+            {
+                seite.HinweisUmschalten();
+                await Bilder(2);
+            }
+            // 404: aufgeklappt keine Eintraege Springen/Ducken/Kriechen; die Tastenbelegung nennt alle drei mit ihrer Taste
+            var belegung = Tastenbelegung.Aktuell;
+            var tasten = new[] { Tastenbelegung.Springen, Tastenbelegung.Ducken, Tastenbelegung.Kriechen }
+                .Select(a => Tastenbelegung.Aufgaben.First(x => x.Id == a).Text + ": " + string.Join("/", belegung.Tasten(a))).ToList();
+            Pruefe("Keine Menue-Eintraege, Tastenbelegung zeigt alle drei", !seite.LeisteKnoepfe.Any(drei.Contains) && tasten.All(z => !z.EndsWith(": ", StringComparison.Ordinal)),
+                $"Leiste: {string.Join(", ", seite.LeisteKnoepfe)}; Tasten: {string.Join("; ", tasten)} an ({stelle.X:0.00}, {stelle.Y:0.00})");
             var (d0, a0) = (fl.LetzteDreiecke, fl.LetzteZeichenaufrufe);
 
             // Leertaste: Sprung, Weg und Stelle bleiben, nach der Dauer wieder am Boden
@@ -95,23 +102,23 @@ public static partial class AutoMessung
             Pruefe("Leertaste springt", hoch > Innenraum.SprungHoch * 0.5f && !spiel.Springt && ort == (spiel.FigurX, spiel.FigurZ) && Ansage.Zuletzt == SpielProbeTexte.DuSpringst
                 && dreieckeSprung == d0, string.Create(inv, $"hoechste Hoehe {hoch:0.000}, Stelle gleich {ort == (spiel.FigurX, spiel.FigurZ)}, Ansage \"{Ansage.Zuletzt}\", Dreiecke {dreieckeSprung} (stehend {d0})"));
 
-            // Screenreader: „Ducken“ ueber den Automation-Peer, der Name wird „Aufstehen“
-            (ControlAutomationPeer.CreatePeerForElement(ducken) as IInvokeProvider)?.Invoke();
+            // Taste C: ducken, die Ansage sagt es (Screenreader)
+            Taste(Key.C);
             await Bilder(3);
-            Pruefe("Ducken (Screenreader)", spiel.Koerper == Koerperhaltung.Ducken && Name(ducken) == SpielProbeTexte.KnopfAufstehen && Ansage.Zuletzt == SpielProbeTexte.DuDuckst
+            Pruefe("Taste C duckt (Ansage)", spiel.Koerper == Koerperhaltung.Ducken && Ansage.Zuletzt == SpielProbeTexte.DuDuckst
                 && fl.LetzteDreiecke == d0 && fl.LetzteZeichenaufrufe == a0,
-                string.Create(inv, $"{spiel.Koerper}, Name \"{Name(ducken)}\", Ansage \"{Ansage.Zuletzt}\", {fl.LetzteDreiecke}/{fl.LetzteZeichenaufrufe} (stehend {d0}/{a0})"));
+                string.Create(inv, $"{spiel.Koerper}, Ansage \"{Ansage.Zuletzt}\", {fl.LetzteDreiecke}/{fl.LetzteZeichenaufrufe} (stehend {d0}/{a0})"));
 
             // Taste X: von Ducken in Kriechen
             Taste(Key.X);
             await Bilder(3);
-            Pruefe("Taste X kriecht", spiel.Koerper == Koerperhaltung.Kriechen && Name(kriechen) == SpielProbeTexte.KnopfAufstehen && Name(ducken) == SpielProbeTexte.KnopfDucken
+            Pruefe("Taste X kriecht", spiel.Koerper == Koerperhaltung.Kriechen
                 && fl.LetzteDreiecke == d0 && fl.LetzteZeichenaufrufe == a0, string.Create(inv, $"{spiel.Koerper}, {fl.LetzteDreiecke}/{fl.LetzteZeichenaufrufe}"));
 
-            // Mausklick auf „Aufstehen“ (der Knopf „Kriechen“)
-            kriechen.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            // Taste X noch einmal: aufstehen
+            Taste(Key.X);
             await Bilder(2);
-            Pruefe("Aufstehen mit Klick", spiel.Koerper == Koerperhaltung.Stehen && Name(kriechen) == SpielProbeTexte.KnopfKriechen && Ansage.Zuletzt == SpielProbeTexte.DuStehst,
+            Pruefe("Aufstehen mit Taste X", spiel.Koerper == Koerperhaltung.Stehen && Ansage.Zuletzt == SpielProbeTexte.DuStehst,
                 $"{spiel.Koerper}, Ansage \"{Ansage.Zuletzt}\"");
 
             // seit A 0.99.0 (Weisung P12-319/320, Sammelliste 400): geduckt gehen, die Haltung bleibt bis „Aufstehen“
@@ -192,7 +199,7 @@ public static partial class AutoMessung
                     return ok;
                 }
                 zurueckOk = await Schritt(StadtSpiel.AktionHinsetzen, () => spiel.HaltungArt == SitzArt.Sitzen)
-                    && await Schritt(StadtSpiel.AktionZuruecklehnen, () => spiel.HaltungArt == SitzArt.Zurueck && !springen.IsVisible)
+                    && await Schritt(StadtSpiel.AktionZuruecklehnen, () => spiel.HaltungArt == SitzArt.Zurueck && !spiel.KoerperMoeglich)
                     && await Schritt(StadtSpiel.AktionAufrichten, () => spiel.HaltungArt == SitzArt.Sitzen)
                     && await Schritt(StadtSpiel.AktionAufstehen, () => spiel.HaltungArt is null);
                 sofaText = string.Join("; ", schritte);

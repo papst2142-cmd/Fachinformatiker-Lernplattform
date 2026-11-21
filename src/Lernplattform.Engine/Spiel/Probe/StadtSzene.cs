@@ -2366,13 +2366,16 @@ public sealed partial class StadtSzene
         {
             var (x1, z1, x2, z2) = steg.Rechteck;
             var zug = (float)(LaufSchritt / 2);
+            // Welle A 1.0.0 (Sammelliste 403): nur ueber das Ende am Land verlaengern; am Ende im Wasser stand die Figur sonst
+            // eine halbe Zelle hinter dem Steg auf dem Wasser
+            var (zugA, zugB) = StegAltFuerTests ? (zug, zug) : (StegEndeAmLand(steg, teiche, true) ? zug : 0f, StegEndeAmLand(steg, teiche, false) ? zug : 0f);
             if (steg.Quer)
             {
-                (z1, z2) = (z1 - zug, z2 + zug);
+                (z1, z2) = (z1 - zugA, z2 + zugB);
             }
             else
             {
-                (x1, x2) = (x1 - zug, x2 + zug);
+                (x1, x2) = (x1 - zugA, x2 + zugB);
             }
             var (s0, s1) = Bereich(x1, x2, spalten);
             var (r0, r1) = Bereich(z1, z2, zeilen);
@@ -2478,8 +2481,71 @@ public sealed partial class StadtSzene
                 }
             }
         }
-        return new Wegsuche(frei, LaufSchritt, FeinSperre(breite, tiefe, gehwege, zebras, gleise, strassen, wege), FeinProbe);
+        return new Wegsuche(frei, LaufSchritt, MitWasserSperre(FeinSperre(breite, tiefe, gehwege, zebras, gleise, strassen, wege), teiche, stege), FeinProbe);
     }
+
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 403): liegt das Ende <paramref name="a"/> (sonst das andere) eines Stegs am Land? Ein Stueck
+    /// hinter dem Ende (<see cref="StegLandProbe"/>) liegt in keinem Teich.
+    /// </summary>
+    public static bool StegEndeAmLand(Steg steg, IReadOnlyList<Teich>? teiche, bool a)
+    {
+        var (ea, eb) = steg.Enden;
+        var (ende, anderes) = a ? (ea, eb) : (eb, ea);
+        var raus = ende - anderes;
+        if (raus.LengthSquared() <= 0)
+        {
+            return true;
+        }
+        var probe = ende + (Vector2.Normalize(raus) * StegLandProbe);
+        return !(teiche ?? []).Any(t => Wasser.Drin(t.Rund, probe));
+    }
+
+    /// <summary>Abstand hinter einem Stegende, an dem geprueft wird, ob dort Land ist.</summary>
+    public const float StegLandProbe = 0.05f;
+
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 403): feine Sperre um das Wasser ergaenzt: die Mitte der Figur darf nie im Wasser eines Teichs
+    /// stehen, ausser auf einem Steg (Rechteck des Stegs). Ohne Teiche bleibt die feine Sperre, wie sie war.
+    /// </summary>
+    private static Func<double, double, bool>? MitWasserSperre(Func<double, double, bool>? fein, List<Teich>? teiche, List<Steg>? stege)
+    {
+        if (teiche is not { Count: > 0 })
+        {
+            return fein;
+        }
+        var flaechen = teiche.Select(t => (Rund: t.Rund, X1: t.Rund.Min(p => p.X), Z1: t.Rund.Min(p => p.Y), X2: t.Rund.Max(p => p.X), Z2: t.Rund.Max(p => p.Y))).ToList();
+        var rechtecke = (stege ?? []).Select(st => st.Rechteck).ToList();
+        bool ImWasser(double x, double z)
+        {
+            if (StegAltFuerTests)
+            {
+                return false;
+            }
+            var p = new Vector2((float)x, (float)z);
+            foreach (var f in flaechen)
+            {
+                if (p.X < f.X1 || p.X > f.X2 || p.Y < f.Z1 || p.Y > f.Z2 || !Wasser.Drin(f.Rund, p))
+                {
+                    continue;
+                }
+                foreach (var (x1, z1, x2, z2) in rechtecke)
+                {
+                    if (p.X >= x1 && p.X <= x2 && p.Y >= z1 && p.Y <= z2)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+        return fein is null ? ImWasser : (x, z) => fein(x, z) || ImWasser(x, z);
+    }
+
+    /// <summary>Gegenprobe Welle A 1.0.0 (Sammelliste 403): Steg wie bis A 0.99.0 (beide Enden verlaengert, Wasser nicht fein gesperrt; nur Tests, je Ablauf).</summary>
+    public static bool StegAltFuerTests { get => StegAlt.Value; set => StegAlt.Value = value; }
+    private static readonly AsyncLocal<bool> StegAlt = new();
 
     /// <summary>Gegenprobe Welle A 0.54.0: Laufraster wie bis A 0.53.2 (Fahrbahn jeder Strasse frei zum Gehen).</summary>
     public static bool FahrbahnFreiAltFuerTests

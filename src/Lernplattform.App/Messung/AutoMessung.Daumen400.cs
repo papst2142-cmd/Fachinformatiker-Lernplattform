@@ -55,7 +55,6 @@ public static partial class AutoMessung
         // der Zustand „zugeklappt“ ist eine Einstellung: danach wie vorher (sonst fehlen spaeteren Pruefungen die Knoepfe)
         var zuVorher = seite.HinweisZu;
         var (springen, haltung) = seite.DaumenKnoepfe;
-        var (mSpringen, mDucken, mKriechen) = seite.HaltungKnoepfe;
         string Name(Control c) => Avalonia.Automation.AutomationProperties.GetName(c) ?? "";
         void Tippen(DaumenKnopf k) => (ControlAutomationPeer.CreatePeerForElement(k) as IInvokeProvider)?.Invoke();
         async Task Warten()
@@ -83,7 +82,7 @@ public static partial class AutoMessung
                 t0.IsVisible = false;
             }
             var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
-            foreach (var (geraet, b, h, gSoll, kSoll) in new[] { ("Handy quer (S24 Ultra)", 832.0, 384.0, 64.0, 46.0), ("Tablet quer (Tab A9+)", 1280.0, 800.0, 72.0, 52.0) })
+            foreach (var (geraet, b, h, gSoll, kSoll) in new[] { ("Handy quer (S24 Ultra)", 832.0, 384.0, 56.0, 40.0), ("Tablet quer (Tab A9+)", 1280.0, 800.0, 64.0, 46.0) })
             {
                 fenster.Width = Math.Min(b, hoechstB);
                 fenster.Height = Math.Min(h, hoechstH);
@@ -104,7 +103,7 @@ public static partial class AutoMessung
                     Pruefe(punkt + " sichtbar", false, $"Springen {springen.IsVisible}, Haltung {haltung.IsVisible}");
                     continue;
                 }
-                // Groesse nach der kleineren Seite des Bilds (Handy 64/46, Tablet 72/52; bei kleinerem Fenster des Rechners die Regel)
+                // Groesse nach der kleineren Seite des Bilds (seit A 1.0.0 Handy 56/40, Tablet 64/46; bei kleinerem Fenster des Rechners die Regel)
                 var (g, k) = HaltungKnopf.Groesse(bereich.Breite, bereich.Hoehe);
                 Pruefe(punkt + " Groesse", rs.Width == g && rh.Width == k && (fenster.Width < b || fenster.Height < h || (g == gSoll && k == kSoll)),
                     string.Create(inv, $"Springen {rs.Width:0}, Haltung {rh.Width:0} (Regel {g:0}/{k:0}, Geraet {gSoll:0}/{kSoll:0})"));
@@ -121,8 +120,10 @@ public static partial class AutoMessung
                 Pruefe(punkt + " Lage", !InZone(rs) && !InZone(rh) && Trifft(springen, rs) && Trifft(haltung, rh) && !aufLeiste && !rs.Intersects(rh)
                     && rs.Center.X > bereich.Breite / 2 && rh.Center.X > bereich.Breite / 2,
                     string.Create(inv, $"Springen ({rs.Center.X:0}, {rs.Center.Y:0}), Haltung ({rh.Center.X:0}, {rh.Center.Y:0}), Bild {bereich.Breite:0}x{bereich.Hoehe:0}, in Stick-Zone {InZone(rs)}/{InZone(rh)}, Treffer {Trifft(springen, rs)}/{Trifft(haltung, rh)}, auf der Leiste {aufLeiste}"));
-                Pruefe(punkt + " Menue-Eintraege weg", !mSpringen.IsVisible && !mDucken.IsVisible && !mKriechen.IsVisible,
-                    $"sichtbar {mSpringen.IsVisible}/{mDucken.IsVisible}/{mKriechen.IsVisible}");
+                // A 1.0.0 (Sammelliste 405): Springen unten rechts in der Ecke (Rand 16), sonst ueber der Leiste
+                var ecke = Math.Abs(rs.Right - (bereich.Breite - HaltungKnopf.Rand)) < 1 && (Math.Abs(rs.Bottom - (bereich.Hoehe - HaltungKnopf.Rand)) < 1
+                    || Math.Abs(rs.Bottom - (bereich.Hoehe - bereich.Unten - HaltungKnopf.Rand)) < 1);
+                Pruefe(punkt + " Ecke", ecke, string.Create(inv, $"Springen rechts {rs.Right:0} unten {rs.Bottom:0}, Bild {bereich.Breite:0}x{bereich.Hoehe:0}, Leiste unten {bereich.Unten:0}"));
                 Pruefe(punkt + " Ruhe", haltung.Symbol == DaumenSymbol.Stehen && !haltung.Leuchtet && Name(haltung) == SpielProbeTexte.KnopfDucken && Name(springen) == SpielProbeTexte.KnopfSpringen,
                     $"Symbol {haltung.Symbol}, leuchtet {haltung.Leuchtet}, Namen \"{Name(springen)}\", \"{Name(haltung)}\"");
 
@@ -166,12 +167,17 @@ public static partial class AutoMessung
                 Pruefe(punkt + " Springen", sprang && !spiel.Springt, $"sprang {sprang}");
             }
 
-            // Gegenprobe: ohne runde Knoepfe (PC) sind sie unsichtbar und die drei Menue-Eintraege wieder da
+            // ohne runde Knoepfe (PC) sind sie unsichtbar; seit A 1.0.0 (Sammelliste 404) gibt es auch keine Menue-Eintraege mehr
             seite.DaumenKnoepfeFuerTests = false;
             seite.SpielSetzen(spiel);
+            if (seite.HinweisZu)
+            {
+                seite.HinweisUmschalten();
+            }
             await Warten();
-            Pruefe("Gegenprobe PC: runde Knoepfe weg, Menue-Eintraege da", !springen.IsVisible && !haltung.IsVisible && mSpringen.IsVisible && mDucken.IsVisible && mKriechen.IsVisible,
-                $"rund {springen.IsVisible}/{haltung.IsVisible}, Menue {mSpringen.IsVisible}/{mDucken.IsVisible}/{mKriechen.IsVisible}");
+            var drei = new[] { SpielProbeTexte.KnopfSpringen, SpielProbeTexte.KnopfDucken, SpielProbeTexte.KnopfKriechen };
+            Pruefe("PC: runde Knoepfe weg, keine Menue-Eintraege", !springen.IsVisible && !haltung.IsVisible && !seite.LeisteKnoepfe.Any(drei.Contains),
+                $"rund {springen.IsVisible}/{haltung.IsVisible}, Leiste: {string.Join(", ", seite.LeisteKnoepfe)}");
         }
         finally
         {

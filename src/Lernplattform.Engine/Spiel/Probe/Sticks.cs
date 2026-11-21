@@ -44,7 +44,28 @@ public sealed class Sticks
             LeisteBis > LeisteVon && y > Hoehe - Unten && y <= Hoehe && (x < LeisteVon || x > LeisteBis);
 
         public double FreiHoehe => Math.Max(0, Hoehe - Oben - Unten);
+
+        /// <summary>
+        /// Welle A 1.0.0 (Sammelliste 405): Flaeche (x1, y1, x2, y2), die frei bleibt (die runden Knoepfe am rechten Daumen mit Rand):
+        /// dort setzt kein Daumen einen Stick, und ein Stick ragt nie hinein. default = keine.
+        /// </summary>
+        public (double X1, double Y1, double X2, double Y2) Sperre { get; init; }
+
+        /// <summary>Liegt (x, y) in der <see cref="Sperre"/>?</summary>
+        public bool Gesperrt(double x, double y) => Sperre.X2 > Sperre.X1 && x >= Sperre.X1 && x <= Sperre.X2 && y >= Sperre.Y1 && y <= Sperre.Y2;
     }
+
+    /// <summary>
+    /// Welle A 1.0.0 (Sammelliste 405, Nico: „Sticks weiter nach unten in die Ecken“): Abstand eines Sticks zum unteren Rand, wenn er
+    /// neben der Leiste liegt (dort ist bis zum Rand Platz), und zur Leiste. Bis A 0.99.0 endete jeder Stick ueber der Hoehe der Leiste
+    /// (<see cref="AltFuerTests"/>).
+    /// </summary>
+    public const double EckRand = 8;
+
+    private static readonly AsyncLocal<bool> Alt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Sticks enden ueber der Hoehe der Leiste und kennen keine Sperre (Stand A 0.99.0).</summary>
+    public static bool AltFuerTests { get => Alt.Value; set => Alt.Value = value; }
 
     /// <summary>
     /// Ein sichtbarer Stick: Mitte (wo der Daumen aufsetzte, nach <see cref="Lage"/> in den freien Bereich gerueckt), Stelle des
@@ -127,7 +148,8 @@ public sealed class Sticks
     /// </summary>
     public static Seite? SeiteFuer(double x, double y, Bereich b)
     {
-        if (b.Breite < 2 * Radius || b.FreiHoehe < Radius || x < 0 || x > b.Breite || (y > b.Hoehe - b.Unten && !b.NebenLeiste(x, y)) || y < ZoneOben(b))
+        if (b.Breite < 2 * Radius || b.FreiHoehe < Radius || x < 0 || x > b.Breite || (y > b.Hoehe - b.Unten && !b.NebenLeiste(x, y)) || y < ZoneOben(b)
+            || (!Alt.Value && b.Gesperrt(x, y)))
         {
             return null;
         }
@@ -146,8 +168,34 @@ public sealed class Sticks
         var (links, rechts) = seite == Seite.Links ? (r, halbBreite - r) : (halbBreite + r, b.Breite - r);
         var mx = rechts < links ? (links + rechts) / 2 : Math.Clamp(x, links, rechts);
         var (oben, unten) = (b.Oben + r, b.Hoehe - b.Unten - r);
+        // A 1.0.0: neben der Leiste bis an den unteren Rand (die Ecke), solange der Kreis die Leiste waagerecht nicht beruehrt
+        if (!Alt.Value && b.LeisteBis > b.LeisteVon && (seite == Seite.Links ? mx + r <= b.LeisteVon - EckRand : mx - r >= b.LeisteBis + EckRand))
+        {
+            unten = Math.Max(unten, b.Hoehe - EckRand - r);
+        }
         var my = unten < oben ? (oben + unten) / 2 : Math.Clamp(y, oben, unten);
+        // A 1.0.0: nie in die Sperre (runde Knoepfe): zuerst nach links (in der eigenen Haelfte), sonst nach oben ruecken
+        if (!Alt.Value && b.Sperre.X2 > b.Sperre.X1 && KreisInRechteck(mx, my, r, b.Sperre))
+        {
+            var linksDavor = b.Sperre.X1 - r;
+            if (linksDavor >= links)
+            {
+                mx = Math.Min(mx, linksDavor);
+            }
+            else
+            {
+                my = Math.Max(oben, Math.Min(my, b.Sperre.Y1 - r));
+            }
+        }
         return (mx, my, r);
+    }
+
+    /// <summary>Beruehrt der Kreis (Mitte, Radius) das Rechteck?</summary>
+    public static bool KreisInRechteck(double x, double y, double r, (double X1, double Y1, double X2, double Y2) q)
+    {
+        var dx = x - Math.Clamp(x, q.X1, q.X2);
+        var dy = y - Math.Clamp(y, q.Y1, q.Y2);
+        return (dx * dx) + (dy * dy) < r * r - 1e-6;
     }
 
     /// <summary>Daumen setzt auf: true = Kandidat fuer den Stick seiner Seite (die Seite hat noch keinen Stick).</summary>

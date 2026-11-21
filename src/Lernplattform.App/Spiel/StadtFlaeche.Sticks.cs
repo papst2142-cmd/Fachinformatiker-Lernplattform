@@ -32,7 +32,17 @@ public sealed partial class StadtFlaeche
     public bool SticksMoeglich => FesteKamera && !OhneGehen && _spiel is not null && GlBereit && !(SticksGesperrt?.Invoke() ?? false);
 
     /// <summary>Freier Bereich fuer die Sticks (zwischen Kopfzeile und Leiste, in Punkten der Flaeche).</summary>
-    public Sticks.Bereich StickBereich => new(Bounds.Width, Bounds.Height, Frei.Oben, Frei.Unten, LeisteX.Von, LeisteX.Bis);
+    public Sticks.Bereich StickBereich
+    {
+        get
+        {
+            var b = new Sticks.Bereich(Bounds.Width, Bounds.Height, Frei.Oben, Frei.Unten, LeisteX.Von, LeisteX.Bis);
+            return KnopfSperre is { } sperre ? b with { Sperre = sperre(b) } : b;
+        }
+    }
+
+    /// <summary>Welle A 1.0.0 (Sammelliste 405): Flaeche der runden Knoepfe, die der rechte Stick frei haelt (setzt die Seite).</summary>
+    public Func<Sticks.Bereich, (double X1, double Y1, double X2, double Y2)>? KnopfSperre { get; set; }
 
     /// <summary>Finger setzt auf (Touch und Stift; auch der Start-Test mit gedachten Fingern).</summary>
     public void FingerAuf(long id, Point p)
