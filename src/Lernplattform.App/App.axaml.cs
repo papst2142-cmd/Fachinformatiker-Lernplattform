@@ -45,6 +45,8 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Sammelliste 418: Schriften (normal und fett) einmal auf dem Oberflaechen-Faden anlegen, bevor etwas gezeichnet wird
+        Design.SchriftVorladen.Laden();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var fenster = new MainWindow

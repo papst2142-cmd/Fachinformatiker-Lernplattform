@@ -148,6 +148,12 @@ public sealed class OrdnerQuelle(string ordner) : IPaketQuelle
     /// <summary>Start-Test: Pause je Block fuer alle Ablaeufe (der Laden-Knopf startet auf dem Oberflaechen-Faden).</summary>
     public static TimeSpan Bremse { get; set; }
 
+    /// <summary>
+    /// Start-Test (Sammelliste 413): nach dem ersten Block wartet das Laden so lange, bis es abgebrochen wird (hoechstens diese
+    /// Zeit). So trifft der Abbruch das Laden immer mitten drin, auch auf einem langsamen Rechner. Null = kein Halt.
+    /// </summary>
+    public static TimeSpan HaltNachErstemBlock { get; set; }
+
     public Task<IReadOnlyList<PaketAngebot>> ListeAsync(CancellationToken abbruch)
     {
         if (!Directory.Exists(ordner))
@@ -200,6 +206,10 @@ public sealed class OrdnerQuelle(string ordner) : IPaketQuelle
             await nach.WriteAsync(block.AsMemory(0, n), abbruch).ConfigureAwait(false);
             summe += n;
             fortschritt?.Report(summe);
+            if (summe == n && HaltNachErstemBlock > TimeSpan.Zero)
+            {
+                await Task.Delay(HaltNachErstemBlock, abbruch).ConfigureAwait(false);
+            }
             if (bremse > TimeSpan.Zero)
             {
                 await Task.Delay(bremse, abbruch).ConfigureAwait(false);

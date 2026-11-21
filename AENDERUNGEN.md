@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 1.2.1
+Eine Pflege-Version ohne neue Funktionen: Sie macht das Programm beim Start und bei den automatischen Prüfungen verlässlicher.
+
+- Beim Start legt das Programm die Schriften der Oberfläche (normal und fett) einmal sicher an, bevor etwas gezeichnet wird. Auf einem Intel-Mac konnte das Laden der fetten Schrift sonst sehr selten mitten in der Bedienung scheitern. Lässt sich eine Schrift nicht laden, steht das im Fehlerprotokoll, das Programm läuft weiter.
+- Die automatischen Prüfungen vor jeder Veröffentlichung sind genauer geworden: Sie warten an einigen Stellen sicher, bis das Bild wirklich gezeichnet ist, und vergleichen keine Uhrzeiten und Protokolle mehr, die sich nur mit der Zeit ändern. So zeigen sie nur noch echte Fehler an.
+- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und das Spiel bleiben genau gleich.
+
 ## A 1.2.0
 Die Flure und Gänge in den Gebäuden sind jetzt wirklich breiter: Links und rechts hast du mehr Platz bis zur Wand, und die Flure sind dabei nicht länger geworden. Dazu kommen breitere Türen, ein einstellbares Blickfeld in der Ich-Sicht und neu sortierte Knöpfe am Handy.
 

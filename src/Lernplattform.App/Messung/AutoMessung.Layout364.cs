@@ -174,7 +174,8 @@ public static partial class AutoMessung
     }
 
     /// <summary>Laufende Uhr der Pruefung (aendert sich mit der Zeit, nicht mit dem Warten).</summary>
-    [System.Text.RegularExpressions.GeneratedRegex(@"^\d+:\d\d:\d\d$")]
+    // Welle „Ablauf stabil“ (Sammelliste 417): auch „mm:ss“ (Pruefungslauf lauf-wiso, Laeufe 1110 bis 1142 rot im 1. Lauf)
+    [System.Text.RegularExpressions.GeneratedRegex(@"^\d+:\d\d(:\d\d)?$")]
     private static partial System.Text.RegularExpressions.Regex Uhrzeit364();
 
     /// <summary>
@@ -201,6 +202,13 @@ public static partial class AutoMessung
             if (text is not null && Uhrzeit364().IsMatch(text))
             {
                 text = "(Uhr)";
+            }
+            // Sammelliste 417 (13 Laeufe bis 1150 am Mac): der Problembericht enthaelt die Protokolle (messpunkte.log,
+            // haenger.log, spiel_bilder.log), die waehrend des Start-Tests weiter wachsen; er aendert sich mit der Zeit, nicht
+            // mit dem Warten. Art, Lage, Groesse und die Funde der Layoutpruefung bleiben verglichen.
+            if (text is not null && text.StartsWith(Lernplattform.Core.Diagnose.Problembericht.Programmname + " – Problembericht", StringComparison.Ordinal))
+            {
+                text = "(Problembericht)";
             }
             sb.Append(c.GetType().Name).Append(' ')
                 .Append(string.Create(inv, $"{p.X:0.#},{p.Y:0.#} {c.Bounds.Width:0.#}x{c.Bounds.Height:0.#}"));

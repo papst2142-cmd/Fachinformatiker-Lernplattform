@@ -45,6 +45,19 @@ public static partial class AutoMessung
                 var fl = seite.Flaeche;
                 await fl.NaechstesBildAsync();
                 await fl.NaechstesBildAsync();
+                // Sammelliste 419 (Laeufe 1110, 1130, 1136, Windows Handy quer): die Tafel war beim Rechnen der Daumenpunkte noch
+                // nicht fertig gewachsen (freier Bereich endete bei y 216 statt 293, der Tipp traf keinen Boden). Erst rechnen, wenn
+                // der freie Bereich in zwei Bildern hintereinander gleich ist (hoechstens 40 Bilder); Pruefung und Grenzen gleich.
+                for (var ruhig = 0; ruhig < 40; ruhig++)
+                {
+                    var vorherBereich = fl.StickBereich;
+                    await ansicht.BildFertigAsync();
+                    await fl.NaechstesBildAsync();
+                    if (fl.StickBereich == vorherBereich)
+                    {
+                        break;
+                    }
+                }
                 var k = fl.AktuelleKamera!;
                 var sz = spiel.Szene;
                 bool Gesperrt() => !spiel.ImInnenraum && (!sz.Laufraster.KannStehen(spiel.FigurX, spiel.FigurZ) || sz.Laufraster.FeinGesperrt(spiel.FigurX, spiel.FigurZ));

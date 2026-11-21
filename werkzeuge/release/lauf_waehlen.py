@@ -181,6 +181,18 @@ def selbsttest():
         if erwartet is None and not zeilen[-1].startswith("FEHLER: "):
             print("FEHLER: Selbsttest Lauf waehlen: %s ohne Fehlerzeile (still)" % name)
             rot = 1
+    # Welle „Ablauf stabil“ C (P12-338): release.yml uebergibt nur die Liste voll; ein Lauf der Stufe werkzeug oder ohne-mac
+    # (gleicher Tree, alle seine Jobs gruen) erlaubt dort kein Release. Gegenprobe: mit Liste werkzeug (stadtbau_release.yml)
+    # wird derselbe Werkzeug-Lauf genommen.
+    nur_voll = {"voll": soll["voll"]}
+    for name, jobs in (("werkzeug", ("a", "w", HILFSJOB)), ("ohne-mac (ohne Mac-Job c)", ("a", "b", HILFSJOB))):
+        gewaehlt, _, zeilen = waehlen(m, t, [lauf(20, "c" * 40, t, jobs=jobs)], nur_voll)
+        if gewaehlt is not None or not zeilen[-1].startswith("FEHLER: "):
+            print("FEHLER: Selbsttest Lauf waehlen: Lauf %s mit gleichem Tree fuer release.yml genommen" % name)
+            rot = 1
+    if waehlen(m, t, [lauf(21, "d" * 40, t, jobs=("a", "w", HILFSJOB))], soll)[0] is None:
+        print("FEHLER: Selbsttest Lauf waehlen: Gegenprobe werkzeug fuer stadtbau_release.yml nicht genommen")
+        rot = 1
     _, _, zeilen = waehlen(m, t, [lauf(3, "3" * 40, "x" * 40)], soll)
     if ABWEICHUNG not in zeilen[-1]:
         print("FEHLER: Selbsttest Lauf waehlen: anderer Tree ohne Meldung '%s'" % ABWEICHUNG)
