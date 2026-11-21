@@ -15,7 +15,7 @@ namespace Lernplattform.Tests;
 public class SpielPruefungTests
 {
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_pruefung.json");
-    private static readonly Lerninhalte Lernen = Lerninhalte.Laden(Pfade.Inhalte);
+    internal static readonly Lerninhalte Lernen = Lerninhalte.Laden(Pfade.Inhalte);
 
     private static object? W(JsonElement e) => Py.Lesen(e.GetRawText());
 
@@ -62,7 +62,7 @@ public class SpielPruefungTests
     [Fact]
     public void EchteInhalteWiePython()
     {
-        Assert.Equal(T(W(Soll.GetProperty("echt"))), T(SpielPruefung.Pruefen((PyObjekt)Py.Kopie(SpielInhaltTests.Inhalt)!, Lernen).Cast<object?>().ToList()));
+        Assert.Equal(T(W(Soll.GetProperty("echt"))), T(SpielPruefung.Pruefen((PyObjekt)Py.Kopie(SpielInhaltTests.InhaltPython)!, Lernen).Cast<object?>().ToList()));
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class SpielPruefungTests
         foreach (var fall in Soll.GetProperty("faelle").EnumerateArray())
         {
             var name = fall.GetProperty("name").GetString();
-            var inhalt = Anwenden((PyObjekt)Py.Kopie(SpielInhaltTests.Inhalt)!, fall.GetProperty("aenderungen"));
+            var inhalt = Anwenden((PyObjekt)Py.Kopie(SpielInhaltTests.InhaltPython)!, fall.GetProperty("aenderungen"));
             if (fall.TryGetProperty("ausnahme", out var art))
             {
                 // Python bricht hier mitten in der Pruefung ab (Fehler in der Python-Linie). C# darf

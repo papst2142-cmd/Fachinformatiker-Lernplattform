@@ -60,12 +60,12 @@ public sealed partial class Innenraum
     /// <summary>
     /// Welle E4 (Antwort 3c): Text am Arbeitsort eines Auftrags, dessen Questgeber nicht dort wartet. Gilt im Raum des
     /// Arbeitsorts (Buero, Kunde) bzw. bis <see cref="Stadtbau.Questebene.ArbeitsortReichweite"/> an der Stelle (Geschaeft,
-    /// Schalter); sonst null. Welle A 1.2.0: (x, z) ist eine Stelle im Innenraum; die Quest-Ebene rechnet im alten Grundriss.
+    /// Schalter); sonst null.
     /// </summary>
     public (string Titel, string Text, List<(string Aktion, string Name)> Knoepfe)? ArbeitsortNachricht(double x, double z, ISpielSicht stand)
     {
         var etage = Stadtbau.Etagen.Teilen(Ansicht).Etage;
-        if (Stadtbau.Questebene.AuftragOhneQuestgeber(Ort, etage, x, Umrechnung.Zurueck(z), GrundrissAlt, stand) is not { } auftrag)
+        if (Stadtbau.Questebene.AuftragOhneQuestgeber(Ort, etage, x, z, Gebaeude, stand) is not { } auftrag)
         {
             return null;
         }

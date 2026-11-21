@@ -8,47 +8,53 @@ namespace Lernplattform.Tests;
 /// <summary>
 /// Welle A 1.1.0 (Sammelliste 409 „Gaenge zu eng“, Weisung P12-328): Blickfeld der Ich-Sicht (Regler 60 bis 110 Grad, normale
 /// Kamera unveraendert). Welle A 1.2.0 (Weisung P12-332, Nico: „Der Flur wurde laenger, aber nicht breiter“): Massstab wieder
-/// 0,6 m, Vorgabe des Blickfelds 75 Grad, Flure wirklich breiter (<see cref="Flurbreite"/>), Laenge wie bis A 1.0.0.
+/// 0,6 m, Vorgabe des Blickfelds 75 Grad, Flure wirklich breiter (Weisung P12-334 Weg B: neue Grundrisse als Daten, <see cref="GrundrisseBreit"/>), Laenge wie bis A 1.0.0.
 /// </summary>
 public class SpielBlickfeldTests
 {
-    /// <summary>Alle Grundrisse mit Flur, die breiter werden (Ort, Name, Grundriss in den alten Zahlen).</summary>
-    private static List<(string Ort, string Wo, PyObjekt Gebaeude)> Grundrisse()
+    /// <summary>
+    /// Alle Grundrisse mit Flur, die breiter werden: (Ort, Name, alter Grundriss wie Python v0.63.2, neuer aus den Daten
+    /// <see cref="GrundrisseBreit"/>, wie Spiel und Werkzeug ihn lesen).
+    /// </summary>
+    internal static List<(string Ort, string Wo, PyObjekt Alt, PyObjekt Neu)> Grundrisse()
     {
-        var inhalt = SpielInhaltTests.Inhalt;
-        var liste = new List<(string, string, PyObjekt)> { (SpielDaten.OrtBuero, "bitweiche", SpielDaten.Objekt(inhalt["gebaeude"])) };
-        foreach (var w in SpielDaten.Liste(SpielDaten.Objekt(inhalt["wohnungen"])["wohnungen"]).Select(SpielDaten.Objekt))
+        static List<(string, string, PyObjekt)> Aus(PyObjekt inhalt, PyObjekt innenraeume)
         {
-            liste.Add((SpielDaten.OrtZuhause, "wohnung " + Py.Str(w["id"]), SpielDaten.Objekt(w["gebaeude"])));
-        }
-        var firma = SpielDaten.Objekt(inhalt["firma"]);
-        foreach (var (teil, ort) in new[] { ("gebaeude", SpielDaten.OrtBuero), ("filiale", SpielDaten.OrtFiliale) })
-        {
-            var stufen = SpielDaten.Liste(SpielDaten.Objekt(firma[teil])["stufen"]);
-            for (var i = 0; i < stufen.Count; i++)
+            var liste = new List<(string, string, PyObjekt)> { (SpielDaten.OrtBuero, "bitweiche", SpielDaten.Objekt(inhalt["gebaeude"])) };
+            foreach (var w in SpielDaten.Liste(SpielDaten.Objekt(inhalt["wohnungen"])["wohnungen"]).Select(SpielDaten.Objekt))
             {
-                liste.Add((ort, $"{teil} Stufe {i}", SpielDaten.Objekt(SpielDaten.Objekt(stufen[i])["gebaeude"])));
+                liste.Add((SpielDaten.OrtZuhause, "wohnung " + Py.Str(w["id"]), SpielDaten.Objekt(w["gebaeude"])));
             }
+            var firma = SpielDaten.Objekt(inhalt["firma"]);
+            foreach (var (teil, ort) in new[] { ("gebaeude", SpielDaten.OrtBuero), ("filiale", SpielDaten.OrtFiliale) })
+            {
+                var stufen = SpielDaten.Liste(SpielDaten.Objekt(firma[teil])["stufen"]);
+                for (var i = 0; i < stufen.Count; i++)
+                {
+                    liste.Add((ort, $"{teil} Stufe {i}", SpielDaten.Objekt(SpielDaten.Objekt(stufen[i])["gebaeude"])));
+                }
+            }
+            foreach (var k in SpielDaten.Kundenorte(inhalt))
+            {
+                liste.Add((Py.Str(k["id"]), "kunde " + Py.Str(k["id"]), SpielDaten.Objekt(k["gebaeude"])));
+            }
+            liste.Add((Innenraum.Serverfarm, "serverfarm", SpielDaten.Objekt(SpielDaten.Objekt(innenraeume[Innenraum.Serverfarm])["gebaeude"])));
+            return liste;
         }
-        foreach (var k in SpielDaten.Kundenorte(inhalt))
-        {
-            liste.Add((Py.Str(k["id"]), "kunde " + Py.Str(k["id"]), SpielDaten.Objekt(k["gebaeude"])));
-        }
-        liste.Add((Innenraum.Serverfarm, "serverfarm", SpielDaten.Objekt(SpielDaten.Objekt(SpielInnenraumTests.Innenraeume.Value["serverfarm"])["gebaeude"])));
-        return liste;
+        var alt = Aus(SpielInhaltTests.InhaltPython, SpielInnenraumTests.InnenraeumeAlt.Value);
+        var neu = Aus(SpielInhaltTests.Inhalt, SpielInnenraumTests.Innenraeume.Value);
+        return [.. alt.Zip(neu, (a, n) => (a.Item1, a.Item2, a.Item3, n.Item3))];
     }
 
-    /// <summary>Breite und Laenge (m) des Flurs im Innenraum: neu (Umrechnung, Massstab) oder wie A 1.1.0 (ohne, 0,75 m).</summary>
-    private static (double Breite, double Laenge) Masse(string ort, PyObjekt g, float meter, bool breiter)
-    {
-        var neu = breiter ? Flurbreite.Anwenden(g, Flurbreite.Fuer(ort, g)) : g;
-        return (Py.F(SpielDaten.Objekt(neu["flur"])["h"]) / meter, Py.F(neu["breite"]) / meter);
-    }
+    /// <summary>Breite und Laenge (m) des Flurs bei <paramref name="meter"/> Einheiten je Meter.</summary>
+    private static (double Breite, double Laenge) Masse(PyObjekt g, float meter) =>
+        (Py.F(SpielDaten.Objekt(g["flur"])["h"]) / meter, Py.F(g["breite"]) / meter);
 
     /// <summary>
-    /// Welle A 1.2.0 (Weisung P12-332 Punkt 1, Nico: „mehr Platz nach links und rechts zur Wand … nicht laenger, nur breiter“):
-    /// jede Diele mindestens 1,30 m, jeder andere Flur mindestens 1,78 m breit, die Laenge jedes Flurs wie bis A 1.0.0
-    /// (0,6 m je Einheit, +-0,01 m). Gegenprobe Stand A 1.1.0 (0,75 m, Flur nicht breiter): zu schmal und zu lang.
+    /// Welle A 1.2.0 (Weisung P12-332 Punkt 1, Nico: „mehr Platz nach links und rechts zur Wand … nicht laenger, nur breiter“;
+    /// Weisung P12-334 Weg B): in den Daten, die Spiel und Werkzeug lesen, ist jede Diele mindestens 1,30 m, jeder andere Flur
+    /// mindestens 1,78 m breit, die Laenge jedes Flurs wie bis A 1.0.0 (0,6 m je Einheit, +-0,01 m). Gegenprobe Stand A 1.1.0
+    /// (alter Grundriss, 0,75 m): jeder zu schmal oder zu lang.
     /// </summary>
     [Fact]
     public void Flure_Breiter_NichtLaenger_WieA100_GegenprobeA110Rot()
@@ -59,25 +65,23 @@ public class SpielBlickfeldTests
         Assert.Equal(4, plaene.Count(p => p.Ort == SpielDaten.OrtZuhause));
         var funde = new List<string>();
         var gegen = new List<string>();
-        foreach (var (ort, wo, g) in plaene)
+        foreach (var (ort, wo, alt, neu) in plaene)
         {
             var mindestens = ort == SpielDaten.OrtZuhause ? 1.30 : 1.78;
-            var (breite, laenge) = Masse(ort, g, Innenraum.Meter, true);
-            var laengeA100 = Py.F(g["breite"]) * 0.6;
+            var (breite, laenge) = Masse(neu, Innenraum.Meter);
+            var laengeA100 = Py.F(alt["breite"]) * 0.6;
             if (breite < mindestens || Math.Abs(laenge - laengeA100) > 0.01)
             {
                 funde.Add($"{wo}: {breite:0.00} m breit, {laenge:0.00} m lang (A 1.0.0 {laengeA100:0.00} m)");
             }
-            var (b110, l110) = Masse(ort, g, Innenraum.MeterA110, false);
+            var (b110, l110) = Masse(alt, Innenraum.MeterA110);
             if (b110 < mindestens || Math.Abs(l110 - laengeA100) > 0.01)
             {
                 gegen.Add(wo);
             }
         }
         Assert.True(funde.Count == 0, string.Join("\n", funde));
-        // Gegenprobe: mit A 1.1.0 ist jeder Grundriss zu schmal oder zu lang (alle laenger, die meisten auch zu schmal)
         Assert.Equal(plaene.Count, gegen.Count);
-        Assert.Equal(plaene.Count, plaene.Count(p => Masse(p.Ort, p.Gebaeude, Innenraum.MeterA110, false).Laenge > (Py.F(p.Gebaeude["breite"]) * 0.6) + 0.01));
     }
 
     /// <summary>Tueroeffnungen (Raum, offen, Seite, von, bis, Lage der Wand) eines Grundrisses.</summary>
@@ -114,19 +118,18 @@ public class SpielBlickfeldTests
     }
 
     /// <summary>
-    /// Welle A 1.2.0 (Weisung P12-332, Chat 3a): jede Innentuer im Innenraum ist mindestens 0,90 m breit (offene Durchgaenge
-    /// sind ohnehin breiter), liegt ganz in der Wand ihres Raums, ihre Mitte bleibt (+-0,01), und kein Stueck steht neu in ihrer
-    /// Oeffnung. Gegenprobe heutiger Stand (A 1.1.0, ohne Verbreiterung): Tueren schmaler als 0,90 m.
+    /// Welle A 1.2.0 (Weisung P12-332, Chat 3a): jede Innentuer in den Daten ist mindestens 0,90 m breit (offene Durchgaenge
+    /// sind ohnehin breiter), liegt ganz in der Wand ihres Raums, ihre Mitte bleibt (+-0,01, gegen den alten Grundriss mit
+    /// Verschiebung des Raums), und kein Stueck steht neu in ihrer Oeffnung. Gegenprobe alter Stand: Tueren schmaler als 0,90 m.
     /// </summary>
     [Fact]
     public void Innentueren_MindestensNeunzigZentimeter_MitteBleibt_Gegenprobe()
     {
         var funde = new List<string>();
         var schmalVorher = 0;
-        foreach (var (ort, wo, g) in Grundrisse())
+        foreach (var (ort, wo, g, neu) in Grundrisse())
         {
             var breit = Flurbreite.Anwenden(g, Flurbreite.Fuer(ort, g));
-            var neu = Flurbreite.Tueren(breit);
             var vorher = Tueroeffnungen(breit);
             var nachher = Tueroeffnungen(neu);
             Assert.Equal(vorher.Count, nachher.Count);
@@ -156,23 +159,23 @@ public class SpielBlickfeldTests
         }
         Assert.True(funde.Count == 0, string.Join("\n", funde));
         Assert.True(schmalVorher >= 50, "Gegenprobe: zu wenige schmale Tueren vorher: " + schmalVorher);
-        // im gebauten Innenraum: Bitweiche mit breiten Tueren, die Mitte jeder Tuer bleibt fuer die Wege des Spiel-Kerns
+        // im gebauten Innenraum: Bitweiche mit breiten Tueren
         var buero = Innenraum.Bauen("buero", new Spielablauf(SpielInhaltTests.Inhalt).Stand, SpielInnenraumTests.Innenraeume.Value, SpielGrafikTests.Bibliothek.Value)!;
         Assert.All(Tueroeffnungen(buero.Gebaeude), t => Assert.True(t.Bis - t.Von >= Flurbreite.Tuer - 1e-6, t.Raum));
     }
 
     /// <summary>
-    /// Welle A 1.2.0: die Raeume behalten ihre Groesse; Raeume ueber dem Flur bleiben, Raeume darunter (mit Einrichtung und Tueren)
-    /// ruecken genau um den Zuwachs; ein Raum, der den Flur ganz quert, wird um den Zuwachs tiefer, keiner ragt nur hinein; Hin und Zurueck ergeben wieder dieselbe Stelle.
+    /// Welle A 1.2.0: in den Daten behalten die Raeume ihre Groesse; Raeume ueber dem Flur bleiben, Raeume darunter (mit Einrichtung)
+    /// ruecken genau um den Zuwachs; ein Raum, der den Flur ganz quert (Lager der Bitweiche), wird um den Zuwachs tiefer, keiner
+    /// ragt nur hinein. Hin und Zurueck der Rechnung ergeben dieselbe Stelle.
     /// </summary>
     [Fact]
     public void Raeume_GleichGross_UnterDemFlurVerschoben_UmrechnungHinUndZurueck()
     {
-        foreach (var (ort, wo, g) in Grundrisse())
+        foreach (var (ort, wo, g, neu) in Grundrisse())
         {
             var u = Flurbreite.Fuer(ort, g);
             Assert.True(u.Zuwachs > 0, wo + ": Flur wird nicht breiter");
-            var neu = Flurbreite.Anwenden(g, u);
             Assert.Equal(Py.F(g["hoehe"]) + u.Zuwachs, Py.F(neu["hoehe"]), 6);
             Assert.Equal(Py.F(g["breite"]), Py.F(neu["breite"]));
             var alt = SpielDaten.Liste(g["raeume"]).Select(SpielDaten.Objekt).ToList();
@@ -182,34 +185,24 @@ public class SpielBlickfeldTests
             {
                 var unten = Py.F(alt[i]["y"]) >= u.Unten - 1e-6;
                 var oben = Py.F(alt[i]["y"]) + Py.F(alt[i]["h"]) <= u.Oben + 1e-6;
-                // ein Raum, der den Flur ganz quert (Lager der Bitweiche), wird um den Zuwachs tiefer; sonst bleibt jeder gleich gross
                 var quert = !unten && !oben && Py.F(alt[i]["y"]) <= u.Oben + 1e-6 && Py.F(alt[i]["y"]) + Py.F(alt[i]["h"]) >= u.Unten - 1e-6;
                 Assert.True(unten || oben || quert, wo + ": Raum ragt in den Flur");
                 Assert.Equal((Py.F(alt[i]["x"]), Py.F(alt[i]["w"]), Py.F(alt[i]["h"]) + (quert ? u.Zuwachs : 0)), (Py.F(jetzt[i]["x"]), Py.F(jetzt[i]["w"]), Py.F(jetzt[i]["h"])));
                 Assert.Equal(Py.F(alt[i]["y"]) + (unten ? u.Zuwachs : 0), Py.F(jetzt[i]["y"]), 6);
             }
-            // der alte Grundriss bleibt unveraendert (Kopie)
-            Assert.Equal(u.Alt, Py.F(SpielDaten.Objekt(g["flur"])["h"]), 6);
             for (var y = 0.0; y <= Py.F(g["hoehe"]); y += 0.25)
             {
                 Assert.Equal(y, u.Zurueck(u.Hin(y)), 6);
             }
         }
-        // Gegenprobe: ohne Umrechnung (Stand A 1.1.0) bleibt der Flur schmal
-        Flurbreite.AusFuerTests = true;
-        try
-        {
-            Assert.False(Flurbreite.Gilt("buero", SpielDaten.OrtBuero));
-        }
-        finally
-        {
-            Flurbreite.AusFuerTests = false;
-        }
     }
 
-    /// <summary>Welle A 1.2.0: im gebauten Innenraum ist der Flur breit (Buero, Wohnung, Serverfarm), Laeden und Schalter bleiben.</summary>
+    /// <summary>
+    /// Welle A 1.2.0: im gebauten Innenraum ist der Flur breit (Buero, Wohnung, Serverfarm), und jede Person steht in dem Raum,
+    /// in dem sie im Grundriss des Spiel-Kerns steht (derselbe Inhalt, keine Umrechnung zur Laufzeit). Laeden und Schalter bleiben.
+    /// </summary>
     [Fact]
-    public void Innenraum_Gebaut_FlurBreit_LaedenBleiben()
+    public void Innenraum_Gebaut_FlurBreit_PersonenImRaum_LaedenBleiben()
     {
         var stand = new Spielablauf(SpielInhaltTests.Inhalt).Stand;
         var bib = SpielGrafikTests.Bibliothek.Value;
@@ -217,22 +210,15 @@ public class SpielBlickfeldTests
         {
             var innen = Innenraum.Bauen(ansicht, stand, SpielInnenraumTests.Innenraeume.Value, bib)!;
             Assert.Equal(ziel, Py.F(SpielDaten.Objekt(innen.Gebaeude["flur"])["h"]), 6);
-            Assert.True(innen.Umrechnung.Zuwachs > 0, ansicht);
-            Assert.NotSame(innen.Gebaeude, innen.GrundrissAlt);
-            // die Personen stehen im selben Raum wie im Grundriss des Spiel-Kerns
-            foreach (var p in innen.Personen)
+            foreach (var p in innen.Personen.Where(p => SpielDaten.Get(p.Daten, "raum") is string))
             {
-                var raumNeu = Wege.RaumBei(p.X, p.Z, innen.Gebaeude)?["id"];
-                var raumAlt = Wege.RaumBei(p.X, innen.Umrechnung.Zurueck(p.Z), innen.GrundrissAlt)?["id"];
-                Assert.Equal(Py.Str(raumAlt ?? "flur"), Py.Str(raumNeu ?? "flur"));
+                Assert.Equal(Py.Str(p.Daten["raum"]), Py.Str(Wege.RaumBei(p.X, p.Z, innen.Gebaeude)?["id"] ?? "flur"));
             }
         }
-        foreach (var ansicht in new[] { "geschaeft:moebelhaus", "schalter:bank" })
-        {
-            var innen = Innenraum.Bauen(ansicht, stand, SpielInnenraumTests.Innenraeume.Value, bib)!;
-            Assert.Equal(0, innen.Umrechnung.Zuwachs);
-            Assert.Same(innen.Gebaeude, innen.GrundrissAlt);
-        }
+        var laden = Innenraum.Bauen("geschaeft:moebelhaus", stand, SpielInnenraumTests.Innenraeume.Value, bib)!;
+        Assert.Equal(Py.Pruefsumme(SpielDaten.Objekt(SpielInnenraumTests.InnenraeumeAlt.Value["moebelhaus"])["gebaeude"]),
+            Py.Pruefsumme(SpielDaten.Objekt(SpielInnenraumTests.Innenraeume.Value["moebelhaus"])["gebaeude"]));
+        Assert.Equal(4.0, Py.F(SpielDaten.Objekt(laden.Gebaeude["flur"])["h"]), 6);
     }
 
     [Theory]

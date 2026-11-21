@@ -16,7 +16,7 @@ public class SpielWegeTests
     /// <summary>Wie der Erzeuger: Buero, Kundenorte, Ausbaustufen der Firma und der Filiale.</summary>
     private static List<(string Name, LaufOrt Ort)> Grundrisse()
     {
-        var inhalt = SpielInhaltTests.Inhalt;
+        var inhalt = SpielInhaltTests.InhaltPython;
         var liste = new List<(string, LaufOrt)> { ("buero", new LaufOrt((PyObjekt)inhalt["gebaeude"]!, (List<object?>)inhalt["kollegen"]!)) };
         foreach (var ort in (List<object?>)((PyObjekt)inhalt["kunden"]!)["orte"]!)
         {

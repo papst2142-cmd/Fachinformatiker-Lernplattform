@@ -11,7 +11,8 @@ Die Flure und Gänge in den Gebäuden sind jetzt wirklich breiter: Links und rec
 - Am Handy und Tablet sitzt der rechte Stick jetzt unten rechts in der Ecke. Die runden Knöpfe „Springen“ und „Haltung“ stehen darüber und liegen nie im Kreis des Sticks, auch mit „Antippen zur Steuerung“. Ist das Bild sehr flach, stehen sie links neben dem Stick.
 - Wege, Plätze, Aufgaben und alles, was du drinnen tun kannst, bleiben genau gleich. Draußen in der Stadt ändert sich nichts.
 - Das Spiel bleibt dabei auf allen Grafikstufen so flüssig wie vorher.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+- Hast du deine Wohnung schon eingerichtet, stehen deine Möbel nach dem Update im selben Zimmer an derselben Stelle wie vorher, auch die in der Diele. Das Programm rechnet sie beim ersten Öffnen des Spielstands einmal um und legt vorher im Ordner „sicherungen“ eine Kopie deines Lernstands an (Name beginnt mit „vor_update_“). Ohne diese Kopie rechnet es nichts um.
+- Dein Lernstand, die Lerninhalte und die Prüfungen bleiben, wie sie sind.
 
 ## A 1.1.0
 Diese Version wurde nicht veröffentlicht. Ihr Blickfeld-Regler steckt in A 1.2.0, die übrigen Änderungen hat A 1.2.0 ersetzt.

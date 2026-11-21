@@ -342,7 +342,7 @@ public sealed partial class StadtSpiel
         // auf eine Person getippt: bis auf Reichweite heran (walk_path mit REACH), sonst zum Punkt
         var person = innen.PersonBei(x, z);
         var (zx, zz, reichweite) = person is not null ? (person.X, person.Z, Wege.Reichweite) : (x, z, 0d);
-        if (person is null && RaumRegel && Wohnung.MoebelBei(Ablauf.Stand, x, KernZ(z)) is { } mr
+        if (person is null && RaumRegel && Wohnung.MoebelBei(Ablauf.Stand, x, z) is { } mr
             && WegInDenRaum(innen, mr.X, mr.Y, Py.F(mr.W), Py.F(mr.H), Wohnung.Vorn(mr.Dreh), Wohnung.Begehbar.Contains(mr.Typ)) is { } raumWeg)
         {
             // Sammelliste 383: durch die Tuer vor die Vorderseite (nie ueber die Wand), erst dort oeffnet es sich
@@ -355,10 +355,10 @@ public sealed partial class StadtSpiel
             Geaendert?.Invoke();
             return raumWeg.Count > 0;
         }
-        if (person is null && Ort == SpielDaten.OrtZuhause && Wohnung.MoebelBei(Ablauf.Stand, x, KernZ(z)) is { } m)
+        if (person is null && Ort == SpielDaten.OrtZuhause && Wohnung.MoebelBei(Ablauf.Stand, x, z) is { } m)
         {
             // auf ein Moebel: bis neben das Moebel (furniture_near prueft 0,9 vom Rand)
-            (zx, zz) = (m.X + (Py.F(m.W) / 2), InnenRechteckZ(m.Y, Py.F(m.H)) + (Py.F(m.H) / 2));
+            (zx, zz) = (m.X + (Py.F(m.W) / 2), m.Y + (Py.F(m.H) / 2));
             reichweite = Wohnung.MoebelReichweite + (Math.Min(Py.F(m.W), Py.F(m.H)) / 2);
         }
         else if (person is null && innen.WareBei(x, z) is { } ware)
@@ -982,7 +982,7 @@ public sealed partial class StadtSpiel
         // Welle A 0.81.0: sitzend oder liegend gilt der Platz (am PC-Stuhl: direkt am Tisch)
         var (fx, fz) = MeinPlatz is { } platz && ReferenceEquals(innen, _platzInnen) ? (platz.Ort.X, platz.Ort.Z) : (FigurX, FigurZ);
         // Sammelliste 383: zu Hause nur Moebel aus dem Raum der Figur (Filter Nutzbar), sonst wie bisher
-        var (titel, text, knoepfe) = RaumRegel ? Wohnung.Nachricht(fx, KernZ(fz), Ablauf.Stand, Nutzbar(fx, fz)) : innen.Nachricht(fx, fz, Sicht(Ablauf.Stand));
+        var (titel, text, knoepfe) = RaumRegel ? Wohnung.Nachricht(fx, fz, Ablauf.Stand, Nutzbar(fx, fz)) : innen.Nachricht(fx, fz, Sicht(Ablauf.Stand));
         Zeile = text.Length > 0 ? titel + "\n" + text : titel;
         if (_notiz is { } notiz)
         {
@@ -991,7 +991,7 @@ public sealed partial class StadtSpiel
             _notiz = null;
         }
         // Phase 12 Welle 1 (Nico 3b): am aufgestellten Kleiderschrank Text und Knopf (Name und Aussehen aendern)
-        if (Ort == SpielDaten.OrtZuhause && Charakter.SchrankNahe(Ablauf.Stand, fx, KernZ(fz), Nutzbar(fx, fz)) is not null)
+        if (Ort == SpielDaten.OrtZuhause && Charakter.SchrankNahe(Ablauf.Stand, fx, fz, Nutzbar(fx, fz)) is not null)
         {
             if (knoepfe.Count == 0)
             {
@@ -1012,11 +1012,11 @@ public sealed partial class StadtSpiel
         var stand = Ablauf.Stand;
         if (Ort == SpielDaten.OrtZuhause)
         {
-            if (Spielwelt.Nahe(stand, Spielwelt.PcTyp, fx, KernZ(fz), Nutzbar(fx, fz)) is not null)
+            if (Spielwelt.Nahe(stand, Spielwelt.PcTyp, fx, fz, Nutzbar(fx, fz)) is not null)
             {
                 knoepfe = [.. knoepfe, (Spielwelt.AktionComputer, Spielwelt.KnopfComputer)];
             }
-            if (Spielwelt.Nahe(stand, Spielwelt.RegalTyp, fx, KernZ(fz), Nutzbar(fx, fz)) is not null)
+            if (Spielwelt.Nahe(stand, Spielwelt.RegalTyp, fx, fz, Nutzbar(fx, fz)) is not null)
             {
                 if (knoepfe.Count == 0)
                 {
@@ -1422,8 +1422,6 @@ public sealed partial class StadtSpiel
 
     private bool EinrichtenTippen(double x, double z)
     {
-        // Welle A 1.2.0: Vorschau, Moebel und Aufstellen rechnen in den Zahlen des Spiel-Kerns
-        z = KernZ(z);
         if (Vorschau is { } v && Ausgewaehlt is not null
             && Py.F(v["x"]) <= x && x <= Py.F(v["x"]) + Py.F(v["w"]) && Py.F(v["y"]) <= z && z <= Py.F(v["y"]) + Py.F(v["h"]))
         {

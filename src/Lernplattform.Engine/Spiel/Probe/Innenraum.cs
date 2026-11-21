@@ -47,8 +47,8 @@ public sealed partial class Innenraum
     /// <summary>
     /// Eine Einheit des Grundrisses sind 0,6 m (Tuer 1,2 = 0,72 m, Schreibtisch 2,4 x 1,0 = 1,44 x 0,6 m). Welle A 1.1.0
     /// (Sammelliste 409) hatte 0,75 m: der ganze Raum wurde groesser, die Flure vor allem laenger (Nico: „Der Flur wurde laenger,
-    /// aber nicht breiter“). Welle A 1.2.0 (Weisung P12-332, Nico 2c): wieder 0,6 m, dafuer werden die Flure wirklich breiter
-    /// (<see cref="Flurbreite"/>: Diele 1,32 m, Flure 1,80 m) und die Laengen sind wie bis A 1.0.0.
+    /// aber nicht breiter“). Welle A 1.2.0 (Weisung P12-332, Nico 2c): wieder 0,6 m, dafuer sind die Flure wirklich breiter
+    /// (neue Grundrisse als Daten, <see cref="GrundrisseBreit"/>: Diele 1,32 m, Flure 1,80 m), die Laengen wie bis A 1.0.0.
     /// </summary>
     public const float Meter = 1f / 0.6f;
 
@@ -103,10 +103,8 @@ public sealed partial class Innenraum
     private readonly List<(Netz Netz, Matrix4x4 Lage)> _puppen = [];
 
     private Innenraum(string ansicht, string ort, PyObjekt gebaeude, List<InnenPerson> personen, GrafikBibliothek? grafik, PyObjekt? boeden,
-        PyObjekt? kleider = null, string? fest = null, PyObjekt? feste = null, Flurbreite.Umrechnung? umrechnung = null, PyObjekt? grundrissAlt = null)
+        PyObjekt? kleider = null, string? fest = null, PyObjekt? feste = null)
     {
-        Umrechnung = umrechnung ?? Flurbreite.Umrechnung.Keine;
-        GrundrissAlt = grundrissAlt ?? gebaeude;
         Fest = fest;
         _festDaten = feste;
         Kleiderdaten = kleider;
@@ -410,54 +408,12 @@ public sealed partial class Innenraum
 
     private static Innenraum? BauenOhneJahreszeit(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, GrafikBibliothek? grafik, PyObjekt? geschaefte,
         string? fest, PyObjekt? feste) =>
-        Breiter(EingabenFuer(ansicht, stand, innenraeume, geschaefte)) is { } e
-            ? new Innenraum(e.Ansicht, e.Ort, e.Gebaeude, e.Personen, grafik, e.Boeden, e.Kleider, fest, feste, e.Umrechnung, e.GrundrissAlt)
+        EingabenFuer(ansicht, stand, innenraeume, geschaefte) is { } e
+            ? new Innenraum(e.Ansicht, e.Ort, e.Gebaeude, e.Personen, grafik, e.Boeden, e.Kleider, fest, feste)
             : null;
 
     /// <summary>Weisung P8-55 (W12): alles, was ein Innenraum aus dem Spielstand liest (Grundriss, Personen, Boeden, Kleidung).</summary>
-    private sealed record Eingaben(string Ansicht, string Ort, PyObjekt Gebaeude, List<InnenPerson> Personen, PyObjekt? Boeden, PyObjekt? Kleider)
-    {
-        /// <summary>Welle A 1.2.0: Umrechnung zwischen altem und breitem Grundriss (Keine = gleich).</summary>
-        public Flurbreite.Umrechnung Umrechnung { get; init; } = Flurbreite.Umrechnung.Keine;
-
-        /// <summary>Welle A 1.2.0: der Grundriss in den alten Zahlen (Spiel-Kern, Spielstand, Quest-Ebene).</summary>
-        public PyObjekt? GrundrissAlt { get; init; }
-    }
-
-    /// <summary>
-    /// Welle A 1.2.0 (Weisung P12-332): Flur breiter (<see cref="Flurbreite"/>), Personen mit, Innentueren mindestens 0,90 m
-    /// (<see cref="Flurbreite.Tueren"/>); Laeden, Schalter und Obergeschosse bleiben.
-    /// </summary>
-    private static Eingaben? Breiter(Eingaben? e)
-    {
-        if (e is null || !Flurbreite.Gilt(e.Ansicht, e.Ort))
-        {
-            return e;
-        }
-        // Innentueren mindestens 0,90 m (Chat 3a), auch wo der Flur schon breit genug ist
-        var u = Flurbreite.Fuer(e.Ort, e.Gebaeude);
-        var g = Flurbreite.Tueren(Flurbreite.Anwenden(e.Gebaeude, u));
-        if (ReferenceEquals(g, e.Gebaeude))
-        {
-            return e;
-        }
-        return e with
-        {
-            Gebaeude = g,
-            Personen = [.. e.Personen.Select(p => Flurbreite.Person(p, u))],
-            Umrechnung = u,
-            GrundrissAlt = e.Gebaeude,
-        };
-    }
-
-    /// <summary>
-    /// Welle A 1.2.0 (Weisung P12-332): Umrechnung zwischen dem Grundriss des Spiel-Kerns (alte Zahlen, Spielstand) und diesem
-    /// Innenraum (breiter Flur). <see cref="Flurbreite.Umrechnung.Keine"/> in Laeden, Schaltern, Obergeschossen und im Werkzeug.
-    /// </summary>
-    public Flurbreite.Umrechnung Umrechnung { get; }
-
-    /// <summary>Welle A 1.2.0: der Grundriss in den alten Zahlen (gleich <see cref="Gebaeude"/>, wenn nichts umgerechnet wird).</summary>
-    public PyObjekt GrundrissAlt { get; }
+    private sealed record Eingaben(string Ansicht, string Ort, PyObjekt Gebaeude, List<InnenPerson> Personen, PyObjekt? Boeden, PyObjekt? Kleider);
 
     /// <summary>
     /// Weisung P8-55 (W12, Selbstfund 3.4 im Teilplan): Inhalt des Innenraums zur Ansicht als Text, ohne ihn zu bauen
@@ -467,7 +423,7 @@ public sealed partial class Innenraum
     /// </summary>
     public static string? InhaltSignatur(string? ansicht, ISpielSicht stand, PyObjekt? innenraeume, PyObjekt? geschaefte, string? fest, Jahreszeit jahreszeit)
     {
-        if (Breiter(EingabenFuer(ansicht, stand, innenraeume, geschaefte)) is not { } e)
+        if (EingabenFuer(ansicht, stand, innenraeume, geschaefte) is not { } e)
         {
             return null;
         }

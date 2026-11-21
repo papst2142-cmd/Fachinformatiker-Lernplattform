@@ -24,28 +24,25 @@ public sealed partial class StadtSpiel
             return null;
         }
         var g = Wohnung.GrundrissVon(Ablauf.Stand);
-        var kz = KernZ(z);
-        return m => !Wohnung.HinterWand(g, m, x, kz);
+        return m => !Wohnung.HinterWand(g, m, x, z);
     }
 
     /// <summary>Ein Platz zum Sitzen oder Liegen ist von (x, z) aus benutzbar (nicht hinter einer Wand).</summary>
     private bool PlatzNutzbar(Sitzgelegenheit s, double x, double z) =>
-        !RaumRegel || !Wohnung.HinterWand(Wohnung.GrundrissVon(Ablauf.Stand), s.Rechteck.X1, KernRechteckZ(s.Rechteck.Z1, s.Rechteck.Z2),
-            s.Rechteck.X2 - s.Rechteck.X1, s.Rechteck.Z2 - s.Rechteck.Z1, x, KernZ(z));
+        !RaumRegel || !Wohnung.HinterWand(Wohnung.GrundrissVon(Ablauf.Stand), s.Rechteck.X1, s.Rechteck.Z1, s.Rechteck.X2 - s.Rechteck.X1,
+            s.Rechteck.Z2 - s.Rechteck.Z1, x, z);
 
     /// <summary>
     /// Weg vor ein Rechteck (Moebel, Platz) im eigenen Raum: je Seite die erste Stelle, auf der die Figur stehen kann
     /// (<see cref="Wohnung.Standplaetze(PyObjekt, double, double, double, double, (double X, double Y)?, bool)"/>); die
     /// Vorderseite (bzw. die Stelle auf einem Teppich) gewinnt, wenn sie erreichbar ist, sonst der kuerzeste Weg.
-    /// Leer = die Figur steht schon dort; null = keine Stelle erreichbar. Welle A 1.2.0: das Rechteck steht in den Zahlen des
-    /// Spiel-Kerns (Moebel aus dem Spielstand), die Stellen werden in den Innenraum umgerechnet.
+    /// Leer = die Figur steht schon dort; null = keine Stelle erreichbar.
     /// </summary>
     private List<(double X, double Y)>? WegInDenRaum(Innenraum innen, double rx, double ry, double rw, double rh, (double X, double Y)? vorn,
         bool begehbar = false)
     {
         var g = Wohnung.GrundrissVon(Ablauf.Stand);
-        var fz = KernZ(FigurZ);
-        if (SpielKern.Abstand(rx, ry, rw, rh, FigurX, fz) <= Wohnung.MoebelReichweite && !Wohnung.HinterWand(g, rx, ry, rw, rh, FigurX, fz))
+        if (SpielKern.Abstand(rx, ry, rw, rh, FigurX, FigurZ) <= Wohnung.MoebelReichweite && !Wohnung.HinterWand(g, rx, ry, rw, rh, FigurX, FigurZ))
         {
             return [];
         }
@@ -55,9 +52,8 @@ public sealed partial class StadtSpiel
         {
             var vorzug = erste && (vorn is not null || begehbar);
             erste = false;
-            foreach (var (px, kernY) in seite)
+            foreach (var (px, py) in seite)
             {
-                var py = InnenZ(kernY);
                 if (!Wege.KannStehen(px, py, innen.Lauf))
                 {
                     continue;

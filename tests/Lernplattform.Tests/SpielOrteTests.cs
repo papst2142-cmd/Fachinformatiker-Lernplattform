@@ -19,7 +19,7 @@ public class SpielOrteTests
     private static readonly string[] PersonFelder =
         ["id", "name", "rolle", "platz", "mitarbeiter", "projekt_text", "kundenticket", "umsatz", "in_weiterbildung", "im_coaching", "lagerist", "macke"];
 
-    private static PyObjekt Inhalt => SpielInhaltTests.Inhalt;
+    private static PyObjekt Inhalt => SpielInhaltTests.InhaltPython;
 
     private static List<double> Raster(double von, double bis)
     {

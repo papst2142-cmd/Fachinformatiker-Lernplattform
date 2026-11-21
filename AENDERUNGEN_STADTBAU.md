@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.59.0
+
+Das Werkzeug zeigt die Innenräume jetzt genau so, wie das Spiel sie baut, auch mit den breiteren Fluren.
+
+- Jeder Innenraum, den das Werkzeug zeigt (im Plan der Arbeitsorte für Quests und in der 3D-Ansicht), hat die breiteren Flure und Türen des Spiels: die Diele einer Wohnung 1,32 Meter, die anderen Flure mindestens 1,80 Meter, Türen mindestens 90 Zentimeter. Das gilt für das Büro der Bitweiche, die Kunden, die Serverfarm, die Wohnungen und die eigene Firma.
+- Was du im Werkzeug baust oder änderst, kommt beim Einbau genau so ins Spiel. Ein Flur wird dabei nie ein zweites Mal breiter.
+- Läden und Schalter sehen aus wie bisher. Deine Projekte und die Dateien für das Spiel bleiben, wie sie sind.
+
 ## S 0.58.0
 
 Über der Karte ist jetzt viel mehr Platz: die Knöpfe sind kleiner, und was du gerade nicht brauchst, lässt sich einklappen.

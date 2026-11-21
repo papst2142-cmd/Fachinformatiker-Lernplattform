@@ -201,7 +201,7 @@ public sealed partial class StadtSpiel
         var (w, t) = (ziel.Rechteck.X2 - ziel.Rechteck.X1, ziel.Rechteck.Z2 - ziel.Rechteck.Z1);
         // Sammelliste 383: zu Hause nie ueber die Wand: durch die Tuer an eine Seite im Raum des Platzes
         var weg = RaumRegel
-            ? WegInDenRaum(innen, ziel.Rechteck.X1, KernRechteckZ(ziel.Rechteck.Z1, ziel.Rechteck.Z2), w, t, null) ?? []
+            ? WegInDenRaum(innen, ziel.Rechteck.X1, ziel.Rechteck.Z1, w, t, null) ?? []
             : MitWeg(() => innen.Weg(FigurX, FigurZ, ziel.Mitte.X, ziel.Mitte.Y, Wohnung.MoebelReichweite + (Math.Min(w, t) / 2)));
         WegLeeren();
         _weg.AddRange(weg);

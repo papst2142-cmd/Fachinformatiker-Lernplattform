@@ -4,15 +4,14 @@ using static Lernplattform.Core.Spiel.SpielDaten;
 namespace Lernplattform.Core.Spiel.Probe;
 
 /// <summary>
-/// Welle A 1.2.0 (Weisung P12-332, Kurzplan P12-205 Weg A, Nico 1a: „Ich wollte mehr Platz nach links und rechts zur Wand haben.
+/// Welle A 1.2.0 (Weisung P12-332, Nico 1a: „Ich wollte mehr Platz nach links und rechts zur Wand haben.
 /// Er sollte nicht laenger werden, nur breiter“): der Flur eines Innenraums wird breiter, seine Laenge bleibt. Jeder Grundriss
 /// ist ein Band: Raeume oben, der Flur quer durch das ganze Haus, Raeume unten. Die Wand unter dem Flur rueckt mit allen Raeumen
 /// darunter (Tueren, Einrichtung, Personen, Fenster) um <see cref="Umrechnung.Zuwachs"/> nach aussen; die Raeume behalten ihre
-/// Groesse, das Haus wird innen tiefer. Die Grundrisse in <c>inhalte/</c> (Sollwerte), die Regeln des Spiel-Kerns und die
-/// Spielstaende bleiben in den alten Zahlen: nur der Innenraum (Darstellung, Laufen, Kamera) rechnet mit dem breiten Grundriss,
-/// und jede Stelle, die einen Punkt zwischen Spiel-Kern und Innenraum reicht, rechnet ueber <see cref="Umrechnung.Hin"/> und
-/// <see cref="Umrechnung.Zurueck"/>. Zielbreite: Wohnungen 2,2 Einheiten (1,32 m), alle anderen Flure mindestens 3 Einheiten
-/// (1,80 m); Laeden, Schalter und Obergeschosse (vom Werkzeug gebaut) bleiben wie sie sind.
+/// Groesse, das Haus wird innen tiefer. Zielbreite: Wohnungen 2,2 Einheiten (1,32 m), alle anderen Flure mindestens 3 Einheiten
+/// (1,80 m). Weisung P12-334 (Nico: Weg B „Neue Grundrisse als Daten“): diese Rechnung laeuft nie zur Laufzeit, sie erzeugt nur
+/// die neuen Grundrisse in <c>inhalte_csharp/spiel/grundrisse_breit.json</c> (<see cref="GrundrisseBreit"/>), die Spiel und
+/// Werkzeug gleich lesen; Laeden, Schalter und Obergeschosse stehen dort nicht und bleiben.
 /// </summary>
 public static class Flurbreite
 {
@@ -21,11 +20,6 @@ public static class Flurbreite
 
     /// <summary>Mindestbreite jedes anderen Flurs (Einheiten).</summary>
     public const double Flur = 3.0;
-
-    private static readonly AsyncLocal<bool> Aus = new();
-
-    /// <summary>Gegenprobe (nur Tests, AsyncLocal): kein Flur wird breiter (Stand bis A 1.1.0).</summary>
-    public static bool AusFuerTests { get => Aus.Value; set => Aus.Value = value; }
 
     /// <summary>Zielbreite des Flurs (Einheiten) fuer den Ort und die heutige Breite; 0 = bleibt.</summary>
     public static double Ziel(string ort, double heute) => ort == OrtZuhause ? Math.Max(Diele, heute) : heute < Flur ? Flur : 0;
@@ -63,10 +57,6 @@ public static class Flurbreite
         }
     }
 
-    /// <summary>Gilt die Verbreiterung fuer diese Ansicht und diesen Ort? (nie in Laeden, Schaltern und Obergeschossen)</summary>
-    public static bool Gilt(string ansicht, string ort) => !Aus.Value && !SpielKern.Laeden.Contains(ort) && !SpielKern.SchalterOrte.Contains(ort)
-        && Stadtbau.Etagen.Teilen(ansicht).Etage == 0;
-
     /// <summary>Umrechnung fuer einen Grundriss (Keine, wenn es keinen Flur gibt, er schon breit genug ist oder ein Raum ihn quert).</summary>
     public static Umrechnung Fuer(string ort, PyObjekt gebaeude)
     {
@@ -91,6 +81,10 @@ public static class Flurbreite
         return new Umrechnung(oben, unten, ziel - h);
     }
 
+    /// <summary>Neuer Wert mit dem Python-Typ des alten: ganze Zahl bleibt ganze Zahl, wenn das Ergebnis ganz ist (json 1 statt 1.0).</summary>
+    public static object Zahl(double neu, object? alt) =>
+        alt is long && Math.Abs(neu - Math.Round(neu)) < 1e-9 ? (object)(long)Math.Round(neu) : Math.Round(neu, 6);
+
     /// <summary>Breiter Grundriss (Kopie; der alte bleibt unveraendert).</summary>
     public static PyObjekt Anwenden(PyObjekt gebaeude, Umrechnung u)
     {
@@ -99,18 +93,18 @@ public static class Flurbreite
             return gebaeude;
         }
         var g = (PyObjekt)Py.Kopie(gebaeude)!;
-        Py.Setzen(g, "hoehe", Py.F(g["hoehe"]) + u.Zuwachs);
+        Py.Setzen(g, "hoehe", Zahl(Py.F(g["hoehe"]) + u.Zuwachs, g["hoehe"]));
         var flur = Objekt(g["flur"]);
-        Py.Setzen(flur, "h", u.Neu);
+        Py.Setzen(flur, "h", Zahl(u.Neu, flur["h"]));
         if (Get(flur, "spieler") is List<object?> { Count: >= 2 } sp)
         {
-            sp[1] = u.Hin(Py.F(sp[1]));
+            sp[1] = Zahl(u.Hin(Py.F(sp[1])), sp[1]);
         }
         if (Get(flur, "eingang") is PyObjekt ein)
         {
             var v = u.Verschiebung(Py.F(ein["von"]), Py.F(ein["bis"]) - Py.F(ein["von"]));
-            Py.Setzen(ein, "von", Py.F(ein["von"]) + v);
-            Py.Setzen(ein, "bis", Py.F(ein["bis"]) + v);
+            Py.Setzen(ein, "von", Zahl(Py.F(ein["von"]) + v, ein["von"]));
+            Py.Setzen(ein, "bis", Zahl(Py.F(ein["bis"]) + v, ein["bis"]));
         }
         foreach (var d in ListeOderLeer(flur, "deko").Select(Objekt))
         {
@@ -121,7 +115,7 @@ public static class Flurbreite
             if (Quert(r, u.Oben, u.Unten))
             {
                 // quert den Flur ganz: Raum wird um den Zuwachs tiefer, Einrichtung bleibt an ihrer Wand, Seitentuer im Flur mittig
-                Py.Setzen(r, "h", Py.F(r["h"]) + u.Zuwachs);
+                Py.Setzen(r, "h", Zahl(Py.F(r["h"]) + u.Zuwachs, r["h"]));
                 foreach (var d in ListeOderLeer(r, "deko").Select(Objekt))
                 {
                     Rechteck(d, u);
@@ -129,8 +123,8 @@ public static class Flurbreite
                 if (Get(r, "tuer") is PyObjekt t && Get(t, "seite") is string seite && seite is "w" or "o")
                 {
                     var v = u.Verschiebung(Py.F(t["von"]), Py.F(t["bis"]) - Py.F(t["von"]));
-                    Py.Setzen(t, "von", Py.F(t["von"]) + v);
-                    Py.Setzen(t, "bis", Py.F(t["bis"]) + v);
+                    Py.Setzen(t, "von", Zahl(Py.F(t["von"]) + v, t["von"]));
+                    Py.Setzen(t, "bis", Zahl(Py.F(t["bis"]) + v, t["bis"]));
                 }
                 continue;
             }
@@ -138,10 +132,10 @@ public static class Flurbreite
             {
                 continue;
             }
-            Py.Setzen(r, "y", Py.F(r["y"]) + u.Zuwachs);
+            Py.Setzen(r, "y", Zahl(Py.F(r["y"]) + u.Zuwachs, r["y"]));
             foreach (var d in ListeOderLeer(r, "deko").Select(Objekt))
             {
-                Py.Setzen(d, "y", Py.F(d["y"]) + u.Zuwachs);
+                Py.Setzen(d, "y", Zahl(Py.F(d["y"]) + u.Zuwachs, d["y"]));
             }
         }
         foreach (var f in ListeOderLeer(g, "rolltor").OfType<List<object?>>().Where(f => f.Count >= 4))
@@ -149,8 +143,8 @@ public static class Flurbreite
             // Rolltor: bleibt gleich gross an seiner Wand (wie ein Rechteck im Flur)
             var (y1, y2) = (Py.F(f[1]), Py.F(f[3]));
             var v = u.Verschiebung(Math.Min(y1, y2), Math.Abs(y2 - y1));
-            f[1] = y1 + v;
-            f[3] = y2 + v;
+            f[1] = Zahl(y1 + v, f[1]);
+            f[3] = Zahl(y2 + v, f[3]);
         }
         foreach (var feld in new[] { "fenster" })
         {
@@ -158,7 +152,7 @@ public static class Flurbreite
             {
                 for (var i = 1; i < f.Count; i += 2)
                 {
-                    f[i] = u.Hin(Py.F(f[i]));
+                    f[i] = Zahl(u.Hin(Py.F(f[i])), f[i]);
                 }
             }
         }
@@ -174,7 +168,7 @@ public static class Flurbreite
     /// <summary>
     /// Welle A 1.2.0 (Weisung P12-332, Chat 3a): jede Innentuer (nicht offene Durchgaenge) wird mindestens <see cref="Tuer"/> breit,
     /// gleichmaessig um ihre Mitte; reicht die Wand ihres Raums dafuer nicht, rueckt sie von der Ecke weg (<see cref="TuerEcke"/>).
-    /// Nur Darstellung und Laufen im Innenraum: die Mitte (Wege des Spiel-Kerns) bleibt, wo es geht. Kopie; leer = nichts zu tun.
+    /// Die Mitte bleibt, wo es geht (Wege und Stellen bleiben gueltig). Kopie; leer = nichts zu tun.
     /// </summary>
     public static PyObjekt Tueren(PyObjekt gebaeude)
     {
@@ -192,8 +186,8 @@ public static class Flurbreite
             var mitte = (Py.F(t["von"]) + Py.F(t["bis"])) / 2;
             var breite = Math.Min(Tuer, l - (2 * TuerEcke));
             var von = Math.Clamp(mitte - (breite / 2), a + TuerEcke, a + l - TuerEcke - breite);
-            Py.Setzen(t, "von", Math.Round(von, 6));
-            Py.Setzen(t, "bis", Math.Round(von + breite, 6));
+            Py.Setzen(t, "von", Zahl(von, t["von"]));
+            Py.Setzen(t, "bis", Zahl(von + breite, t["bis"]));
         }
         return g;
     }
@@ -214,22 +208,6 @@ public static class Flurbreite
             return;
         }
         var h = Get(d, "h") is { } hh ? Py.F(hh) : 0;
-        Py.Setzen(d, "y", Py.F(d["y"]) + u.Verschiebung(Py.F(d["y"]), h));
-    }
-
-    /// <summary>Person mit Platz im Innenraum (Kopie ihrer Daten; der Spielstand bleibt).</summary>
-    public static InnenPerson Person(InnenPerson p, Umrechnung u)
-    {
-        if (u.Zuwachs <= 0)
-        {
-            return p;
-        }
-        var daten = Py.Flach(p.Daten);
-        var z = u.Hin(p.Z);
-        if (Get(daten, "platz") is List<object?> { Count: >= 2 } pl)
-        {
-            Py.Setzen(daten, "platz", new List<object?> { pl[0], z });
-        }
-        return p with { Z = (float)z, Daten = daten };
+        Py.Setzen(d, "y", Zahl(Py.F(d["y"]) + u.Verschiebung(Py.F(d["y"]), h), d["y"]));
     }
 }
