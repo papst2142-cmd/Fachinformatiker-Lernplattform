@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.60.0
+
+Im Werkzeug kannst du jetzt auch die Räume ansehen, die das Spiel aus seinen eigenen Daten baut.
+
+- In den Innenräumen gibt es links unter der Wahl des Orts den Knopf „Räume des Spiels ansehen“. Dort wählst du jede Wohnung (Einzimmer-Apartment, Zweizimmer-Wohnung, Dreizimmer-Altbau, Loft), das Büro der Bitweiche, das Büro der eigenen Firma auf jeder Stufe, die Serverfarm, die Zweigstelle und jeden Kunden.
+- Du siehst den Raum als Grundriss von oben oder mit „In 3D ansehen“ genau so wie im Spiel: dieselben Räume, Gänge, Türen, Möbel und Personen. Rechts stehen die Maße (Größe, Breite von Flur oder Diele, schmalste Innentür).
+- Diese Räume lassen sich nur ansehen, nicht ändern. Deine Projekte und die Dateien für das Spiel bleiben, wie sie sind.
+
 ## S 0.59.0
 
 Das Werkzeug zeigt die Innenräume jetzt genau so, wie das Spiel sie baut, auch mit den breiteren Fluren.

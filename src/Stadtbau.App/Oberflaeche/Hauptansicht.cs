@@ -2362,7 +2362,7 @@ public sealed partial class Hauptansicht : UserControl
         }
         var ortTitel = Gruppe(Schrift.Text(Texte.Ort, "Mittel", FontWeight.Bold).Fuer(_ortWahl), Texte.TippOrt);
         // Welle Q (Weisung P12-76): die Etagen stehen rechts unter „Ausgewähltes Stück“
-        var links = KatalogFlaeche(new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } });
+        var links = KatalogFlaeche(new StackPanel { Spacing = 8, Children = { ortTitel, _ortWahl, SpielRaeumeKnopfBauen(), Gruppe(Schrift.Text(Texte.Katalog, "Mittel", FontWeight.Bold), Texte.TippKatalog), _katalogHinweis, VollerKatalogKnopf(true) } });
         foreach (var gruppe in InnenKatalog.Teile.GroupBy(t => t.Gruppe))
         {
             var reihe = new WrapPanel();
@@ -2455,6 +2455,12 @@ public sealed partial class Hauptansicht : UserControl
             _innen = true;
             _drei = false;
             _geschichteOffen = false;
+            _innenAnsicht ??= InnenBauen();
+            _inhalt.Content = _innenAnsicht;
+        }
+        else if (ZeigtSpielRaeume)
+        {
+            // Welle S 0.60.0: aus „Räume des Spiels“ zurueck in die Innenraeume der Stadt
             _innenAnsicht ??= InnenBauen();
             _inhalt.Content = _innenAnsicht;
         }

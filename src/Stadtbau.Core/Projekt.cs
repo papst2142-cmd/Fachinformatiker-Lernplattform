@@ -259,6 +259,11 @@ public sealed partial class Projekt
     /// <summary>Der aktuelle Grundriss eines Orts (bearbeitet oder die Basis). Nur ueber <see cref="Aendern"/> veraendern.</summary>
     public PyObjekt Grundriss(string ort)
     {
+        if (SpielRaeume.Ist(ort))
+        {
+            // Welle S 0.60.0: Raum des Spiels, nur ansehen (kommt nie in die bearbeiteten Grundrisse und den Export)
+            return SpielRaumGrundriss(ort);
+        }
         var (basis, etage) = Etagen.Teilen(ort);
         if (etage > 0)
         {
@@ -277,7 +282,8 @@ public sealed partial class Projekt
         return g;
     }
 
-    public List<PyObjekt> Personen(string ort) => Etagen.Teilen(ort).Etage > 0 ? [] : IstBau(ort)
+    public List<PyObjekt> Personen(string ort) => SpielRaeume.Ist(ort) ? (SpielRaum(ort) is { } sr ? SpielRaeume.Personen(sr) : [])
+        : Etagen.Teilen(ort).Etage > 0 ? [] : IstBau(ort)
         ? [.. (Bau(ort)?["personen"] as List<object?> ?? []).OfType<PyObjekt>()]
         : InnenGrundriss.Personen(Basis.Innenraeume, ort);
 
@@ -456,6 +462,11 @@ public sealed partial class Projekt
         if (NurLesen)
         {
             throw new InvalidOperationException("Projekt ist nur zum Lesen geöffnet.");
+        }
+        if (SpielRaeume.Ist(ort))
+        {
+            // Welle S 0.60.0: Raeume des Spiels nur ansehen (das Format der Stadt-Datei traegt sie nicht)
+            throw new InvalidOperationException("Räume des Spiels lassen sich nur ansehen.");
         }
         var (basis, etage) = Etagen.Teilen(ort);
         T Mit(PyObjekt eg)

@@ -106,7 +106,7 @@ public sealed class InnenDreiBedienung : Control
 
     private Projekt? Projekt => _grund.Projekt;
 
-    private bool Bauen => !FigurLaufen && Projekt is { NurLesen: false } && _grund.Ort is not null;
+    private bool Bauen => !FigurLaufen && Projekt is { NurLesen: false } && _grund.Ort is not null && !SpielRaeume.Ist(_grund.Ort);
 
     /// <summary>Der Grundriss hat sich geaendert (Hauptansicht): Funde von vorher neu, Schatten weg.</summary>
     public void StandGeaendert()
