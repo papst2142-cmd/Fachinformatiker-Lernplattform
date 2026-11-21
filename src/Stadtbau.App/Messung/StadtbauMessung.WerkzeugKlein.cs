@@ -171,8 +171,9 @@ public static partial class StadtbauMessung
         {
             Fund("Notiz: Text aendern geht nicht oder ist nicht genau ein Schritt");
         }
-        await BildAsync(a);
-        if (!k.NotizFlaechen.Any(n => n.Text == NotizProbeText && n.Flaeche.Width > 20))
+        // Sammelliste 416 (Laeufe 1009 bis 1153, Ubuntu): die Notizflaechen entstehen erst beim Zeichnen der Karte; zwei Bilder
+        // reichten auf einem langsamen Rechner nicht immer. Gleiche Pruefung, aber bis das Bild mit der Notiz wirklich gezeichnet ist.
+        if (!await BisAsync(a, () => k.NotizFlaechen.Any(n => n.Text == NotizProbeText && n.Flaeche.Width > 20)))
         {
             Fund("Notiz: der Text steht nicht auf der Karte");
         }

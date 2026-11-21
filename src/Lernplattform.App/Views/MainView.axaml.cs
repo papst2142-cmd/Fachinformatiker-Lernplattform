@@ -1148,6 +1148,12 @@ public partial class MainView : UserControl
             // Absturz im Start ohne Bedienung: festhalten und rot beenden statt haengen
             Core.Diagnose.Fehlerprotokoll.Schreiben(ausnahme);
             Messwerte.Notiere("URTEIL: rot (Ausnahme " + ausnahme.GetType().Name + ": " + ausnahme.Message + ")");
+            // Sammelliste 418 (Lauf 1150): ohne Stapel war die Stelle des Absturzes nicht zu finden (fehler.log liegt im
+            // Datenordner, der in der CI nicht hochgeladen wird); jetzt steht er in der Messdatei
+            foreach (var zeile in ausnahme.ToString().Split('\n').Take(80))
+            {
+                Messwerte.Notiere("Stapel: " + zeile.TrimEnd('\r'));
+            }
             fehler = 1;
         }
         _ergebnis.Text = BerichtText();

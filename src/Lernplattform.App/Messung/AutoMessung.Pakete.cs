@@ -95,6 +95,7 @@ public static partial class AutoMessung
         }
         Environment.SetEnvironmentVariable(PaketQuelle.Umgebung, null);
         OrdnerQuelle.Bremse = TimeSpan.Zero;
+        OrdnerQuelle.HaltNachErstemBlock = TimeSpan.Zero;
         OptionenSeite.PaketMobilFuerTests = false;
         PaketDienst.NeuFuerTests();
         try
@@ -109,9 +110,9 @@ public static partial class AutoMessung
         }
     }
 
-    private static string DatenAbdruck(string ordner) => !Directory.Exists(ordner) ? "" : string.Join("\n",
-        Directory.GetFileSystemEntries(ordner, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
-            .Select(p => Path.GetRelativePath(ordner, p) + (File.Exists(p) ? " " + Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(p))) : "/")));
+    // Welle „Ablauf stabil“ (Sammelliste 413): ohne haenger.log (macOS schreibt dort bei verdecktem Fenster „verdeckt“);
+    // jeder neue Eintrag dort wird am Ende der Probe einzeln geprueft (nur „verdeckt“ erlaubt)
+    private static string DatenAbdruck(string ordner) => Lernplattform.Core.Diagnose.OrdnerAbdruck.Abdruck(ordner);
 
     private static Button? DialogKnopf(string text) => Dialog.Offen?.GetLogicalDescendants().OfType<Button>()
         .FirstOrDefault(b => b.Content is string s ? s == text : b.Content is TextBlock t && t.Text == text);
@@ -164,6 +165,7 @@ public static partial class AutoMessung
         }
         var daten = Ablage.Datenordner();
         var vorher = DatenAbdruck(daten);
+        var haengerVorher = Lernplattform.Core.Diagnose.OrdnerAbdruck.HaengerText(daten);
         var quelle = PaketQuelleAnlegen(mitVarianten: true);
         if (quelle is null)
         {
@@ -260,6 +262,9 @@ public static partial class AutoMessung
 
             // A2: Abbruch mitten im Laden laesst den alten Stand (hier: nicht geladen) und keine Reste
             OrdnerQuelle.Bremse = TimeSpan.FromMilliseconds(250);   // 4 Bloecke je 16 KB: rund 1 s Laden, Zeit fuer den Knopf
+            // Sammelliste 413: nach dem ersten Block haelt das Laden an, bis der Abbruch kommt (hoechstens 60 s); vorher war
+            // das Paket auf einem langsamen Rechner schon fertig, bevor der Finger den Knopf traf (Lauf 1147, 2. Lauf)
+            OrdnerQuelle.HaltNachErstemBlock = TimeSpan.FromSeconds(60);
             if (optionen.PaketKnoepfe.TryGetValue("probe_testkarte", out var kt) && kt.TryGetValue(PaketKnopf.Laden, out var ladenT))
             {
                 await BedienenAsync(ansicht, ladenT, "Maus");
@@ -281,6 +286,7 @@ public static partial class AutoMessung
                     + (DatenAbdruck(daten) == vorher ? ", Datenordner wie vorher" : ", Datenordner GEAENDERT"));
             }
             OrdnerQuelle.Bremse = TimeSpan.Zero;
+            OrdnerQuelle.HaltNachErstemBlock = TimeSpan.Zero;
 
             // A3: Rueckfrage ohne WLAN kommt VOR dem Laden (kein Balken), „Später“ laedt nichts, „Jetzt laden“ laedt
             OptionenSeite.PaketMobilFuerTests = true;
@@ -340,6 +346,9 @@ public static partial class AutoMessung
         }
         var ende = DatenAbdruck(daten);
         Pruefe("Datenordner am Ende wie vorher", ende == vorher, ende == vorher ? "gleich" : "ANDERS");
+        var haengerNeu = Lernplattform.Core.Diagnose.OrdnerAbdruck.NeueHaengerEintraege(haengerVorher, Lernplattform.Core.Diagnose.OrdnerAbdruck.HaengerText(daten));
+        Pruefe("Haenger-Diagnose waehrend der Probe nur verdeckt", Lernplattform.Core.Diagnose.OrdnerAbdruck.NurVerdeckt(haengerNeu),
+            haengerNeu.Count == 0 ? "keine neuen Eintraege" : haengerNeu.Count + " neue Eintraege: " + string.Join(" | ", haengerNeu));
         await ansicht.ZeigeAsync(Seiten.Dashboard);
         return funde;
     }

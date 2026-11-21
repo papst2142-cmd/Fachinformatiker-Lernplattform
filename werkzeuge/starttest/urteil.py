@@ -758,7 +758,8 @@ def selbsttest():
     rot |= urteil_github.selbsttest()
     # Weisung P12-324 (Nico 1a 2a 3a 4c): Zeitlimits aus werkzeuge/ci/zeitlimits.json gleich ci.yml, Vorschlagsregel und
     # Reserve-Tabelle (je mit Gegenproben); beide aendern kein Urteil
-    for name in ("zeitlimits", "reserve"):
+    # Welle „Ablauf stabil“ C (P12-338/P12-340): tor_gleich.py beweist vor dem Merge „ein Lauf reicht“ (Baum gleich, 18/18)
+    for name in ("zeitlimits", "reserve", "tor_gleich"):
         spec = importlib.util.spec_from_file_location(name, os.path.join("werkzeuge", "ci", name + ".py"))
         modul = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(modul)

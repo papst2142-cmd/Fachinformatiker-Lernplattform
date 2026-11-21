@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.VisualTree;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Pakete;
 using Lernplattform.Core.Spiel;
@@ -89,6 +90,11 @@ public static partial class AutoMessung
                 && !seite.OrtKnoepfe.Keys.Any(k => k.EndsWith("probe_grafik", StringComparison.Ordinal))
                 && PaketDienst.Verwaltung.Zeilen().Any(z => z.Kennung == "probe_grafik"),
                 spiel.Zeile.Replace('\n', ' ') + " | Knoepfe: " + string.Join(", ", seite.OrtKnoepfe.Keys));
+            // Sammelliste 421 (Lauf 1126, Mac): der Knopf wird nach den Pruefungen oben frisch geholt; die Knoepfe des Orts entstehen
+            // nach einem neuen Bild der Tafel neu, ein Tippen auf den alten (nicht mehr angezeigten) Knopf laedt nichts
+            await ansicht.BildFertigAsync();
+            laden = seite.OrtKnoepfe.GetValueOrDefault(StadtSpiel.AktionPaketLaden + ZugPaket);
+            var ladenAngezeigt = laden?.GetVisualRoot() is not null;
             if (laden is not null)
             {
                 await BedienenAsync(ansicht, laden, "Finger");
@@ -97,7 +103,7 @@ public static partial class AutoMessung
             var zugKnopf = seite.OrtKnoepfe.GetValueOrDefault(StadtSpiel.AktionZug + ZugPaket);
             Pruefe("Paket am Bahnhof geladen", KnopfName(zugKnopf) == ZugTexte.Format(ZugTexte.ZugNach, "Probe: kleine Stadt")
                 && PaketDienst.Verwaltung.Staedte().Any(s => s.Kopf.Kennung == ZugPaket),
-                (KnopfName(zugKnopf) ?? "kein Knopf Zug") + " | " + spiel.Zeile.Replace('\n', ' '));
+                (KnopfName(zugKnopf) ?? "kein Knopf Zug") + (ladenAngezeigt ? "" : " (Knopf Laden war nicht angezeigt)") + " | " + spiel.Zeile.Replace('\n', ' '));
 
             // ein Paket unbekannter Art (Grafik-Paket): auch geladen und als „unbekannte Art“ erkannt faehrt kein Zug dorthin
             var lern = await SpielZug.LadenAsync(sitzung, "probe_grafik");
