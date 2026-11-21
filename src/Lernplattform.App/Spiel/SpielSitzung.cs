@@ -116,6 +116,30 @@ public sealed class SpielSitzung
         }
     }
 
+    /// <summary>
+    /// Welle A 1.2.0 (Weisung P12-334 Punkt 2): beim ersten Laden eines Spielstands mit A 1.2.0 die Moebel der Wohnungen auf die
+    /// breiten Grundrisse umrechnen (Kopie vor_update_* vorher, angehaengte Zeilen; spaeter nie wieder). Ein Fehler haelt das
+    /// Spiel nicht an: er steht im Fehlerprotokoll, der naechste Start versucht es wieder.
+    /// </summary>
+    private void GrundrisseUmrechnen()
+    {
+        var ordner = Path.GetDirectoryName(_schreiber.Lernstand.Pfad)!;
+        try
+        {
+            var ergebnis = Verwaltung.GrundrisseUmrechnen(SpielStart.Breit());
+            if (ergebnis.Protokoll.Length > 0)
+            {
+                Core.Update.Updateprotokoll.Schreiben(ergebnis.Protokoll, ordner);
+            }
+        }
+        catch (Exception fehler) when (fehler is SpielBelegtAusnahme or SpielFehler or IOException or UnauthorizedAccessException or InvalidDataException
+            or Microsoft.Data.Sqlite.SqliteException)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben("Spiel: Umrechnung breite Flure: " + fehler.GetType().Name,
+                Path.Combine(ordner, Core.Diagnose.Fehlerprotokoll.DateiName));
+        }
+    }
+
     private StadtSpiel Neu()
     {
         if (Verwaltung.Ablauf is not { } ablauf || ablauf.Stand.Profil is null)
@@ -124,6 +148,7 @@ public sealed class SpielSitzung
         }
         // Welle A 0.88.0: die Stadt, in der die Figur ist (Stadt 1 oder eine Paket-Stadt); fehlt das Paket, Stadt 1 mit dem Hinweis
         ablauf.Sperre = SperreGrund;
+        GrundrisseUmrechnen();
         var kennung = StadtDerFigur(ablauf.Stand);
         _fehlt = null;
         StadtSpiel spiel;

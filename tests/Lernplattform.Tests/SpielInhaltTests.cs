@@ -2,6 +2,7 @@ using System.Text.Json;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Spiel;
+using Lernplattform.Core.Spiel.Probe;
 
 namespace Lernplattform.Tests;
 
@@ -12,9 +13,16 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class SpielInhaltTests
 {
-    private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_inhalte.json");
+    internal static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_inhalte.json");
 
-    internal static readonly PyObjekt Inhalt = Laden();
+    /// <summary>Spielinhalte mit den alten, schmalen Grundrissen (Stand bis A 1.1.0, wie `inhalte/`): fuer Proben gegen die alten Masse.</summary>
+    internal static readonly PyObjekt InhaltSchmal = Laden();
+
+    /// <summary>
+    /// Welle A 1.2.0 (Weisung P12-334): die Spielinhalte, wie Spiel und Werkzeug sie lesen, mit den breiten Grundrissen als Daten
+    /// (<see cref="GrundrisseBreit"/>).
+    /// </summary>
+    internal static readonly PyObjekt Inhalt = GrundrisseBreit.Einsetzen(InhaltSchmal, GrundrisseBreit.Inhalt, GrundrisseBreitTests.Daten.Value);
 
     /// <summary>Spielinhalte laden; dabei die Themen der Lerninhalte fuer alle Spiel-Tests setzen (SpielThemen.Standard).</summary>
     private static PyObjekt Laden()

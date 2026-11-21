@@ -80,7 +80,8 @@ public class ArbeitsortFormatTests
         Assert.Contains("\"formatversion\": 2,", Encoding.UTF8.GetString(stadt), StringComparison.Ordinal);
         // die Projektdatei traegt die Kennzeile des Werkzeugs (Version), darum nur bis auf diese Zeile gleich
         Assert.Equal(OhneWerkzeug(Testdatei(NeuProjekt)), OhneWerkzeug(projekt));
-        Assert.Equal(OhneWerkzeug(Testdatei(NeuStadt)), OhneWerkzeug(stadt));
+        // seit S 0.59.0 (Weisung P12-334) mit den breiten Grundrissen, die das Spiel in die alte Datei einsetzt
+        Assert.Equal(OhneWerkzeug(TestdateiTests.MitBreit(Testdatei(NeuStadt))), OhneWerkzeug(stadt));
     }
 
     private static string OhneWerkzeug(byte[] daten) =>

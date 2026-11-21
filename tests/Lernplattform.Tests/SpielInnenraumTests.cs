@@ -14,8 +14,13 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class SpielInnenraumTests
 {
-    internal static readonly Lazy<PyObjekt> Innenraeume = new(() =>
+    /// <summary>innenraeume.json wie im Repo (alte Grundrisse).</summary>
+    internal static readonly Lazy<PyObjekt> InnenraeumeAlt = new(() =>
         (PyObjekt)Py.Lesen(File.ReadAllBytes(Path.Combine(Pfade.Wurzel, "inhalte_csharp", "spiel", "innenraeume.json")))!);
+
+    /// <summary>Welle A 1.2.0 (Weisung P12-334): die Innenraeume, wie Spiel und Werkzeug sie lesen (breite Grundrisse als Daten).</summary>
+    internal static readonly Lazy<PyObjekt> Innenraeume = new(() =>
+        GrundrisseBreit.Einsetzen(InnenraeumeAlt.Value, GrundrisseBreit.Innenraeume, GrundrisseBreitTests.Daten.Value));
 
     private static PyObjekt Inhalt => SpielInhaltTests.Inhalt;
 
@@ -184,7 +189,8 @@ public class SpielInnenraumTests
     {
         var innen = Innenraum.Bauen(Innenraum.Serverfarm, NeuerAblauf().Stand, Innenraeume.Value, null)!;
         Assert.Equal(["arendt", "brauer", "ruppert"], innen.Personen.Select(p => p.Id));
-        Assert.Equal((23.7f, 10.7f), (innen.Personen[0].X, innen.Personen[0].Z));
+        // Welle A 1.2.0 (Weisung P12-334): die Leitwarte liegt unter dem breiteren Flur 1,0 tiefer, Arendt mit ihr (vorher 10.7)
+        Assert.Equal((23.7f, 11.7f), (innen.Personen[0].X, innen.Personen[0].Z));
         foreach (var raum in SpielDaten.Liste(innen.Gebaeude["raeume"]).Select(SpielDaten.Objekt))
         {
             var tuer = SpielDaten.Objekt(raum["tuer"]);
