@@ -106,9 +106,10 @@ public sealed class EigeneLieder(string datenordner)
         for (var versuch = 0; versuch < liste.Count; versuch++)
         {
             var name = liste[(ab + versuch) % liste.Count];
+            FileStream? stream = null;
             try
             {
-                var stream = new FileStream(Path.Combine(Ordner, name), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                stream = new FileStream(Path.Combine(Ordner, name), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 var strom = (oeffnen ?? ((s, e) => Tondekoder.Strom(s, e)))(stream, Path.GetExtension(name));
                 if (weiterzaehlen)
                 {
@@ -118,6 +119,9 @@ public sealed class EigeneLieder(string datenordner)
             }
             catch (Exception fehler)
             {
+                // Fehlerpruefung P12-341 (Fund 1): eine Datei, die sich nicht lesen laesst, gibt ihren Datei-Griff sofort frei
+                // (vorher blieb er bis zur Speicherbereinigung offen, bei jedem Umlauf der Liste ein weiterer)
+                stream?.Dispose();
                 Fehlerprotokoll.Schreiben("Ton: eigenes Lied übersprungen (" + name + "): " + fehler.GetType().Name + ": " + fehler.Message, FehlerPfad);
             }
         }

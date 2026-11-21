@@ -86,6 +86,10 @@ public static partial class Paket
         {
             using var zip = new ZipArchive(archiv, ZipArchiveMode.Read, leaveOpen: true);
             var dateien = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+            // Fehlerpruefung P12-341 (Fund 2): Windows und macOS unterscheiden Gross-/Kleinschreibung in Dateinamen nicht.
+            // Zwei Namen, die sich nur darin unterscheiden, landen dort in EINER Datei (die zweite ueberschreibt die erste),
+            // obwohl beide einzeln geprueft wurden. Darum gilt ein solcher Name wie ein doppelter.
+            var namen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             long summe = 0;
             foreach (var eintrag in zip.Entries)
             {
@@ -94,7 +98,7 @@ public static partial class Paket
                 {
                     return (null, PaketTexte.Format(PaketTexte.DateiFremd, name));
                 }
-                if (dateien.ContainsKey(name))
+                if (!namen.Add(name))
                 {
                     return (null, PaketTexte.Format(PaketTexte.DateiFremd, name));
                 }

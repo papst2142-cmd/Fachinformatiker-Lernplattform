@@ -175,6 +175,40 @@ public sealed class SpielHoerprobeTests
         }
     }
 
+    /// <summary>
+    /// Fehlerpruefung P12-341 Fund 1: eine eigene Musikdatei, die sich nicht lesen laesst, gibt ihren Datei-Griff sofort
+    /// frei. Bis A 1.2.1 blieb er offen (bis zur Speicherbereinigung), bei jedem Umlauf der Liste ein weiterer.
+    /// Gegenprobe: mit dem alten Ablauf ist jeder Strom nach dem Ueberspringen noch lesbar (rot).
+    /// </summary>
+    [Fact]
+    public void KaputtesLied_GibtDateiGriffSofortFrei()
+    {
+        var ordner = NeuerOrdner();
+        try
+        {
+            var lieder = new EigeneLieder(ordner);
+            Directory.CreateDirectory(lieder.Ordner);
+            File.WriteAllBytes(Path.Combine(lieder.Ordner, "a_kaputt.mp3"), Encoding.ASCII.GetBytes("kein Ton"));
+            File.WriteAllBytes(Path.Combine(lieder.Ordner, "b_kaputt.flac"), Encoding.ASCII.GetBytes("auch kein Ton"));
+            var gesehen = new List<Stream>();
+            ITonStrom Kaputt(Stream s, string endung)
+            {
+                gesehen.Add(s);
+                throw new InvalidDataException("kein Ton");
+            }
+            for (var umlauf = 0; umlauf < 3; umlauf++)
+            {
+                Assert.Null(lieder.Erstes(Kaputt));
+            }
+            Assert.Equal(6, gesehen.Count);
+            Assert.All(gesehen, s => Assert.False(s.CanRead, "Datei-Griff nach dem Ueberspringen noch offen"));
+        }
+        finally
+        {
+            Directory.Delete(ordner, true);
+        }
+    }
+
     /// <summary>Gesamt 0 % = still, auch waehrend einer Hoerprobe (der Mischer gibt nichts aus).</summary>
     [Fact]
     public void NullProzentStill()

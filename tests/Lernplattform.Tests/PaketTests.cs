@@ -103,6 +103,26 @@ public sealed class PaketTests : IDisposable
         Assert.Equal(PaketTexte.Format(PaketTexte.FeldFehlt, "art"), Grund(MitKopf(k => k.Remove("art"))));
     }
 
+    /// <summary>
+    /// Fehlerpruefung P12-341 Fund 2: zwei Dateinamen, die sich nur in Gross-/Kleinschreibung unterscheiden, sind unter
+    /// Windows und macOS EINE Datei. Ein solches Paket ist fehlerhaft (wie ein doppelter Name), auch wenn der Kopf beide
+    /// mit richtiger Pruefsumme nennt. Gegenprobe: bis A 1.2.1 galt es als gut (Grund leer).
+    /// </summary>
+    [Fact]
+    public void A2_NamenNurGrossKleinAnders_Fehlerhaft()
+    {
+        var d = Dateien(Klein);
+        var kopf = JsonNode.Parse(d[Paket.KopfDatei])!.AsObject();
+        var gross = Paket.StadtDatei.ToUpperInvariant();
+        kopf["dateien"]![gross] = kopf["dateien"]![Paket.StadtDatei]!.DeepClone();
+        var zip = Zip([(Paket.KopfDatei, Encoding.UTF8.GetBytes(kopf.ToJsonString())), (Paket.StadtDatei, d[Paket.StadtDatei]), (gross, d[Paket.StadtDatei])]);
+        Assert.Equal(PaketTexte.Format(PaketTexte.DateiFremd, gross), Grund(zip));
+        // dasselbe Paket mit einem wirklich anderen Namen bleibt gut (die Regel trifft nur Gross-/Kleinschreibung)
+        var andersKopf = JsonNode.Parse(d[Paket.KopfDatei])!.AsObject();
+        andersKopf["dateien"]!["stadt2.fistadt"] = andersKopf["dateien"]![Paket.StadtDatei]!.DeepClone();
+        Assert.Null(Grund(Zip([(Paket.KopfDatei, Encoding.UTF8.GetBytes(andersKopf.ToJsonString())), (Paket.StadtDatei, d[Paket.StadtDatei]), ("stadt2.fistadt", d[Paket.StadtDatei])])));
+    }
+
     [Fact]
     public void A2_Kaputt_Abgeschnitten_Fehlt_Fremd_ZuNeu()
     {
