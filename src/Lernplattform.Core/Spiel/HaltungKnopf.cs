@@ -38,7 +38,10 @@ public static class HaltungKnopf
     public const double Rand = 16;
 
     /// <summary>
-    /// Mittelpunkte (in Punkten der Spielflaeche) von Springen und Haltung. Welle A 1.0.0 (Sammelliste 405, Nico: „weiter nach unten
+    /// Mittelpunkte (in Punkten der Spielflaeche) von Springen und Haltung. Welle A 1.2.0 (Sammelliste 412, Weisung P12-332, Nico:
+    /// „Der Joystick sollte da sitzen und die Knoepfe darueber“): der rechte Stick liegt unten rechts in der Ecke, Springen steht mit
+    /// <see cref="Rand"/> Abstand ueber seinem Kreis am rechten Rand, Haltung links daneben etwas hoeher; kein Knopf liegt im
+    /// Kreis des Sticks; ist ueber dem Kreis kein Platz (sehr flaches Bild), stehen beide links neben ihm. Bis A 1.1.0 (Gegenprobe <see cref="EckeFuerTests"/>, Welle A 1.0.0, Sammelliste 405, Nico: „weiter nach unten
     /// in die Ecken“): Springen unten rechts in der Ecke (<see cref="Rand"/> zum Rand), Haltung links daneben etwas hoeher auf dem
     /// Daumenbogen. Ragt Haltung dort bis an die Leiste (schmales Bild oder aufgeklappte Leiste), stehen beide ueber der Leiste.
     /// Den Platz der Knoepfe haelt der rechte Stick frei (<see cref="Sperre"/>). Kein Platz (sehr flaches Bild, Haltung in der
@@ -57,6 +60,24 @@ public static class HaltungKnopf
         }
         const double neben = 14;
         const double hoch = 18;
+        if (!Ecke.Value)
+        {
+            // Welle A 1.2.0 (Sammelliste 412, Nico: „Der Joystick sollte da sitzen und die Knoepfe darueber“): der rechte Stick
+            // hat die Ecke unten rechts (so tief wie seit A 1.0.0), die Knoepfe stehen ueber seinem Kreis, Springen am rechten Rand
+            var (_, sy, sr) = Sticks.Lage(b.Breite, b.Hoehe, Sticks.Seite.Rechts, b with { Sperre = default });
+            var sp = (X: b.Breite - Rand - (g / 2), Y: sy - sr - Rand - (g / 2));
+            var hochNeu = Math.Clamp(sp.Y - (k / 2) - (b.Oben + 4), 0, hoch);
+            var ha = (X: sp.X - (g / 2) - neben - (k / 2), Y: sp.Y - hochNeu);
+            if (Math.Min(sp.Y - (g / 2), ha.Y - (k / 2)) >= b.Oben + 4 && ha.X - (k / 2) >= b.Breite / 2)
+            {
+                return (sp, ha);
+            }
+            // sehr flaches Bild (ueber dem Stick kein Platz): beide links neben seinem Kreis, Springen auf seiner Hoehe
+            var (sx, _, _) = Sticks.Lage(b.Breite, b.Hoehe, Sticks.Seite.Rechts, b with { Sperre = default });
+            var sn = (X: sx - sr - Rand - (g / 2), Y: Math.Min(sy, b.Hoehe - b.Unten - Rand - (g / 2)));
+            var hn = (X: sn.X - (g / 2) - neben - (k / 2), Y: sn.Y - Math.Clamp(sn.Y - (k / 2) - (b.Oben + 4), 0, hoch));
+            return Math.Min(sn.Y - (g / 2), hn.Y - (k / 2)) < b.Oben + 4 || hn.X - (k / 2) < b.Breite / 2 ? null : (sn, hn);
+        }
         var springen = (X: b.Breite - Rand - (g / 2), Y: b.Hoehe - Rand - (g / 2));
         var haltung = (X: springen.X - (g / 2) - neben - (k / 2), Y: springen.Y - hoch);
         // steht die Leiste unter Haltung oder reicht die Leiste ueber die ganze Breite: beide ueber die Leiste
@@ -95,6 +116,11 @@ public static class HaltungKnopf
 
     /// <summary>Gegenprobe (nur Tests, AsyncLocal): Groesse und Lage wie bis A 0.99.0.</summary>
     public static bool AltFuerTests { get => Alt.Value; set => Alt.Value = value; }
+
+    private static readonly AsyncLocal<bool> Ecke = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Knoepfe unten rechts in der Ecke wie A 1.0.0 bis A 1.1.0 (Sammelliste 412).</summary>
+    public static bool EckeFuerTests { get => Ecke.Value; set => Ecke.Value = value; }
 
     private static readonly AsyncLocal<bool> NurSchraeg = new();
 

@@ -35,11 +35,14 @@ public sealed class Spieldaten
 
     public static Spieldaten Laden(Func<string, byte[]?> lesen)
     {
-        var fassung = AktiveFassung.LadenNummer(lesen, BasisFassung);
+        // Welle A 1.2.0 (Weisung P12-333/334): das Werkzeug liest dieselben breiten Grundrisse wie das Spiel (Werkzeug = Spiel)
+        var breit = GrundrisseBreit.Lesen(lesen(GrundrisseBreit.Datei));
+        var fassung = GrundrisseBreit.Fassung(AktiveFassung.LadenNummer(lesen, BasisFassung), breit);
         var karte = PythonJson.Utf8(PythonJson.Standard(fassung.Karte));
         var daten = Py.Lesen(lesen("inhalte_csharp/spiel/geschaefte.json") ?? throw new FileNotFoundException("geschaefte.json")) as PyObjekt
             ?? throw new InvalidDataException("geschaefte.json ist kein Objekt");
-        var inhalt = Geschaefte.NeueMoebelEinfuegen(SpielInhalt.Laden(name => name == "orte" ? karte : lesen("inhalte/spiel/" + name + ".json"), null), daten);
+        var inhalt = GrundrisseBreit.Einsetzen(Geschaefte.NeueMoebelEinfuegen(SpielInhalt.Laden(name => name == "orte" ? karte : lesen("inhalte/spiel/" + name + ".json"), null), daten),
+            GrundrisseBreit.Inhalt, breit);
         GrafikBibliothek? grafik = null;
         if (lesen("inhalte_csharp/grafik/modelle.bin") is { } bin && lesen("inhalte_csharp/grafik/modelle.json") is { } mj && lesen("inhalte_csharp/grafik/zuordnung.json") is { } zj)
         {

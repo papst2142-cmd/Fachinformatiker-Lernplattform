@@ -339,6 +339,25 @@ public sealed class Spielverwaltung
     public bool BestenlisteLoeschen() => Halten(() => Ablauf is { } ablauf ? ablauf.BestenlisteLoeschen() : Direkt().BestenlisteLoeschen());
 
     /// <summary>
+    /// Welle A 1.2.0 (Weisung P12-334 Punkt 2): Moebel des aktiven Spielstands auf die breiten Grundrisse umrechnen
+    /// (<see cref="GrundrissUmrechnung"/>), mit der Sperre der Vorgaenge; Kopie <c>sicherungen/vor_update_*</c> der Datenbank
+    /// vorher (nach dem Schreiben aller Spielschritte), ohne Kopie keine Umrechnung. Belegt: nichts, der naechste Start versucht es.
+    /// </summary>
+    public GrundrissUmrechnung.Ergebnis GrundrisseUmrechnen(Probe.GrundrisseBreit.Daten breit, Uhr? uhr = null)
+    {
+        if (Ablauf is not { } ablauf || ablauf.Stand.Profil is null || GrundrissUmrechnung.Ereignisse(ablauf.Stand, breit).Count == 0)
+        {
+            return new GrundrissUmrechnung.Ergebnis(0, null, "");
+        }
+        var ordner = Path.GetDirectoryName(schreiber.Lernstand.Pfad)!;
+        return Halten(() => GrundrissUmrechnung.Ausfuehren(ablauf, breit, () =>
+        {
+            Direkt();
+            return Update.UpdateAblauf.KopieAnlegen(schreiber.Lernstand.Pfad, Path.Combine(ordner, Uebernahme.SicherungsOrdner), uhr ?? Uhr.System);
+        }));
+    }
+
+    /// <summary>
     /// reset: den aktiven Spielstand zuruecksetzen. Der Durchgang endet (seine Bestwerte kommen in
     /// die Bestenliste), auf demselben Platz beginnt ein neuer; der Name des Platzes bleibt.
     /// </summary>

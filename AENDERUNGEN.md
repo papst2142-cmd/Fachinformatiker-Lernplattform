@@ -1,15 +1,21 @@
 # Änderungen
 
-## A 1.1.0
-In der Ich-Sicht siehst du jetzt weiter zur Seite, und die Gänge, Flure und Türen in den Gebäuden wirken nicht mehr so eng. Wie weit du siehst, stellst du in den Optionen selbst ein.
+## A 1.2.0
+Die Flure und Gänge in den Gebäuden sind jetzt wirklich breiter: Links und rechts hast du mehr Platz bis zur Wand, und die Flure sind dabei nicht länger geworden. Dazu kommen breitere Türen, ein einstellbares Blickfeld in der Ich-Sicht und neu sortierte Knöpfe am Handy.
 
-- Die Ich-Sicht zeigt jetzt waagrecht 90 Grad statt bisher etwa 60 Grad am PC. Das Bild wirkt dadurch nicht mehr wie durch ein Fernglas, und du siehst in Räumen und Fluren viel mehr auf einmal. Beim Wechsel in die Ich-Sicht und zurück gleitet das Blickfeld weich mit.
-- In den Optionen gibt es in der Karte „Steuerung“ den neuen Regler „Blickfeld Ich-Sicht“. Du stellst ihn von 60 bis 110 Grad in Schritten von 5 Grad ein, vorgegeben sind 90 Grad. Die normale Kamera von schräg oben bleibt dabei immer gleich.
-- In allen Gebäuden ist alles jetzt im richtigen Größenverhältnis: Deine Figur, die Menschen, die Wände und die Möbel sind im Verhältnis etwas kleiner, die Räume selbst bleiben an ihrer Stelle. Dadurch ist die Diele deiner Wohnung jetzt gut 1,10 Meter breit, der Flur bei der Bitweiche 1,50 Meter, und die Türen sind so breit wie echte Zimmertüren.
-- Wege, Plätze, Aufgaben und alles, was du drinnen tun kannst, bleiben genau gleich. Sitzen, Liegen, Springen, Ducken, Kriechen, die Werkstatt und die Glastüren der Serverschränke sind an die neuen Größen angepasst.
-- Draußen in der Stadt ändert sich nichts.
+- Die Diele deiner Wohnung ist jetzt 1,32 Meter breit, alle anderen Flure und Gänge mindestens 1,80 Meter: bei der Bitweiche, in deiner eigenen Firma und ihren Filialen, bei den Kunden und in der Serverfarm. Die Räume neben den Fluren bleiben genauso groß wie vorher, das Haus ist innen dafür etwas tiefer. Die Flure sind so lang wie bisher.
+- Alle Zimmertüren drinnen sind jetzt mindestens 90 Zentimeter breit, so breit wie echte Zimmertüren. Sie sitzen an derselben Stelle wie bisher.
+- Deine Figur, die Menschen und die Möbel haben drinnen wieder dieselbe Größe wie in A 1.0.0.
+- In der Ich-Sicht siehst du jetzt waagrecht 75 Grad statt bisher etwa 60 Grad am PC und wirkst dadurch nicht mehr wie durch ein Fernglas. In den Optionen gibt es in der Karte „Steuerung“ den neuen Regler „Blickfeld Ich-Sicht“: Du stellst ihn von 60 bis 110 Grad in Schritten von 5 Grad ein. Die normale Kamera von schräg oben bleibt immer gleich.
+- Die Umzugskartons unter dem Tisch in der Werkstatt der Bitweiche stecken nicht mehr in der Tischplatte: Unter einem Tisch steht jetzt nur eine Lage Kartons, und der Tisch darüber hat nur Beine an den Ecken. Auch sonst steckt in keinem Raum ein Möbelstück in einem anderen.
+- Am Handy und Tablet sitzt der rechte Stick jetzt unten rechts in der Ecke. Die runden Knöpfe „Springen“ und „Haltung“ stehen darüber und liegen nie im Kreis des Sticks, auch mit „Antippen zur Steuerung“. Ist das Bild sehr flach, stehen sie links neben dem Stick.
+- Wege, Plätze, Aufgaben und alles, was du drinnen tun kannst, bleiben genau gleich. Draußen in der Stadt ändert sich nichts.
 - Das Spiel bleibt dabei auf allen Grafikstufen so flüssig wie vorher.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+- Hast du deine Wohnung schon eingerichtet, stehen deine Möbel nach dem Update im selben Zimmer an derselben Stelle wie vorher, auch die in der Diele. Das Programm rechnet sie beim ersten Öffnen des Spielstands einmal um und legt vorher im Ordner „sicherungen“ eine Kopie deines Lernstands an (Name beginnt mit „vor_update_“). Ohne diese Kopie rechnet es nichts um.
+- Dein Lernstand, die Lerninhalte und die Prüfungen bleiben, wie sie sind.
+
+## A 1.1.0
+Diese Version wurde nicht veröffentlicht. Ihr Blickfeld-Regler steckt in A 1.2.0, die übrigen Änderungen hat A 1.2.0 ersetzt.
 
 ## A 1.0.0
 In der Werkstatt baust du einen PC jetzt auf einer Werkbank von oben gesehen zusammen und siehst im Regal, was im Lager liegt. Dazu ist vieles im Spiel aufgeräumt: am Steg, in der Leiste, bei den Knöpfen, an Sessel, Tisch und Drucker.

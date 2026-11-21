@@ -50,6 +50,13 @@ public class TestdateiTests
         return p.Exportieren(Zeit);
     }
 
+    /// <summary>
+    /// Welle A 1.2.0 / S 0.59.0 (Weisung P12-334): eine alte Stadt-Datei so, wie das Spiel sie laedt (breite Grundrisse aus
+    /// <c>grundrisse_breit.json</c> eingesetzt, nur wo der alte Wert passt).
+    /// </summary>
+    public static byte[] MitBreit(byte[] datei) =>
+        GrundrisseBreit.Fassung(StadtFassung.Lesen(datei), GrundrisseBreit.Lesen(Daten.Lesen(GrundrisseBreit.Datei))).Schreiben();
+
     private static PyObjekt OhneWerkzeug(byte[] datei)
     {
         var o = (PyObjekt)Py.Lesen(datei)!;
@@ -66,8 +73,10 @@ public class TestdateiTests
             File.WriteAllBytes(Path.Combine(Daten.Wurzel, Datei), neu);
         }
         var alt = Daten.Lesen(Datei) ?? throw new FileNotFoundException(Datei);
-        // die Versionsnummer des Werkzeugs (und damit die Pruefsumme) darf sich aendern, alles andere nicht
-        Assert.Equal(PythonJson.Text(OhneWerkzeug(neu), true), PythonJson.Text(OhneWerkzeug(alt), true));
+        // die Versionsnummer des Werkzeugs (und damit die Pruefsumme) darf sich aendern, alles andere nicht; seit S 0.59.0
+        // (Weisung P12-334) schreibt der Export die breiten Grundrisse, die das Spiel in die alte Datei einsetzt (Werkzeug = Spiel)
+        Assert.Equal(PythonJson.Text(OhneWerkzeug(neu), true), PythonJson.Text(OhneWerkzeug(MitBreit(alt)), true));
+        Assert.NotEqual(PythonJson.Text(OhneWerkzeug(neu), true), PythonJson.Text(OhneWerkzeug(alt), true));   // Gegenprobe
     }
 
     [Fact]

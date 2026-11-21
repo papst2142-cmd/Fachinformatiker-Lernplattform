@@ -174,11 +174,16 @@ public sealed class Sticks
             unten = Math.Max(unten, b.Hoehe - EckRand - r);
         }
         var my = unten < oben ? (oben + unten) / 2 : Math.Clamp(y, oben, unten);
-        // A 1.0.0: nie in die Sperre (runde Knoepfe): zuerst nach links (in der eigenen Haelfte), sonst nach oben ruecken
+        // A 1.0.0: nie in die Sperre (runde Knoepfe): zuerst nach links (in der eigenen Haelfte), sonst nach oben ruecken.
+        // A 1.2.0 (Sammelliste 412): stehen die Knoepfe ueber dem Stick, rueckt er zuerst nach unten (in die Ecke)
         if (!Alt.Value && b.Sperre.X2 > b.Sperre.X1 && KreisInRechteck(mx, my, r, b.Sperre))
         {
             var linksDavor = b.Sperre.X1 - r;
-            if (linksDavor >= links)
+            if (b.Sperre.Y2 + r <= unten + 1e-9)
+            {
+                my = Math.Max(my, b.Sperre.Y2 + r);
+            }
+            else if (linksDavor >= links)
             {
                 mx = Math.Min(mx, linksDavor);
             }

@@ -125,8 +125,11 @@ public sealed class Kamera
     /// <summary>Welle A 1.1.0: groesstes Blickfeld der Ich-Sicht (waagrecht, Grad).</summary>
     public const float IchBlickfeldMax = 110f;
 
-    /// <summary>Welle A 1.1.0: Vorgabe des Blickfelds der Ich-Sicht (waagrecht, Grad).</summary>
-    public const float IchBlickfeldVorgabe = 90f;
+    /// <summary>
+    /// Vorgabe des Blickfelds der Ich-Sicht (waagrecht, Grad). Welle A 1.1.0: 90; Welle A 1.2.0 (Weisung P12-332, Nico 2c): 75,
+    /// das Ende eines Flurs rueckt naeher, der Flur wirkt nicht mehr so lang.
+    /// </summary>
+    public const float IchBlickfeldVorgabe = 75f;
 
     /// <summary>
     /// Welle A 1.1.0 (Weisung P12-328): Blickfeld der Ich-Sicht waagrecht in Grad (60 bis 110, Vorgabe 90). Die normale Kamera

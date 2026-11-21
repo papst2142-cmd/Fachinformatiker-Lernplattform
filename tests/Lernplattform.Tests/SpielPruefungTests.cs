@@ -14,8 +14,8 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class SpielPruefungTests
 {
-    private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_pruefung.json");
-    private static readonly Lerninhalte Lernen = Lerninhalte.Laden(Pfade.Inhalte);
+    internal static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_pruefung.json");
+    internal static readonly Lerninhalte Lernen = Lerninhalte.Laden(Pfade.Inhalte);
 
     private static object? W(JsonElement e) => Py.Lesen(e.GetRawText());
 
