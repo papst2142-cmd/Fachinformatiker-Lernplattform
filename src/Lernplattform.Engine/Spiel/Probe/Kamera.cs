@@ -117,6 +117,41 @@ public sealed class Kamera
 
     public float Sichtfeld { get; init; } = 40f;
 
+    // ---- Welle A 1.1.0 (Sammelliste 409, Weisung P12-328 Punkt 2): Blickfeld der Ich-Sicht ---------------------------------
+
+    /// <summary>Welle A 1.1.0: kleinstes Blickfeld der Ich-Sicht (waagrecht, Grad).</summary>
+    public const float IchBlickfeldMin = 60f;
+
+    /// <summary>Welle A 1.1.0: groesstes Blickfeld der Ich-Sicht (waagrecht, Grad).</summary>
+    public const float IchBlickfeldMax = 110f;
+
+    /// <summary>Welle A 1.1.0: Vorgabe des Blickfelds der Ich-Sicht (waagrecht, Grad).</summary>
+    public const float IchBlickfeldVorgabe = 90f;
+
+    /// <summary>
+    /// Welle A 1.1.0 (Weisung P12-328): Blickfeld der Ich-Sicht waagrecht in Grad (60 bis 110, Vorgabe 90). Die normale Kamera
+    /// bleibt bei <see cref="Sichtfeld"/> (40 Grad senkrecht); beim Uebergang gleitet das Blickfeld mit dem Anteil der Ich-Sicht.
+    /// </summary>
+    public float IchBlickfeld
+    {
+        get => _ichBlickfeld;
+        set => _ichBlickfeld = Math.Clamp(value, IchBlickfeldMin, IchBlickfeldMax);
+    }
+
+    private float _ichBlickfeld = IchBlickfeldVorgabe;
+
+    /// <summary>
+    /// Welle A 1.1.0: senkrechtes Sichtfeld (Grad) zu einem waagrechten Blickfeld <paramref name="waagrecht"/> bei dem
+    /// Seitenverhaeltnis <paramref name="seiten"/> (Breite durch Hoehe). Im Hochformat gilt das Blickfeld fuer die lange
+    /// (senkrechte) Seite, sonst wuerde das Bild nach oben und unten uebermaessig weit.
+    /// </summary>
+    public static float IchSenkrecht(float waagrecht, float seiten) =>
+        2f * MathF.Atan(MathF.Tan(waagrecht * MathF.PI / 360f) / Math.Max(seiten, 1f)) * 180f / MathF.PI;
+
+    /// <summary>Welle A 1.1.0: senkrechtes Sichtfeld jetzt (normale Kamera, Ich-Sicht oder der Weg dazwischen).</summary>
+    public float SichtfeldJetzt(float seiten) =>
+        _ichAnteil <= 0f ? Sichtfeld : Sichtfeld + ((IchSenkrecht(IchBlickfeld, seiten) - Sichtfeld) * _ichAnteil);
+
     /// <summary>Grenzen fuer das Ziel (Welt), damit man die Stadt nicht verliert.</summary>
     public (float X1, float Z1, float X2, float Z2) Grenzen { get; init; } = (-100, -100, 100, 100);
 
@@ -294,7 +329,7 @@ public sealed class Kamera
     public float Versatz { get; set; }
 
     public Matrix4x4 Projektion(float breite, float hoehe) =>
-        Matrix4x4.CreatePerspectiveFieldOfView(Sichtfeld * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f)
+        Matrix4x4.CreatePerspectiveFieldOfView(SichtfeldJetzt(Math.Max(breite, 1) / Math.Max(hoehe, 1)) * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f)
         * Matrix4x4.CreateTranslation(0, Versatz * (1f - _ichAnteil), 0);
 
     public void Setzen(float zielX, float zielZ)

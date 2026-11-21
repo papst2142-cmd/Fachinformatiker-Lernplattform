@@ -237,6 +237,16 @@ public static class SpielProbeTexte
 
     public const string UmsehenSatz = "Gilt für das Umsehen mit dem rechten Stick, der Maus und den Tasten zum Drehen. An: Diese Richtung ist umgekehrt. Gehen bleibt immer gleich.";
 
+    /// <summary>
+    /// Welle A 1.1.0 (Sammelliste 409, Weisung P12-328 Punkt 2): Regler „Blickfeld Ich-Sicht“ in der Karte „Steuerung“ (PC und
+    /// Handy gleich), Anzeige des Werts und der Satz darunter.
+    /// </summary>
+    public const string Blickfeld = "Blickfeld Ich-Sicht";
+
+    public const string BlickfeldGrad = "{0}°";
+
+    public const string BlickfeldSatz = "Wie weit du in der Ich-Sicht zur Seite siehst, von 60 bis 110 Grad (Vorgabe 90). Größer wirkt weiter und Räume geräumiger, kleiner wirkt näher. Die normale Kamera bleibt gleich.";
+
     public const string StickGehen = "Stick zum Gehen";
 
     public const string StickDrehen = "Stick zum Drehen";

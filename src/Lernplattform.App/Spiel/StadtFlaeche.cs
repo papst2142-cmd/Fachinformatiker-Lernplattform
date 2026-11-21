@@ -1062,6 +1062,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
             LichtSetzen(gl, _lichtOrte, licht, kamera.Auge);
             DunstSetzen(gl, _dunstOrte);
             gl.Uniform1f(_ortDurch, 0f);
+            // Welle A 1.1.0 (Weisung P12-328): Blickfeld der Ich-Sicht aus dem Regler in der Karte „Steuerung“
+            kamera.IchBlickfeld = Lernplattform.Core.Spiel.Blickfeldbedienung.Grad;
             var sichtProj = kamera.Sicht * kamera.Projektion(breite, hoehe);
             LetzteSichtProj = sichtProj;
             LetzterAbstand = kamera.Abstand;

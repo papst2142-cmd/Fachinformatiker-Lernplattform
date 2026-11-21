@@ -113,6 +113,88 @@ public sealed partial class OptionenSeite
         _umsehenLr.Margin = new Avalonia.Thickness(0, GruppenAbstand, 0, 0);
         _umsehenOb = UmsehenSchalterBauen(panel, SpielProbeTexte.UmsehenObenUnten, Umsehbedienung.SchluesselObenUnten, an => Umsehbedienung.ObenUnten = an);
         panel.Children.Add(new LernText(SpielProbeTexte.UmsehenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        // Welle A 1.1.0 (Weisung P12-328 Punkt 2): Regler „Blickfeld Ich-Sicht“ 60 bis 110 Grad, Vorgabe 90
+        BlickfeldReglerAnhaengen(panel);
+    }
+
+    private Slider? _blickfeld;
+    private TextBlock? _blickfeldZahl;
+    private DispatcherTimer? _blickfeldSpeichern;
+
+    /// <summary>Start-Test: Regler „Blickfeld Ich-Sicht“ und seine Anzeige (null ohne aufgeklappte Karte).</summary>
+    public (Slider? Regler, TextBlock? Zahl) BlickfeldRegler => (_blickfeld, _blickfeldZahl);
+
+    private void BlickfeldReglerAnhaengen(Panel panel)
+    {
+        // Titel ueber dem Regler (eigene Zeile), damit er bei grosser Schrift nie neben dem Regler zu eng wird
+        var titel = new LernText(SpielProbeTexte.Blickfeld, "Normal", FontWeight.Normal, "Pinsel.text") { Margin = new Avalonia.Thickness(0, GruppenAbstand, 0, 0) };
+        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
+        var wert = Blickfeldbedienung.Lesen(Zustand.Werte);
+        var regler = new Slider
+        {
+            Minimum = Blickfeldbedienung.Min, Maximum = Blickfeldbedienung.Max, Value = wert,
+            SmallChange = Blickfeldbedienung.Schritt, LargeChange = 2 * Blickfeldbedienung.Schritt,
+            TickFrequency = Blickfeldbedienung.Schritt, IsSnapToTickEnabled = true,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(regler, SpielProbeTexte.Blickfeld);
+        if (Avalonia.Application.Current!.TryFindResource(Akzent(Optionen.Tasten), out var farbe))
+        {
+            foreach (var n in (string[])["SliderTrackValueFill", "SliderTrackValueFillPointerOver", "SliderTrackValueFillPressed",
+                         "SliderThumbBackground", "SliderThumbBackgroundPointerOver", "SliderThumbBackgroundPressed"])
+            {
+                regler.Resources[n] = farbe;
+            }
+        }
+        var zahl = Schrift.Text(string.Format(SpielProbeTexte.BlickfeldGrad, wert), "Normal", FontWeight.Bold, "Pinsel.text");
+        zahl.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        zahl.MinWidth = 48 * Schrift.Faktor;
+        zahl.TextAlignment = TextAlignment.Right;
+        regler.ValueChanged += (_, e) =>
+        {
+            var grad = Blickfeldbedienung.Begrenzen((int)Math.Round(e.NewValue));
+            zahl.Text = string.Format(SpielProbeTexte.BlickfeldGrad, grad);
+            if (_setzen)
+            {
+                return;
+            }
+            // das Bild folgt sofort, geschrieben wird erst, wenn der Regler ruht (nicht jeder Zwischenwert)
+            Blickfeldbedienung.Grad = grad;
+            _blickfeldSpeichern ??= new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) => BlickfeldSpeichern());
+            _blickfeldSpeichern.Stop();
+            _blickfeldSpeichern.Start();
+        };
+        _blickfeld = regler;
+        _blickfeldZahl = zahl;
+        Grid.SetColumn(zahl, 1);
+        zeile.Children.Add(regler);
+        zeile.Children.Add(zahl);
+        panel.Children.Add(titel);
+        panel.Children.Add(zeile);
+        panel.Children.Add(new LernText(SpielProbeTexte.BlickfeldSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
+    }
+
+    /// <summary>Regler „Blickfeld Ich-Sicht“ speichern (auch sofort fuer den Start-Test); false = nicht gespeichert.</summary>
+    public bool BlickfeldSpeichern()
+    {
+        _blickfeldSpeichern?.Stop();
+        if (_blickfeld is null)
+        {
+            return true;
+        }
+        var grad = Blickfeldbedienung.Begrenzen((int)Math.Round(_blickfeld.Value));
+        if (Ergebnis(Zustand.Aendere(werte => Blickfeldbedienung.Wert(werte, grad))))
+        {
+            Blickfeldbedienung.Grad = grad;
+            return true;
+        }
+        // nicht gespeichert: der Regler zeigt wieder, was gilt (nie still verloren)
+        var gilt = Blickfeldbedienung.Lesen(Zustand.Werte);
+        Blickfeldbedienung.Grad = gilt;
+        _setzen = true;
+        _blickfeld.Value = gilt;
+        _setzen = false;
+        return false;
     }
 
     /// <summary>Welle A 0.98.0 (Sammelliste 397): Abstand ueber einer neuen Gruppe in einer Karte (wie die Ueberschriften in <c>OptionenSeite</c>).</summary>

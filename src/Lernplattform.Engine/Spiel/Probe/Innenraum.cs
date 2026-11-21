@@ -44,8 +44,15 @@ public sealed record InnenPerson(string Id, string Name, float X, float Z, PyObj
 /// </summary>
 public sealed partial class Innenraum
 {
-    /// <summary>Eine Einheit des Grundrisses sind etwa 0,6 m (Tuer 1,4 = 0,84 m, Schreibtisch 2,4 x 1,0).</summary>
-    public const float Meter = 1f / 0.6f;
+    /// <summary>
+    /// Eine Einheit des Grundrisses sind 0,75 m (Tuer 1,4 = 1,05 m, Schreibtisch 2,4 x 1,0 = 1,8 x 0,75 m). Bis A 1.0.0 waren es
+    /// 0,6 m; Welle A 1.1.0 (Sammelliste 409, Weisung P12-328 Punkt 1, „Gaenge zu eng“): nur Darstellung, Grundriss, Wege und
+    /// Plaetze bleiben, Figur, Waende und Moebel werden im Verhaeltnis kleiner (Diele 1,13 m, Bueroflur 1,50 m).
+    /// </summary>
+    public const float Meter = 1f / 0.75f;
+
+    /// <summary>Welle A 1.1.0: Massstab bis A 1.0.0 (nur fuer die Gegenprobe der Gangbreiten in den Tests).</summary>
+    public const float MeterBisA100 = 1f / 0.6f;
 
     /// <summary>Hoehe der Waende (1,8 m): niedriger als echt, damit die schraege Kamera in die Raeume sieht.</summary>
     public const float WandHoehe = 1.8f * Meter;
