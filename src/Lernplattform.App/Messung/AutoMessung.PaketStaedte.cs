@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.VisualTree;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Pakete;
 using Lernplattform.Core.Spiel;
@@ -94,7 +93,7 @@ public static partial class AutoMessung
             // nach einem neuen Bild der Tafel neu, ein Tippen auf den alten (nicht mehr angezeigten) Knopf laedt nichts
             await ansicht.BildFertigAsync();
             laden = seite.OrtKnoepfe.GetValueOrDefault(StadtSpiel.AktionPaketLaden + ZugPaket);
-            var ladenAngezeigt = laden?.GetVisualRoot() is not null;
+            var ladenAngezeigt = laden is not null && TopLevel.GetTopLevel(laden) is not null;
             if (laden is not null)
             {
                 await BedienenAsync(ansicht, laden, "Finger");
