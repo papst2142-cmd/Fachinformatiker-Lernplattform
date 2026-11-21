@@ -83,7 +83,7 @@ public class SpielNeuaufbauTests
             foreach (var stand in protokoll.GetProperty("staende").EnumerateArray())
             {
                 var n = stand.GetProperty("n").GetInt32();
-                var s = new Spielstand(ereignisse.Take(n), SpielInhaltTests.InhaltPython);
+                var s = new Spielstand(ereignisse.Take(n), SpielInhaltTests.Inhalt);
                 Gleich(stand.GetProperty("stand").GetProperty("felder"), Felder(s), name + " n=" + n + " Feld");
                 Gleich(stand.GetProperty("stand").GetProperty("abgeleitet"), Abgeleitet(s), name + " n=" + n);
                 anzahl++;
@@ -99,7 +99,7 @@ public class SpielNeuaufbauTests
         foreach (var protokoll in VergleichsHilfe.Mindestens(Soll.GetProperty("protokolle"), 20, "protokolle"))
         {
             var ereignisse = Ereignisse(protokoll.GetProperty("ereignisse"));
-            var s = new Spielstand([], SpielInhaltTests.InhaltPython);
+            var s = new Spielstand([], SpielInhaltTests.Inhalt);
             var einmal = s.EinmalGezaehlt();
             foreach (var e in ereignisse)
             {
@@ -109,7 +109,7 @@ public class SpielNeuaufbauTests
                     s.BearbeitetNotieren(e.Art, e.Daten, vorher);
                 }
             }
-            var neu = new Spielstand(ereignisse, SpielInhaltTests.InhaltPython);
+            var neu = new Spielstand(ereignisse, SpielInhaltTests.Inhalt);
             Assert.Equal(PythonJson.Text(Felder(neu)), PythonJson.Text(Felder(s)));
         }
     }

@@ -13,16 +13,16 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class SpielInhaltTests
 {
-    private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_inhalte.json");
+    internal static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_inhalte.json");
 
-    /// <summary>Spielinhalte genau wie Python v0.63.2 (alte Grundrisse): fuer alle Vergleiche mit den Python-Sollwerten.</summary>
-    internal static readonly PyObjekt InhaltPython = Laden();
+    /// <summary>Spielinhalte mit den alten, schmalen Grundrissen (Stand bis A 1.1.0, wie `inhalte/`): fuer Proben gegen die alten Masse.</summary>
+    internal static readonly PyObjekt InhaltSchmal = Laden();
 
     /// <summary>
     /// Welle A 1.2.0 (Weisung P12-334): die Spielinhalte, wie Spiel und Werkzeug sie lesen, mit den breiten Grundrissen als Daten
     /// (<see cref="GrundrisseBreit"/>).
     /// </summary>
-    internal static readonly PyObjekt Inhalt = GrundrisseBreit.Einsetzen(InhaltPython, GrundrisseBreit.Inhalt, GrundrisseBreitTests.Daten.Value);
+    internal static readonly PyObjekt Inhalt = GrundrisseBreit.Einsetzen(InhaltSchmal, GrundrisseBreit.Inhalt, GrundrisseBreitTests.Daten.Value);
 
     /// <summary>Spielinhalte laden; dabei die Themen der Lerninhalte fuer alle Spiel-Tests setzen (SpielThemen.Standard).</summary>
     private static PyObjekt Laden()
@@ -37,8 +37,8 @@ public class SpielInhaltTests
     [Fact]
     public void SchluesselInPythonsReihenfolge()
     {
-        Assert.Equal(Soll.GetProperty("schluessel").EnumerateArray().Select(s => s.GetString()!), InhaltPython.Select(p => p.Key));
-        Assert.Equal(SpielInhalt.Schluessel, InhaltPython.Select(p => p.Key));
+        Assert.Equal(Soll.GetProperty("schluessel").EnumerateArray().Select(s => s.GetString()!), Inhalt.Select(p => p.Key));
+        Assert.Equal(SpielInhalt.Schluessel, Inhalt.Select(p => p.Key));
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class SpielInhaltTests
         foreach (var liste in new[] { "aufgaben", "zwischenfaelle" })
         {
             var soll = Soll.GetProperty(liste).EnumerateArray().ToList();
-            var ist = (List<object?>)InhaltPython[liste]!;
+            var ist = (List<object?>)Inhalt[liste]!;
             Assert.Equal(soll.Count, ist.Count);
             for (var i = 0; i < soll.Count; i++)
             {
@@ -65,14 +65,14 @@ public class SpielInhaltTests
     {
         foreach (var (schluessel, soll) in Soll.GetProperty("werte").EnumerateObject().Select(p => (p.Name, p.Value)))
         {
-            var ist = InhaltPython[schluessel];
+            var ist = Inhalt[schluessel];
             Assert.Equal(soll.GetProperty("typ").GetString(), ist is PyObjekt ? "dict" : "list");
             Assert.Equal(soll.GetProperty("anzahl").GetInt32(), Py.Len(ist));
             Assert.True(soll.GetProperty("sha256").GetString() == Py.Pruefsumme(ist), schluessel);
         }
         foreach (var p in Soll.GetProperty("story").EnumerateObject())
         {
-            Assert.True(p.Value.GetString() == Py.Pruefsumme(((PyObjekt)InhaltPython["story"]!)[p.Name]), "story " + p.Name);
+            Assert.True(p.Value.GetString() == Py.Pruefsumme(((PyObjekt)Inhalt["story"]!)[p.Name]), "story " + p.Name);
         }
     }
 
@@ -105,7 +105,7 @@ public class SpielInhaltTests
     [Fact]
     public void KeinPlatzhalterUebrig()
     {
-        Assert.False(SpielInhalt.PlatzhalterUebrig(InhaltPython["aufgaben"]));
+        Assert.False(SpielInhalt.PlatzhalterUebrig(Inhalt["aufgaben"]));
         Assert.True(SpielInhalt.PlatzhalterUebrig(Py.Lesen("""[{"a": ["x {{y}}"]}]""")));
     }
 

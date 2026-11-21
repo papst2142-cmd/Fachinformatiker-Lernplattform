@@ -20,7 +20,7 @@ public class GrundrissUmrechnungTests
 
     /// <summary>Inhalt bis A 1.1.0 (alte Grundrisse) mit den Moebeln der Laeden, wie das Spiel ihn damals lud.</summary>
     private static readonly Lazy<PyObjekt> InhaltAlt = new(() =>
-        Geschaefte.NeueMoebelEinfuegen((PyObjekt)Py.Kopie(SpielInhaltTests.InhaltPython)!, SpielGeschaefteTests.Daten.Value));
+        Geschaefte.NeueMoebelEinfuegen((PyObjekt)Py.Kopie(SpielInhaltTests.InhaltSchmal)!, SpielGeschaefteTests.Daten.Value));
 
     private static PyObjekt InhaltNeu => SpielCharakterTests.InhaltMitNeuen.Value;
 

@@ -394,7 +394,7 @@ public sealed class StadtbauFassungTests
         var gespielt = name.EndsWith("-gespielt", StringComparison.Ordinal);
         var ansicht = gespielt ? name[..^"-gespielt".Length] : name;
         // Welle A 1.2.0 (Weisung P12-334): Fassung 0 ist der alte Stand (alte Grundrisse); die breiten setzt erst das Spiel ein
-        var stand = gespielt ? SpielFingerabdruckTests.Gespielt.Value.Stand : new Spielablauf(SpielInhaltTests.InhaltPython).Stand;
+        var stand = gespielt ? SpielFingerabdruckTests.Gespielt.Value.Stand : new Spielablauf(SpielInhaltTests.InhaltSchmal).Stand;
         string Hash(PyObjekt innenraeume, GrafikBibliothek? grafik = null) =>
             Innenraum.Bauen(ansicht, stand, innenraeume, grafik ?? SpielGrafikTests.Bibliothek.Value, SpielGeschaefteTests.Daten.Value) is { } innen
                 ? StadtSzeneHash.Innen(innen) : "null";

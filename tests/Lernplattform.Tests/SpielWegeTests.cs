@@ -11,12 +11,12 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class SpielWegeTests
 {
-    private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_wege.json");
+    internal static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_wege.json");
 
     /// <summary>Wie der Erzeuger: Buero, Kundenorte, Ausbaustufen der Firma und der Filiale.</summary>
-    private static List<(string Name, LaufOrt Ort)> Grundrisse()
+    internal static List<(string Name, LaufOrt Ort)> Grundrisse(PyObjekt? andere = null)
     {
-        var inhalt = SpielInhaltTests.InhaltPython;
+        var inhalt = andere ?? SpielInhaltTests.Inhalt;
         var liste = new List<(string, LaufOrt)> { ("buero", new LaufOrt((PyObjekt)inhalt["gebaeude"]!, (List<object?>)inhalt["kollegen"]!)) };
         foreach (var ort in (List<object?>)((PyObjekt)inhalt["kunden"]!)["orte"]!)
         {

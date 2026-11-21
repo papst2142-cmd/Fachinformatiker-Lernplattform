@@ -20,7 +20,7 @@ public sealed class GrundrisseBreitTests
     internal static readonly Lazy<GrundrisseBreit.Daten> Daten = new(() => GrundrisseBreit.Lesen(File.Exists(Pfad) ? File.ReadAllBytes(Pfad) : null));
 
     private static GrundrisseBreit.Daten Erzeugt() =>
-        GrundrisseBreit.Erzeugen(SpielInhaltTests.InhaltPython, SpielInnenraumTests.InnenraeumeAlt.Value);
+        GrundrisseBreit.Erzeugen(SpielInhaltTests.InhaltSchmal, SpielInnenraumTests.InnenraeumeAlt.Value);
 
     [Fact]
     public void Datei_GenauDasErzeugte_PasstGanzAufDieAltenDaten()
@@ -37,13 +37,13 @@ public sealed class GrundrisseBreitTests
         var innen = d.Ersatz.Count(e => e.Bereich == GrundrisseBreit.Innenraeume);
         Assert.True(inhalt >= 20 && innen >= 1, $"zu wenige Ersatzstuecke: {inhalt} / {innen}");
         // jedes Stueck passt auf die alten Daten, nach dem Einsetzen keines mehr (zweites Einsetzen aendert nichts)
-        Assert.Equal(inhalt, GrundrisseBreit.Passend(SpielInhaltTests.InhaltPython, GrundrisseBreit.Inhalt, d));
+        Assert.Equal(inhalt, GrundrisseBreit.Passend(SpielInhaltTests.InhaltSchmal, GrundrisseBreit.Inhalt, d));
         Assert.Equal(innen, GrundrisseBreit.Passend(SpielInnenraumTests.InnenraeumeAlt.Value, GrundrisseBreit.Innenraeume, d));
         Assert.Equal(0, GrundrisseBreit.Passend(SpielInhaltTests.Inhalt, GrundrisseBreit.Inhalt, d));
         Assert.Equal(0, GrundrisseBreit.Passend(SpielInnenraumTests.Innenraeume.Value, GrundrisseBreit.Innenraeume, d));
         Assert.Equal(Py.Pruefsumme(SpielInhaltTests.Inhalt), Py.Pruefsumme(GrundrisseBreit.Einsetzen(SpielInhaltTests.Inhalt, GrundrisseBreit.Inhalt, d)));
         // die alten Daten bleiben unveraendert (Einsetzen arbeitet auf einer Kopie)
-        Assert.Equal(2L, Py.Int(SpielDaten.Objekt(SpielDaten.Objekt(SpielInhaltTests.InhaltPython["gebaeude"])["flur"])["h"]));
+        Assert.Equal(2L, Py.Int(SpielDaten.Objekt(SpielDaten.Objekt(SpielInhaltTests.InhaltSchmal["gebaeude"])["flur"])["h"]));
         Assert.Equal(3L, Py.Int(SpielDaten.Objekt(SpielDaten.Objekt(SpielInhaltTests.Inhalt["gebaeude"])["flur"])["h"]));
         // Zahlen behalten ihren Python-Typ (ganze Zahl bleibt ganze Zahl, json 3 statt 3.0; Gegenprobe Kommazahl bleibt Kommazahl)
         Assert.IsType<long>(SpielDaten.Objekt(SpielDaten.Objekt(SpielInhaltTests.Inhalt["gebaeude"])["flur"])["h"]);
@@ -51,7 +51,7 @@ public sealed class GrundrisseBreitTests
         Assert.IsType<long>(farm["hoehe"]);
         Assert.IsType<double>(SpielDaten.Objekt(farm["flur"])["h"]);
         // alle vier Wohnungen haben ihre Umrechnung fuer die Spielstaende
-        Assert.Equal(SpielDaten.Liste(SpielDaten.Objekt(SpielInhaltTests.InhaltPython["wohnungen"])["wohnungen"]).Count, d.Wohnungen.Count);
+        Assert.Equal(SpielDaten.Liste(SpielDaten.Objekt(SpielInhaltTests.InhaltSchmal["wohnungen"])["wohnungen"]).Count, d.Wohnungen.Count);
         Assert.All(d.Wohnungen.Values, u => Assert.True(u.Zuwachs > 0));
     }
 
@@ -60,7 +60,7 @@ public sealed class GrundrisseBreitTests
     {
         var d = Daten.Value;
         // Nico hat die Bitweiche im Werkzeug geaendert: der Ersatz greift nicht, sein Grundriss bleibt
-        var geaendert = (PyObjekt)Py.Kopie(SpielInhaltTests.InhaltPython)!;
+        var geaendert = (PyObjekt)Py.Kopie(SpielInhaltTests.InhaltSchmal)!;
         Py.Setzen(SpielDaten.Objekt(geaendert["gebaeude"]), "breite", 31L);
         var ergebnis = GrundrisseBreit.Einsetzen(geaendert, GrundrisseBreit.Inhalt, d);
         Assert.Equal(31L, Py.Int(SpielDaten.Objekt(ergebnis["gebaeude"])["breite"]));
@@ -69,8 +69,8 @@ public sealed class GrundrisseBreitTests
         var w = SpielDaten.Objekt(SpielDaten.Liste(SpielDaten.Objekt(ergebnis["wohnungen"])["wohnungen"])[0]);
         Assert.Equal(2.2, Py.F(SpielDaten.Objekt(SpielDaten.Objekt(w["gebaeude"])["flur"])["h"]), 6);
         // Gegenprobe: ohne Datei bleibt alles wie in Python
-        Assert.Equal(Py.Pruefsumme(SpielInhaltTests.InhaltPython),
-            Py.Pruefsumme(GrundrisseBreit.Einsetzen(SpielInhaltTests.InhaltPython, GrundrisseBreit.Inhalt, GrundrisseBreit.Daten.Leer)));
+        Assert.Equal(Py.Pruefsumme(SpielInhaltTests.InhaltSchmal),
+            Py.Pruefsumme(GrundrisseBreit.Einsetzen(SpielInhaltTests.InhaltSchmal, GrundrisseBreit.Inhalt, GrundrisseBreit.Daten.Leer)));
         // neuere Formatnummer = klarer Fehler
         Assert.Throws<InvalidDataException>(() => GrundrisseBreit.Lesen("""{"format": 2, "wohnungen": {}, "ersatz": []}"""u8.ToArray()));
     }
@@ -84,12 +84,12 @@ public sealed class GrundrisseBreitTests
     public void Ladepruefung_BreiteInhalte_OhneFunde_StellenImRaum_Gegenprobe()
     {
         Assert.Equal("[]", PythonJson.Text(SpielPruefung.Pruefen((PyObjekt)Py.Kopie(SpielInhaltTests.Inhalt)!, SpielPruefungTests.Lernen).Cast<object?>().ToList()));
-        var (anzahl, falsch) = StellenVergleich(SpielInhaltTests.InhaltPython, SpielInhaltTests.Inhalt);
+        var (anzahl, falsch) = StellenVergleich(SpielInhaltTests.InhaltSchmal, SpielInhaltTests.Inhalt);
         Assert.True(anzahl >= 20, $"zu wenige Stellen: {anzahl}");
         Assert.Empty(falsch);
         var ohneStellen = new GrundrisseBreit.Daten([.. Daten.Value.Ersatz.Where(e => e.Pfad[0] is not ("aufgaben" or "zwischenfaelle"))], Daten.Value.Wohnungen);
-        var halb = GrundrisseBreit.Einsetzen(SpielInhaltTests.InhaltPython, GrundrisseBreit.Inhalt, ohneStellen);
-        Assert.NotEmpty(StellenVergleich(SpielInhaltTests.InhaltPython, halb).Falsch);
+        var halb = GrundrisseBreit.Einsetzen(SpielInhaltTests.InhaltSchmal, GrundrisseBreit.Inhalt, ohneStellen);
+        Assert.NotEmpty(StellenVergleich(SpielInhaltTests.InhaltSchmal, halb).Falsch);
     }
 
     /// <summary>Alle Grundrisse eines Inhalts in fester Reihenfolge (Bitweiche, Kunden, Wohnungen, Firma und Filiale je Stufe).</summary>

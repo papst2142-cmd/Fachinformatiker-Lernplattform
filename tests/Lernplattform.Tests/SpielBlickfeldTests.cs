@@ -41,7 +41,7 @@ public class SpielBlickfeldTests
             liste.Add((Innenraum.Serverfarm, "serverfarm", SpielDaten.Objekt(SpielDaten.Objekt(innenraeume[Innenraum.Serverfarm])["gebaeude"])));
             return liste;
         }
-        var alt = Aus(SpielInhaltTests.InhaltPython, SpielInnenraumTests.InnenraeumeAlt.Value);
+        var alt = Aus(SpielInhaltTests.InhaltSchmal, SpielInnenraumTests.InnenraeumeAlt.Value);
         var neu = Aus(SpielInhaltTests.Inhalt, SpielInnenraumTests.Innenraeume.Value);
         return [.. alt.Zip(neu, (a, n) => (a.Item1, a.Item2, a.Item3, n.Item3))];
     }

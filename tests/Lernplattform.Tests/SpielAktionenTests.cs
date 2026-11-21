@@ -15,7 +15,7 @@ public class SpielAktionenTests
 {
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_aktionen.json");
 
-    private static PyObjekt Inhalt => SpielInhaltTests.InhaltPython;
+    private static PyObjekt Inhalt => SpielInhaltTests.Inhalt;
 
     private static object? W(JsonElement e) => Py.Lesen(e.GetRawText());
 
