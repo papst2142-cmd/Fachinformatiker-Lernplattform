@@ -194,7 +194,12 @@ public static partial class AutoMessung
                             && !m.UnterDaumen && (!zu || m.Stick == Sticks.Seite.Links);
                         Pruefe(punkt, ok, string.Create(inv,
                             $"Mitte Symbole {m.Symbole:0.0}, Leiste {m.Leiste:0.0}, Bild {m.Seite:0.0} (±2), zugeklappt {symboleZu:0.0}; Daumen links unten: {(m.UnterDaumen ? "SYMBOL" : "kein Symbol")}, {(m.Stick is { } s ? "Stick " + s : "KEIN Stick")}"));
-                        if (!zu)
+                        if (!zu && !seite.Flaeche.GlBereit)
+                        {
+                            // ohne 3D gibt es keine Ich-Sicht (Knopf nur mit 3D, Welle A 0.92.0): nichts zu pruefen (Teil Nachladen am Mac)
+                            Messwerte.Notiere("Spiel: Leiste 399 " + punkt + " Ich-Sicht links (402): ohne 3D kein Knopf Ich-Sicht, nicht geprueft");
+                        }
+                        else if (!zu)
                         {
                             // Welle A 1.0.0 (Sammelliste 402): „Ich-Sicht“ links und „Spiel verlassen“ rechts gleich breit und gleich weit
                             // von der Mitte der zwei Symbole (±2 Punkte), nicht uebereinander; nur wenn beide nebeneinander nicht in die
