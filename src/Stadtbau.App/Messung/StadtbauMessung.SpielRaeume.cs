@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Lernplattform.Core.Spiel.Probe;
 using Lernplattform.Messung;
 using Stadtbau.Core;
@@ -57,6 +58,21 @@ public static partial class StadtbauMessung
         {
             Fund("Räume des Spiels: Ansehen hat Schritte im Verlauf angelegt (" + schritte + " → " + p.SchritteZurueck + ")");
         }
+        // Wahl ueber die Liste links: ein Tipp auf „Bitweiche“ oeffnet sie (die Liste zeigt jeden Raum mit ganzem Namen)
+        var knoepfe = a.GetLogicalDescendants().OfType<RadioButton>().Where(k => k.Tag is string t && SpielRaeume.Ist(t)).ToList();
+        if (knoepfe.Count != liste.Count)
+        {
+            Fund("Räume des Spiels: die Liste links zeigt " + knoepfe.Count + " statt " + liste.Count + " Räume");
+        }
+        if (knoepfe.FirstOrDefault(k => (string)k.Tag! == "spiel:buero:bitweiche") is { } bitweiche)
+        {
+            bitweiche.IsChecked = true;
+            await BildAsync(a);
+            if (a.SpielRaumOffen != "spiel:buero:bitweiche")
+            {
+                Fund("Räume des Spiels: ein Tipp in der Liste öffnet die Bitweiche nicht");
+            }
+        }
         a.SpielRaumOeffnen(liste[0].Schluessel);
         await AlleGroessenAsync(a, f, "Räume des Spiels 2D");
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
@@ -64,7 +80,7 @@ public static partial class StadtbauMessung
         // 3D: Wohnung, Bitweiche, Serverfarm
         if (a.SpielRaum3DKnopf is not { } drei || !drei.IsEffectivelyVisible)
         {
-            Fund("Räume des Spiels: Knopf „" + Texte.Innen3DKnopf + "“ fehlt");
+            Fund("Räume des Spiels: Knopf „" + Texte.SpielRaum3DKnopf + "“ fehlt");
             return;
         }
         drei.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -72,7 +88,7 @@ public static partial class StadtbauMessung
         await BildAsync(a);
         if (!a.ZeigtSpielRaum3D)
         {
-            Fund("Räume des Spiels: „" + Texte.Innen3DKnopf + "“ zeigt den Raum nicht in 3D");
+            Fund("Räume des Spiels: „" + Texte.SpielRaum3DKnopf + "“ zeigt den Raum nicht in 3D");
             return;
         }
         if (!a.SpielRaum3DFlaeche.GlBereit)

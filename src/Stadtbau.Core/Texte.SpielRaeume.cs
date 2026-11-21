@@ -10,8 +10,8 @@ public static partial class Texte
     public const string SpielRaeumeTitel = "Räume des Spiels";
     public const string SpielRaeumeErklaerung = "Diese Räume baut das Spiel aus seinen eigenen Daten, nicht aus deiner Stadt-Datei. "
         + "Du siehst sie hier genau so wie im Spiel: Räume, Gänge, Türen und Möbelplätze. Ändern kannst du sie hier nicht.";
-    public const string SpielRaumWahl = "Raum";
-    public const string SpielRaumWahlTipp = "Raum des Spiels wählen";
+    public const string SpielRaum3DKnopf = "In 3D ansehen";
+    public const string SpielRaum3DTipp = "Den Raum in 3D ansehen, wie das Spiel ihn zeigt. Ziehen dreht, das Mausrad oder zwei Finger zoomen.";
     public const string SpielRaeumeZurueck = "Zurück zu den Innenräumen";
     public const string SpielRaeumeZurueckTipp = "Zurück zu den Innenräumen deiner Stadt, die du bearbeiten kannst.";
     public const string SpielRaumNurAnsehen = "Nur ansehen";

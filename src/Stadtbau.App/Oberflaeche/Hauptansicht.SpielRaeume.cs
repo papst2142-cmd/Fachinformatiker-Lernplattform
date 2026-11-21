@@ -30,7 +30,9 @@ public sealed partial class Hauptansicht
     internal StadtFlaeche SpielRaum3DFlaeche { get; } = new() { OhneGehen = true, VerkehrNurNachBedienen = true };
 
     private Control? _spielRaumAnsicht;
-    private readonly ComboBox _spielRaumWahl = new() { HorizontalAlignment = HorizontalAlignment.Stretch };
+    /// <summary>Liste der Raeume (Gruppen-Ueberschrift, dann je Raum ein Knopf mit Umbruch; eine Auswahlliste schnitt lange Namen ab).</summary>
+    private readonly StackPanel _spielRaumWahl = new() { Spacing = 4 };
+    private readonly Dictionary<string, RadioButton> _spielRaumKnoepfe = [];
     private readonly ContentControl _spielRaumMitte = new() { Margin = new Thickness(12) };
     private readonly StackPanel _spielRaumMasse = new() { Spacing = 4 };
     private readonly TextBlock _spielRaum3DStatus = Schrift.Text("", "Klein", farbe: "Pinsel.muted");
@@ -97,10 +99,31 @@ public sealed partial class Hauptansicht
         }
         _spielRaumAnsicht ??= SpielRaeumeBauen();
         _spielRaumWahlFuellt = true;
-        _spielRaumWahl.Items.Clear();
+        _spielRaumWahl.Children.Clear();
+        _spielRaumKnoepfe.Clear();
+        string? gruppe = null;
         foreach (var r in liste)
         {
-            _spielRaumWahl.Items.Add(new ComboBoxItem { Content = r.Gruppe + ": " + r.Name, Tag = r.Schluessel });
+            if (r.Gruppe != gruppe)
+            {
+                gruppe = r.Gruppe;
+                var kopf = Schrift.Text(gruppe, "Klein", FontWeight.Bold);
+                kopf.Margin = new Thickness(0, 6, 0, 0);
+                _spielRaumWahl.Children.Add(kopf);
+            }
+            var name = Schrift.Text(r.Name, "Klein");
+            name.TextWrapping = TextWrapping.Wrap;
+            var knopf = new RadioButton { Content = name, GroupName = "spielraeume", Tag = r.Schluessel }.Vorlese(r.Gruppe + ": " + r.Name);
+            var raum = r.Schluessel;
+            knopf.IsCheckedChanged += (_, _) =>
+            {
+                if (!_spielRaumWahlFuellt && knopf.IsChecked == true && raum != _spielRaumOffen)
+                {
+                    SpielRaumOeffnen(raum);
+                }
+            };
+            _spielRaumKnoepfe[raum] = knopf;
+            _spielRaumWahl.Children.Add(knopf);
         }
         _spielRaumWahlFuellt = false;
         _innen = true;
@@ -121,12 +144,9 @@ public sealed partial class Hauptansicht
         }
         _spielRaumOffen = schluessel;
         _spielRaumWahlFuellt = true;
-        foreach (var item in _spielRaumWahl.Items.OfType<ComboBoxItem>())
+        foreach (var (s, k) in _spielRaumKnoepfe)
         {
-            if (item.Tag as string == schluessel)
-            {
-                _spielRaumWahl.SelectedItem = item;
-            }
+            k.IsChecked = s == schluessel;
         }
         _spielRaumWahlFuellt = false;
         SpielRaumFlaeche.Zeigen(_projekt, schluessel);
@@ -150,14 +170,6 @@ public sealed partial class Hauptansicht
 
     private Control SpielRaeumeBauen()
     {
-        _spielRaumWahl.Vorlese(Texte.SpielRaumWahl).Mit(Texte.SpielRaumWahlTipp);
-        _spielRaumWahl.SelectionChanged += (_, _) =>
-        {
-            if (!_spielRaumWahlFuellt && _spielRaumWahl.SelectedItem is ComboBoxItem { Tag: string s } && s != _spielRaumOffen)
-            {
-                SpielRaumOeffnen(s);
-            }
-        };
         var zurueck = Schrift.Knopf(Texte.SpielRaeumeZurueck).Vorlese(Texte.SpielRaeumeZurueck).Mit(Texte.SpielRaeumeZurueckTipp);
         zurueck.HorizontalAlignment = HorizontalAlignment.Stretch;
         zurueck.Click += (_, _) => ReiterZeigen(true);
@@ -168,9 +180,8 @@ public sealed partial class Hauptansicht
             {
                 Schrift.Text(Texte.SpielRaeumeTitel, "Mittel", FontWeight.Bold),
                 Hinweis(Texte.SpielRaeumeErklaerung),
-                Schrift.Text(Texte.SpielRaumWahl, "Klein", FontWeight.Bold).Fuer(_spielRaumWahl),
-                _spielRaumWahl,
                 zurueck,
+                _spielRaumWahl,
             },
         };
         var linksRollen = new ScrollViewer { Content = Schrift.Karte(links), Margin = new Thickness(12, 12, 0, 12) };
@@ -183,7 +194,7 @@ public sealed partial class Hauptansicht
             k.Click += (_, _) => a();
             return k;
         }
-        var drei = Klein(Texte.Innen3DKnopf, Texte.Innen3DKnopf, Texte.Innen3DTipp, () => SpielRaum3DZeigen(true));
+        var drei = Klein(Texte.SpielRaum3DKnopf, Texte.SpielRaum3DKnopf, Texte.SpielRaum3DTipp, () => SpielRaum3DZeigen(true));
         SpielRaum3DKnopf = drei;
         var karte2D = Kamerakarte.Bauen(new WrapPanel
         {
@@ -201,7 +212,7 @@ public sealed partial class Hauptansicht
         _spielRaum2DMitte = Kamerakarte.Ueber(rahmen2D, karte2D, h => SpielRaumFlaeche.UntenFrei = h);
 
         // Mitte 3D: eigene Flaeche, Kamera wie im Spiel (ziehen, Mausrad, zwei Finger), immer hell
-        SpielRaum3DFlaeche.Vorlese(Texte.Innen3DKnopf);
+        SpielRaum3DFlaeche.Vorlese(Texte.SpielRaum3DKnopf);
         SpielRaum3DFlaeche.BildGezeichnet += SpielRaum3DBildGezeichnet;
         var zwei = Klein(Texte.Innen3DZurueck, Texte.Innen3DZurueck, Texte.Innen3DZurueckTipp, () => SpielRaum3DZeigen(false));
         SpielRaum2DKnopf = zwei;
@@ -250,7 +261,7 @@ public sealed partial class Hauptansicht
         _spielRaum3DAn = an;
         _spielRaumMitte.Content = an ? _spielRaum3DMitte : _spielRaum2DMitte;
         SpielRaum3DAktualisieren();
-        Melden(an ? Texte.Innen3DKnopf : Texte.Innen3DZurueck);
+        Melden(an ? Texte.SpielRaum3DKnopf : Texte.Innen3DZurueck);
     }
 
     private void SpielRaum3DAktualisieren()
