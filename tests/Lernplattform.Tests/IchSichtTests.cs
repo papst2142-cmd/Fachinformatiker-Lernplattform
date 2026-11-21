@@ -255,10 +255,13 @@ public sealed class IchSichtTests
     }
 
     /// <summary>
-    /// Halbe Diagonale der nahen Ebene (Sichtfeld 40 Grad, breites Bild 2,5:1): naeher als so darf keine Wand am Auge sein, sonst
-    /// schnitte die nahe Ebene sie an (man saehe hindurch).
+    /// Halbe Diagonale der nahen Ebene: naeher als so darf keine Wand am Auge sein, sonst schnitte die nahe Ebene sie an (man
+    /// saehe hindurch). Bis A 1.0.0 Sichtfeld 40 Grad bei breitem Bild 2,5:1; seit A 1.1.0 (Weisung P12-328) das groesste
+    /// Blickfeld des Reglers (110 Grad) im unguenstigsten Seitenverhaeltnis 1:1 (beide Seiten 110 Grad), das Groessere von beiden.
     /// </summary>
-    private static readonly float NahRadius = Kamera.IchNah * MathF.Sqrt(1 + (MathF.Pow(MathF.Tan(20f * MathF.PI / 180f), 2) * (1 + (2.5f * 2.5f))));
+    private static readonly float NahRadius = Kamera.IchNah * MathF.Max(
+        MathF.Sqrt(1 + (MathF.Pow(MathF.Tan(20f * MathF.PI / 180f), 2) * (1 + (2.5f * 2.5f)))),
+        MathF.Sqrt(1 + (2 * MathF.Pow(MathF.Tan(Kamera.IchBlickfeldMax * MathF.PI / 360f), 2))));
 
     private static float AbstandZumKasten(Vector2 p, Vector3 min, Vector3 max)
     {

@@ -13,10 +13,14 @@ namespace Lernplattform.Tests;
 /// </summary>
 public class SpielWerkstattTests
 {
-    /// <summary>Dreiecke je Teil: heute (bis A 0.98.0), Entwurf P12-194, neu (fest).</summary>
+    /// <summary>
+    /// Dreiecke je Teil: heute (bis A 0.98.0), Entwurf P12-194, neu (fest). Welle A 1.1.0 (Massstab innen 0,75 m, Weisung P12-328):
+    /// der alte Schrank hat seine Einschuebe in festen Abstaenden bis zu einer Hoehe in Metern, darum zaehlt er jetzt 228 statt 276
+    /// (bis A 1.0.0 mit 0,6 m); alle anderen Zahlen bleiben.
+    /// </summary>
     public static TheoryData<string, int, int, int> Zahlen => new()
     {
-        { "rack", 276, 1836, NeuRack },
+        { "rack", 228, 1836, NeuRack },
         { "usv", 36, 168, NeuUsv },
         { "pc", 12, 224, NeuPc },
         { "mainboard", 0, 288, NeuMainboard },

@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 1.1.0
+In der Ich-Sicht siehst du jetzt weiter zur Seite, und die Gänge, Flure und Türen in den Gebäuden wirken nicht mehr so eng. Wie weit du siehst, stellst du in den Optionen selbst ein.
+
+- Die Ich-Sicht zeigt jetzt waagrecht 90 Grad statt bisher etwa 60 Grad am PC. Das Bild wirkt dadurch nicht mehr wie durch ein Fernglas, und du siehst in Räumen und Fluren viel mehr auf einmal. Beim Wechsel in die Ich-Sicht und zurück gleitet das Blickfeld weich mit.
+- In den Optionen gibt es in der Karte „Steuerung“ den neuen Regler „Blickfeld Ich-Sicht“. Du stellst ihn von 60 bis 110 Grad in Schritten von 5 Grad ein, vorgegeben sind 90 Grad. Die normale Kamera von schräg oben bleibt dabei immer gleich.
+- In allen Gebäuden ist alles jetzt im richtigen Größenverhältnis: Deine Figur, die Menschen, die Wände und die Möbel sind im Verhältnis etwas kleiner, die Räume selbst bleiben an ihrer Stelle. Dadurch ist die Diele deiner Wohnung jetzt gut 1,10 Meter breit, der Flur bei der Bitweiche 1,50 Meter, und die Türen sind so breit wie echte Zimmertüren.
+- Wege, Plätze, Aufgaben und alles, was du drinnen tun kannst, bleiben genau gleich. Sitzen, Liegen, Springen, Ducken, Kriechen, die Werkstatt und die Glastüren der Serverschränke sind an die neuen Größen angepasst.
+- Draußen in der Stadt ändert sich nichts.
+- Das Spiel bleibt dabei auf allen Grafikstufen so flüssig wie vorher.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 1.0.0
 In der Werkstatt baust du einen PC jetzt auf einer Werkbank von oben gesehen zusammen und siehst im Regal, was im Lager liegt. Dazu ist vieles im Spiel aufgeräumt: am Steg, in der Leiste, bei den Knöpfen, an Sessel, Tisch und Drucker.
 

@@ -89,7 +89,7 @@ public sealed partial class Innenraum
         ["loungeSofa"] = (0.055f, 0f),
         ["loungeChair"] = (0.045f, 0f),
         ["loungeChairRelax"] = (0.085f, 0f),
-        ["kkChairA"] = (0f, 0f), // dahinter haengt die Anzeigetafel (Amt): der Kopf stiesse an
+        ["kkChairA"] = (0.04f, 0f), // A 1.1.0 (Massstab 0,75 m): die kleinere Figur passt jetzt bis an die Lehne (bis A 1.0.0 0, der Kopf stiess an die Anzeigetafel)
         ["kkArmchair"] = (0.055f, 0f),
     };
 
