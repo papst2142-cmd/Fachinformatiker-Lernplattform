@@ -120,10 +120,18 @@ public static partial class AutoMessung
                 Pruefe(punkt + " Lage", !InZone(rs) && !InZone(rh) && Trifft(springen, rs) && Trifft(haltung, rh) && !aufLeiste && !rs.Intersects(rh)
                     && rs.Center.X > bereich.Breite / 2 && rh.Center.X > bereich.Breite / 2,
                     string.Create(inv, $"Springen ({rs.Center.X:0}, {rs.Center.Y:0}), Haltung ({rh.Center.X:0}, {rh.Center.Y:0}), Bild {bereich.Breite:0}x{bereich.Hoehe:0}, in Stick-Zone {InZone(rs)}/{InZone(rh)}, Treffer {Trifft(springen, rs)}/{Trifft(haltung, rh)}, auf der Leiste {aufLeiste}"));
-                // A 1.0.0 (Sammelliste 405): Springen unten rechts in der Ecke (Rand 16), sonst ueber der Leiste
-                var ecke = Math.Abs(rs.Right - (bereich.Breite - HaltungKnopf.Rand)) < 1 && (Math.Abs(rs.Bottom - (bereich.Hoehe - HaltungKnopf.Rand)) < 1
-                    || Math.Abs(rs.Bottom - (bereich.Hoehe - bereich.Unten - HaltungKnopf.Rand)) < 1);
-                Pruefe(punkt + " Ecke", ecke, string.Create(inv, $"Springen rechts {rs.Right:0} unten {rs.Bottom:0}, Bild {bereich.Breite:0}x{bereich.Hoehe:0}, Leiste unten {bereich.Unten:0}"));
+                // A 1.2.0 (Sammelliste 412, Nico: „Der Joystick sollte da sitzen und die Knoepfe darueber“): Springen am rechten Rand
+                // (Rand 16) ueber dem Kreis des rechten Sticks, im sehr flachen Bild links neben ihm; kein Knopf beruehrt den Kreis
+                var (stx, sty, str) = Sticks.Lage(bereich.Breite, bereich.Hoehe, Sticks.Seite.Rechts, bereich with { Sperre = default });
+                bool ImKreis(Rect r)
+                {
+                    double dx = Math.Clamp(stx, r.Left, r.Right) - stx, dy = Math.Clamp(sty, r.Top, r.Bottom) - sty;
+                    return (dx * dx) + (dy * dy) < str * str;
+                }
+                var darueber = Math.Abs(rs.Right - (bereich.Breite - HaltungKnopf.Rand)) < 1 && rs.Bottom <= sty - str - HaltungKnopf.Rand + 1;
+                var daneben = rs.Right <= stx - str - HaltungKnopf.Rand + 1;
+                var ecke = (darueber || daneben) && !ImKreis(rs) && !ImKreis(rh);
+                Pruefe(punkt + " Ecke", ecke, string.Create(inv, $"Springen rechts {rs.Right:0} unten {rs.Bottom:0}, Stick ({stx:0}, {sty:0}) Radius {str:0}, darueber {darueber}, daneben {daneben}, im Kreis {ImKreis(rs)}/{ImKreis(rh)}, Bild {bereich.Breite:0}x{bereich.Hoehe:0}"));
                 Pruefe(punkt + " Ruhe", haltung.Symbol == DaumenSymbol.Stehen && !haltung.Leuchtet && Name(haltung) == SpielProbeTexte.KnopfDucken && Name(springen) == SpielProbeTexte.KnopfSpringen,
                     $"Symbol {haltung.Symbol}, leuchtet {haltung.Leuchtet}, Namen \"{Name(springen)}\", \"{Name(haltung)}\"");
 

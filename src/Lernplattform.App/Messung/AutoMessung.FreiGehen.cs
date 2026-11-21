@@ -408,12 +408,13 @@ public static partial class AutoMessung
             }
             pruefe("Schalter Umsehen umkehren", umsehenStandard && umsehenAn && umsehenAus,
                 $"Standard aus {umsehenStandard}, links/rechts an wirkt und gespeichert {umsehenAn}, wieder aus {umsehenAus}");
-            // Welle A 1.1.0 (Weisung P12-328 Punkt 2): Regler „Blickfeld Ich-Sicht“ 60 bis 110, Vorgabe 90, Name fuer den Screenreader;
-            // ein neuer Wert wirkt und bleibt gespeichert, zurueck auf 90 entfernt den Eintrag wieder (Gegenprobe)
+            // Welle A 1.1.0 (Weisung P12-328 Punkt 2): Regler „Blickfeld Ich-Sicht“ 60 bis 110, Vorgabe seit A 1.2.0 75 (Weisung P12-332,
+            // vorher 90), Name fuer den Screenreader; ein neuer Wert wirkt und bleibt gespeichert, zurueck auf die Vorgabe entfernt den Eintrag wieder (Gegenprobe)
             var (blick, blickZahl) = optionen.BlickfeldRegler;
-            var blickStandard = blick is not null && blickZahl is not null && (int)blick.Value == 90 && (int)blick.Minimum == 60 && (int)blick.Maximum == 110
-                && Avalonia.Automation.AutomationProperties.GetName(blick) == SpielProbeTexte.Blickfeld && Blickfeldbedienung.Grad == 90
-                && blickZahl.Text == string.Format(SpielProbeTexte.BlickfeldGrad, 90);
+            var vorgabe = (int)Kamera.IchBlickfeldVorgabe;
+            var blickStandard = blick is not null && blickZahl is not null && (int)blick.Value == vorgabe && vorgabe == 75 && (int)blick.Minimum == 60 && (int)blick.Maximum == 110
+                && Avalonia.Automation.AutomationProperties.GetName(blick) == SpielProbeTexte.Blickfeld && Blickfeldbedienung.Grad == vorgabe
+                && blickZahl.Text == string.Format(SpielProbeTexte.BlickfeldGrad, vorgabe);
             var blickNeu = false;
             var blickZurueck = false;
             if (blick is not null && blickZahl is not null)
@@ -422,12 +423,12 @@ public static partial class AutoMessung
                 await ansicht.BildFertigAsync();
                 blickNeu = Blickfeldbedienung.Grad == 105 && optionen.BlickfeldSpeichern() && Blickfeldbedienung.Lesen(Zustand.Werte) == 105
                     && blickZahl.Text == string.Format(SpielProbeTexte.BlickfeldGrad, 105);
-                blick.Value = 90;
+                blick.Value = vorgabe;
                 await ansicht.BildFertigAsync();
-                blickZurueck = optionen.BlickfeldSpeichern() && Blickfeldbedienung.Grad == 90 && !Zustand.Werte.ContainsKey(Blickfeldbedienung.Schluessel);
+                blickZurueck = optionen.BlickfeldSpeichern() && Blickfeldbedienung.Grad == vorgabe && !Zustand.Werte.ContainsKey(Blickfeldbedienung.Schluessel);
             }
             pruefe("Regler Blickfeld Ich-Sicht", blickStandard && blickNeu && blickZurueck,
-                $"Vorgabe 90 {blickStandard}, 105 wirkt und gespeichert {blickNeu}, zurueck auf 90 {blickZurueck}");
+                $"Vorgabe {vorgabe} {blickStandard}, 105 wirkt und gespeichert {blickNeu}, zurueck auf {vorgabe} {blickZurueck}");
             klappe.IsExpanded = false;
         }
         else
