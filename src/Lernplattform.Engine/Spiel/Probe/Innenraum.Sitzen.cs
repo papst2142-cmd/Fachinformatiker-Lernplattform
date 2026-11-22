@@ -101,6 +101,22 @@ public sealed partial class Innenraum
     /// </summary>
     public static readonly IReadOnlySet<string> ZurueckModelle = new HashSet<string>(StringComparer.Ordinal) { "loungeSofa", "loungeChair", "loungeChairRelax" };
 
+    /// <summary>
+    /// Welle A 1.3.1 (Weisung P12-348, Sammelliste 431, Nico 1a „Beine auf dem Polster“): Sofa, Sessel und Liegestuhl, auf denen
+    /// die Figur mit den Beinen lang auf dem Polster sitzt (<see cref="Figur.SitzenLang"/>, <see cref="Figur.SitzenLangZurueck"/>).
+    /// Die Stelle der Figur liegt <c>Anteil</c> der Tiefe plus <c>Gerade</c> bzw. <c>Zurueck</c> (Anteil der Figurhoehe) vor der
+    /// Hinterkante der Huelle, in der Hoehe wie bisher (das Gesaess liegt auf der Sitzflaeche, die Beine waagrecht darauf).
+    /// Gemessen an allen Plaetzen der Raeume (Tiefe 0,95 bis 2,0): der Ruecken liegt an der Lehne, das Polster wird nicht durchdrungen; <c>SpielSitzLehneTests</c>
+    /// prueft beides fuer jedes Sitzmoebel, die Gegenprobe <see cref="Figur.SitzenLangAltFuerTests"/> (Stand bis A 1.3.0) ist rot.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, (float Anteil, float Gerade, float Zurueck)> LangModelle =
+        new Dictionary<string, (float, float, float)>(StringComparer.Ordinal)
+        {
+            ["loungeChair"] = (0.2f, 0.0782f, 0.1159f),
+            ["loungeSofa"] = (0.2f, 0.0816f, 0.1159f),
+            ["loungeChairRelax"] = (0.2f, 0.0792f, 0.1f),
+        };
+
     /// <summary>Welle A 0.93.0: der zurueckgelehnte Platz zum Sitzplatz <paramref name="sitz"/> (gleiches Moebel), sonst null.</summary>
     public Sitzgelegenheit? ZurueckZu(Sitzgelegenheit sitz) =>
         _sitzgelegenheiten.FirstOrDefault(s => s.Art == SitzArt.Zurueck && ReferenceEquals(s.Deko, sitz.Deko) && s.Modell == sitz.Modell && s.Rechteck == sitz.Rechteck);
@@ -152,6 +168,14 @@ public sealed partial class Innenraum
     /// Welle A 0.81.0: Quader um die Figur der Hoehe 1 (x halb, y von bis, z von bis; in Blickrichtung +z), sitzend und liegend,
     /// mit Reserve fuer Muetze und Spitzhut (sitzend). <c>SpielHaltungTests</c> prueft, dass jede Ecke der Figur in ihnen liegt.
     /// </summary>
+    public static IReadOnlyList<(float Halb, float Y1, float Y2, float Z1, float Z2)> FigurQuader(SitzArt art, string? modell) => !Figur.Lang(art, modell)
+        ? FigurQuader(art)
+        : art == SitzArt.Zurueck
+            // Welle A 1.3.1 (Sammelliste 431): wie zurueckgelehnt, die Beine lang auf dem Polster statt herabhaengend
+            ? [(0.12f, 0.23f, 0.46f, -0.07f, 0.37f), (0.13f, 0.44f, 0.61f, -0.155f, 0.285f), (0.125f, 0.59f, 0.86f, -0.245f, 0.09f), (0.19f, 0.83f, 1.07f, -0.31f, 0.16f)]
+            : [(0.14f, 0.27f, 0.90f, -0.145f, 0.16f), (0.19f, 0.86f, 1.08f, -0.215f, 0.22f), (0.12f, 0.23f, 0.45f, -0.06f, 0.37f), (0.19f, 0.44f, 0.65f, -0.06f, 0.35f)];
+
+    /// <summary>Welle A 0.81.0: Quader der Figur je Art (Sitzmoebel ohne lange Beine, siehe <see cref="FigurQuader(SitzArt, string?)"/>).</summary>
     public static IReadOnlyList<(float Halb, float Y1, float Y2, float Z1, float Z2)> FigurQuader(SitzArt art) => art == SitzArt.Liegen
         ? [(0.19f, -0.15f, 0.16f, -1.01f, 0.01f)]
         : art == SitzArt.Zurueck
@@ -197,7 +221,7 @@ public sealed partial class Innenraum
         var f = new Vector2(MathF.Sin(s.Blick), MathF.Cos(s.Blick));
         var q = new Vector2(f.Y, -f.X);
         var ort = new Vector2(s.Ort.X, s.Ort.Z);
-        foreach (var (halb, y1, y2, z1, z2) in FigurQuader(s.Art))
+        foreach (var (halb, y1, y2, z1, z2) in FigurQuader(s.Art, s.Modell))
         {
             if (s.Ort.Y + (y1 * hoehe) - spiel >= hi.Y || s.Ort.Y + (y2 * hoehe) + spiel <= lo.Y)
             {
@@ -225,7 +249,9 @@ public sealed partial class Innenraum
                     _sitzgelegenheiten.Add(frei);
                 }
                 // Welle A 0.93.0 (Sammelliste 352): auf Sofa, Sessel und Liegestuhl auch zurueckgelehnt (eigener Platz, eigene Pruefung)
-                if (s.Art == SitzArt.Sitzen && ZurueckModelle.Contains(s.Modell) && VorDerWand(s with { Art = SitzArt.Zurueck }) is { } zurueck)
+                // Welle A 1.3.1 (Sammelliste 431): mit den Beinen auf dem Polster hat der zurueckgelehnte Platz eine eigene Stelle
+                if (s.Art == SitzArt.Sitzen && ZurueckModelle.Contains(s.Modell)
+                    && Platz(_stuecke[i].Name, gm.Min, gm.Max, _stuecke[i].Lage, Innenraum.FigurHoehe, _dekoJetzt, zurueck: true) is { } z && VorDerWand(z) is { } zurueck)
                 {
                     _sitzgelegenheiten.Add(zurueck);
                 }
@@ -238,6 +264,12 @@ public sealed partial class Innenraum
     /// fuer Kopfbedeckung und Haende: sitzend 0,21 nach hinten (Spitzhut), 0,35 nach vorn, 0,19 zur Seite; liegend die ganze
     /// Laenge nach hinten (Kopf), ohne Kopfbedeckung (die Figur legt sie im Bett ab).
     /// </summary>
+    /// <remarks>Welle A 1.3.1 (Sammelliste 431): mit den Beinen auf dem Polster vorn 0,38 (Fuesse), zurueckgelehnt hinten 0,29
+    /// (Spitzhut bis 0,278; <c>SpielHaltungTests</c> prueft jede Kleidung).</remarks>
+    public static (float Hinten, float Vorn, float Halb) Grundflaeche(SitzArt art, string? modell) =>
+        !Figur.Lang(art, modell) ? Grundflaeche(art) : art == SitzArt.Zurueck ? (0.29f, 0.38f, 0.19f) : (0.21f, 0.38f, 0.19f);
+
+    /// <summary>Welle A 0.81.0: Grundflaeche der Figur je Art (ohne lange Beine, siehe <see cref="Grundflaeche(SitzArt, string?)"/>).</summary>
     public static (float Hinten, float Vorn, float Halb) Grundflaeche(SitzArt art) =>
         art == SitzArt.Liegen ? (1.02f, 0.02f, 0.19f) : art == SitzArt.Zurueck ? (0.32f, 0.35f, 0.19f) : (0.21f, 0.35f, 0.19f);
 
@@ -251,7 +283,7 @@ public sealed partial class Innenraum
         for (var k = 0; k <= (s.Art == SitzArt.Liegen ? 0 : 7); k++)
         {
             var ort = s.Ort + (new Vector3(f.X, 0, f.Y) * (k * 0.01f * FigurHoehe));
-            if (!UeberWand(new Vector2(ort.X, ort.Z), f, Grundflaeche(s.Art), FigurHoehe, s.Mitte))
+            if (!UeberWand(new Vector2(ort.X, ort.Z), f, Grundflaeche(s.Art, s.Modell), FigurHoehe, s.Mitte))
             {
                 return s with { Ort = ort };
             }
@@ -260,7 +292,7 @@ public sealed partial class Innenraum
     }
 
     /// <summary>Welle A 0.81.0 (Sammelliste 351, nur fuer Pruefungen): die Grundflaeche der Figur auf dem Platz reicht ueber die Mitte einer Wand.</summary>
-    internal bool UeberDieWand(Sitzgelegenheit s) => UeberWand(new Vector2(s.Ort.X, s.Ort.Z), new Vector2(MathF.Sin(s.Blick), MathF.Cos(s.Blick)), Grundflaeche(s.Art), FigurHoehe, s.Mitte);
+    internal bool UeberDieWand(Sitzgelegenheit s) => UeberWand(new Vector2(s.Ort.X, s.Ort.Z), new Vector2(MathF.Sin(s.Blick), MathF.Cos(s.Blick)), Grundflaeche(s.Art, s.Modell), FigurHoehe, s.Mitte);
 
     private bool UeberWand(Vector2 ort, Vector2 f, (float Hinten, float Vorn, float Halb) g, float hoehe, Vector2 anker)
     {
@@ -320,9 +352,10 @@ public sealed partial class Innenraum
     /// Welle A 0.81.0: Platz der Figur (Hoehe <paramref name="figur"/>) auf einem Modell mit Huelle <paramref name="min"/> bis
     /// <paramref name="max"/> in der Lage <paramref name="lage"/>, sonst null (kein Sitzmodell). Sitzen: Gesaess auf der
     /// Sitzflaeche, die Unterschenkel knapp vor der Vorderkante (<see cref="Figur.SitzVor"/>), Blick nach vorn. Liegen: auf
-    /// dem Ruecken, der Kopf am Kopfende (hinten) und ganz auf der Liegeflaeche.
+    /// dem Ruecken, der Kopf am Kopfende (hinten) und ganz auf der Liegeflaeche. Mit <paramref name="zurueck"/> der Platz zum
+    /// Zuruecklehnen (Welle A 1.3.1: auf <see cref="LangModelle"/> mit eigener Stelle).
     /// </summary>
-    public static Sitzgelegenheit? Platz(string name, Vector3 min, Vector3 max, Matrix4x4 lage, float figur, PyObjekt? deko)
+    public static Sitzgelegenheit? Platz(string name, Vector3 min, Vector3 max, Matrix4x4 lage, float figur, PyObjekt? deko, bool zurueck = false)
     {
         if (!SitzModelle.TryGetValue(name, out var m))
         {
@@ -353,8 +386,18 @@ public sealed partial class Innenraum
             return new Sitzgelegenheit(SitzArt.Liegen, new Vector3(fuss.X, fussende.Y + ((Figur.LiegenRuecken + Figur.LiegenUeber) * figur), fuss.Y),
                 MathF.Atan2(richtung.X, richtung.Y), rechteck, deko, name);
         }
+        var art = zurueck ? SitzArt.Zurueck : SitzArt.Sitzen;
+        var hoehe = vorn.Y - ((Figur.SitzUnten - Figur.SitzSpalt) * figur);
+        var hinterkante = L(0.5f, m.Sitz, 0f);
+        if (Figur.Lang(art, name) && LangModelle.TryGetValue(name, out var lm))
+        {
+            // Welle A 1.3.1 (Sammelliste 431): von der Hinterkante aus gemessen, der Ruecken an der Lehne, die Beine auf dem Polster
+            var weg = (lm.Anteil * Vector3.Distance(hinterkante, vorn)) + ((zurueck ? lm.Zurueck : lm.Gerade) * figur);
+            var ort = new Vector2(hinterkante.X, hinterkante.Z) + (f * weg);
+            return new Sitzgelegenheit(art, new Vector3(ort.X, hoehe, ort.Y), blick, rechteck, deko, name);
+        }
         // Sammelliste 351: ohne Tisch weiter nach hinten an die Lehne (Zurueck), mit der Gegenprobe wie bis P12-276
-        var stelle = new Vector2(vorn.X, vorn.Z) - (f * ((Figur.SitzVor * figur) + Zurueck(name, Vector3.Distance(L(0.5f, m.Sitz, 0f), vorn), figur)));
-        return new Sitzgelegenheit(SitzArt.Sitzen, new Vector3(stelle.X, vorn.Y - ((Figur.SitzUnten - Figur.SitzSpalt) * figur), stelle.Y), blick, rechteck, deko, name);
+        var stelle = new Vector2(vorn.X, vorn.Z) - (f * ((Figur.SitzVor * figur) + Zurueck(name, Vector3.Distance(hinterkante, vorn), figur)));
+        return new Sitzgelegenheit(art, new Vector3(stelle.X, hoehe, stelle.Y), blick, rechteck, deko, name);
     }
 }

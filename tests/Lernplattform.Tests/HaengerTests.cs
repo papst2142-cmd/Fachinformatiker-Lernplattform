@@ -287,7 +287,7 @@ public sealed class HaengerTests : IDisposable
     public void ZustandTextNachAbruf()
     {
         Haenger.Abruf();
-        Assert.Contains("| Abruf (Signal USR1): Seite: -, Vorgang: bereit", Log(), StringComparison.Ordinal);
+        Assert.Contains("| " + Haenger.AbrufAnfang + "Seite: -, Vorgang: bereit", Log(), StringComparison.Ordinal);
         Assert.StartsWith("haenger.log: ", Haenger.ZustandText(Haenger.Pfad(_ordner.Pfad)), StringComparison.Ordinal);
     }
 
@@ -334,7 +334,7 @@ public sealed class HaengerTests : IDisposable
             return;
         }
         var vorher = Log();
-        using (var kill = Process.Start(new ProcessStartInfo("kill", "-USR1 " + Environment.ProcessId) { UseShellExecute = false })!)
+        using (var kill = Process.Start(new ProcessStartInfo("kill", "-" + Haenger.AbrufSignal(OperatingSystem.IsMacOS()) + " " + Environment.ProcessId) { UseShellExecute = false })!)
         {
             kill.WaitForExit();
             Assert.Equal(0, kill.ExitCode);
@@ -386,10 +386,10 @@ public sealed class HaengerTests : IDisposable
             neu = leser.ReadToEnd();
         }
         Assert.DoesNotContain("Abruf (Signal", neu, StringComparison.Ordinal);
-        Assert.Contains("| Abruf (Signal USR1): Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===", Log(), StringComparison.Ordinal);
+        Assert.Contains("| " + Haenger.AbrufAnfang + "Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===", Log(), StringComparison.Ordinal);
     }
 
-    /// <summary>kill -USR1 schreibt die Angaben, das Programm laeuft weiter (Linux und macOS).</summary>
+    /// <summary>Das Abruf-Signal (Linux kill -USR1, macOS seit A 1.3.1 kill -INFO) schreibt die Angaben, das Programm laeuft weiter.</summary>
     [Fact]
     public void SignalSchreibtAbruf()
     {
@@ -399,14 +399,14 @@ public sealed class HaengerTests : IDisposable
         }
         Haenger.Seite("optionen");
         Haenger.SignalAbrufFuerTests(true);
-        using (var kill = Process.Start(new ProcessStartInfo("kill", "-USR1 " + Environment.ProcessId) { UseShellExecute = false })!)
+        using (var kill = Process.Start(new ProcessStartInfo("kill", "-" + Haenger.AbrufSignal(OperatingSystem.IsMacOS()) + " " + Environment.ProcessId) { UseShellExecute = false })!)
         {
             kill.WaitForExit();
             Assert.Equal(0, kill.ExitCode);
         }
         // Sammelliste 107 (macOS einmal rot "nach 0 ms" mit einer Zeile "Seite: -"): auf genau die erwartete
         // Zeile warten statt auf die erste Abruf-Zeile; Wortlaut und Frist (10 s) bleiben wie vorher
-        const string Erwartet = "| Abruf (Signal USR1): Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===";
+        var Erwartet = "| " + Haenger.AbrufAnfang + "Seite: optionen, Vorgang: bereit\nWartepunkte: 1 lp T S wartet ===";
         var uhr = Stopwatch.StartNew();
         while (!Log().Contains(Erwartet, StringComparison.Ordinal) && uhr.Elapsed < TimeSpan.FromSeconds(10))
         {
@@ -416,5 +416,91 @@ public sealed class HaengerTests : IDisposable
         var log = Log();
         Assert.True(log.Contains(Erwartet, StringComparison.Ordinal),
             "nach " + uhr.ElapsedMilliseconds + " ms, Seite/Vorgang jetzt " + Haenger.Aktuell() + ", voller Log:\n" + log);
+    }
+
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-345/P12-346, Sammelliste 425): Abruf-Signal je System. Linux USR1 (10), macOS
+    /// INFO (29); bis A 1.3.0 war es am Mac USR1 (30), das die Laufzeit selbst nutzt. Gegenprobe: der alte Mac-Wert 30 und der
+    /// Text „USR1“ sind am Mac nicht mehr da. Text und Befehl in den Optionen ziehen mit.
+    /// </summary>
+    [Fact]
+    public void Haenger425_SignalJeSystem_MacInfoLinuxUsr1()
+    {
+        Assert.Equal(("USR1", 10), (Haenger.AbrufSignal(false), Haenger.AbrufNummer(false)));
+        Assert.Equal(("INFO", 29), (Haenger.AbrufSignal(true), Haenger.AbrufNummer(true)));
+        Assert.NotEqual(30, Haenger.AbrufNummer(true));
+        Assert.Equal("Abruf (Signal " + (OperatingSystem.IsMacOS() ? "INFO" : "USR1") + "): ", Haenger.AbrufAnfang);
+        Assert.StartsWith("kill -USR1 ", HaengerTexte.Befehl, StringComparison.Ordinal);
+        Assert.StartsWith("kill -INFO ", HaengerTexte.BefehlMac, StringComparison.Ordinal);
+        Assert.EndsWith(" $(pgrep -i -x -o lernplattform)", HaengerTexte.BefehlMac, StringComparison.Ordinal);
+        Assert.Contains("ctrl + T", HaengerTexte.SignalHilfeMac, StringComparison.Ordinal);
+        Assert.DoesNotContain("USR1", HaengerTexte.SignalHilfeMac + HaengerTexte.BefehlMac, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Weisung P12-347 (Nico Bild-OK 22.11.2026): unter „Hänger-Diagnose“ zeigt Linux Satz und Befehl wie bisher, der Mac
+    /// denselben Block mit eigenem Satz und Befehl, Windows keinen Block. Gegenprobe: bis A 1.3.0 gab es nur den Linux-Block.
+    /// Die Anzeige im laufenden Programm prueft der Start-Test auf jedem System (AutoMessung.HaengerBlockPruefen).
+    /// </summary>
+    [Fact]
+    public void P12_347_SignalBlock_JeSystem()
+    {
+        Assert.Equal((HaengerTexte.SignalHilfe, HaengerTexte.Befehl), HaengerTexte.SignalBlock(linux: true, macOS: false));
+        Assert.Equal((HaengerTexte.SignalHilfeMac, HaengerTexte.BefehlMac), HaengerTexte.SignalBlock(linux: false, macOS: true));
+        Assert.Null(HaengerTexte.SignalBlock(linux: false, macOS: false));
+        Assert.StartsWith("Auf dem Mac: Hängt das Programm, öffne das Programm „Terminal“", HaengerTexte.SignalHilfeMac, StringComparison.Ordinal);
+        Assert.Equal("kill -INFO $(pgrep -i -x -o lernplattform)", HaengerTexte.BefehlMac);
+        // die Oberflaeche nimmt den Block nur aus SignalBlock (kein eigener Zweig nur fuer Linux mehr)
+        var quelle = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Views", "DiagnoseTeil.cs"));
+        Assert.Contains("HaengerTexte.SignalBlock(OperatingSystem.IsLinux(), OperatingSystem.IsMacOS())", quelle, StringComparison.Ordinal);
+        Assert.DoesNotContain("HaengerTexte.SignalHilfe,", quelle, StringComparison.Ordinal);
+        Assert.DoesNotContain("KopierenAsync(HaengerTexte.Befehl)", quelle, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Sammelliste 425, nur am Mac: die Laufzeit schickt beim Anhalten der Faeden (Speicherbereinigung, Faeden in verwaltetem
+    /// Code) SIGUSR1 an den eigenen Prozess. Bis A 1.3.0 schrieb das ohne Zutun „Abruf (Signal USR1)“ (Lauf 1158). Seit A 1.3.1
+    /// hoert der Abruf auf INFO: viele Speicherbereinigungen mit laufenden Faeden schreiben keinen Eintrag, ein kill -INFO schon
+    /// (Gegenprobe im selben Test). Kein fremdes kill -USR1: die Laufzeit gibt ein fremdes USR1 an die Vorgabe weiter.
+    /// </summary>
+    [Fact]
+    public async Task Haenger425_MacLaufzeitUsr1SchreibtNichts_InfoSchon()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+        Haenger.Seite("optionen");
+        Haenger.SignalAbrufFuerTests(true);
+        var vorher = Log();
+        using var stopp = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        var faeden = Enumerable.Range(0, 4).Select(_ => Task.Run(() =>
+        {
+            long summe = 0;
+            while (!stopp.IsCancellationRequested)
+            {
+                summe += new object().GetHashCode() & 1;
+            }
+            return summe;
+        }, TestContext.Current.CancellationToken)).ToArray();
+        while (!stopp.IsCancellationRequested)
+        {
+            GC.Collect(2, GCCollectionMode.Forced, blocking: true);
+            Thread.Sleep(10);
+        }
+        await Task.WhenAll(faeden);
+        Thread.Sleep(500);
+        Assert.DoesNotContain("Abruf (Signal", Log()[vorher.Length..], StringComparison.Ordinal);
+        using (var kill = Process.Start(new ProcessStartInfo("kill", "-INFO " + Environment.ProcessId) { UseShellExecute = false })!)
+        {
+            kill.WaitForExit();
+            Assert.Equal(0, kill.ExitCode);
+        }
+        var uhr = Stopwatch.StartNew();
+        while (!Log().Contains("| Abruf (Signal INFO): Seite: optionen", StringComparison.Ordinal) && uhr.Elapsed < TimeSpan.FromSeconds(10))
+        {
+            Thread.Sleep(50);
+        }
+        Assert.Contains("| Abruf (Signal INFO): Seite: optionen", Log(), StringComparison.Ordinal);
     }
 }

@@ -195,9 +195,10 @@ public sealed partial class StadtFlaeche
         }
     }
 
-    private void KachelHochladen(GlInterface gl, Nachlader.Paket p)
+    private void KachelHochladen(GlInterface gl, Nachlader.Paket? p)
     {
-        if (_kachelGl.ContainsKey(p.Kachel))
+        // Sammelliste 430: null = Bau der Kachel gescheitert (steht in fehler.log), sie bleibt fern gezeichnet
+        if (p is null || _kachelGl.ContainsKey(p.Kachel))
         {
             return;
         }
@@ -327,9 +328,9 @@ public sealed partial class StadtFlaeche
                 ZeichnenFestImBild(gl, e.Fest, sichtProj);
                 continue;
             }
-            if (lader.Noetig.Contains(k))
+            if (lader.Noetig.Contains(k) && !lader.Kaputt.Contains(k))
             {
-                // eine noetige Kachel im Bild fehlt (darf nach dem Takt nie sein)
+                // eine noetige Kachel im Bild fehlt (darf nach dem Takt nie sein; eine kaputte zeichnet das Bild fern, Sammelliste 430)
                 loch++;
             }
             fern++;

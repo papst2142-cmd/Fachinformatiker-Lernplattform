@@ -259,7 +259,7 @@ public sealed class SpielTestkarteTests
             }
             foreach (var k in lader.Fehlend().ToList())
             {
-                lader.Hochgeladen(lader.JetztBauen(k));
+                lader.Hochgeladen(lader.JetztBauen(k) ?? throw new InvalidOperationException(Nachlader.FehlerText(k, null)));
             }
             Assert.All(lader.Noetig, k => Assert.True(lader.Geladen.ContainsKey(k), k.Name));
             schritte++;

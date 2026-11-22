@@ -4,7 +4,7 @@
 # werkzeug), dann das Update des Stadtbau-Werkzeugs (werkzeuge/stadtbau/update_probe.sh, n -> n+1). Rot, wenn eine rot ist.
 # Welle A 0.98.0 (Weisung P12-315, Sammelliste 391): nach der Update-Probe der Lernplattform die Touch-Probe der Sticks mit
 # der dort installierten Probe-APK n+2 (werkzeuge/android/touch_probe.sh); ihr Ergebnis steht am Ende von emulator_probe_update.txt.
-# Seit A 0.99.0 Pflicht: rot macht den Job rot.
+# Seit A 0.99.0 Pflicht: rot macht den Job rot. Seit A 1.3.1 danach die Konfig-Probe (werkzeuge/android/konfig_probe.sh, Sammelliste 426).
 # Aufruf: emulator_proben.sh <ergebnis lernplattform-bau> <ergebnis werkzeug-bau> (je "success" oder anderes)
 set -u
 rc=0
@@ -14,6 +14,9 @@ if [ "${1:-}" = success ]; then
   # nur ein Hinweis, weil ein Fenster ueber dem Spiel die Finger abfing (Lauf 1116: Treffer LernText/Bildlauf statt Flaeche)
   bash werkzeuge/android/touch_probe.sh emulator_probe_update.txt \
     || { echo "FEHLER: Touch-Probe rot (Pflicht seit A 0.99.0), Einzelheiten in emulator_probe_update.txt" | tee -a emulator_probe_update.txt; rc=1; }
+  # Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 426): Konfig-Probe (Dichte und Groesse aendern, keine neue Activity)
+  bash werkzeuge/android/konfig_probe.sh emulator_probe_update.txt \
+    || { echo "FEHLER: Konfig-Probe rot, Einzelheiten in emulator_probe_update.txt" | tee -a emulator_probe_update.txt; rc=1; }
 fi
 if [ "${2:-}" = success ]; then
   adb uninstall io.github.papst2142cmd.lernplattform > /dev/null 2>&1 || true

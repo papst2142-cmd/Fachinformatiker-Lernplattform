@@ -202,8 +202,9 @@ public class PruefungTests
             // A 0.68.0 (Weisung P12-206): der begehbare Schrank in der Auslage ist jetzt Entwurf B (vorher 10160); A 0.80.0
             // (Sammelliste 347): am Esstisch an der Aussenwand entfaellt die Stuhlreihe in der Wand (2 Stuehle, vorher 10184); A 0.90.0
             // (Sammelliste 380): die Betten stehen laengs mit dem Kopfteil an der Wand, an der Wand fallen andere Flaechen weg
-            // (vorher 9882, Gegenprobe unten)
-            ["moebelhaus"] = (9833, 12),
+            // (vorher 9882, Gegenprobe unten); A 1.3.1 (Sammelliste 432): das Bild der Ausstellung steht auf einer Staffelei
+            // (60 Dreiecke, vorher 9833, Gegenprobe unten)
+            ["moebelhaus"] = (9893, 12),
             ["elektromarkt"] = (15282, 12),
             ["bank"] = (7468, 12),
             // A 0.68.0: Frisuren an der 3D-Figur; im Amt langes Haar (3 Quader, vorher 9259), im Kaufhaus Locken (29 Quader mit den
@@ -217,8 +218,9 @@ public class PruefungTests
             var innen = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), Grundriss(ort), InnenGrundriss.Personen(D.Fassung.Innenraeume, ort), D.Grafik);
             Assert.Equal(soll[ort], StadtbauGrenzen.Innen(innen));
         }
-        // Gegenprobe Sammelliste 380: mit den Betten wie bis A 0.89.0 (quer) wieder der alte Wert
+        // Gegenprobe Sammelliste 380: mit den Betten wie bis A 0.89.0 (quer) wieder der alte Wert (Bild wie damals ohne Staffelei)
         Innenraum.BettQuerAltFuerTests.Value = true;
+        Innenraum.BildAltFuerTests.Value = true;
         try
         {
             var alt = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht("moebelhaus"), Grundriss("moebelhaus"),
@@ -228,6 +230,19 @@ public class PruefungTests
         finally
         {
             Innenraum.BettQuerAltFuerTests.Value = false;
+            Innenraum.BildAltFuerTests.Value = false;
+        }
+        // Gegenprobe Sammelliste 432: mit dem Bild wie bis A 1.3.0 (ohne Staffelei) wieder der alte Wert
+        Innenraum.BildAltFuerTests.Value = true;
+        try
+        {
+            var alt = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht("moebelhaus"), Grundriss("moebelhaus"),
+                InnenGrundriss.Personen(D.Fassung.Innenraeume, "moebelhaus"), D.Grafik);
+            Assert.Equal((9833L, 12), StadtbauGrenzen.Innen(alt));
+        }
+        finally
+        {
+            Innenraum.BildAltFuerTests.Value = false;
         }
         // Gegenprobe Sammelliste 410: mit dem Drucker wie bis A 0.99.0 (ein Kasten) wieder der alte Wert
         Innenraum.DruckerAltFuerTests.Value = true;

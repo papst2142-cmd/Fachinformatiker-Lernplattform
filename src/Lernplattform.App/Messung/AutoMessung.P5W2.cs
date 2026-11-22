@@ -78,6 +78,32 @@ public static partial class AutoMessung
         await ansicht.BildFertigAsync();
     }
 
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-347, Nico Bild-OK): unter „Hänger-Diagnose“ steht unter Linux der Satz und Befehl
+    /// mit USR1, am Mac der eigene Satz und Befehl mit INFO, unter Windows kein Befehl. Geprueft im laufenden Programm auf jedem
+    /// System der CI (die Texte aller Systeme werden gesucht, damit ein falscher Block auffaellt).
+    /// </summary>
+    private static void HaengerBlockPruefen(DiagnoseTeil diagnose)
+    {
+        var texte = Avalonia.LogicalTree.LogicalExtensions.GetLogicalDescendants(diagnose.Teil).OfType<Avalonia.Controls.TextBlock>()
+            .Select(t => t.Text ?? "").ToHashSet(StringComparer.Ordinal);
+        var soll = HaengerTexte.SignalBlock(OperatingSystem.IsLinux(), OperatingSystem.IsMacOS());
+        string[] alle = [HaengerTexte.SignalHilfe, HaengerTexte.Befehl, HaengerTexte.SignalHilfeMac, HaengerTexte.BefehlMac];
+        var da = alle.Where(texte.Contains).ToList();
+        var erwartet = soll is var (satz, befehl) ? new List<string> { satz, befehl } : [];
+        var knopf = texte.Contains(HaengerTexte.BefehlKopieren);
+        if (!da.SequenceEqual(alle.Where(erwartet.Contains)) || knopf != (soll is not null))
+        {
+            Messwerte.Notiere("  FEHLER: Hänger-Diagnose zeigt den falschen Block für dieses System: " + (da.Count == 0 ? "keinen" : string.Join(" | ", da))
+                + (knopf ? " (mit Knopf)" : " (ohne Knopf)"));
+            _w2Fehlt++;
+        }
+        else
+        {
+            Messwerte.Notiere("Hänger-Diagnose: Block für dieses System richtig (" + (soll is var (_, b) ? b : "kein Befehl") + ") (gruen)");
+        }
+    }
+
     private static async IAsyncEnumerable<string> P5W2Ansichten(MainView ansicht)
     {
         // erst zeigen (baut die Seite); fehlt der Bereich danach, ist das ein Fund statt eines stillen Uebergehens (Gegenpruefung W2 Fund 11)
@@ -92,6 +118,7 @@ public static partial class AutoMessung
         else
         {
             await diagnose.Bericht;
+            HaengerBlockPruefen(diagnose);
             await P11SendenOhneSchluesselAsync(ansicht, diagnose);
         }
         await ansicht.BildFertigAsync();

@@ -1172,7 +1172,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 // Sammelliste 351 (Weisung P12-276): ohne Tisch die Haltung mit den Haenden auf den Knien, Lage aus StadtSpiel.HaltungLage
                 spieler = h.Liegt
                     ? FigurNetz(gl, "#spieler-liegt", aussehen, OhneKopf(_spiel.Kleidung), null, -1)
-                    : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, Figur.SitzBild(_spiel.HaltungArt ?? SitzArt.Sitzen), 0);
+                    : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, Figur.SitzBild(_spiel.HaltungArt ?? SitzArt.Sitzen, _spiel.MeinPlatz?.Modell), 0);
                 figurLage = StadtSpiel.HaltungLage(h, groesse, innen is null ? FigurHoehe(_spiel) : 0f);
             }
             else

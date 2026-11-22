@@ -2353,6 +2353,46 @@ public sealed partial class Hauptansicht : UserControl
 
     // ---- Innenraeume ------------------------------------------------------------------------------
 
+    /// <summary>Welle A 1.3.1 (Sammelliste 422): die Gruppen des Katalogs mit ihren Knoepfen (fuer <see cref="KatalogGruende"/>).</summary>
+    private readonly List<(Expander Klappe, WrapPanel Reihe)> _katalogKlappen = [];
+
+    /// <summary>Welle A 1.3.1 (Sammelliste 422): die Katalog-Gruppen der Innenansicht (Start-Test).</summary>
+    internal IReadOnlyList<(Expander Klappe, WrapPanel Reihe)> KatalogKlappen => _katalogKlappen;
+
+    /// <summary>
+    /// Welle A 1.3.1 (Sammelliste 422, Start-Test): Gruende, warum der Katalog nicht wie verlangt baut: eine zugeklappte Gruppe
+    /// steckt schon in der Ansicht, oder eine Gruppe zeigt nach dem Aufklappen nicht alle ihre Knoepfe. Klappt dazu jede
+    /// zugeklappte Gruppe einmal auf und wieder zu.
+    /// </summary>
+    internal static List<string> KatalogGruende(IEnumerable<(Expander Klappe, WrapPanel Reihe)> klappen)
+    {
+        var gruende = new List<string>();
+        foreach (var (klappe, reihe) in klappen)
+        {
+            var name = (klappe.Header as TextBlock)?.Text ?? "?";
+            if (klappe.IsExpanded)
+            {
+                if (!ReferenceEquals(klappe.Content, reihe))
+                {
+                    gruende.Add(name + ": aufgeklappt ohne Knoepfe");
+                }
+                continue;
+            }
+            if (klappe.Content is not null)
+            {
+                gruende.Add(name + ": zugeklappt schon in der Ansicht");
+                continue;
+            }
+            klappe.IsExpanded = true;
+            if (!ReferenceEquals(klappe.Content, reihe) || reihe.Children.Count == 0)
+            {
+                gruende.Add(name + ": nach dem Aufklappen ohne Knoepfe");
+            }
+            klappe.IsExpanded = false;
+        }
+        return gruende;
+    }
+
     private Control InnenBauen()
     {
         _ortWahl.Items.Clear();
@@ -2377,8 +2417,13 @@ public sealed partial class Hauptansicht : UserControl
                 k.Click += (_, _) => SetzenWaehlen(teil.Typ);
                 reihe.Children.Add(k);
             }
-            var klappe = new Expander { Header = Schrift.Text(gruppe.Key, farbe: "Pinsel.text"), Content = reihe, IsExpanded = gruppe.Key == "Regale", HorizontalAlignment = HorizontalAlignment.Stretch }
+            // Welle A 1.3.1 (Sammelliste 422 Gruppe 3): eine zugeklappte Gruppe kommt erst beim Aufklappen in die Ansicht (spart
+            // beim Anlegen eines Projekts Layout und Zeichnen, gemessen 291 bis 345 ms vorher, 243 bis 255 ms nachher)
+            var offen = gruppe.Key == "Regale";
+            var klappe = new Expander { Header = Schrift.Text(gruppe.Key, farbe: "Pinsel.text"), Content = offen ? reihe : null, IsExpanded = offen, HorizontalAlignment = HorizontalAlignment.Stretch }
                 .Vorlese(Texte.Katalog + " " + gruppe.Key);
+            klappe.Expanding += (_, _) => klappe.Content ??= reihe;
+            _katalogKlappen.Add((klappe, reihe));
             Gruppe(klappe, Texte.TippGruppe(gruppe.Key));
             links.Children.Add(klappe);
         }

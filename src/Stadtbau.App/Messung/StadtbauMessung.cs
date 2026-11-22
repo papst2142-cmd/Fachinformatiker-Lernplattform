@@ -205,6 +205,28 @@ public static partial class StadtbauMessung
         }
     }
 
+    /// <summary>
+    /// Welle A 1.3.1 (Sammelliste 422 Gruppe 3): zugeklappte Katalog-Gruppen kommen erst beim Aufklappen in die Ansicht, jede
+    /// zeigt dann alle Knoepfe. Gegenprobe: eine zugeklappte Gruppe mit Inhalt (Stand bis S 0.60.0) wird gefunden.
+    /// </summary>
+    private static async Task KatalogPruefenAsync(Hauptansicht a)
+    {
+        var gruende = Hauptansicht.KatalogGruende(a.KatalogKlappen);
+        await BildAsync(a);
+        Messwerte.Notiere(string.Create(Inv, $"Katalog: {a.KatalogKlappen.Count} Gruppen, {a.KatalogKlappen.Count(k => k.Klappe.IsExpanded)} aufgeklappt, Gruende: {(gruende.Count > 0 ? string.Join(" | ", gruende) : "keine")}"));
+        if (a.KatalogKlappen.Count < 2 || gruende.Count > 0)
+        {
+            Fund("Katalog: " + (gruende.Count > 0 ? string.Join(" | ", gruende) : "weniger als 2 Gruppen"));
+        }
+        var reihe = new WrapPanel { Children = { new Button() } };
+        var alt = Hauptansicht.KatalogGruende([(new Expander { Header = new TextBlock { Text = "Gegenprobe" }, Content = reihe, IsExpanded = false }, reihe)]);
+        Messwerte.Notiere("Katalog Gegenprobe (zugeklappt mit Inhalt): " + (alt.Count > 0 ? string.Join(" | ", alt) : "kein Fund"));
+        if (alt.Count == 0)
+        {
+            Fund("Katalog Gegenprobe: zugeklappte Gruppe mit Inhalt nicht gefunden");
+        }
+    }
+
     private static async Task<int> LaufAsync(Hauptansicht a, Window? f)
     {
         Messwerte.Notiere("Start-Test-Teil stadtbau: " + Werkzeug.Kennzeile + ", Ordner " + StadtbauApp.Ordner.Wurzel);
@@ -235,6 +257,7 @@ public static partial class StadtbauMessung
         }
         Messwerte.Notiere(string.Create(Inv, $"Elektromarkt Grenzen: {a.GrenzenStand.Dreiecke} Dreiecke, {a.GrenzenStand.Aufrufe} Aufrufe"));
         await AlleGroessenAsync(a, f, "Innenraeume");
+        await KatalogPruefenAsync(a);
 
         var p = a.Projekt!;
         var g = p.Grundriss("elektromarkt");

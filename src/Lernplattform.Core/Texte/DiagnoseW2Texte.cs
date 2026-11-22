@@ -44,6 +44,22 @@ public static class HaengerTexte
         + "beendet.";
     /// <summary>KILL_COMMAND mit dem Programmnamen der C#-Linie (Wortliste W2).</summary>
     public const string Befehl = "kill -USR1 $(pgrep -i -x -o lernplattform)";
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-346, Nico 22.11.2026 Frage 1 a, Satz von Chat geprueft): Satz und Befehl am Mac
+    /// (Abruf-Signal INFO, Sammelliste 425). Unter Linux bleiben <see cref="SignalHilfe"/> und <see cref="Befehl"/> wortgleich.
+    /// </summary>
+    public const string SignalHilfeMac = "Auf dem Mac: Hängt das Programm, öffne das Programm „Terminal“ und gib diesen "
+        + "Befehl ein. Das Programm schreibt dann in die Datei haenger.log, an welcher Stelle es gerade steht, und wird "
+        + "dabei nicht beendet. Hast du das Programm selbst im Terminal gestartet, genügt dort auch die Tastenkombination "
+        + "ctrl + T.";
+    public const string BefehlMac = "kill -INFO $(pgrep -i -x -o lernplattform)";
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-347, Nico Bild-OK 22.11.2026): Satz und Befehl unter „Hänger-Diagnose“ je System.
+    /// Linux wie bisher, am Mac derselbe Block mit eigenem Satz und Befehl, Windows ohne Block (null).
+    /// </summary>
+    public static (string Satz, string Befehl)? SignalBlock(bool linux, bool macOS) =>
+        linux ? (SignalHilfe, Befehl) : macOS ? (SignalHilfeMac, BefehlMac) : null;
+
     public const string BefehlKopieren = "Befehl kopieren";
     public const string BefehlKopiert = "Befehl in die Zwischenablage kopiert";
     public const string Keine = "Keine Hänger aufgezeichnet.";

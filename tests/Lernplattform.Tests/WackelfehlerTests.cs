@@ -54,32 +54,27 @@ public sealed class WackelfehlerTests : IDisposable
     }
 
     /// <summary>
-    /// Sammelliste 423 (Lauf 1158, macos-15, 1. Lauf rot): ein Abruf-Eintrag ohne fremdes kill (Laufzeit nutzt am Mac
-    /// SIGUSR1 zum Anhalten der Faeden) zaehlt am Mac nicht als Blockade; eine Blockade bleibt ueberall rot.
+    /// Sammelliste 423 (Lauf 1158, macos-15) und 425 (A 1.3.1): der Eintrag „Abruf (Signal USR1)“ aus Lauf 1158 entstand, weil
+    /// die Laufzeit am Mac SIGUSR1 selbst nutzt. Seit A 1.3.1 hoert das Programm am Mac auf SIGINFO; ein Abruf-Eintrag ist in
+    /// Start-Test-Proben darum wieder auf jedem System ein Fund (die Mac-Ausnahme aus A 1.3.0 ist entfallen, strenger).
     /// </summary>
     [Fact]
-    public void Haenger423_AbrufAmMacKeineBlockade_BlockadeBleibtRot()
+    public void Haenger425_AbrufIstUeberallEinFund_BlockadeBleibtRot()
     {
-        // genau der Eintrag aus Lauf 1158 (Text so, wie Haenger.Abruf ihn schreibt)
-        var abruf = "=== 2026-11-21 22:57:10 | " + Haenger.AbrufAnfang + "Seite: settings, Vorgang: bereit ===";
-        Assert.Equal("=== 2026-11-21 22:57:10 | Abruf (Signal USR1): Seite: settings, Vorgang: bereit ===", abruf);
+        // genau der Eintrag aus Lauf 1158 (Text so, wie Haenger.Abruf ihn bis A 1.3.0 schrieb)
+        var abruf = "=== 2026-11-21 22:57:10 | Abruf (Signal USR1): Seite: settings, Vorgang: bereit ===";
         var neu = OrdnerAbdruck.NeueHaengerEintraege("", abruf + "\n");
-        Assert.True(OrdnerAbdruck.IstAbruf(Assert.Single(neu)));
-        Assert.True(OrdnerAbdruck.OhneBlockade(neu, macOS: true));
-        // Gegenprobe 1: die Pruefung bis A 1.2.1 (NurVerdeckt) war hier rot (= der rote 1. Lauf)
         Assert.False(OrdnerAbdruck.NurVerdeckt(neu));
-        // Gegenprobe 2: unter Linux und Windows bleibt ein Abruf rot (dort sendet die Laufzeit kein SIGUSR1)
-        Assert.False(OrdnerAbdruck.OhneBlockade(neu, macOS: false));
-        // Gegenprobe 3: eine echte Blockade (Stelle des Waechters) bleibt auch am Mac rot, neben einem Abruf
-        var blockade = Eintrag("Stelle 1 (Hauptfaden seit 6 s still, Seite: settings, Vorgang: bereit)");
-        var zwei = OrdnerAbdruck.NeueHaengerEintraege("", abruf + "\n" + blockade);
-        Assert.Equal(2, zwei.Count);
-        Assert.False(OrdnerAbdruck.OhneBlockade(zwei, macOS: true));
-        // Gegenprobe 4: „Abruf“ nur am Anfang des Textes zaehlt, nicht irgendwo in einer Blockade-Zeile
+        Assert.Equal(!OperatingSystem.IsMacOS(), OrdnerAbdruck.IstAbruf(Assert.Single(neu)));
+        // der heutige Abruf-Eintrag dieses Systems wird erkannt und ist ebenso ein Fund
+        var heute = OrdnerAbdruck.NeueHaengerEintraege("", "=== 2026-11-22 11:00:00 | " + Haenger.AbrufAnfang + "Seite: settings, Vorgang: bereit ===\n");
+        Assert.True(OrdnerAbdruck.IstAbruf(Assert.Single(heute)));
+        Assert.False(OrdnerAbdruck.NurVerdeckt(heute));
+        // eine echte Blockade bleibt rot, „Abruf“ zaehlt nur am Anfang des Textes
+        Assert.False(OrdnerAbdruck.NurVerdeckt(OrdnerAbdruck.NeueHaengerEintraege("", Eintrag("Stelle 1 (Hauptfaden seit 6 s still, Seite: settings, Vorgang: bereit)"))));
         Assert.False(OrdnerAbdruck.IstAbruf(Eintrag("Stelle 2 (Seite: " + Haenger.AbrufAnfang + ")").TrimEnd('\n')));
         // verdeckt bleibt wie in 413 erlaubt
-        var verdeckt = OrdnerAbdruck.NeueHaengerEintraege("", Eintrag("Hänger-Diagnose: Hauptfaden seit 5,2 s ohne Rückruf" + Haenger.VerdecktZusatz));
-        Assert.True(OrdnerAbdruck.OhneBlockade(verdeckt, macOS: false));
+        Assert.True(OrdnerAbdruck.NurVerdeckt(OrdnerAbdruck.NeueHaengerEintraege("", Eintrag("Hänger-Diagnose: Hauptfaden seit 5,2 s ohne Rückruf" + Haenger.VerdecktZusatz))));
     }
 
     /// <summary>Abdruck wie bis A 1.2.0 (AutoMessung.DatenAbdruck): alle Dateien.</summary>

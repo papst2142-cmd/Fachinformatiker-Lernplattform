@@ -17,6 +17,8 @@ public partial class App : Application
         _ = Messwerte.SeitStart;
         // Phase 1, K4: unbehandelte Fehler nach fehler.log im Datenordner (PC und Handy)
         Fehlerprotokoll.Einrichten(Aktualisierung.Aktualisierung.Anzeige);
+        // Welle Fehlerpruefung Teil 2 (Sammelliste 430): Fehler beim Bau einer Kachel (Nachladen) ebenfalls nach fehler.log
+        Core.Spiel.Probe.Nachlader.Fehlerziel = text => Fehlerprotokoll.Schreiben(text);
         // Wie Python (Tk report_callback_exception): Fehler einer Bedienung protokollieren, Programm laeuft weiter;
         // als behandelt markiert, damit derselbe Fehler nicht ein zweites Mal ueber AppDomain im Protokoll landet.
         Dispatcher.UIThread.UnhandledException += (_, e) =>

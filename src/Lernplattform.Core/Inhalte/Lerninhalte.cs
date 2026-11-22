@@ -141,27 +141,77 @@ public sealed partial class Lerninhalte
     /// </summary>
     public static Lerninhalte Laden(Func<string, byte[]> lesen, string ordner = "")
     {
-        var quiz = LadeListe(lesen, "quizfragen");
-        var anzahlDatei = quiz.Count;
-        var themen = LadeThemen(lesen);
+        // Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 422 Gruppe 1): die Dateien sind unabhaengig voneinander;
+        // jede Datei ist ein Lazy, den ein Hintergrund-Thread schon beginnt. Der Aufrufer holt die Werte danach in der
+        // bisherigen Reihenfolge ab und rechnet eine noch nicht begonnene Datei selbst (nie langsamer als nacheinander,
+        // auch wenn kein Thread frei ist). Ergebnis und erster Fehler (in der Reihenfolge der Dateien) bleiben gleich.
+        var quizLaden = Vorab(() => { var liste = LadeListe(lesen, "quizfragen"); return (Anzahl: liste.Count, Fragen: Verpacke(InhaltArt.Quizfrage, Fragenkatalog.Aufbauen(liste))); });
+        var themenLaden = Vorab(() => LadeThemen(lesen));
+        var kartenLaden = Vorab(() => Verpacke(InhaltArt.Karteikarte, LadeListe(lesen, "karteikarten")));
+        var ap2Laden = Vorab(() => Verpacke(InhaltArt.Ap2Szenario, LadeListe(lesen, "szenarien_ap2")));
+        var ap1Laden = Vorab(() => Verpacke(InhaltArt.Ap1Szenario, LadeListe(lesen, "szenarien_ap1")));
+        var projekteLaden = Vorab(() => Verpacke(InhaltArt.Testprojekt, LadeListe(lesen, "projektarbeiten")));
+        var rahmenLaden = Vorab(() => LadeObjekt(lesen, "rahmenplan"));
+        var zuordnungLaden = Vorab(() => LadeObjekt(lesen, "rahmenplan_zuordnung"));
+        var quiz = quizLaden.Value;
+        var themen = themenLaden.Value;
         return new Lerninhalte
         {
             Ordner = ordner,
-            Karteikarten = Verpacke(InhaltArt.Karteikarte, LadeListe(lesen, "karteikarten")),
-            Quizfragen = Verpacke(InhaltArt.Quizfrage, Fragenkatalog.Aufbauen(quiz)),
-            AnzahlQuizfragenDatei = anzahlDatei,
-            Ap2Szenarien = Verpacke(InhaltArt.Ap2Szenario, LadeListe(lesen, "szenarien_ap2")),
-            Ap1Szenarien = Verpacke(InhaltArt.Ap1Szenario, LadeListe(lesen, "szenarien_ap1")),
-            Testprojekte = Verpacke(InhaltArt.Testprojekt, LadeListe(lesen, "projektarbeiten")),
+            Karteikarten = kartenLaden.Value,
+            Quizfragen = quiz.Fragen,
+            AnzahlQuizfragenDatei = quiz.Anzahl,
+            Ap2Szenarien = ap2Laden.Value,
+            Ap1Szenarien = ap1Laden.Value,
+            Testprojekte = projekteLaden.Value,
             Themen = themen,
             ThemenReihenfolge = Fachbereiche.Alle
                 .SelectMany(f => themen.TryGetValue(f, out var liste) ? liste : [])
                 .Select(t => t.Id)
                 .ToList(),
             ThemaNach = ThemenNachId(themen),
-            Rahmenplan = LadeObjekt(lesen, "rahmenplan"),
-            RahmenplanZuordnung = LadeObjekt(lesen, "rahmenplan_zuordnung"),
+            Rahmenplan = rahmenLaden.Value,
+            RahmenplanZuordnung = zuordnungLaden.Value,
         };
+    }
+
+    /// <summary>Schalter fuer Tests (AsyncLocal, Sammelliste 307): ohne Hintergrund-Threads laden (alter Weg, nacheinander).</summary>
+    internal static readonly AsyncLocal<bool> NacheinanderFuerTests = new();
+
+    /// <summary>Zaehlt fuer Tests (AsyncLocal, nur der eigene Ablauf), wie viele Teile einem Hintergrund-Thread uebergeben wurden.</summary>
+    internal static readonly AsyncLocal<System.Runtime.CompilerServices.StrongBox<int>?> HintergrundFuerTests = new();
+
+    /// <summary>
+    /// Ein Teil des Ladens als Lazy, den ein Hintergrund-Thread schon beginnt. Ein Fehler bleibt im Lazy und kommt beim
+    /// Abholen (nie im Hintergrund verschluckt, nie doppelt gerechnet).
+    /// </summary>
+    private static Lazy<T> Vorab<T>(Func<T> rechnen)
+    {
+        var lazy = new Lazy<T>(rechnen, LazyThreadSafetyMode.ExecutionAndPublication);
+        if (!NacheinanderFuerTests.Value)
+        {
+            var zaehler = HintergrundFuerTests.Value;
+            _ = Task.Run(() =>
+            {
+                if (zaehler is not null)
+                {
+                    Interlocked.Increment(ref zaehler.Value);
+                }
+                if (lazy.IsValueCreated)
+                {
+                    return;
+                }
+                try
+                {
+                    _ = lazy.Value;
+                }
+                catch (Exception)
+                {
+                    // der Lazy merkt sich den Fehler, das Abholen meldet ihn
+                }
+            });
+        }
+        return lazy;
     }
 
     /// <summary>inhalte/&lt;name&gt;.json laden und umwandeln wie load_content.</summary>

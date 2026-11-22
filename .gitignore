@@ -39,3 +39,6 @@ __pycache__/
 # Betriebssystem
 .DS_Store
 Thumbs.db
+
+# Welle Fehlerpruefung Teil 2 (Sammelliste 424): Stapel-Dateien des Wachhunds (nur CI-Artefakt)
+wachhund_stapel/

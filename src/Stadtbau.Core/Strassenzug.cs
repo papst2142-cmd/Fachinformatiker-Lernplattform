@@ -78,7 +78,7 @@ public sealed class Strassenzug
     public static bool NameGueltig(string name) => Projekt.NameGueltig(name);
 
     /// <summary>Ein Name einer festen Vorlage (gleich bis auf Gross-/Kleinschreibung) ist fuer eigene Vorlagen gesperrt.</summary>
-    public static bool NameFest(string name) => Feste.Any(f => string.Equals(f.Name, name, StringComparison.CurrentCultureIgnoreCase));
+    public static bool NameFest(string name) => Feste.Any(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase));
 
     public static string DateiName(string name) => Projekt.DateiName(name) + Endung;
 
@@ -254,7 +254,7 @@ public sealed class Strassenzug
             throw new ArgumentException("Name ungültig", nameof(ablage));
         }
         var pfad = Path.Combine(ablage.Strassenzuege, DateiName(Name));
-        if (NameFest(Name) || File.Exists(pfad) || Alle(ablage).Any(e => string.Equals(e.Name, Name, StringComparison.CurrentCultureIgnoreCase)))
+        if (NameFest(Name) || File.Exists(pfad) || Alle(ablage).Any(e => string.Equals(e.Name, Name, StringComparison.OrdinalIgnoreCase)))
         {
             throw new IOException(Texte.ZugGibtEs);
         }

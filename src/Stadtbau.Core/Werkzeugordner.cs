@@ -94,14 +94,44 @@ public sealed class Werkzeugordner(string wurzel)
         return this;
     }
 
-    /// <summary>Datei sicher schreiben: erst eine Kopie daneben, dann ersetzen (nie halb geschrieben).</summary>
+    /// <summary>
+    /// Datei sicher schreiben: erst eine Kopie daneben, dann ersetzen (nie halb geschrieben). Welle S 0.61.0 (Weisung P12-345,
+    /// Sammelliste 428): die Kopie wird vor dem Umbenennen mit <c>Flush(true)</c> auf die Platte gezwungen; sonst kann nach
+    /// einem Stromausfall das Umbenennen schon auf der Platte stehen, der Inhalt aber noch nicht (leeres Projekt).
+    /// </summary>
     public static void SicherSchreiben(string pfad, byte[] daten)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(pfad))!);
         var neu = pfad + ".neu";
-        File.WriteAllBytes(neu, daten);
+        AufPlatteSchreiben(neu, daten);
+        SchrittFuerTests.Value?.Invoke("move");
         File.Move(neu, pfad, overwrite: true);
     }
+
+    /// <summary>
+    /// Neue Datei schreiben und mit <c>Flush(true)</c> auf die Platte zwingen (Sammelliste 428); fuer jede Zwischendatei, die
+    /// danach eine vorhandene Datei ersetzt (<see cref="SicherSchreiben"/>, Umbenennen eines Blueprints).
+    /// </summary>
+    internal static void AufPlatteSchreiben(string pfad, byte[] daten)
+    {
+        if (OhneFlushFuerTests.Value)
+        {
+            File.WriteAllBytes(pfad, daten);
+            return;
+        }
+        using (var strom = new FileStream(pfad, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            strom.Write(daten);
+            strom.Flush(flushToDisk: true);
+        }
+        SchrittFuerTests.Value?.Invoke("flush");
+    }
+
+    /// <summary>Nur fuer die Gegenprobe (Sammelliste 428): der alte Weg ohne <c>Flush(true)</c>.</summary>
+    internal static readonly AsyncLocal<bool> OhneFlushFuerTests = new();
+
+    /// <summary>Nur fuer Tests (Sammelliste 428): meldet die Schritte „flush“ und „move“ in ihrer Reihenfolge.</summary>
+    internal static readonly AsyncLocal<Action<string>?> SchrittFuerTests = new();
 
     /// <summary>Eine Zeile in fehler.log (nur Art und Text, nie Schluessel).</summary>
     public void Fehler(string text)

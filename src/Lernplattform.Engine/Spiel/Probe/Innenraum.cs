@@ -1364,6 +1364,15 @@ public sealed partial class Innenraum
     /// <summary>Welle A 1.0.0 (Sammelliste 407), Gegenprobe: Sessel ohne eigene Drehung wie bis A 0.99.0 (immer Blick nach Sueden).</summary>
     internal static readonly AsyncLocal<bool> SesselAltFuerTests = new();
 
+    /// <summary>
+    /// Welle A 1.3.1 (Sammelliste 432): ein Bild haengt an der Wand, wenn bis so weit (Welt) hinter seiner Rueckseite eine Wand
+    /// ist (oder das Haus endet); sonst steht es auf einer Staffelei.
+    /// </summary>
+    public const float BildWandAbstand = 0.15f;
+
+    /// <summary>Welle A 1.3.1 (Sammelliste 432), Gegenprobe: jedes Bild als Tafel in Augenhoehe wie bis A 1.3.0 (schwebt ohne Wand).</summary>
+    internal static readonly AsyncLocal<bool> BildAltFuerTests = new();
+
     /// <summary>Flache Stuecke am Boden, die vor einem Sessel nicht stoeren.</summary>
     private static readonly HashSet<string> SesselFlach = ["teppich", "fussmatte"];
 
@@ -2161,6 +2170,18 @@ public sealed partial class Innenraum
             case "kamera":
             {
                 var farbe = typ == "bild" ? Netz.Farbe("#F472B6") : typ == "wimpel" ? Farben.Gelb : Farben.Geraet;
+                if (typ == "bild" && !BildAltFuerTests.Value && !InWand(r.Rechteck(0, -BildWandAbstand, b, BildWandAbstand)))
+                {
+                    // Welle A 1.3.1 (Weisung P12-348, Sammelliste 432, Nico 2a „Staffelei“): ein Bild, hinter dem keine Wand ist,
+                    // schwebte in der Luft; es steht jetzt auf einer Staffelei (zwei Beine vorn, ein Bein hinten mit Strebe, Ablage)
+                    Kasten(r, b * 0.2f, t * 0.6f, 0.05f, 0.05f, 0, 1.6f * M, Farben.Holz);
+                    Kasten(r, (b * 0.8f) - 0.05f, t * 0.6f, 0.05f, 0.05f, 0, 1.6f * M, Farben.Holz);
+                    Kasten(r, (b * 0.5f) - 0.025f, 0, 0.05f, 0.05f, 0, 1.45f * M, Farben.Holz);
+                    Kasten(r, (b * 0.5f) - 0.025f, 0.05f, 0.05f, (t * 0.6f) - 0.05f, 0.9f * M, 0.95f * M, Farben.Holz);
+                    Kasten(r, b * 0.15f, t * 0.65f, b * 0.7f, 0.1f, 0.62f * M, 0.67f * M, Farben.Holz);
+                    Kasten(r, b * 0.15f, t * 0.55f, b * 0.7f, 0.06f, 0.67f * M, 1.4f * M, farbe);
+                    break;
+                }
                 Kasten(r, b * 0.1f, 0, b * 0.8f, Math.Min(t, 0.1f), 1.2f * M, Math.Min(wandOben, 1.6f * M), farbe);
                 break;
             }

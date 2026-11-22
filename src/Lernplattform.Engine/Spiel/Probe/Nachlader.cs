@@ -25,13 +25,14 @@ public sealed class Nachlader
     private readonly Dictionary<Stadtteile.Kachel, long> _geladen = [];
     private readonly Dictionary<Stadtteile.Kachel, Paket> _bereit = [];
     private readonly bool _hintergrund;
-    private Task<Paket>? _bau;
+    private Task<(Paket? Paket, Exception? Fehler)>? _bau;
     private Stadtteile.Kachel _bauKachel;
     private List<Stadtteile.Kachel> _noetig = [];
     private List<Stadtteile.Kachel> _vor = [];
     private (float X, float Z)? _ort;
     private (float X, float Z)? _ziel;
     private List<Stadtteile.Kachel> _zielKacheln = [];
+    private readonly HashSet<Stadtteile.Kachel> _kaputt = [];
 
     public Nachlader(StadtSzene szene, bool mitGruen, bool hintergrund = true)
     {
@@ -91,12 +92,35 @@ public sealed class Nachlader
     /// <summary>Die Kacheln zu <see cref="BauZeiten"/> (gleiche Stelle), fuer die Wiederholung einer Messung.</summary>
     public List<Stadtteile.Kachel> BauKacheln { get; } = [];
 
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 430): wohin ein Fehler beim Bau einer Kachel geschrieben
+    /// wird. Das Programm setzt es beim Start (Lernplattform: <c>fehler.log</c> im Datenordner, Werkzeug: <c>fehler.log</c> des
+    /// Werkzeugs); null = nirgends. <see cref="Protokoll"/> einer Instanz geht vor (Tests).
+    /// </summary>
+    public static Action<string>? Fehlerziel { get; set; }
+
+    /// <summary>Ziel der Fehler dieser Instanz (Vorgabe: <see cref="Fehlerziel"/>).</summary>
+    public Action<string>? Protokoll { get; set; }
+
+    /// <summary>
+    /// Kacheln, deren Bau gescheitert ist (Sammelliste 430): sie werden in dieser Sitzung nicht noch einmal gebaut und bleiben
+    /// fern gezeichnet (Fernkasten der Grundlage), nie ein Loch und kein Absturz.
+    /// </summary>
+    public IReadOnlySet<Stadtteile.Kachel> Kaputt => _kaputt;
+
+    /// <summary>Nur fuer Tests (Sammelliste 430): scheitert der Bau dieser Kachel mit einem eingeschleusten Fehler.</summary>
+    public static readonly AsyncLocal<Func<Stadtteile.Kachel, bool>?> FehlerFuerTests = new();
+
     /// <summary>Wie oft eine noetige Kachel sofort gebaut werden musste (sie war nicht vorbereitet).</summary>
     public int Sofort { get; private set; }
 
     /// <summary>Eine Kachel bauen und packen (darf ausserhalb des Oberflaechen-Threads laufen).</summary>
     public static Paket Packen(StadtSzene szene, Stadtteile.Kachel k, bool mitGruen)
     {
+        if (FehlerFuerTests.Value is { } fehler && fehler(k))
+        {
+            throw new InvalidOperationException("eingeschleuster Fehler (Test) in Kachel " + k.Spalte + "," + k.Reihe);
+        }
         var uhr = Stopwatch.StartNew();
         var n = szene.KachelVorbereiten(k);
         var p = Packen(n, mitGruen);
@@ -166,18 +190,19 @@ public sealed class Nachlader
         {
             _bereit.Remove(k);
         }
-        if (_bau is null && _vor.Concat(_zielKacheln).Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k)).Take(1).ToList() is [var naechste])
+        if (_bau is null && _vor.Concat(_zielKacheln).Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k) && !_kaputt.Contains(k)).Take(1).ToList() is [var naechste])
         {
             _bauKachel = naechste;
             if (_hintergrund)
             {
                 var szene = Szene;
                 var gruen = MitGruen;
-                _bau = Task.Run(() => Packen(szene, naechste, gruen));
+                // die Aufgabe selbst wirft nie (Sammelliste 430): ein Fehler kommt als Ergebnis zurueck und wird in Uebernehmen gemeldet
+                _bau = Task.Run(() => Versuchen(szene, naechste, gruen));
             }
-            else
+            else if (Versuchen(Szene, naechste, MitGruen) is { } ergebnis)
             {
-                Ablegen(Packen(Szene, naechste, MitGruen));
+                Annehmen(naechste, ergebnis);
             }
         }
         Merken();
@@ -204,7 +229,7 @@ public sealed class Nachlader
     }
 
     /// <summary>Noetige Kacheln, die weder geladen noch vorbereitet sind (naechste zuerst).</summary>
-    public IEnumerable<Stadtteile.Kachel> Fehlend() => _noetig.Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k));
+    public IEnumerable<Stadtteile.Kachel> Fehlend() => _noetig.Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k) && !_kaputt.Contains(k));
 
     /// <summary>Die Kachel liegt jetzt auf der Grafikkarte (ihre Netze im Prozessor werden nicht mehr gehalten).</summary>
     public void Hochgeladen(Paket p)
@@ -214,19 +239,32 @@ public sealed class Nachlader
         Merken();
     }
 
-    /// <summary>Eine noetige Kachel sofort bauen (wartet auf einen laufenden Bau derselben Kachel) und vorbereitet ablegen.</summary>
-    public Paket JetztBauen(Stadtteile.Kachel k)
+    /// <summary>
+    /// Eine noetige Kachel sofort bauen (wartet auf einen laufenden Bau derselben Kachel) und vorbereitet ablegen. Null, wenn ihr
+    /// Bau gescheitert ist (Sammelliste 430: Eintrag in <c>fehler.log</c>, die Kachel bleibt fern gezeichnet).
+    /// </summary>
+    public Paket? JetztBauen(Stadtteile.Kachel k)
     {
         if (_bau is { } bau && _bauKachel == k)
         {
             bau.Wait();
             Uebernehmen();
         }
+        if (_kaputt.Contains(k))
+        {
+            return null;
+        }
         if (!_bereit.TryGetValue(k, out var p))
         {
             Sofort++;
-            p = Packen(Szene, k, MitGruen);
-            Ablegen(p);
+            var ergebnis = Versuchen(Szene, k, MitGruen);
+            Annehmen(k, ergebnis);
+            if (ergebnis.Paket is not { } neu)
+            {
+                Merken();
+                return null;
+            }
+            p = neu;
         }
         Merken();
         return p;
@@ -241,14 +279,15 @@ public sealed class Nachlader
     {
         _bau?.Wait();
         Uebernehmen();
-        var fehlt = kacheln.Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k)).Distinct().ToList();
-        var pakete = new Paket[fehlt.Count];
+        var fehlt = kacheln.Where(k => !_geladen.ContainsKey(k) && !_bereit.ContainsKey(k) && !_kaputt.Contains(k)).Distinct().ToList();
+        var ergebnisse = new (Paket? Paket, Exception? Fehler)[fehlt.Count];
         var (szene, gruen) = (Szene, MitGruen);
         _ = szene.Laternen;
-        Parallel.For(0, fehlt.Count, i => pakete[i] = Packen(szene, fehlt[i], gruen));
-        foreach (var p in pakete)
+        // Sammelliste 430: ein Fehler einer Kachel schlaegt nicht durch (kein Abbruch des Ladebilds), er wird gemeldet
+        Parallel.For(0, fehlt.Count, i => ergebnisse[i] = Versuchen(szene, fehlt[i], gruen));
+        for (var i = 0; i < fehlt.Count; i++)
         {
-            Ablegen(p);
+            Annehmen(fehlt[i], ergebnisse[i]);
         }
         Merken();
     }
@@ -265,12 +304,42 @@ public sealed class Nachlader
         if (_bau is { IsCompleted: true } bau)
         {
             _bau = null;
-            if (bau.IsCompletedSuccessfully)
-            {
-                Ablegen(bau.Result);
-            }
+            Annehmen(_bauKachel, bau.IsCompletedSuccessfully ? bau.Result : (null, bau.Exception?.GetBaseException() ?? new InvalidOperationException("Bau abgebrochen")));
         }
     }
+
+    /// <summary>Eine Kachel bauen; ein Fehler wird als Ergebnis zurueckgegeben, nie geworfen (Sammelliste 430).</summary>
+    private static (Paket? Paket, Exception? Fehler) Versuchen(StadtSzene szene, Stadtteile.Kachel k, bool mitGruen)
+    {
+        try
+        {
+            return (Packen(szene, k, mitGruen), null);
+        }
+        catch (Exception x) when (x is not OutOfMemoryException)
+        {
+            return (null, x);
+        }
+    }
+
+    /// <summary>Ergebnis eines Baus uebernehmen: Paket ablegen oder Kachel als kaputt merken und den Fehler melden.</summary>
+    private void Annehmen(Stadtteile.Kachel k, (Paket? Paket, Exception? Fehler) ergebnis)
+    {
+        if (ergebnis.Paket is { } p)
+        {
+            Ablegen(p);
+            return;
+        }
+        if (_kaputt.Add(k))
+        {
+            (Protokoll ?? Fehlerziel)?.Invoke(FehlerText(k, ergebnis.Fehler));
+        }
+    }
+
+    /// <summary>Text des Eintrags in fehler.log: Kachel, Art und Text des Fehlers, Stapel.</summary>
+    public static string FehlerText(Stadtteile.Kachel k, Exception? fehler) =>
+        "Nachladen: Kachel " + k.Spalte.ToString(System.Globalization.CultureInfo.InvariantCulture) + ","
+        + k.Reihe.ToString(System.Globalization.CultureInfo.InvariantCulture) + " nicht gebaut, wird fern gezeichnet: "
+        + (fehler?.ToString() ?? "unbekannter Fehler");
 
     private void Ablegen(Paket p)
     {

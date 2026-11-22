@@ -94,7 +94,7 @@ public static partial class Paket
             foreach (var eintrag in zip.Entries)
             {
                 var name = eintrag.FullName;
-                if (name.Length == 0 || name.Contains('/') || name.Contains('\\') || name is "." or "..")
+                if (name.Length == 0 || name.Contains('/') || name.Contains('\\') || name is "." or ".." || UnterWindowsVerboten(name))
                 {
                     return (null, PaketTexte.Format(PaketTexte.DateiFremd, name));
                 }
@@ -123,6 +123,37 @@ public static partial class Paket
         {
             return (null, PaketTexte.KeinArchiv);
         }
+    }
+
+    /// <summary>Unter Windows reservierte Geraetenamen (jede Schreibweise, auch mit Endung, z. B. <c>nul.txt</c>).</summary>
+    private static readonly HashSet<string> Geraetenamen = new(
+        // dazu (selbst gefunden, strenger): COM0/LPT0 und die hochgestellten ¹ ² ³, die Windows ebenso reserviert
+        ["CON", "PRN", "AUX", "NUL", .. Enumerable.Range(0, 10).Select(i => "COM" + i), .. Enumerable.Range(0, 10).Select(i => "LPT" + i),
+            "COM¹", "COM²", "COM³", "LPT¹", "LPT²", "LPT³"],
+        StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 429): ein Dateiname, den Windows nicht speichern kann, gilt
+    /// wie F2 als „Datei fremd“: reservierter Geraetename (<c>CON</c>, <c>PRN</c>, <c>AUX</c>, <c>NUL</c>, <c>COM0</c> bis
+    /// <c>COM9</c>, <c>LPT0</c> bis <c>LPT9</c>, <c>COM¹</c> bis <c>COM³</c>, <c>LPT¹</c> bis <c>LPT³</c>, auch mit Endung), Punkt oder Leerzeichen am Ende, eines der Zeichen
+    /// <c>&lt; &gt; : " | ? *</c> oder ein Steuerzeichen. Vorher galt so ein Paket als gut und scheiterte erst beim Speichern.
+    /// </summary>
+    internal static bool UnterWindowsVerboten(string name)
+    {
+        if (name.EndsWith('.') || name.EndsWith(' '))
+        {
+            return true;
+        }
+        foreach (var c in name)
+        {
+            if (c < 32 || c is '<' or '>' or ':' or '"' or '|' or '?' or '*')
+            {
+                return true;
+            }
+        }
+        var punkt = name.IndexOf('.', StringComparison.Ordinal);
+        var stamm = (punkt < 0 ? name : name[..punkt]).TrimEnd(' ');
+        return Geraetenamen.Contains(stamm);
     }
 
     /// <summary>Prueft ein Paket-Archiv vollstaendig (Kopf, Prüfsummen, Inhalt); <paramref name="app"/> = Anzeige der App.</summary>

@@ -20,7 +20,7 @@ namespace Lernplattform.Core.Diagnose;
 /// <item>Stelle (D6, statt des Python-Stapels): steht der Herzschlag 30 s, schreibt der Waechter
 /// Seite, Vorgang und Wartepunkte nach haenger.log, nach weiteren 90 s noch einmal; je Sitzung
 /// hoechstens 3 Mal. Einen Code-Stapel gibt es nicht (keine Fremdbibliothek).</item>
-/// <item>Abruf (Linux, macOS): kill -USR1 schreibt dieselben Angaben, das Programm laeuft weiter.</item>
+/// <item>Abruf: unter Linux kill -USR1, am Mac kill -INFO (oder Strg+T im Terminal) schreibt dieselben Angaben, das Programm laeuft weiter.</item>
 /// <item>Beim Schliessen: lebt der Prozess 5 s danach noch, eine Zeile mit den Angaben.</item>
 /// </list>
 /// Grundsatz: Die Diagnose zeigt nie einen Fehler und stoppt nie das Programm; jede Funktion
@@ -88,8 +88,18 @@ public static class Haenger
     /// <summary>Patch A 0.37.0 (Sammelliste 204): Zusatz einer Blockade, waehrend das Programm am Mac verdeckt ist.</summary>
     public const string VerdecktZusatz = " – Programm verdeckt (macOS drosselt Zeitgeber)";
 
-    /// <summary>Anfang eines Eintrags, den das Signal USR1 schreibt (<see cref="Abruf"/>).</summary>
-    public const string AbrufAnfang = "Abruf (Signal USR1): ";
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-345/P12-346, Sammelliste 425): Name des Abruf-Signals. Linux USR1, macOS INFO
+    /// (Strg+T im Terminal): am Mac nutzt die .NET-Laufzeit SIGUSR1 selbst zum Anhalten der Faeden (kein SIGRTMIN), ein
+    /// Abruf ueber USR1 schrieb dort ohne Zutun Eintraege (Sammelliste 423). Linux kennt kein INFO und bleibt bei USR1.
+    /// </summary>
+    public static string AbrufSignal(bool macOS) => macOS ? "INFO" : "USR1";
+
+    /// <summary>Rohe Signalnummer des Abrufs (.NET kennt die Namen nicht): Linux USR1 = 10, macOS INFO = 29 (bis A 1.3.0 USR1 = 30).</summary>
+    public static int AbrufNummer(bool macOS) => macOS ? 29 : 10;
+
+    /// <summary>Anfang eines Eintrags, den das Abruf-Signal schreibt (<see cref="Abruf"/>): „Abruf (Signal USR1): “ bzw. am Mac „Abruf (Signal INFO): “.</summary>
+    public static readonly string AbrufAnfang = "Abruf (Signal " + AbrufSignal(OperatingSystem.IsMacOS()) + "): ";
 
     /// <summary>
     /// Patch A 0.37.0 (Sammelliste 204, Weisung P11-34 Antwort 3a): Abfrage, ob das Programm sichtbar ist (macOS:
@@ -148,8 +158,8 @@ public static class Haenger
             }
             if (plattform != "win32" && (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()) && _signal is null)
             {
-                // SIGUSR1: Linux 10, macOS 30 (rohe Signalnummer, .NET kennt den Namen nicht)
-                var nummer = OperatingSystem.IsMacOS() ? 30 : 10;
+                // Sammelliste 425: Linux SIGUSR1 (10), macOS SIGINFO (29)
+                var nummer = AbrufNummer(OperatingSystem.IsMacOS());
                 _signal = PosixSignalRegistration.Create((PosixSignal)nummer, kontext =>
                 {
                     kontext.Cancel = true;   // nicht beenden
@@ -498,7 +508,7 @@ public static class Haenger
     }
 
     /// <summary>
-    /// Das Signal USR1 ist angekommen. FW8 (Sammelliste 101): Freigabe pruefen und schreiben unter derselben Sperre,
+    /// Das Abruf-Signal (Linux USR1, macOS INFO) ist angekommen. FW8 (Sammelliste 101): Freigabe pruefen und schreiben unter derselben Sperre,
     /// mit der <see cref="FuerTests"/> die Freigabe zuruecknimmt und die Datei schliesst; ein Signal, das zwischen
     /// Pruefen und Schreiben lag, schreibt so nie in die haenger.log, die erst danach geoeffnet wurde.
     /// </summary>
@@ -518,7 +528,7 @@ public static class Haenger
     /// <summary>Nur fuer Tests (Gegenprobe Sammelliste 101): wird nach der Pruefung der Freigabe und vor dem Schreiben gerufen.</summary>
     internal static Action? NachFreigabeFuerTests { get; set; }
 
-    /// <summary>Abruf ueber das Signal USR1 (Linux, macOS): Seite, Vorgang und Wartepunkte nach haenger.log.</summary>
+    /// <summary>Abruf ueber das Signal (Linux USR1, macOS INFO): Seite, Vorgang und Wartepunkte nach haenger.log.</summary>
     public static void Abruf()
     {
         try

@@ -39,18 +39,10 @@ public static class OrdnerAbdruck
     public static bool NurVerdeckt(IReadOnlyList<string> eintraege) => eintraege.All(z => z.Contains(Haenger.VerdecktZusatz, StringComparison.Ordinal));
 
     /// <summary>
-    /// Sammelliste 423 (Lauf 1158, macos-15): wie <see cref="NurVerdeckt"/>, am Mac zaehlt ein Abruf-Eintrag
-    /// („Abruf (Signal USR1): …“) nicht als Blockade. Grund (Quelle .NET 10, coreclr/pal/src/exception/signal.cpp):
-    /// macOS kennt kein SIGRTMIN, die Laufzeit nimmt dort SIGUSR1 als INJECT_ACTIVATION_SIGNAL (Faeden anhalten fuer die
-    /// Speicherbereinigung); System.Native (pal_signal.c) ruft zuerst den Laufzeit-Handler und meldet das Signal danach
-    /// trotzdem an PosixSignalRegistration. Ohne fremdes kill schreibt die Haenger-Diagnose am Mac so einen Abruf-Eintrag.
-    /// Eine Blockade („Stelle …“, „Hänger-Diagnose …“) ohne Zusatz „verdeckt“ bleibt auf jedem System rot, ein Abruf
-    /// unter Linux und Windows auch (dort nutzt die Laufzeit SIGRTMIN bzw. kein Signal).
+    /// Wahr fuer einen Eintrag „=== &lt;Zeit&gt; | Abruf (Signal …): … ===“ (<see cref="Haenger.AbrufAnfang"/>). Seit A 1.3.1
+    /// (Sammelliste 425) zaehlt ein Abruf in Start-Test-Proben wieder auf jedem System als Fund (<see cref="NurVerdeckt"/>): am
+    /// Mac hoert das Programm nicht mehr auf USR1, das die Laufzeit selbst nutzt; die Ausnahme aus 423 (A 1.3.0) ist entfallen.
     /// </summary>
-    public static bool OhneBlockade(IReadOnlyList<string> eintraege, bool macOS) => eintraege.All(z =>
-        z.Contains(Haenger.VerdecktZusatz, StringComparison.Ordinal) || (macOS && IstAbruf(z)));
-
-    /// <summary>Wahr fuer einen Eintrag „=== &lt;Zeit&gt; | Abruf (Signal USR1): … ===“.</summary>
     public static bool IstAbruf(string eintrag)
     {
         var trenner = eintrag.IndexOf(" | ", StringComparison.Ordinal);
