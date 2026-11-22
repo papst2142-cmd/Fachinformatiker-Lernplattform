@@ -27,6 +27,8 @@ public class LadenSchnellerTests
 
     private static (Lerninhalte Inhalte, int Hintergrund) Laden(bool nacheinander)
     {
+        // Typ-Initialisierer (Feld Inhalte) vor der Zaehlung, siehe NeueInhalte_ListenNebeneinander_GleichesErgebnisWieNacheinander
+        _ = Inhalte;
         var zaehler = new System.Runtime.CompilerServices.StrongBox<int>();
         Lerninhalte.NacheinanderFuerTests.Value = nacheinander;
         Lerninhalte.HintergrundFuerTests.Value = zaehler;
@@ -74,7 +76,11 @@ public class LadenSchnellerTests
     public void NeueInhalte_ListenNebeneinander_GleichesErgebnisWieNacheinander()
     {
         var bisher = Lerninhalte.Laden(Pfade.Inhalte);
-        byte[]? Lesen(string name) => Path.Combine(Lernen, name + ".json") is var pfad && File.Exists(pfad) ? File.ReadAllBytes(pfad) : null;
+        // die statischen Felder der Klasse vorher anfassen: ihr Typ-Initialisierer laedt auch die Inhalte (Feld Inhalte) und
+        // zaehlte sonst mit, wenn er erst im gemessenen Ablauf laeuft (Lauf 1165 windows: 16 statt 8)
+        var lernen = Lernen;
+        _ = Inhalte;
+        byte[]? Lesen(string name) => Path.Combine(lernen, name + ".json") is var pfad && File.Exists(pfad) ? File.ReadAllBytes(pfad) : null;
         (string Abbild, int Hintergrund) Mit(bool nacheinander)
         {
             var zaehler = new System.Runtime.CompilerServices.StrongBox<int>();

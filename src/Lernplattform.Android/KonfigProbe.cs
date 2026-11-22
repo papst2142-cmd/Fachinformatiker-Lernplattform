@@ -47,7 +47,7 @@ internal static class KonfigProbe
             await Task.Delay(2000);
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var ansicht = (Application.Current?.ApplicationLifetime as ISingleViewApplicationLifetime)?.MainView;
+                var ansicht = (global::Avalonia.Application.Current?.ApplicationLifetime as ISingleViewApplicationLifetime)?.MainView;
                 var oben = ansicht is null ? null : TopLevel.GetTopLevel(ansicht);
                 var g = oben?.ClientSize ?? default;
                 Log($"ANSICHT breite {g.Width:F0} hoehe {g.Height:F0} skalierung {(oben?.RenderScaling ?? 0):F2} aufgebaut {(ansicht?.IsLoaded == true ? "ja" : "nein")}");
