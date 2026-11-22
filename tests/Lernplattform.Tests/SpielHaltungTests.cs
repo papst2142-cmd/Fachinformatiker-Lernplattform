@@ -21,16 +21,19 @@ public class SpielHaltungTests
 
     private static readonly Dictionary<(string, int), List<SpielSitzenTests.Dreieck>> FigurVorrat = [];
 
-    /// <summary>Die Figur (Hoehe 1) sitzend (Sitzbild wie gezeichnet, <see cref="Figur.SitzBild"/>) oder liegend, je Kleidung.</summary>
-    internal static List<SpielSitzenTests.Dreieck> FigurDreiecke(SitzArt art, int kleid)
+    /// <summary>
+    /// Die Figur (Hoehe 1) sitzend (Sitzbild wie gezeichnet, <see cref="Figur.SitzBild(SitzArt, string?)"/>, auf Sofa, Sessel
+    /// und Liegestuhl seit A 1.3.1 mit den Beinen auf dem Polster) oder liegend, je Kleidung.
+    /// </summary>
+    internal static List<SpielSitzenTests.Dreieck> FigurDreiecke(SitzArt art, int kleid, string? modell = null)
     {
         lock (FigurVorrat)
         {
-            var key = (art == SitzArt.Liegen ? "liegen" : Figur.SitzBild(art), kleid);
+            var key = (art == SitzArt.Liegen ? "liegen" : Figur.SitzBild(art, modell), kleid);
             if (!FigurVorrat.TryGetValue(key, out var d))
             {
                 var g = SpielGrafikTests.Bibliothek.Value;
-                var netz = art == SitzArt.Liegen ? Figur.Netz(g, null, 1f, Kleider[kleid]) : Figur.Netz(g, null, 1f, Kleider[kleid], Figur.SitzBild(art), 0);
+                var netz = art == SitzArt.Liegen ? Figur.Netz(g, null, 1f, Kleider[kleid]) : Figur.Netz(g, null, 1f, Kleider[kleid], Figur.SitzBild(art, modell), 0);
                 d = SpielSitzenTests.Dreiecke(netz, art == SitzArt.Liegen ? Matrix4x4.CreateRotationX(-MathF.PI / 2) : Matrix4x4.Identity);
                 FigurVorrat[key] = d;
             }
@@ -117,7 +120,7 @@ public class SpielHaltungTests
         {
             foreach (var schub in Schuebe)
             {
-                var figur = FigurDreiecke(s.Art, kleid).Select(d => new SpielSitzenTests.Dreieck(
+                var figur = FigurDreiecke(s.Art, kleid, s.Modell).Select(d => new SpielSitzenTests.Dreieck(
                     Vector3.Transform(d.A, Lage(s.Ort, s.Blick, Innenraum.FigurHoehe, schub)), Vector3.Transform(d.B, Lage(s.Ort, s.Blick, Innenraum.FigurHoehe, schub)),
                     Vector3.Transform(d.C, Lage(s.Ort, s.Blick, Innenraum.FigurHoehe, schub)))).ToList();
                 foreach (var (name, d) in hindernisse)
@@ -272,16 +275,19 @@ public class SpielHaltungTests
     [Fact]
     public void FigurQuader_UmfassenDieFigur()
     {
-        foreach (var art in new[] { SitzArt.Sitzen, SitzArt.PcStuhl, SitzArt.Liegen })
+        // Welle A 1.3.1 (Sammelliste 431): dazu die Haltungen mit den Beinen auf dem Polster (Sofa, Sessel, Liegestuhl)
+        foreach (var (art, modell) in new (SitzArt, string?)[] { (SitzArt.Sitzen, null), (SitzArt.PcStuhl, null), (SitzArt.Liegen, null), (SitzArt.Sitzen, "loungeSofa"), (SitzArt.Zurueck, "loungeSofa") })
         {
             for (var kleid = 0; kleid < (art == SitzArt.Liegen ? 1 : Kleider.Count); kleid++)
             {
-                var quader = Innenraum.FigurQuader(art);
-                var draussen = FigurDreiecke(art, kleid).SelectMany(d => new[] { d.A, d.B, d.C })
+                var quader = Innenraum.FigurQuader(art, modell);
+                var draussen = FigurDreiecke(art, kleid, modell).SelectMany(d => new[] { d.A, d.B, d.C })
                     .Where(e => !quader.Any(q => MathF.Abs(e.X) <= q.Halb && e.Y >= q.Y1 && e.Y <= q.Y2 && e.Z >= q.Z1 && e.Z <= q.Z2)).Distinct().ToList();
-                Assert.True(draussen.Count == 0, $"{art} Kleid {kleid}: {draussen.Count} Ecken ausserhalb, z. B. {string.Join(" ", draussen.Take(5))}");
+                Assert.True(draussen.Count == 0, $"{art} {modell} Kleid {kleid}: {draussen.Count} Ecken ausserhalb, z. B. {string.Join(" ", draussen.Take(5))}");
             }
         }
+        Assert.Equal(Figur.SitzenLang, Figur.SitzBild(SitzArt.Sitzen, "loungeSofa"));
+        Assert.Equal(Figur.SitzenLangZurueck, Figur.SitzBild(SitzArt.Zurueck, "loungeChairRelax"));
     }
 
     /// <summary>Gegenprobe: dieselbe Pruefung findet eine Figur, die mitten im Sofa sitzt (Stelle 0,3 tiefer).</summary>
@@ -293,7 +299,7 @@ public class SpielHaltungTests
         var lage = Matrix4x4.CreateTranslation(-gm.Min) * Matrix4x4.CreateScale(3.6f / (gm.Max.X - gm.Min.X), 0.8f * Innenraum.Meter / (gm.Max.Y - gm.Min.Y), 1.4f / (gm.Max.Z - gm.Min.Z));
         var s = Innenraum.Platz("loungeSofa", gm.Min, gm.Max, lage, Innenraum.FigurHoehe, null)!;
         var sofa = SpielSitzenTests.Dreiecke(gm, lage);
-        var figur = FigurDreiecke(SitzArt.Sitzen, 0);
+        var figur = FigurDreiecke(SitzArt.Sitzen, 0, "loungeSofa");
         List<SpielSitzenTests.Dreieck> An(Vector3 ort) => figur.Select(d => new SpielSitzenTests.Dreieck(
             Vector3.Transform(d.A, Lage(ort, s.Blick, Innenraum.FigurHoehe, Vector2.Zero)), Vector3.Transform(d.B, Lage(ort, s.Blick, Innenraum.FigurHoehe, Vector2.Zero)),
             Vector3.Transform(d.C, Lage(ort, s.Blick, Innenraum.FigurHoehe, Vector2.Zero)))).ToList();

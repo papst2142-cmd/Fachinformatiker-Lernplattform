@@ -863,6 +863,26 @@
    "arme": 84,
    "bewegung": "sitzen_zurueck2",
    "sitz": 0.9
+  },
+  {
+   "name": "figur-sitzen-lang",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "sitzen_lang",
+   "sitz": 1.063
+  },
+  {
+   "name": "figur-sitzen-lang-zurueck",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "sitzen_lang_zurueck",
+   "sitz": 1.063
   }
  ]
 }

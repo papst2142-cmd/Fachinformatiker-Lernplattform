@@ -84,6 +84,39 @@ public class WerkzeugGleichSpielTests
                 funde.Add($"{name}: Teil {i} {s} gegen {t}");
             }
         }
+        // Welle A 1.3.1 (Weisung P12-348 Punkt 2): auch die Modelle (Lage) und die Plaetze zum Sitzen und Liegen (Stelle, Blick)
+        // sind gleich; Bilder und ihre Staffelei sind Teile (oben)
+        if (a.Stuecke.Count != b.Stuecke.Count)
+        {
+            funde.Add($"{name}: {a.Stuecke.Count} gegen {b.Stuecke.Count} Modelle");
+        }
+        else
+        {
+            for (var i = 0; i < a.Stuecke.Count; i++)
+            {
+                ModellStueck s = a.Stuecke[i], t = b.Stuecke[i];
+                if (s.Name != t.Name || Weit(s.Lage.M41, t.Lage.M41) || Weit(s.Lage.M42, t.Lage.M42) || Weit(s.Lage.M43, t.Lage.M43)
+                    || Weit(s.Lage.M11, t.Lage.M11) || Weit(s.Lage.M13, t.Lage.M13) || Weit(s.Lage.M22, t.Lage.M22) || Weit(s.Lage.M33, t.Lage.M33))
+                {
+                    funde.Add($"{name}: Modell {i} {s.Name} gegen {t.Name}");
+                }
+            }
+        }
+        if (a.Sitzgelegenheiten.Count != b.Sitzgelegenheiten.Count)
+        {
+            funde.Add($"{name}: {a.Sitzgelegenheiten.Count} gegen {b.Sitzgelegenheiten.Count} Sitzplaetze");
+        }
+        else
+        {
+            for (var i = 0; i < a.Sitzgelegenheiten.Count; i++)
+            {
+                Sitzgelegenheit s = a.Sitzgelegenheiten[i], t = b.Sitzgelegenheiten[i];
+                if (s.Art != t.Art || s.Modell != t.Modell || Weit(s.Ort.X, t.Ort.X) || Weit(s.Ort.Y, t.Ort.Y) || Weit(s.Ort.Z, t.Ort.Z) || Weit(s.Blick, t.Blick))
+                {
+                    funde.Add($"{name}: Sitzplatz {i} {s.Modell} {s.Art} {s.Ort} gegen {t.Modell} {t.Art} {t.Ort}");
+                }
+            }
+        }
         return funde;
     }
 

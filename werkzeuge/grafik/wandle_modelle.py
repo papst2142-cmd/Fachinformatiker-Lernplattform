@@ -645,6 +645,40 @@ def sitzen_zurueck2_haltung(sk, arme):
     return G
 
 
+def sitzen_lang_haltung(sk, arme, zurueck=False):
+    """A 1.3.1 (Sammelliste 431, Weisung P12-348, Nico 1a): sitzend auf Sofa, Sessel und Liegestuhl mit den Beinen lang
+    auf dem Polster (Ober- und Unterschenkel waagrecht und gerade), der Ruecken an der Lehne; zurueckgelehnt
+    neigt sich der Oberkoerper nach hinten, der Kopf bleibt gerade. Die Haende liegen auf den Oberschenkeln."""
+    G = sk.global_()
+    welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
+    welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
+    welt_drehen(G, sk.eltern, 'LeftArm', 0, -15 if zurueck else -5)
+    welt_drehen(G, sk.eltern, 'RightArm', 0, -15 if zurueck else -5)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 0, -25 if zurueck else -50)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 0, -25 if zurueck else -50)
+    welt_drehen(G, sk.eltern, 'LeftForeArm', 1, -12)
+    welt_drehen(G, sk.eltern, 'RightForeArm', 1, 12)
+    welt_drehen(G, sk.eltern, 'LeftHand', 0, 15)
+    welt_drehen(G, sk.eltern, 'RightHand', 0, 15)
+    welt_drehen(G, sk.eltern, 'LeftUpLeg', 0, -97)
+    welt_drehen(G, sk.eltern, 'RightUpLeg', 0, -97)
+    welt_drehen(G, sk.eltern, 'LeftLeg', 0, 0)
+    welt_drehen(G, sk.eltern, 'RightLeg', 0, 0)
+    if zurueck:
+        welt_drehen(G, sk.eltern, 'Spine', 0, -25)
+        welt_drehen(G, sk.eltern, 'Neck', 0, 25)
+    return G
+
+
+def auf_polster(dreiecke, G, sitz):
+    """A 1.3.1 (Sammelliste 431): Haltung mit langen Beinen senken: die tiefste Ecke des Gesaesses (bis 0,3 vor und hinter
+    der Huefte) liegt auf Hoehe <sitz> (Einheiten des Modells, die Figur steht 3,77 hoch; 1,063 = 0,282 der Figurhoehe wie
+    Figur.SitzUnten: das Gesaess liegt auf der Sitzflaeche des Spiels). Die Beine steigen leicht an und liegen darauf."""
+    huefte = G['LeftUpLeg'][2][3] / 100.0
+    d = sitz - min(p[1] for e, _ in dreiecke for p in e if abs(p[2] - huefte) < 0.3)
+    return [(tuple((p[0], p[1] + d, p[2]) for p in e), f) for e, f in dreiecke]
+
+
 def am_boden_kopf_fest(dreiecke, ruhe):
     """Welle A 0.93.0: Haltung auf den Boden stellen (tiefste Ecke wie die stehende Figur) und waagrecht so schieben, dass der
     Kopf (Dreiecke der Ruhehaltung ganz ueber 75 % der Hoehe) ueber derselben Stelle steht wie im Stehen. So bleibt die Figur
@@ -737,6 +771,10 @@ def bewegung_bilder(z, eintrag):
         G = haltungen[eintrag["bewegung"]](modell, eintrag.get("arme", 72))
         ruhe = fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], modell.global_())
         return [am_boden_kopf_fest(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), ruhe)]
+    if eintrag["bewegung"] in ("sitzen_lang", "sitzen_lang_zurueck"):
+        # A 1.3.1 (Sammelliste 431): Beine lang auf dem Polster, neue Modelle hinten angehaengt
+        G = sitzen_lang_haltung(modell, eintrag.get("arme", 72), eintrag["bewegung"] == "sitzen_lang_zurueck")
+        return [auf_polster(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), G, eintrag["sitz"])]
     if eintrag["bewegung"] in ("sitzen_zurueck", "sitzen_zurueck2"):
         # A 0.98.0 (Sammelliste 395): "sitzen_zurueck2" = Haende auf den Oberschenkeln, neues Modell hinten angehaengt
         G = (sitzen_zurueck_haltung if eintrag["bewegung"] == "sitzen_zurueck" else sitzen_zurueck2_haltung)(modell, eintrag.get("arme", 72))

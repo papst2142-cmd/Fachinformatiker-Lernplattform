@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "7df74542ad7b5fc9b6ab3d17bc83e06aff14dfb614a021c585368546f7acfa80",
- "bytes": 10563489,
+ "sha256": "9328720ae8fcaff31a816551e09e2bc8d11dbca94a4e51c81cc9a7583184ab5e",
+ "bytes": 10730363,
  "modelle": [
   {
    "name": "building-e",
@@ -2784,6 +2784,40 @@
     0.4552,
     3.589,
     1.0876
+   ]
+  },
+  {
+   "name": "figur-sitzen-lang00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.4547,
+    1.063,
+    -0.5339
+   ],
+   "max": [
+    0.4552,
+    3.6982,
+    1.3564
+   ]
+  },
+  {
+   "name": "figur-sitzen-lang-zurueck00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.4547,
+    1.063,
+    -0.8911
+   ],
+   "max": [
+    0.4552,
+    3.5902,
+    1.3564
    ]
   }
  ]

@@ -59,7 +59,7 @@ public class SpielSitzenOhneTischTests
     }
 
     /// <summary>Ein Sitzplatz ohne Tisch: Stelle, Blick, Figurhoehe, Hoehe der Sitzflaeche, Netz des Sitzmoebels, Zeichenlage und die Regel des Spiels gegen andere Stuecke (Verschiebung -> stoesst an).</summary>
-    private sealed record Fall(string Name, Vector3 Ort, float Blick, float Hoehe, float SitzY, List<SpielSitzenTests.Dreieck> Moebel, Matrix4x4 Lage, Func<Vector3, bool> Anderes, float Zurueck)
+    private sealed record Fall(string Name, Vector3 Ort, float Blick, float Hoehe, float SitzY, List<SpielSitzenTests.Dreieck> Moebel, Matrix4x4 Lage, Func<Vector3, bool> Anderes, float Zurueck, string? Modell = null)
     {
         public Vector3 Vor => new(MathF.Sin(Blick), 0, MathF.Cos(Blick));
 
@@ -67,8 +67,9 @@ public class SpielSitzenOhneTischTests
         public Fall Um(Vector3 d) => this with { Ort = Ort + d, Lage = Lage * Matrix4x4.CreateTranslation(d), Anderes = x => Anderes(x + d) };
     }
 
+    // Welle A 1.3.1 (Sammelliste 431): wie gezeichnet, auf Sofa, Sessel und Liegestuhl mit den Beinen auf dem Polster
     private static List<Vector3> Figur(Fall f, IReadOnlyList<Figur.Stueck>? kleidung, PyObjekt? aussehen) =>
-        SpielSitzenTests.Dreiecke(Core.Spiel.Probe.Figur.Netz(SpielGrafikTests.Bibliothek.Value, aussehen, 1f, kleidung, Core.Spiel.Probe.Figur.SitzBild(SitzArt.Sitzen), 0), f.Lage)
+        SpielSitzenTests.Dreiecke(Core.Spiel.Probe.Figur.Netz(SpielGrafikTests.Bibliothek.Value, aussehen, 1f, kleidung, Core.Spiel.Probe.Figur.SitzBild(SitzArt.Sitzen, f.Modell), 0), f.Lage)
             .SelectMany(d => new[] { d.A, d.B, d.C }).Distinct().ToList();
 
     /// <summary>Kleinster Abstand von Ecken der Figur (Hoehe ueber der Sitzflaeche von bis) nach hinten bis zum Moebel, Anteil der Figurhoehe.</summary>
@@ -133,7 +134,7 @@ public class SpielSitzenOhneTischTests
                 }
                 var sitzY = lo2.Y + ((hi2.Y - lo2.Y) * Innenraum.SitzModelle[s.Modell].Sitz);
                 faelle.Add(new Fall($"{name} {s.Modell}", s.Ort, s.Blick, Innenraum.FigurHoehe, sitzY, moebel,
-                    StadtSpiel.HaltungLage((s.Ort, s.Blick, false), Innenraum.FigurHoehe, 0f), Regel(innen, s), Innenraum.Zurueck(s.Modell, (MathF.Abs(MathF.Sin(s.Blick)) * (hi2 - lo2).X) + (MathF.Abs(MathF.Cos(s.Blick)) * (hi2 - lo2).Z), Innenraum.FigurHoehe)));
+                    StadtSpiel.HaltungLage((s.Ort, s.Blick, false), Innenraum.FigurHoehe, 0f), Regel(innen, s), Innenraum.Zurueck(s.Modell, (MathF.Abs(MathF.Sin(s.Blick)) * (hi2 - lo2).X) + (MathF.Abs(MathF.Cos(s.Blick)) * (hi2 - lo2).Z), Innenraum.FigurHoehe), s.Modell));
             }
         }
         foreach (var (name, innenraeume) in SpielWandTests.Fassungen())
@@ -187,7 +188,7 @@ public class SpielSitzenOhneTischTests
             funde.AddRange(HoeheUndHaende(f, figur));
             var weiter = f.Um(-f.Vor * (0.05f * f.Hoehe));
             if (!weiter.Anderes(Vector3.Zero) && SpielHaltungTests.Durchdringung(SpielSitzenTests.Dreiecke(Core.Spiel.Probe.Figur.Netz(SpielGrafikTests.Bibliothek.Value,
-                null, 1f, null, Core.Spiel.Probe.Figur.SitzBild(SitzArt.Sitzen), 0), weiter.Lage), f.Moebel) == 0)
+                null, 1f, null, Core.Spiel.Probe.Figur.SitzBild(SitzArt.Sitzen, f.Modell), 0), weiter.Lage), f.Moebel) == 0)
             {
                 funde.Add($"{f.Name}: 0,05 weiter hinten waere noch frei (Ruecken {Hinten(f, figur, 0.1f, 0.4f):0.000} bis zur Lehne)");
             }

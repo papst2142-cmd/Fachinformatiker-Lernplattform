@@ -121,6 +121,30 @@ public static class Figur
     /// <summary>Welle A 0.81.0 (Sammelliste 351): die Gegenprobe <see cref="SitzenAltFuerTests"/> ist an.</summary>
     public static bool SitzenWieBisher => SitzenAlt.Value;
 
+    /// <summary>
+    /// Welle A 1.3.1 (Weisung P12-348, Sammelliste 431, Nico 1a „Beine auf dem Polster“): auf Sofa, Sessel und Liegestuhl
+    /// (<see cref="Innenraum.LangModelle"/>) sitzt die Figur ganz hinten an der Lehne, die Beine liegen lang auf dem Polster
+    /// (gerade und zurueckgelehnt); jedes andere Sitzmoebel wie bisher <see cref="SitzBild(SitzArt)"/>.
+    /// </summary>
+    public static string SitzBild(SitzArt art, string? modell) => Lang(art, modell)
+        ? (art == SitzArt.Zurueck ? SitzenLangZurueck : SitzenLang)
+        : SitzBild(art);
+
+    /// <summary>Welle A 1.3.1 (Sammelliste 431): sitzend mit den Beinen lang auf dem Polster (ein Bild, Name plus "00").</summary>
+    public const string SitzenLang = "figur-sitzen-lang";
+
+    /// <summary>Welle A 1.3.1 (Sammelliste 431): zurueckgelehnt mit den Beinen lang auf dem Polster (ein Bild, Name plus "00").</summary>
+    public const string SitzenLangZurueck = "figur-sitzen-lang-zurueck";
+
+    private static readonly AsyncLocal<bool> LangAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Sofa, Sessel und Liegestuhl wie bis A 1.3.0 (zu weit vorn, auf der Fussstuetze).</summary>
+    public static void SitzenLangAltFuerTests(bool an) => LangAlt.Value = an;
+
+    /// <summary>Welle A 1.3.1 (Sammelliste 431): auf diesem Platz sitzt die Figur mit den Beinen auf dem Polster.</summary>
+    public static bool Lang(SitzArt art, string? modell) =>
+        !LangAlt.Value && !SitzenAlt.Value && art is SitzArt.Sitzen or SitzArt.Zurueck && modell is not null && Innenraum.LangModelle.ContainsKey(modell);
+
     /// <summary>Welle A 0.81.0 (Sammelliste 351): Bewegung des Sitzbilds der Spielfigur je Platz (am PC die Schreibtisch-Haltung).</summary>
     public static string SitzBild(SitzArt art) => art switch
     {
@@ -165,7 +189,7 @@ public static class Figur
     };
 
     /// <summary>Welle A 0.93.0: die neuen Haltungen, deren Teile am Koerper (Rock, Mantel, Kragen, Tasche) dem Koerper folgen (<see cref="Folgen"/>).</summary>
-    public static readonly IReadOnlySet<string> NeueHaltungen = new HashSet<string>(StringComparer.Ordinal) { Springen, Ducken, Kriechen, SitzenZurueck, SitzenZurueck2 };
+    public static readonly IReadOnlySet<string> NeueHaltungen = new HashSet<string>(StringComparer.Ordinal) { Springen, Ducken, Kriechen, SitzenZurueck, SitzenZurueck2, SitzenLang, SitzenLangZurueck };
 
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GrafikModell, Dictionary<string, float>> SenkungVorrat = new();
 
