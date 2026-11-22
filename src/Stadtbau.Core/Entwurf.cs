@@ -416,7 +416,7 @@ public sealed class Entwurf
         {
             throw new StadtbauFehler(rot);
         }
-        var modellName = Modell is not null && Name is not null && string.Equals(Name, name, StringComparison.CurrentCultureIgnoreCase) ? Modell : ModellName(name);
+        var modellName = Modell is not null && Name is not null && string.Equals(Name, name, StringComparison.OrdinalIgnoreCase) ? Modell : ModellName(name);
         var gm = Modell3D(modellName, modell);
         var e = Eingaenge[0];
         // die Tuer liegt auf der Aussenkante des Blocks (das Spiel setzt sie auf die Wand des Blocks; Simse, Balkone und

@@ -706,7 +706,7 @@ public sealed class Blueprint
     public string Speichern(Werkzeugordner ablage, DateTime zeit)
     {
         var pfad = Path.Combine(ablage.Blueprints, DateiName(Name));
-        if (File.Exists(pfad) || Alle(ablage).Any(e => string.Equals(e.Name, Name, StringComparison.CurrentCultureIgnoreCase)))
+        if (File.Exists(pfad) || Alle(ablage).Any(e => string.Equals(e.Name, Name, StringComparison.OrdinalIgnoreCase)))
         {
             throw new IOException(Texte.BlueprintGibtEs);
         }
@@ -747,7 +747,7 @@ public sealed class Blueprint
         // nur Gross-/Kleinschreibung anders: unter Windows dieselbe Datei, unter Linux und Android eine andere
         var selbe = string.Equals(Path.GetFullPath(ziel), Path.GetFullPath(datei), StringComparison.Ordinal);
         var nurSchreibweise = !selbe && string.Equals(Path.GetFullPath(ziel), Path.GetFullPath(datei), StringComparison.OrdinalIgnoreCase);
-        if ((!selbe && !nurSchreibweise && File.Exists(ziel)) || Alle(ablage).Any(e => e.Datei != datei && string.Equals(e.Name, neuerName, StringComparison.CurrentCultureIgnoreCase)))
+        if ((!selbe && !nurSchreibweise && File.Exists(ziel)) || Alle(ablage).Any(e => e.Datei != datei && string.Equals(e.Name, neuerName, StringComparison.OrdinalIgnoreCase)))
         {
             throw new IOException(Texte.BlueprintGibtEs);
         }
@@ -756,7 +756,8 @@ public sealed class Blueprint
         if (nurSchreibweise)
         {
             var zwischen = ziel + ".neu";
-            File.WriteAllBytes(zwischen, daten);
+            Werkzeugordner.AufPlatteSchreiben(zwischen, daten);   // Sammelliste 428: vor dem Loeschen der alten Datei auf der Platte
+            Werkzeugordner.SchrittFuerTests.Value?.Invoke("move");
             File.Delete(datei);
             File.Move(zwischen, ziel);
         }

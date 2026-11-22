@@ -154,7 +154,7 @@ public sealed partial class Hauptansicht
         {
             var b = e.AlsBlueprint(name, Katalog.Bauteil, _projekt?.Name ?? "", _projekt?.Basis.StadtId ?? "", out grundrissNeu, out etagenNeu);
             // Weiterbauen unter demselben Namen ersetzt die Datei (Sicherung vorher), sonst ein neuer Blueprint
-            if (e.Datei is { } datei && File.Exists(datei) && string.Equals(e.Name, name, StringComparison.CurrentCultureIgnoreCase))
+            if (e.Datei is { } datei && File.Exists(datei) && string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase))
             {
                 b.Ersetzen(_ordner, datei, Jetzt);
             }
