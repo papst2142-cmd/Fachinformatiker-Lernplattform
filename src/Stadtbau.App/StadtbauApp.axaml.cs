@@ -39,6 +39,8 @@ public partial class StadtbauApp : Application
             Ordner.Fehler(e.Exception.ToString());
             e.Handled = true;
         };
+        // Welle Fehlerpruefung Teil 2 (Sammelliste 430): Fehler beim Bau einer Kachel nach fehler.log des Werkzeugs
+        Lernplattform.Core.Spiel.Probe.Nachlader.Fehlerziel = text => Ordner.Fehler(text);
         AvaloniaXamlLoader.Load(this);
         Lernplattform.Views.Vorlesen.Einrichten();
         Lernplattform.Views.Fokusrahmen.Einrichten(this);

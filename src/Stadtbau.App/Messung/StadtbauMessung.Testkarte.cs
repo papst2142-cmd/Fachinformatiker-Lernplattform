@@ -79,7 +79,7 @@ public static partial class StadtbauMessung
             lader.StartBauen(noetig);
             foreach (var k in noetig)
             {
-                lader.Hochgeladen(lader.JetztBauen(k));
+                lader.Hochgeladen(lader.JetztBauen(k) ?? throw new InvalidOperationException(Nachlader.FehlerText(k, null)));
             }
             return (b, gr, u2.Elapsed.TotalMilliseconds, noetig.Count, lader.Bytes / 1048576.0);
         });

@@ -126,7 +126,7 @@ public static partial class AutoMessung
         lader.StartBauen(noetig);
         foreach (var k in noetig)
         {
-            lader.Hochgeladen(lader.JetztBauen(k));
+            lader.Hochgeladen(lader.JetztBauen(k) ?? throw new InvalidOperationException(Nachlader.FehlerText(k, null)));
         }
         var kacheln = uhr.Elapsed.TotalMilliseconds;
         var gesamt = bauen + grundlage + kacheln;
