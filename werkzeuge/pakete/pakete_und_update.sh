@@ -132,6 +132,28 @@ case "$RID" in
     echo "--- codesign -dv (Bundle) ---"; codesign -dv "$BUNDLE" 2>&1 || true
     echo "--- codesign -dv (Programmdatei) ---"; codesign -dv "$APP" 2>&1 || true
     echo "--- spctl -a -vv ---"; spctl -a -vv "$BUNDLE" 2>&1 || true
+    # Welle Fehlerpruefung Teil 2 (Weisung P12-346, Sammelliste 425): der Befehl der Haenger-Hilfe am Mac
+    # (kill -INFO $(pgrep -i -x -o lernplattform)) trifft das installierte Programm und schreibt den Abruf in haenger.log
+    INFO_DATEN="$AUS/info_probe"; rm -rf "$INFO_DATEN"; mkdir -p "$INFO_DATEN"
+    LERNPLATTFORM_DATEN="$INFO_DATEN" "$APP" > "$AUS/info_probe.log" 2>&1 &
+    INFO_PID=$!
+    for _ in $(seq 1 60); do grep -q "| Start | Version" "$INFO_DATEN/haenger.log" 2>/dev/null && break; sleep 1; done
+    GEFUNDEN=$(pgrep -i -x -o lernplattform || true)
+    echo "Mac-Probe Haenger-Befehl: gestartet pid $INFO_PID, pgrep -i -x -o lernplattform = ${GEFUNDEN:-nichts}, Prozessname $(ps -o comm= -p "$INFO_PID" 2>/dev/null || echo ?)"
+    if [ "$GEFUNDEN" != "$INFO_PID" ]; then
+      echo "FEHLER: pgrep -i -x -o lernplattform trifft das installierte Programm nicht"; ps -axo pid=,comm= | grep -i lernplatt || true
+      kill "$INFO_PID" 2>/dev/null || true; exit 1
+    fi
+    kill -INFO "$(pgrep -i -x -o lernplattform)"
+    for _ in $(seq 1 20); do grep -q "| Abruf (Signal INFO): " "$INFO_DATEN/haenger.log" 2>/dev/null && break; sleep 1; done
+    if ! grep -q "| Abruf (Signal INFO): " "$INFO_DATEN/haenger.log" 2>/dev/null; then
+      echo "FEHLER: kill -INFO schrieb keinen Abruf in haenger.log"; cat "$INFO_DATEN/haenger.log" 2>/dev/null || true
+      kill "$INFO_PID" 2>/dev/null || true; exit 1
+    fi
+    if ! kill -0 "$INFO_PID" 2>/dev/null; then echo "FEHLER: das Programm wurde durch kill -INFO beendet"; exit 1; fi
+    echo "Mac-Probe Haenger-Befehl: Abruf (Signal INFO) in haenger.log, Programm laeuft weiter"
+    kill "$INFO_PID" 2>/dev/null || true
+    sleep 3
     ;;
 esac
 

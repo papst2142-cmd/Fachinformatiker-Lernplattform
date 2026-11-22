@@ -62,7 +62,7 @@ fi
 # Sammelliste 199 (Weisung P11-22): Wachhund VOR dem Schrittzeitlimit der CI. Lauf 458 (Intel-Mac, 2. Lauf) stand
 # 25 Minuten ohne Ausgabe, bis GitHub den Schritt abbrach; der Prozess lebte danach weiter (bis Jobende) und es
 # gab keine Angabe, wo er stand. STARTTEST_WACHHUND_MINUTEN (setzt ci.yml: Schrittzeit minus 3 Minuten) beendet
-# den Lauf vorher selbst: Zeile "FEHLER: HAENGER", Abruf ueber USR1 (Haenger.cs schreibt Seite, Vorgang und
+# den Lauf vorher selbst: Zeile "FEHLER: HAENGER", Abruf ueber USR1, am Mac INFO (Haenger.cs schreibt Seite, Vorgang und
 # Wartepunkte nach haenger.log), unter macOS zusaetzlich die Faden-Stapel ueber "sample", Ausgabe von haenger.log
 # und fehler.log, dann den ganzen Prozessbaum beenden. Rueckgabe 4 = Haenger (urteil.py: sofort rot, kein
 # Neustart). Nur strenger: ohne Wachhund waere der Schritt genauso rot (Zeitlimit), nur ohne Angaben.
@@ -87,8 +87,8 @@ haenger_angaben() {
   echo "Wachhund: Programm-Prozess ${pid:-nicht gefunden}, Prozessbaum:"
   ps -o pid=,ppid=,pcpu=,rss=,etime=,comm= -p "$(nachkommen "$wurzel" | tr '\n' ',' | sed 's/,$//')" 2>/dev/null || true
   if [ -n "$pid" ]; then
-    # Abruf: Linux USR1 = 10, macOS USR1 = 30; kill -USR1 waehlt die richtige Nummer selbst
-    kill -USR1 "$pid" 2>/dev/null || true
+    # Abruf (Sammelliste 425, A 1.3.1): Linux USR1, macOS INFO (dort nutzt die .NET-Laufzeit USR1 selbst)
+    if [ "$(uname)" = "Darwin" ]; then kill -INFO "$pid" 2>/dev/null || true; else kill -USR1 "$pid" 2>/dev/null || true; fi
     sleep 5
     if [ "$(uname)" = "Darwin" ] && command -v sample >/dev/null 2>&1; then
       echo "Wachhund: Faden-Stapel (sample, 5 s):"
