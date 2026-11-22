@@ -88,6 +88,9 @@ public static class Haenger
     /// <summary>Patch A 0.37.0 (Sammelliste 204): Zusatz einer Blockade, waehrend das Programm am Mac verdeckt ist.</summary>
     public const string VerdecktZusatz = " – Programm verdeckt (macOS drosselt Zeitgeber)";
 
+    /// <summary>Anfang eines Eintrags, den das Signal USR1 schreibt (<see cref="Abruf"/>).</summary>
+    public const string AbrufAnfang = "Abruf (Signal USR1): ";
+
     /// <summary>
     /// Patch A 0.37.0 (Sammelliste 204, Weisung P11-34 Antwort 3a): Abfrage, ob das Programm sichtbar ist (macOS:
     /// NSApp.occlusionState, liest nur; true sichtbar, false verdeckt, null unbekannt = wie sichtbar). macOS drosselt
@@ -521,7 +524,7 @@ public static class Haenger
         try
         {
             var (seite, vorgang) = Aktuell();
-            var text = "Abruf (Signal USR1): Seite: " + (seite.Length > 0 ? seite : "-") + ", Vorgang: " + vorgang;
+            var text = AbrufAnfang + "Seite: " + (seite.Length > 0 ? seite : "-") + ", Vorgang: " + vorgang;
             var warten = _wartepunkte();
             Schreiben(warten.Length > 0 ? text + "\nWartepunkte: " + warten : text);
         }

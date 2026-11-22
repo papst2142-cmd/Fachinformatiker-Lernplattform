@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 1.3.0
+Eine Pflege-Version mit mehreren kleinen Fehlerbehebungen aus einer gründlichen Prüfung des ganzen Programms.
+
+- Lässt sich eine deiner eigenen Musikdateien nicht abspielen, gibt das Programm die Datei jetzt sofort wieder frei. Vorher blieb sie im Hintergrund geöffnet, bei jedem neuen Versuch ein weiteres Mal.
+- Ein Inhaltspaket, in dem zwei Dateien fast gleich heißen und sich nur in Groß- und Kleinschreibung unterscheiden, gilt jetzt als fehlerhaft und wird nicht geladen. Unter Windows und macOS wären beide Dateien sonst in einer gelandet. Die heutigen Pakete sind davon nicht betroffen.
+- Die automatischen Prüfungen vor jeder Veröffentlichung erkennen am Mac jetzt richtig, wann das Programm wirklich hängt. Ein Signal, das .NET am Mac selbst für seine Speicherverwaltung nutzt, galt dort fälschlich als Hänger.
+- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und das Spiel bleiben genau gleich.
+
 ## A 1.2.1
 Eine Pflege-Version ohne neue Funktionen: Sie macht das Programm beim Start und bei den automatischen Prüfungen verlässlicher.
 

@@ -347,7 +347,7 @@ public static partial class AutoMessung
         var ende = DatenAbdruck(daten);
         Pruefe("Datenordner am Ende wie vorher", ende == vorher, ende == vorher ? "gleich" : "ANDERS");
         var haengerNeu = Lernplattform.Core.Diagnose.OrdnerAbdruck.NeueHaengerEintraege(haengerVorher, Lernplattform.Core.Diagnose.OrdnerAbdruck.HaengerText(daten));
-        Pruefe("Haenger-Diagnose waehrend der Probe nur verdeckt", Lernplattform.Core.Diagnose.OrdnerAbdruck.NurVerdeckt(haengerNeu),
+        Pruefe("Haenger-Diagnose waehrend der Probe nur verdeckt", Lernplattform.Core.Diagnose.OrdnerAbdruck.OhneBlockade(haengerNeu, OperatingSystem.IsMacOS()),
             haengerNeu.Count == 0 ? "keine neuen Eintraege" : haengerNeu.Count + " neue Eintraege: " + string.Join(" | ", haengerNeu));
         await ansicht.ZeigeAsync(Seiten.Dashboard);
         return funde;
