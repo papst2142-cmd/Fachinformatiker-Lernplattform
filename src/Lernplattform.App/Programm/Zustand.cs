@@ -220,6 +220,37 @@ public static class Zustand
 
     public static void AusbildungGespeichert() => AusbildungGeaendert?.Invoke();
 
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 422 Gruppe 1): die Werte der gewichteten Reihenfolge fuer die
+    /// Karteikarten und Pruefungsfragen der Sicht im Hintergrund vorab rechnen (eigener Hintergrund-Schritt, die
+    /// Rahmenplan-Zuordnung ist schon fertig). Das erste Oeffnen von Karteikarten und Pruefungstrainer sortiert dann nur noch.
+    /// Die Einstellungen werden als Ganzes ersetzt, nie veraendert; hier gilt der Stand von jetzt (andere Werte = neue Rechnung).
+    /// </summary>
+    private static void ReihenfolgeVorbereiten(RahmenplanGewicht gewicht, Lerninhalte sicht)
+    {
+        var werte = RahmenplanWerte.Aus(Werte, gewicht);
+        if (!werte.Gewichtung)
+        {
+            return;
+        }
+        var heute = DateOnly.FromDateTime(DateTime.Now);
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                var uhr = Stopwatch.StartNew();
+                gewicht.Vorbereiten(Quellen.Karte, sicht.Karteikarten.Select(k => k.Frage!), werte, heute);
+                gewicht.Vorbereiten(Quellen.Quiz, sicht.Quizfragen.Select(q => q.Frage!), werte, heute);
+                Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Reihenfolge der Karten und Fragen im Hintergrund vorbereitet: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            }
+        });
+    }
+
     /// <summary>Rahmenplan-Zuordnung, Suchtext und Dashboard-Zahlen zur aktuellen Sicht im Hintergrund.</summary>
     private static void AbgeleiteteStarten()
     {
@@ -235,6 +266,7 @@ public static class Zustand
                 var gewicht = new RahmenplanGewicht(t.Result);
                 Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture,
                     $"Rahmenplan-Zuordnung im Hintergrund vorbereitet: {uhr.Elapsed.TotalMilliseconds:F0} ms"));
+                ReihenfolgeVorbereiten(gewicht, t.Result);
                 return gewicht;
             }
             catch (Exception fehler)

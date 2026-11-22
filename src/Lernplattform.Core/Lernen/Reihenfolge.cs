@@ -264,24 +264,48 @@ public sealed class RahmenplanGewicht
         return null;
     }
 
-    private int LernfeldStunden(string? thema, RahmenplanWerte werte)
+    private int LernfeldStunden(string? thema, List<string> sichtbar)
     {
-        var sichtbar = SichtbareLernfelder(werte);
         var stunden = (thema is not null && _themaLernfelder.TryGetValue(thema, out var felder) ? felder : [])
             .Where(sichtbar.Contains).Select(f => Lernfelder[f]).ToList();
         return stunden.Count > 0 ? stunden.Max() : 0;
     }
 
     /// <summary>item_weight: Gewicht eines Inhalts (etwa 1 bis 3, mit Pruefungsnaehe bis 4,5).</summary>
-    public double Gewicht(string quelle, string schluessel, RahmenplanWerte werte, DateOnly heute)
+    public double Gewicht(string quelle, string schluessel, RahmenplanWerte werte, DateOnly heute) =>
+        Gewicht(quelle, schluessel, Fest(werte, heute));
+
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 422 Gruppe 1): was fuer alle Inhalte eines Aufrufs gleich ist
+    /// (Abschnitte, sichtbare Lernfelder, Pruefungsphase mit dem Lesen der Termine), wird einmal je Reihenfolge gerechnet statt
+    /// je Inhalt. Die Rechnung je Inhalt ist unveraendert (gleiche Gewichte, gleiche Reihenfolge).
+    /// </summary>
+    private readonly record struct Feste(List<string> Abschnitte, List<string> Sichtbar, string? Phase);
+
+    private Feste Fest(RahmenplanWerte werte, DateOnly heute)
     {
-        var abschnitte = Abschnitte(werte);
+        Interlocked.Increment(ref _festGerechnet);
+        return new(Abschnitte(werte), SichtbareLernfelder(werte), Pruefungsphase(werte, heute));
+    }
+
+    private int _festGerechnet;
+    private int _werteGerechnet;
+
+    /// <summary>Fuer Tests: wie oft die festen Teile (Abschnitte, Lernfelder, Pruefungsphase) gerechnet wurden.</summary>
+    internal int FestGerechnet => Volatile.Read(ref _festGerechnet);
+
+    /// <summary>Fuer Tests: wie viele Werte der gewichteten Reihenfolge gerechnet wurden (vorab oder beim Sortieren).</summary>
+    internal int WerteGerechnet => Volatile.Read(ref _werteGerechnet);
+
+    private double Gewicht(string quelle, string schluessel, Feste fest)
+    {
+        var abschnitte = fest.Abschnitte;
         var punkte = Punkte(quelle, schluessel).Where(p => _punkte.TryGetValue(p, out var punkt) && abschnitte.Contains(punkt.Abschnitt))
             .Select(p => _punkte[p]).ToList();
         var wochen = punkte.Count > 0 ? punkte.Max(p => p.Wochen) : 0;
         var gewicht = 1.0 + 1.5 * Math.Sqrt(Math.Min(wochen, WochenMax) / WochenMax)
-            + 0.5 * (LernfeldStunden(_thema.GetValueOrDefault((quelle, schluessel)), werte) / StundenMax);
-        var phase = Pruefungsphase(werte, heute);
+            + 0.5 * (LernfeldStunden(_thema.GetValueOrDefault((quelle, schluessel)), fest.Sichtbar) / StundenMax);
+        var phase = fest.Phase;
         if (phase == "ap1" && punkte.Any(p => p.Ap1))
         {
             gewicht *= PruefungsFaktor;
@@ -307,9 +331,43 @@ public sealed class RahmenplanGewicht
     public List<string> GewichteteReihenfolge(string quelle, IEnumerable<string> schluessel, RahmenplanWerte? werte, DateOnly heute)
     {
         werte ??= RahmenplanWerte.Vorgabe;
-        return schluessel.Select(s => (Wert: PythonPow.Pow(Tageszufall(quelle, s, heute), 1.0 / Gewicht(quelle, s, werte, heute)), Schluessel: s))
+        var fest = Fest(werte, heute);
+        _vorab.TryGetValue((quelle, werte, heute), out var vorab);
+        return schluessel.Select(s => (Wert: vorab is not null && vorab.TryGetValue(s, out var v) ? v : Wert(quelle, s, heute, fest), Schluessel: s))
             .OrderByDescending(x => x.Wert).Select(x => x.Schluessel).ToList();
     }
+
+    /// <summary>Schluessel der gewichteten Reihenfolge: Tageszufall hoch 1/Gewicht (wie weighted_order).</summary>
+    private double Wert(string quelle, string schluessel, DateOnly heute, Feste fest)
+    {
+        Interlocked.Increment(ref _werteGerechnet);
+        return PythonPow.Pow(Tageszufall(quelle, schluessel, heute), 1.0 / Gewicht(quelle, schluessel, fest));
+    }
+
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<(string Quelle, RahmenplanWerte Werte, DateOnly Heute),
+        System.Collections.Concurrent.ConcurrentDictionary<string, double>> _vorab = new();
+
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Sammelliste 422 Gruppe 1): die Werte der gewichteten Reihenfolge im Hintergrund vorab
+    /// rechnen (z. B. alle Karteikarten der Sicht, sobald die Rahmenplan-Zuordnung steht), damit das erste Oeffnen nur noch
+    /// sortiert. Gilt nur fuer genau diese Quelle, Einstellungen und diesen Tag; derselbe Wert wie ohne Vorab (gleiche Rechnung).
+    /// </summary>
+    public void Vorbereiten(string quelle, IEnumerable<string> schluessel, RahmenplanWerte werte, DateOnly heute)
+    {
+        var fest = Fest(werte, heute);
+        var tabelle = _vorab.GetOrAdd((quelle, werte, heute), _ => new(StringComparer.Ordinal));
+        foreach (var s in schluessel)
+        {
+            if (!tabelle.ContainsKey(s))
+            {
+                tabelle.TryAdd(s, Wert(quelle, s, heute, fest));
+            }
+        }
+    }
+
+    /// <summary>Fuer Tests: so viele Werte liegen fuer Quelle, Einstellungen und Tag schon vorab bereit.</summary>
+    internal int VorabAnzahl(string quelle, RahmenplanWerte werte, DateOnly heute) =>
+        _vorab.TryGetValue((quelle, werte, heute), out var t) ? t.Count : 0;
 
     /// <summary>fresh_order: Reihenfolge der neuen Inhalte fuer BevorzugteReihenfolge, null wenn die Gewichtung aus ist.</summary>
     public Func<List<string>, List<string>>? NeuReihenfolge(string quelle, RahmenplanWerte werte, DateOnly heute) =>
