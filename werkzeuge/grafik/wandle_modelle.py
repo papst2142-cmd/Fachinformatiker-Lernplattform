@@ -648,7 +648,8 @@ def sitzen_zurueck2_haltung(sk, arme):
 def sitzen_lang_haltung(sk, arme, zurueck=False):
     """A 1.3.1 (Sammelliste 431, Weisung P12-348, Nico 1a): sitzend auf Sofa, Sessel und Liegestuhl mit den Beinen lang
     auf dem Polster (Ober- und Unterschenkel waagrecht und gerade), der Ruecken an der Lehne; zurueckgelehnt
-    neigt sich der Oberkoerper nach hinten, der Kopf bleibt gerade. Die Haende liegen auf den Oberschenkeln."""
+    neigt sich der Oberkoerper 18 Grad nach hinten (mit Spitzhut 0,278 der Figurhoehe hinter der Huefte, damit der Liegestuhl
+    an der Wand der Wohnung zuruecklehnen kann), der Kopf bleibt gerade. Die Haende liegen auf den Oberschenkeln."""
     G = sk.global_()
     welt_drehen(G, sk.eltern, 'LeftArm', 2, -arme)
     welt_drehen(G, sk.eltern, 'RightArm', 2, arme)
@@ -665,8 +666,8 @@ def sitzen_lang_haltung(sk, arme, zurueck=False):
     welt_drehen(G, sk.eltern, 'LeftLeg', 0, 0)
     welt_drehen(G, sk.eltern, 'RightLeg', 0, 0)
     if zurueck:
-        welt_drehen(G, sk.eltern, 'Spine', 0, -25)
-        welt_drehen(G, sk.eltern, 'Neck', 0, 25)
+        welt_drehen(G, sk.eltern, 'Spine', 0, -18)
+        welt_drehen(G, sk.eltern, 'Neck', 0, 18)
     return G
 
 

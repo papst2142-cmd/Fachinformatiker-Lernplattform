@@ -172,7 +172,7 @@ public sealed partial class Innenraum
         ? FigurQuader(art)
         : art == SitzArt.Zurueck
             // Welle A 1.3.1 (Sammelliste 431): wie zurueckgelehnt, die Beine lang auf dem Polster statt herabhaengend
-            ? [(0.12f, 0.23f, 0.46f, -0.07f, 0.37f), (0.13f, 0.44f, 0.61f, -0.155f, 0.285f), (0.125f, 0.59f, 0.86f, -0.245f, 0.065f), (0.19f, 0.83f, 1.04f, -0.31f, 0.13f)]
+            ? [(0.12f, 0.23f, 0.46f, -0.07f, 0.37f), (0.13f, 0.44f, 0.61f, -0.155f, 0.285f), (0.125f, 0.59f, 0.86f, -0.245f, 0.09f), (0.19f, 0.83f, 1.07f, -0.31f, 0.16f)]
             : [(0.14f, 0.27f, 0.90f, -0.145f, 0.16f), (0.19f, 0.86f, 1.08f, -0.215f, 0.22f), (0.12f, 0.23f, 0.45f, -0.06f, 0.37f), (0.19f, 0.44f, 0.65f, -0.06f, 0.35f)];
 
     /// <summary>Welle A 0.81.0: Quader der Figur je Art (Sitzmoebel ohne lange Beine, siehe <see cref="FigurQuader(SitzArt, string?)"/>).</summary>
@@ -264,8 +264,10 @@ public sealed partial class Innenraum
     /// fuer Kopfbedeckung und Haende: sitzend 0,21 nach hinten (Spitzhut), 0,35 nach vorn, 0,19 zur Seite; liegend die ganze
     /// Laenge nach hinten (Kopf), ohne Kopfbedeckung (die Figur legt sie im Bett ab).
     /// </summary>
+    /// <remarks>Welle A 1.3.1 (Sammelliste 431): mit den Beinen auf dem Polster vorn 0,38 (Fuesse), zurueckgelehnt hinten 0,29
+    /// (Spitzhut bis 0,278; <c>SpielHaltungTests</c> prueft jede Kleidung).</remarks>
     public static (float Hinten, float Vorn, float Halb) Grundflaeche(SitzArt art, string? modell) =>
-        !Figur.Lang(art, modell) ? Grundflaeche(art) : art == SitzArt.Zurueck ? (0.32f, 0.38f, 0.19f) : (0.21f, 0.38f, 0.19f);
+        !Figur.Lang(art, modell) ? Grundflaeche(art) : art == SitzArt.Zurueck ? (0.29f, 0.38f, 0.19f) : (0.21f, 0.38f, 0.19f);
 
     /// <summary>Welle A 0.81.0: Grundflaeche der Figur je Art (ohne lange Beine, siehe <see cref="Grundflaeche(SitzArt, string?)"/>).</summary>
     public static (float Hinten, float Vorn, float Halb) Grundflaeche(SitzArt art) =>

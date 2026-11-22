@@ -284,6 +284,14 @@ public class SpielHaltungTests
                 var draussen = FigurDreiecke(art, kleid, modell).SelectMany(d => new[] { d.A, d.B, d.C })
                     .Where(e => !quader.Any(q => MathF.Abs(e.X) <= q.Halb && e.Y >= q.Y1 && e.Y <= q.Y2 && e.Z >= q.Z1 && e.Z <= q.Z2)).Distinct().ToList();
                 Assert.True(draussen.Count == 0, $"{art} {modell} Kleid {kleid}: {draussen.Count} Ecken ausserhalb, z. B. {string.Join(" ", draussen.Take(5))}");
+                // die Grundflaeche fuer die Wandregel (Regel 347) reicht nach hinten, vorn und zur Seite ueber jede Ecke (sitzend)
+                if (art != SitzArt.Liegen)
+                {
+                    var (hinten, vorn, halb) = Innenraum.Grundflaeche(art, modell);
+                    var ecken = FigurDreiecke(art, kleid, modell).SelectMany(d => new[] { d.A, d.B, d.C }).ToList();
+                    Assert.True(-ecken.Min(e => e.Z) <= hinten && ecken.Max(e => e.Z) <= vorn && ecken.Max(e => MathF.Abs(e.X)) <= halb,
+                        $"{art} {modell} Kleid {kleid}: Grundflaeche ({hinten}, {vorn}, {halb}) zu klein fuer z {ecken.Min(e => e.Z):0.000} bis {ecken.Max(e => e.Z):0.000}, x {ecken.Max(e => MathF.Abs(e.X)):0.000}");
+                }
             }
         }
         Assert.Equal(Figur.SitzenLang, Figur.SitzBild(SitzArt.Sitzen, "loungeSofa"));
