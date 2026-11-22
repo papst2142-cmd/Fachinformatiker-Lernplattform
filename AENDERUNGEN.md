@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 1.4.0
+Eine Pflege-Version: Das Spiel baut die Stadt jetzt zum Teil nebeneinander auf mehreren Prozessorkernen.
+
+- Beim Bauen der Stadt laufen einige Schritte jetzt gleichzeitig statt nacheinander: die Mittellinien der Straßen, die Wege, auf denen deine Figur gehen kann, und die Vorbereitung gleicher Bäume, Büsche und Steine. Auf Rechnern mit mehreren Kernen steht die Stadt dadurch etwas früher bereit.
+- Die Stadt sieht genau gleich aus wie vorher: Jedes Haus, jeder Baum und jede Straße liegt an derselben Stelle, das prüft ein Test Stück für Stück.
+- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.3.2
 Eine kleine Pflege-Version für Handy und Tablet.
 

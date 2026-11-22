@@ -81,6 +81,8 @@ public static partial class StadtbauMessung
             {
                 lader.Hochgeladen(lader.JetztBauen(k) ?? throw new InvalidOperationException(Nachlader.FehlerText(k, null)));
             }
+            // Engine-Welle A 1.4.0: auch was nebenher entsteht (Laufraster) gehoert zur Messung
+            szene.FertigWarten();
             return (b, gr, u2.Elapsed.TotalMilliseconds, noetig.Count, lader.Bytes / 1048576.0);
         });
         var gesamt = bauen + grundlage + start;

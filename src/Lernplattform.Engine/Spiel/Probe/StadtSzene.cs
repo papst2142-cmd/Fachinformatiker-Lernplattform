@@ -135,12 +135,12 @@ public sealed partial class StadtSzene
     public const double LaufKoerper = 0.15;
 
     private StadtSzene(IReadOnlyList<Teil> teile, IReadOnlyList<Streifen> streifen, IReadOnlyList<ModellStueck> stuecke, GrafikBibliothek? grafik,
-        IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe, Wegsuche laufraster, IReadOnlyList<StadtHaus> haeuser)
+        IReadOnlyList<StadtOrt> orte, string signatur, float breite, float tiefe, Spaeter<Wegsuche> laufraster, IReadOnlyList<StadtHaus> haeuser)
     {
         Haeuser = haeuser;
         Teile = teile;
         Streifen = streifen;
-        Laufraster = laufraster;
+        _laufraster = laufraster;
         Stuecke = stuecke;
         Grafik = grafik;
         Orte = orte;
@@ -340,7 +340,9 @@ public sealed partial class StadtSzene
     /// nicht Haeuser, Wasser (nur ueber Bruecken = Strasse ueber dem Fluss) und Gleis (nur an
     /// Uebergaengen = Strasse ueber dem Gleis). Zellen zu <see cref="LaufSchritt"/>.
     /// </summary>
-    public Wegsuche Laufraster { get; }
+    public Wegsuche Laufraster => _laufraster.Wert;
+
+    private readonly Spaeter<Wegsuche> _laufraster;
 
     /// <summary>Platzierte CC0-Modelle (leer ohne Grafik-Bibliothek).</summary>
     public IReadOnlyList<ModellStueck> Stuecke { get; }
@@ -609,57 +611,91 @@ public sealed partial class StadtSzene
             n.HinzuLokal(m, lage, f);
             return n;
         }
-        var ausStuecken = new Instanzen.Kandidat?[Stuecke.Count];
-        Parallel.For(0, Stuecke.Count, i =>
-        {
-            if (stueckeHaus[i] || ImPaket(Stuecke[i].Name) || ModellAn(i) is not { } original || Katalogstueck.IstEffekt(original.Name)
-                || !Instanzen.Geeignet(Stuecke[i].Lage))
-            {
-                return;
-            }
-            var lage = Stuecke[i].Lage;
-            var fernModell = Fernform.Von(original);
-            var nah = Lokal(original, lage, i < FestStueckeVon ? ModellFaerbung(original, lage, Faerbeart.Stadt) : FestLicht(original), Unterseiten);
-            var fern = Lokal(fernModell, lage, i < FestStueckeVon ? ModellFaerbung(fernModell, lage, Faerbeart.Stadt) : FestLicht(fernModell), Unterseiten);
-            if (nah.AnzahlEcken > 0)
-            {
-                ausStuecken[i] = new(Instanzen.Stadt, 's', i, original.Name, lage, nah, fern);
-            }
-        });
+        // Engine-Welle A 1.4.0 (Weisung P12-351): Stuecke, Baeume und Kleingruen in EINEM Durchgang auf allen Kernen (vorher
+        // drei nacheinander), der Schluessel jedes Kandidaten gleich mit (vorher ein vierter Durchgang); Reihenfolge wie bisher
         var baeume = GruenKlein?.Baeume ?? [];
-        var ausBaeumen = new Instanzen.Kandidat?[baeume.Count];
-        Parallel.For(0, baeume.Count, b =>
-        {
-            var baum = baeume[b];
-            if (Grafik.Modell(baum.Name) is not { } modell || !Instanzen.Geeignet(baum.Lage))
-            {
-                return;
-            }
-            var fernModell = Fernform.Von(modell);
-            var nah = Lokal(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt), Unterseiten);
-            var fern = Lokal(fernModell, baum.Lage, ModellFaerbung(fernModell, baum.Lage, Faerbeart.Stadt), Unterseiten);
-            if (nah.AnzahlEcken > 0)
-            {
-                ausBaeumen[b] = new(Instanzen.Stadt, 'b', b, modell.Name, baum.Lage, nah, fern);
-            }
-        });
         var klein = GruenKlein?.Stuecke ?? [];
-        var ausGruen = new Instanzen.Kandidat?[klein.Count];
-        Parallel.For(0, klein.Count, g =>
+        var anzahl = Stuecke.Count + baeume.Count + klein.Count;
+        var aus = new Instanzen.Kandidat?[anzahl];
+        var schluessel = new string?[anzahl];
+        void Kandidat(int nr)
         {
-            var st = klein[g];
-            if (Grafik.Modell(st.Name) is not { } m || !Instanzen.Geeignet(st.Lage))
+            Instanzen.Kandidat? k = null;
+            if (nr < Stuecke.Count)
             {
-                return;
+                var i = nr;
+                if (stueckeHaus[i] || ImPaket(Stuecke[i].Name) || ModellAn(i) is not { } original || Katalogstueck.IstEffekt(original.Name)
+                    || !Instanzen.Geeignet(Stuecke[i].Lage))
+                {
+                    return;
+                }
+                var lage = Stuecke[i].Lage;
+                var fernModell = Fernform.Von(original);
+                var nah = Lokal(original, lage, i < FestStueckeVon ? ModellFaerbung(original, lage, Faerbeart.Stadt) : FestLicht(original), Unterseiten);
+                var fern = Lokal(fernModell, lage, i < FestStueckeVon ? ModellFaerbung(fernModell, lage, Faerbeart.Stadt) : FestLicht(fernModell), Unterseiten);
+                if (nah.AnzahlEcken > 0)
+                {
+                    k = new(Instanzen.Stadt, 's', i, original.Name, lage, nah, fern);
+                }
             }
-            var nah = Lokal(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein), null);
-            if (nah.AnzahlEcken > 0)
+            else if (nr < Stuecke.Count + baeume.Count)
             {
-                ausGruen[g] = new(Instanzen.Gruen, 'g', g, m.Name, st.Lage, nah, null);
+                var b = nr - Stuecke.Count;
+                var baum = baeume[b];
+                if (Grafik.Modell(baum.Name) is not { } modell || !Instanzen.Geeignet(baum.Lage))
+                {
+                    return;
+                }
+                var fernModell = Fernform.Von(modell);
+                var nah = Lokal(modell, baum.Lage, ModellFaerbung(modell, baum.Lage, Faerbeart.Stadt), Unterseiten);
+                var fern = Lokal(fernModell, baum.Lage, ModellFaerbung(fernModell, baum.Lage, Faerbeart.Stadt), Unterseiten);
+                if (nah.AnzahlEcken > 0)
+                {
+                    k = new(Instanzen.Stadt, 'b', b, modell.Name, baum.Lage, nah, fern);
+                }
             }
-        });
-        var kandidaten = ausStuecken.Concat(ausBaeumen).Concat(ausGruen).OfType<Instanzen.Kandidat>().ToList();
-        return Instanzen.Planen(kandidaten);
+            else
+            {
+                var g = nr - Stuecke.Count - baeume.Count;
+                var st = klein[g];
+                if (Grafik.Modell(st.Name) is not { } m || !Instanzen.Geeignet(st.Lage))
+                {
+                    return;
+                }
+                var nah = Lokal(m, st.Lage, ModellFaerbung(m, st.Lage, Faerbeart.Klein), null);
+                if (nah.AnzahlEcken > 0)
+                {
+                    k = new(Instanzen.Gruen, 'g', g, m.Name, st.Lage, nah, null);
+                }
+            }
+            if (k is not null)
+            {
+                aus[nr] = k;
+                schluessel[nr] = Instanzen.SchluesselVon(k);
+            }
+        }
+        if (Nacheinander.Value)
+        {
+            for (var nr = 0; nr < anzahl; nr++)
+            {
+                Kandidat(nr);
+            }
+        }
+        else
+        {
+            Parallel.For(0, anzahl, Kandidat);
+        }
+        var kandidaten = new List<Instanzen.Kandidat>();
+        var schluesselListe = new List<string>();
+        for (var nr = 0; nr < anzahl; nr++)
+        {
+            if (aus[nr] is { } k)
+            {
+                kandidaten.Add(k);
+                schluesselListe.Add(schluessel[nr]!);
+            }
+        }
+        return Instanzen.Planen(kandidaten, schluesselListe);
     }
 
     /// <summary>
@@ -1153,6 +1189,9 @@ public sealed partial class StadtSzene
         // Zebrastreifen (Fassung 0: keine Ampeln)
         var ampeln = Probe.Ampeln.Alle(stadt.Daten, strassen);
         var furten = ampeln.SelectMany(a => a.Furten).ToList();
+        // Engine-Welle A 1.4.0 (Weisung P12-351): die Mittellinien haengen nur von Strassen, Zebrastreifen und Furten ab und
+        // entstehen darum nebenher; angehaengt werden sie an derselben Stelle wie bisher
+        var mittellinien = MittellinienSpaeter(strassen, zebras, furten);
         // Welle A 0.61.0 (Weisung P12-171): Haltestellen und Parkplaetze an geraden Strassen mit Gehweg (Fassung 0: keine)
         var gehwegLinien = gehwege.Select(g => (g.Linie, g.Halb)).ToList();
         var haltestellen = Probe.Haltestellen.Alle(stadt.Daten, gehwegLinien);
@@ -1316,16 +1355,8 @@ public sealed partial class StadtSzene
         // Welle K3 (Sammelliste 231): Strassen, die nach Weiter aneinander anschliessen (Kurve an gerade Strasse, Kurve an
         // Kurve), bekommen EINE Mittellinie im gleichen Takt; vorher lief der Takt je Strasse ab 0 und die Kreuzungsregel nahm
         // am Anschluss auf beiden Seiten Striche weg (Luecke). Eine Strasse ohne solchen Anschluss (alle in Fassung 0) wie bisher.
-        foreach (var (x1, z1, x2, z2) in MittellinienStriche(strassen))
-        {
-            // Welle A 0.54.0: kein Strich auf einem Zebrastreifen
-            if (zebras.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f))
-                || furten.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f)))
-            {
-                continue;
-            }
-            teile.Add(Band(x1, z1, x2, z2, Hoehe.Mittellinie, 0.04f, Farben.Mittellinie));
-        }
+        // Engine-Welle A 1.4.0: die Striche entstehen schon neben dem Bau der Landschaft (nur Strassen, Zebrastreifen, Furten)
+        teile.AddRange(Vertauscht.Value ? Enumerable.Reverse(mittellinien.Wert) : mittellinien.Wert);
         // Welle A 0.54.0: weisse Balken je Zebrastreifen (flach auf der Hoehe der Mittellinie, je Balken 2 Dreiecke)
         foreach (var z in zebras)
         {
@@ -1998,7 +2029,9 @@ public sealed partial class StadtSzene
         {
             FarbenAnwenden(stadt.Daten, grafik, stuecke, haeuser, umgefaerbt);
         }
-        var laufraster = LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, [.. zebras, .. furten], gelaende);
+        // Engine-Welle A 1.4.0: das Laufraster entsteht neben der Grundlage weiter (die Eingaben stehen jetzt fest, keine wird
+        // danach geaendert); wer Laufraster liest, wartet darauf (der Reihe nach: sofort hier wie bisher)
+        var laufraster = LaufrasterSpaeter(breite, tiefe, hindernisse, wasser, gleise, strassen, zugangswege, orte, gehwege, teiche, stege, inseln, [.. zebras, .. furten], gelaende);
         return new StadtSzene(teile, streifen, stuecke, grafik, orte, string.Join(";", signatur), breite, tiefe, laufraster, haeuser)
         {
             _vorrat = vorrat,
@@ -2270,6 +2303,34 @@ public sealed partial class StadtSzene
         var p = weg[0] + (d / l * MathF.Min(0.3f, l));
         return (p.X, p.Y);
     }
+
+    /// <summary>Engine-Welle A 1.4.0: die Striche der Mittellinien nebenher (eigene Methode, nichts vom grossen Bau eingefangen).</summary>
+    private static Spaeter<List<Teil>> MittellinienSpaeter(List<List<Vector2>> strassen, List<Zebra> zebras, List<Zebra> furten)
+    {
+        return new Spaeter<List<Teil>>(() =>
+        {
+            var striche = new List<Teil>();
+            foreach (var (x1, z1, x2, z2) in MittellinienStriche(strassen))
+            {
+                // Welle A 0.54.0: kein Strich auf einem Zebrastreifen
+                if (zebras.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f))
+                    || furten.Any(z => z.Drauf(new Vector2(x1, z1), 0.02f) || z.Drauf(new Vector2(x2, z2), 0.02f) || z.Drauf(new Vector2((x1 + x2) / 2, (z1 + z2) / 2), 0.02f)))
+                {
+                    continue;
+                }
+                striche.Add(Band(x1, z1, x2, z2, Hoehe.Mittellinie, 0.04f, Farben.Mittellinie));
+            }
+            return striche;
+        });
+    }
+
+    /// <summary>Engine-Welle A 1.4.0: das Laufraster nebenher (eigene Methode, nichts vom grossen Bau eingefangen).</summary>
+    private static Spaeter<Wegsuche> LaufrasterSpaeter(float breite, float tiefe, List<(double, double, double, double)> hindernisse,
+        List<List<Vector2>> wasser, List<List<Vector2>> gleise, List<List<Vector2>> strassen, List<List<Vector2>> wege, List<StadtOrt> orte,
+        List<(List<Vector2> Linie, float Halb)> gehwege, List<Teich> teiche, List<Steg> stege, List<List<Vector2>> inseln, List<Zebra> zebras,
+        Gelaende? gelaende) =>
+        new(() => LaufrasterBauen(breite, tiefe, hindernisse, wasser, gleise, strassen, wege, orte, gehwege, teiche, stege, inseln, zebras, gelaende), sofort: true);
+
 
     /// <summary>
     /// Laufraster des freien Gehens: frei ist eine Zelle, deren Mitte <see cref="LaufKoerper"/> von jedem
