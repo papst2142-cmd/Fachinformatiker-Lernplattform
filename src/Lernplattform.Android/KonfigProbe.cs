@@ -1,7 +1,6 @@
 #if UPDATEPROBE
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 
 namespace Lernplattform.Android;
@@ -47,7 +46,8 @@ internal static class KonfigProbe
             await Task.Delay(2000);
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var ansicht = (global::Avalonia.Application.Current?.ApplicationLifetime as ISingleViewApplicationLifetime)?.MainView;
+                // die Ansicht wie in der Touch-Probe (MainView.Zuletzt); die Lebensdauer der App liefert auf Android keine MainView
+                var ansicht = global::Lernplattform.Views.MainView.Zuletzt;
                 var oben = ansicht is null ? null : TopLevel.GetTopLevel(ansicht);
                 var g = oben?.ClientSize ?? default;
                 Log($"ANSICHT breite {g.Width:F0} hoehe {g.Height:F0} skalierung {(oben?.RenderScaling ?? 0):F2} aufgebaut {(ansicht?.IsLoaded == true ? "ja" : "nein")}");
