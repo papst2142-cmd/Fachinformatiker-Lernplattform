@@ -61,6 +61,50 @@ public class LadenSchnellerTests
         Assert.True(neben.Karteikarten.Count > 1000 && neben.Quizfragen.Count > 1000);
     }
 
+    private static readonly string Lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
+
+    private static string AbbildNeu(Lerninhalte l) => Abbild(l) + "\n" + string.Join("|", l.Karteikarten.Concat(l.Quizfragen).Concat(l.Ap2Szenarien)
+        .Concat(l.Testprojekte).Select(e => e.Zugehoerigkeit)) + "\n" + string.Join("|", l.NeueFachfragen.Select(f => f.Nummer + ":" + f.Daten.ToJsonString()));
+
+    /// <summary>
+    /// Auch die neuen Inhalte (inhalte_csharp/lernen, auch beim Nachladen und Einsetzen eines Fachrichtungs-Pakets) werden je
+    /// Liste nebeneinander umgewandelt: alle vier Listen gehen an Hintergrund-Threads, das Ergebnis ist gleich wie nacheinander.
+    /// </summary>
+    [Fact]
+    public void NeueInhalte_ListenNebeneinander_GleichesErgebnisWieNacheinander()
+    {
+        var bisher = Lerninhalte.Laden(Pfade.Inhalte);
+        byte[]? Lesen(string name) => Path.Combine(Lernen, name + ".json") is var pfad && File.Exists(pfad) ? File.ReadAllBytes(pfad) : null;
+        (string Abbild, int Hintergrund) Mit(bool nacheinander)
+        {
+            var zaehler = new System.Runtime.CompilerServices.StrongBox<int>();
+            Lerninhalte.NacheinanderFuerTests.Value = nacheinander;
+            Lerninhalte.HintergrundFuerTests.Value = zaehler;
+            try
+            {
+                var l = Lerninhalte.MitLernen(bisher, Lesen, ["si", "dpa"]).MitFachrichtung("ae");
+                var uhr = System.Diagnostics.Stopwatch.StartNew();
+                while (!nacheinander && Volatile.Read(ref zaehler.Value) < 2 * Lerninhalte.LernenListen.Count && uhr.Elapsed < TimeSpan.FromSeconds(30))
+                {
+                    Thread.Sleep(10);
+                }
+                Thread.Sleep(50);
+                return (AbbildNeu(l), Volatile.Read(ref zaehler.Value));
+            }
+            finally
+            {
+                Lerninhalte.NacheinanderFuerTests.Value = false;
+                Lerninhalte.HintergrundFuerTests.Value = null;
+            }
+        }
+        var neben = Mit(nacheinander: false);
+        Assert.Equal(2 * Lerninhalte.LernenListen.Count, neben.Hintergrund);
+        // Gegenprobe: nacheinander (Weg bis A 1.3.0) uebergibt keine Liste einem Hintergrund-Thread; Ergebnis gleich
+        var nach = Mit(nacheinander: true);
+        Assert.Equal(0, nach.Hintergrund);
+        Assert.Equal(nach.Abbild, neben.Abbild);
+    }
+
     [Fact]
     public void InhalteLaden_Fehler_ErsterInDerReihenfolgeDerDateien_WieNacheinander()
     {

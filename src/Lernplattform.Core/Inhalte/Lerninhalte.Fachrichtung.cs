@@ -106,7 +106,16 @@ public sealed partial class Lerninhalte
         {
             ordner.TeileVorab(umwandeln);
         }
-        foreach (var (art, name) in LernenListen)
+        // Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 422 Gruppe 1): die Listen sind unabhaengig voneinander und
+        // werden nebeneinander umgewandelt (Hintergrund-Threads beginnen, der Aufrufer holt in der bisherigen Reihenfolge ab und
+        // rechnet eine noch nicht begonnene Liste selbst); gleiche Eintraege, gleiche Nummern, erster Fehler wie bisher
+        var listen = LernenListen.Select(l => (l.Art, Liste: Vorab(() => ListeUmwandeln(l.Art, l.Name)))).ToList();
+        foreach (var (art, liste) in listen)
+        {
+            neue[art] = liste.Value;
+        }
+
+        List<Lerninhalt> ListeUmwandeln(InhaltArt art, string name)
         {
             var vorherAnzahl = art switch
             {
@@ -128,7 +137,7 @@ public sealed partial class Lerninhalte
                 Zugehoerigkeit = d.Daten[Fachrichtungen.Feld] is JsonValue v && v.GetValueKind() == JsonValueKind.String
                     && Fachrichtungen.Werte.Contains(v.GetValue<string>()) ? v.GetValue<string>() : Ungueltig,
             });
-            neue[art] = wiederverwenden is null ? umgewandelt.ToList()
+            return wiederverwenden is null ? umgewandelt.ToList()
                 : vorher!.Neue[art].Concat(umgewandelt).OrderBy(e => e.Nummer).ToList();
         }
 
