@@ -114,12 +114,13 @@ public sealed class DiagnoseTeil
                     panel.Children.Add(Hilfe(HaengerTexte.Hilfe));
                     _haengerZustand = Schrift.Text("", "Klein", FontWeight.Normal, "Pinsel.muted");
                     panel.Children.Add(_haengerZustand);
-                    if (OperatingSystem.IsLinux())
+                    // Welle Fehlerpruefung Teil 2 (Weisung P12-347): am Mac derselbe Block mit eigenem Satz und Befehl
+                    if (HaengerTexte.SignalBlock(OperatingSystem.IsLinux(), OperatingSystem.IsMacOS()) is var (satz, befehlText))
                     {
-                        var signal = Schrift.Text(HaengerTexte.SignalHilfe, "Klein", FontWeight.Normal, "Pinsel.muted");
+                        var signal = Schrift.Text(satz, "Klein", FontWeight.Normal, "Pinsel.muted");
                         signal.Margin = new Thickness(0, 6, 0, 0);
                         panel.Children.Add(signal);
-                        var befehl = Schrift.Text(HaengerTexte.Befehl, "Klein", FontWeight.Normal, "Pinsel.text_dim");
+                        var befehl = Schrift.Text(befehlText, "Klein", FontWeight.Normal, "Pinsel.text_dim");
                         befehl.FontFamily = new FontFamily("monospace");
                         befehl.VerticalAlignment = VerticalAlignment.Center;
                         befehl.Margin = new Thickness(0, 0, 16, 6);
@@ -127,7 +128,7 @@ public sealed class DiagnoseTeil
                         kopieren.Margin = new Thickness(0, 0, 0, 6);
                         kopieren.Click += async (_, _) =>
                         {
-                            if (await KopierenAsync(HaengerTexte.Befehl))
+                            if (await KopierenAsync(befehlText))
                             {
                                 Kurzhinweis.Zeigen(HaengerTexte.BefehlKopiert);
                             }

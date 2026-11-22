@@ -438,6 +438,26 @@ public sealed class HaengerTests : IDisposable
     }
 
     /// <summary>
+    /// Weisung P12-347 (Nico Bild-OK 22.11.2026): unter „Hänger-Diagnose“ zeigt Linux Satz und Befehl wie bisher, der Mac
+    /// denselben Block mit eigenem Satz und Befehl, Windows keinen Block. Gegenprobe: bis A 1.3.0 gab es nur den Linux-Block.
+    /// Die Anzeige im laufenden Programm prueft der Start-Test auf jedem System (AutoMessung.HaengerBlockPruefen).
+    /// </summary>
+    [Fact]
+    public void P12_347_SignalBlock_JeSystem()
+    {
+        Assert.Equal((HaengerTexte.SignalHilfe, HaengerTexte.Befehl), HaengerTexte.SignalBlock(linux: true, macOS: false));
+        Assert.Equal((HaengerTexte.SignalHilfeMac, HaengerTexte.BefehlMac), HaengerTexte.SignalBlock(linux: false, macOS: true));
+        Assert.Null(HaengerTexte.SignalBlock(linux: false, macOS: false));
+        Assert.StartsWith("Auf dem Mac: Hängt das Programm, öffne das Programm „Terminal“", HaengerTexte.SignalHilfeMac, StringComparison.Ordinal);
+        Assert.Equal("kill -INFO $(pgrep -i -x -o lernplattform)", HaengerTexte.BefehlMac);
+        // die Oberflaeche nimmt den Block nur aus SignalBlock (kein eigener Zweig nur fuer Linux mehr)
+        var quelle = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Views", "DiagnoseTeil.cs"));
+        Assert.Contains("HaengerTexte.SignalBlock(OperatingSystem.IsLinux(), OperatingSystem.IsMacOS())", quelle, StringComparison.Ordinal);
+        Assert.DoesNotContain("HaengerTexte.SignalHilfe,", quelle, StringComparison.Ordinal);
+        Assert.DoesNotContain("KopierenAsync(HaengerTexte.Befehl)", quelle, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Sammelliste 425, nur am Mac: die Laufzeit schickt beim Anhalten der Faeden (Speicherbereinigung, Faeden in verwaltetem
     /// Code) SIGUSR1 an den eigenen Prozess. Bis A 1.3.0 schrieb das ohne Zutun „Abruf (Signal USR1)“ (Lauf 1158). Seit A 1.3.1
     /// hoert der Abruf auf INFO: viele Speicherbereinigungen mit laufenden Faeden schreiben keinen Eintrag, ein kill -INFO schon

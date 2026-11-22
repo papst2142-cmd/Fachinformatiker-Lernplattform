@@ -53,6 +53,13 @@ public static class HaengerTexte
         + "dabei nicht beendet. Hast du das Programm selbst im Terminal gestartet, genügt dort auch die Tastenkombination "
         + "ctrl + T.";
     public const string BefehlMac = "kill -INFO $(pgrep -i -x -o lernplattform)";
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-347, Nico Bild-OK 22.11.2026): Satz und Befehl unter „Hänger-Diagnose“ je System.
+    /// Linux wie bisher, am Mac derselbe Block mit eigenem Satz und Befehl, Windows ohne Block (null).
+    /// </summary>
+    public static (string Satz, string Befehl)? SignalBlock(bool linux, bool macOS) =>
+        linux ? (SignalHilfe, Befehl) : macOS ? (SignalHilfeMac, BefehlMac) : null;
+
     public const string BefehlKopieren = "Befehl kopieren";
     public const string BefehlKopiert = "Befehl in die Zwischenablage kopiert";
     public const string Keine = "Keine Hänger aufgezeichnet.";
