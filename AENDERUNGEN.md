@@ -1,5 +1,17 @@
 # Änderungen
 
+## A 1.3.1
+Deine Figur sitzt auf Sofa, Sessel und Liegestuhl jetzt richtig, ein Bild ohne Wand steht auf einer Staffelei, und das Programm lädt die Lerninhalte schneller. Dazu kommen weitere kleine Fehlerbehebungen aus einer gründlichen Prüfung.
+
+- Setzt du dich auf ein Sofa, einen Sessel oder einen Liegestuhl, rutscht deine Figur jetzt ganz nach hinten an die Lehne und legt die Beine lang auf das Polster, gerade und zurückgelehnt. Vorher saß sie zu weit vorn, auf dem Liegestuhl sogar auf der Fußstütze. An einer Wand der Wohnung rückt sie nur so weit nach vorn, dass ein spitzer Hut nicht in die Wand ragt. Bank, Hocker und die Stühle bleiben wie bisher.
+- Ein Bild, das nicht an einer Wand hängt, schwebt nicht mehr in der Luft: Es steht jetzt auf einer Holzstaffelei, zum Beispiel im Möbelhaus. Bilder an einer Wand hängen weiter dort.
+- Beim Start und beim Wechsel der Fachrichtung lädt das Programm die Lerninhalte schneller, weil es mehrere Dateien gleichzeitig liest.
+- Am Handy und Tablet startet das Programm nicht mehr neu, wenn du zum Beispiel eine Tastatur anschließt oder die Bildschirmgröße wechselt; es läuft einfach weiter.
+- Hängt das Programm einmal, zeigt die Hilfe dazu jetzt auch auf dem Mac, wie du einen Bericht für die Fehlersuche bekommst.
+- Inhaltspakete mit Dateinamen, die unter Windows nicht erlaubt sind, gelten jetzt als fehlerhaft und werden nicht geladen. Die heutigen Pakete sind davon nicht betroffen.
+- Kann ein Stück der Stadt beim Nachladen nicht gebaut werden, steht das im Fehlerprotokoll, und das Spiel läuft weiter.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 1.3.0
 Eine Pflege-Version mit mehreren kleinen Fehlerbehebungen aus einer gründlichen Prüfung des ganzen Programms.
 

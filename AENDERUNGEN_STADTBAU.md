@@ -3,6 +3,16 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.61.0
+
+Ein neues Projekt öffnet sich schneller, und das Werkzeug speichert noch sicherer.
+
+- Beim Anlegen eines Projekts baut das Werkzeug im Katalog der Innenräume nur die aufgeklappte Gruppe gleich mit. Jede andere Gruppe erscheint, sobald du sie aufklappst, mit allen Knöpfen wie bisher.
+- Beim Speichern schreibt das Werkzeug die Datei jetzt ganz auf den Datenträger, bevor es die alte ersetzt. So geht auch bei einem plötzlichen Stromausfall nichts verloren.
+- Namen von Orten und Dateien vergleicht das Werkzeug jetzt auf jedem Gerät gleich, unabhängig von der Spracheinstellung.
+- Ein Bild, das nicht an einer Wand hängt, steht in der 3D-Ansicht wie im Spiel auf einer Staffelei.
+- Deine Projekte und die Dateien für das Spiel bleiben, wie sie sind.
+
 ## S 0.60.0
 
 Im Werkzeug kannst du jetzt auch die Räume ansehen, die das Spiel aus seinen eigenen Daten baut.
