@@ -4,7 +4,8 @@
 # werkzeug), dann das Update des Stadtbau-Werkzeugs (werkzeuge/stadtbau/update_probe.sh, n -> n+1). Rot, wenn eine rot ist.
 # Welle A 0.98.0 (Weisung P12-315, Sammelliste 391): nach der Update-Probe der Lernplattform die Touch-Probe der Sticks mit
 # der dort installierten Probe-APK n+2 (werkzeuge/android/touch_probe.sh); ihr Ergebnis steht am Ende von emulator_probe_update.txt.
-# Seit A 0.99.0 Pflicht: rot macht den Job rot. Seit A 1.3.1 danach die Konfig-Probe (werkzeuge/android/konfig_probe.sh, Sammelliste 426).
+# Seit A 0.99.0 Pflicht: rot macht den Job rot. Seit A 1.3.1 danach die Konfig-Probe (werkzeuge/android/konfig_probe.sh, Sammelliste 426),
+# seit A 1.3.2 / S 0.61.1 mit Skalierung je Schritt und auch fuer das Werkzeug (Sammelliste 434/435).
 # Aufruf: emulator_proben.sh <ergebnis lernplattform-bau> <ergebnis werkzeug-bau> (je "success" oder anderes)
 set -u
 rc=0
@@ -21,5 +22,12 @@ fi
 if [ "${2:-}" = success ]; then
   adb uninstall io.github.papst2142cmd.lernplattform > /dev/null 2>&1 || true
   bash werkzeuge/stadtbau/update_probe.sh stadtbau-probe-0/*-Signed.apk stadtbau-probe-1/*-Signed.apk emulator_probe_stadtbau.txt || rc=1
+  # S 0.61.1 (Weisung P12-350, Sammelliste 435): Konfig-Probe auch fuer das Werkzeug (gleiche Probe, eigenes Paket), mit der
+  # nach der Update-Probe installierten Probe-APK (beide Stufen sind Probe-APKs; fehlt das Paket, wird n+1 installiert)
+  if ! adb shell pm path io.github.papst2142cmd.stadtbau 2>/dev/null | grep -q package:; then
+    adb install -r stadtbau-probe-1/*-Signed.apk > /dev/null 2>&1 || true
+  fi
+  bash werkzeuge/android/konfig_probe.sh emulator_probe_stadtbau.txt io.github.papst2142cmd.stadtbau \
+    || { echo "FEHLER: Konfig-Probe Werkzeug rot, Einzelheiten in emulator_probe_stadtbau.txt" | tee -a emulator_probe_stadtbau.txt; rc=1; }
 fi
 exit $rc

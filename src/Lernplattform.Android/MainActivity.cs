@@ -38,8 +38,10 @@ public class MainActivity : AvaloniaMainActivity
         }
 #endif
         base.OnCreate(savedInstanceState);
+        _dichte = Resources?.Configuration?.DensityDpi ?? 0;
 #if UPDATEPROBE
-        KonfigProbe.OnCreate(Intent);
+        KonfigProbe.Ansicht = () => global::Lernplattform.Views.MainView.Zuletzt;
+        KonfigProbe.OnCreate(this, Intent);
 #endif
         SystemmessungEinrichten();
 #if UPDATEPROBE
@@ -190,14 +192,6 @@ public class MainActivity : AvaloniaMainActivity
 #endif
     }
 
-#if UPDATEPROBE
-    public override void OnConfigurationChanged(global::Android.Content.Res.Configuration newConfig)
-    {
-        base.OnConfigurationChanged(newConfig);
-        KonfigProbe.Geaendert(newConfig);
-    }
-#endif
-
     protected override void OnDestroy()
     {
         if (_empfaenger is not null)
@@ -239,6 +233,21 @@ public class MainActivity : AvaloniaMainActivity
         Lernplattform.Spiel.Systemwerte.Kopf = () => string.Create(System.Globalization.CultureInfo.InvariantCulture,
             $"Android {version} (API {api}), Bildwiederholrate {messung.Hertz:0} Hz");
         Lernplattform.Spiel.Systemwerte.Seit = messung.Seit;
+    }
+
+    private int _dichte;
+
+    /// <summary>
+    /// Welle A 1.3.2 (Weisung P12-350, Sammelliste 434): nach einer reinen Dichte-Aenderung (Anzeigegroesse in den Einstellungen)
+    /// die neue Skalierung sofort an Avalonia geben, nicht erst beim naechsten Groessenwechsel (<see cref="Dichte"/>).
+    /// </summary>
+    public override void OnConfigurationChanged(global::Android.Content.Res.Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        _dichte = Dichte.Nachziehen(this, newConfig, _dichte);
+#if UPDATEPROBE
+        KonfigProbe.Geaendert(newConfig);
+#endif
     }
 
     public override bool DispatchTouchEvent(global::Android.Views.MotionEvent? e)

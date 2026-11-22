@@ -13,12 +13,29 @@ namespace Stadtbau.Android;
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+    // S 0.61.1 (Weisung P12-350, Sammelliste 435): dieselben Konfigurationswechsel wie die Lernplattform seit A 1.3.1 (426) selbst
+    // behandeln (Bildschirm-Aufbau, kleinste Breite, Tastatur, Dichte). Sonst baut Android die Activity neu, etwa beim Wechsel in
+    // den Mehrfenster-Modus, beim Anstecken einer Tastatur oder bei anderer Anzeigegroesse.
+    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.ScreenLayout
+        | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden | ConfigChanges.Density)]
 public class MainActivity : AvaloniaMainActivity
 {
     protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
     {
+#if UPDATEPROBE
+        // S 0.61.1 (Sammelliste 435): die Konfig-Probe misst die Hauptansicht des Werkzeugs (kommt beim Anlegen der Activity)
+        var vorher = StadtbauApp.NachStart;
+        StadtbauApp.NachStart = (ansicht, fenster) =>
+        {
+            Lernplattform.Android.KonfigProbe.Ansicht = () => ansicht;
+            vorher?.Invoke(ansicht, fenster);
+        };
+#endif
         base.OnCreate(savedInstanceState);
+        _dichte = Resources?.Configuration?.DensityDpi ?? 0;
+#if UPDATEPROBE
+        Lernplattform.Android.KonfigProbe.OnCreate(this, Intent);
+#endif
         // Patch S 0.5.1 (Weisung P12-35): "Werkzeug beenden" schliesst die Aufgabe (auch aus der Liste der letzten Apps)
         // und beendet danach den Prozess, wie "Programm beenden" der Lernplattform
         StadtbauApp.GeraetBeenden = () => RunOnUiThread(() =>
@@ -90,7 +107,25 @@ public class MainActivity : AvaloniaMainActivity
             RegisterReceiver(_empfaenger, filter);
         }
 #if UPDATEPROBE
-        UpdateProbe.Starten(installer);
+        if (!Lernplattform.Android.KonfigProbe.An)
+        {
+            UpdateProbe.Starten(installer);
+        }
+#endif
+    }
+
+    private int _dichte;
+
+    /// <summary>
+    /// S 0.61.1 (Weisung P12-350, Sammelliste 435): nach einer reinen Dichte-Aenderung die neue Skalierung sofort an Avalonia
+    /// geben, nicht erst beim naechsten Groessenwechsel (gleiche Behandlung wie die Lernplattform, <c>Dichte.cs</c>).
+    /// </summary>
+    public override void OnConfigurationChanged(global::Android.Content.Res.Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        _dichte = Lernplattform.Android.Dichte.Nachziehen(this, newConfig, _dichte);
+#if UPDATEPROBE
+        Lernplattform.Android.KonfigProbe.Geaendert(newConfig);
 #endif
     }
 
