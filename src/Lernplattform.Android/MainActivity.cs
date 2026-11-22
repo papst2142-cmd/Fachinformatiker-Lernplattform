@@ -14,7 +14,11 @@ namespace Lernplattform.Android;
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+    // Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 426): auch Bildschirm-Aufbau, kleinste Breite, Tastatur und
+    // Dichte selbst behandeln. Sonst baut Android die Activity neu (neue Ansicht, die alte haengt noch an statischen Ereignissen),
+    // etwa beim Wechsel in den Mehrfenster-Modus, beim Anstecken einer Tastatur oder bei anderer Anzeigegroesse.
+    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.ScreenLayout
+        | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden | ConfigChanges.Density)]
 public class MainActivity : AvaloniaMainActivity
 {
     /// <summary>
@@ -34,6 +38,9 @@ public class MainActivity : AvaloniaMainActivity
         }
 #endif
         base.OnCreate(savedInstanceState);
+#if UPDATEPROBE
+        KonfigProbe.OnCreate(Intent);
+#endif
         SystemmessungEinrichten();
 #if UPDATEPROBE
         // Welle A 0.98.0 (Weisung P12-315, Sammelliste 391): Touch-Probe im Emulator (Start mit "--ez touch_probe true")
@@ -176,12 +183,20 @@ public class MainActivity : AvaloniaMainActivity
             RegisterReceiver(_empfaenger, filter);
         }
 #if UPDATEPROBE
-        if (!TouchProbe.An)
+        if (!TouchProbe.An && !KonfigProbe.An)
         {
             UpdateProbe.Starten(installer);
         }
 #endif
     }
+
+#if UPDATEPROBE
+    public override void OnConfigurationChanged(global::Android.Content.Res.Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        KonfigProbe.Geaendert(newConfig);
+    }
+#endif
 
     protected override void OnDestroy()
     {
