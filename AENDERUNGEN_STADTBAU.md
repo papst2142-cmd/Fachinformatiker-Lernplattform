@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.61.1
+
+Eine kleine Pflege-Version für das Tablet.
+
+- Am Tablet startet das Werkzeug nicht mehr neu, wenn du zum Beispiel eine Tastatur anschließt, in die geteilte Ansicht wechselst oder eine andere Anzeigegröße einstellst; es läuft einfach weiter, und ein offenes Projekt bleibt offen.
+- Eine neue Anzeigegröße übernimmt das Werkzeug sofort: Schrift und Knöpfe haben gleich die neue Größe.
+- Deine Projekte und die Dateien für das Spiel bleiben, wie sie sind.
+
 ## S 0.61.0
 
 Ein neues Projekt öffnet sich schneller, und das Werkzeug speichert noch sicherer.

@@ -32,6 +32,9 @@
   <!-- S 0.6.0: Android-Teil des Updates gemeinsam mit der Lernplattform (eine Datei, beide Programme bauen sie) -->
   <ItemGroup>
     <Compile Include="..\Lernplattform.Android\HandyInstaller.cs" Link="HandyInstaller.cs" />
+    <!-- S 0.61.1 (Weisung P12-350, Sammelliste 435): Dichte sofort uebernehmen und Konfig-Probe, gemeinsam mit der Lernplattform -->
+    <Compile Include="..\Lernplattform.Android\Dichte.cs" Link="Dichte.cs" />
+    <Compile Include="..\Lernplattform.Android\KonfigProbe.cs" Link="KonfigProbe.cs" />
   </ItemGroup>
 
   <ItemGroup>

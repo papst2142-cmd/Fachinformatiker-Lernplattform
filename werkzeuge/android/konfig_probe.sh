@@ -9,10 +9,15 @@
 #   - es keinen Absturz gibt (kein "FATAL EXCEPTION" der App) und die App vorne bleibt.
 # Gegenprobe im selben Lauf: eine Aenderung, die NICHT in ConfigurationChanges steht (Schriftgroesse, fontScale), legt die
 # Activity neu an (ONCREATE 2): so ist belegt, dass die Probe ein Neuanlegen ueberhaupt sieht.
-# Aufruf: konfig_probe.sh <ergebnisdatei> (haengt an die Datei an). Rueckgabe 1 = rot.
+# Welle A 1.3.2 / S 0.61.1 (Weisung P12-350, Sammelliste 434/435): jeder Schritt einzeln auch mit der Skalierung: die Zeile
+# ANSICHT nennt die Skalierung von Avalonia und die zur Dichte gehoerende (soll = Dichte / 160); rot, wenn sie in einem Schritt
+# nicht passt (434: nach "Dichte 320" galt bis A 1.3.1 die alte Skalierung bis zum naechsten Groessenwechsel). Gegenprobe im
+# selben Lauf: ein neuer Start mit "--ez dichte_gegenprobe true" verhaelt sich wie vor 434; dort MUSS der Schritt "Dichte"
+# eine falsche Skalierung zeigen, sonst saehe die Probe den Fehler nicht. Dasselbe fuer das Werkzeug (435, zweites Argument).
+# Aufruf: konfig_probe.sh <ergebnisdatei> [paket] (haengt an die Datei an; ohne Paket die Lernplattform). Rueckgabe 1 = rot.
 set -u
 ERGEBNIS=$1
-PAKET=io.github.papst2142cmd.lernplattform
+PAKET=${2:-io.github.papst2142cmd.lernplattform}
 LOG=$(mktemp)
 trap 'rm -f "$LOG"; adb shell wm density reset >/dev/null 2>&1; adb shell wm size reset >/dev/null 2>&1; adb shell settings put system font_scale 1.0 >/dev/null 2>&1' EXIT
 zeile() { echo "$*" | tee -a "$ERGEBNIS"; }
@@ -24,20 +29,24 @@ warten() {   # $1 Muster (grep -E), $2 Mindestzahl Treffer, $3 Sekunden
   while [ "$t" -lt "$3" ]; do lesen; [ "$(grep -cE "$1" "$LOG")" -ge "$2" ] && return 0; sleep 2; t=$((t + 2)); done
   return 1
 }
-zeile "===== Konfig-Probe (Dichte und Groesse aendern, Activity darf nicht neu entstehen) ====="
+zeile "===== Konfig-Probe $PAKET (Dichte und Groesse aendern, Activity darf nicht neu entstehen, Skalierung passt sofort) ====="
 KOMP=$(adb shell cmd package resolve-activity --brief "$PAKET" | tr -d '\r' | tail -n 1)
 adb shell am force-stop "$PAKET"
 adb shell wm density reset >/dev/null 2>&1; adb shell wm size reset >/dev/null 2>&1
 adb logcat -c
 adb shell am start -n "$KOMP" --ez konfig_probe true > /dev/null 2>&1
-warten "^ONCREATE 1$" 1 90 || { rot "App startet nicht (keine Zeile ONCREATE 1)"; cat "$LOG" >> "$ERGEBNIS"; exit 1; }
+warten "^ONCREATE 1( |$)" 1 90 || { rot "App startet nicht (keine Zeile ONCREATE 1)"; cat "$LOG" >> "$ERGEBNIS"; exit 1; }
 sleep 8
 PID=$(adb shell pidof "$PAKET" | tr -d '\r')
 DICHTE=$(adb shell wm density | tr -d '\r' | sed -n 's/^Physical density: //p')
 GROESSE=$(adb shell wm size | tr -d '\r' | sed -n 's/^Physical size: //p')
 zeile "Start: pid $PID, Dichte $DICHTE, Groesse $GROESSE"
+# eine andere Dichte als beim Start (sonst aendert "wm density" nichts)
+NEU=320; [ "$DICHTE" = 320 ] && NEU=280
 n=0
 LETZTE=()
+# Skalierung einer Zeile ANSICHT passt zur Dichte? (Feld 7 = skalierung, Feld 9 = soll), Rueckgabe 0 = passt
+passt() { echo "$1" | awk '{d = $7 - $9; if (d < 0) d = -d; exit (d <= 0.01 && $9 > 0) ? 0 : 1}'; }
 schritt() {   # $1 Beschreibung, $2.. adb shell Befehl; ein Wechsel kann mehrere Rueckrufe bringen, gezaehlt wird ab dem Stand davor
   local text=$1; shift
   n=$((n + 1))
@@ -47,12 +56,13 @@ schritt() {   # $1 Beschreibung, $2.. adb shell Befehl; ein Wechsel kann mehrere
     sleep 3; lesen
     LETZTE[$n]=$(grep '^ANSICHT ' "$LOG" | tail -n 1)
     zeile "Schritt $n ($text): $(grep '^GEAENDERT ' "$LOG" | tail -n 1) | ${LETZTE[$n]}"
+    passt "${LETZTE[$n]}" || rot "Schritt $n ($text): Skalierung passt nicht zur Dichte (${LETZTE[$n]})"
   else
     LETZTE[$n]=""
     rot "Schritt $n ($text) kam nicht an oder die Ansicht zeichnete nicht (Zeilen: $(tr '\n' ';' < "$LOG"))"
   fi
 }
-schritt "Dichte 320" wm density 320
+schritt "Dichte $NEU" wm density "$NEU"
 schritt "Groesse 1000x1800" wm size 1000x1800
 schritt "Dichte zurueck" wm density reset
 schritt "Groesse zurueck" wm size reset
@@ -71,9 +81,37 @@ FATAL=$(adb logcat -d 2>/dev/null | tr -d '\r' | grep -A3 "FATAL EXCEPTION" | gr
 adb shell dumpsys window 2>/dev/null | tr -d '\r' | grep -E "mCurrentFocus|mFocusedApp" | grep -q "$PAKET" || rot "App ist nicht mehr vorne"
 # Gegenprobe: Schriftgroesse (nicht in ConfigurationChanges) legt die Activity neu an
 adb shell settings put system font_scale 1.3 > /dev/null 2>&1
-if warten "^ONCREATE 2$" 1 40; then zeile "Gegenprobe: Schriftgroesse legt die Activity neu an (ONCREATE 2), die Probe sieht ein Neuanlegen"
+if warten "^ONCREATE 2( |$)" 1 40; then zeile "Gegenprobe: Schriftgroesse legt die Activity neu an (ONCREATE 2), die Probe sieht ein Neuanlegen"
 else rot "Gegenprobe: Schriftgroesse legte die Activity nicht neu an (die Probe saehe ein Neuanlegen nicht)"; fi
 adb shell settings put system font_scale 1.0 > /dev/null 2>&1
+# Gegenprobe Dichte: neuer Start wie vor 434 (dichte_gegenprobe); der Schritt "Dichte" muss die falsche Skalierung zeigen
 adb shell am force-stop "$PAKET"
-if [ "$fehler" -eq 0 ]; then zeile "Konfig-Probe gruen: $ONCREATE x ONCREATE bei 4 Wechseln, pid $PID gleich, kein Absturz"; fi
+adb shell wm density reset >/dev/null 2>&1; adb shell wm size reset >/dev/null 2>&1
+adb logcat -c
+adb shell am start -n "$KOMP" --ez konfig_probe true --ez dichte_gegenprobe true > /dev/null 2>&1
+if warten "^ONCREATE 1 .*gegenprobe" 1 90; then
+  sleep 8
+  adb shell wm density "$NEU" > /dev/null 2>&1
+  if warten "^ANSICHT " 1 30; then
+    sleep 3; lesen
+    G=$(grep '^ANSICHT ' "$LOG" | tail -n 1)
+    # Bildpunkte der Flaeche (Breite x Skalierung, Hoehe x Skalierung) vor dem Wechsel (Schritt 4 = Startwerte) und danach.
+    # 434 tritt nur auf, wenn sich die Flaeche in Bildpunkten NICHT aendert (dann meldet Android kein SurfaceChanged); aendert sie
+    # sich (z. B. sichtbare Systemleisten, Lauf 1171 im Werkzeug: 320x556 -> 320x592), liest Avalonia die Dichte dort selbst
+    # und die Gegenprobe kann nichts zeigen. Pflicht ist sie darum genau dann, wenn die Bildpunkte gleich bleiben.
+    px() { echo "$1" | awk '{printf "%dx%d", $3 * $7 + 0.5, $5 * $7 + 0.5}'; }
+    PXV=$(px "${LETZTE[4]:-}"); PXN=$(px "$G")
+    if [ -n "${LETZTE[4]:-}" ] && [ "$PXV" != "$PXN" ]; then
+      zeile "Gegenprobe Dichte: Hinweis, die Flaeche aendert hier ihre Bildpunkte ($PXV -> $PXN), Avalonia liest die Dichte dabei selbst ($G); 434 kann hier nicht auftreten"
+    elif passt "$G"; then rot "Gegenprobe Dichte: ohne Behebung passt die Skalierung trotzdem ($G, Bildpunkte $PXV -> $PXN), die Probe saehe 434 nicht"
+    else zeile "Gegenprobe Dichte: ohne Behebung falsche Skalierung ($G, Bildpunkte $PXV -> $PXN gleich), die Probe sieht den Fehler"; fi
+  else
+    rot "Gegenprobe Dichte: Schritt kam nicht an (Zeilen: $(tr '\n' ';' < "$LOG"))"
+  fi
+else
+  rot "Gegenprobe Dichte: App startet nicht (keine Zeile ONCREATE 1 ... gegenprobe)"
+fi
+adb shell wm density reset > /dev/null 2>&1
+adb shell am force-stop "$PAKET"
+if [ "$fehler" -eq 0 ]; then zeile "Konfig-Probe gruen: $ONCREATE x ONCREATE bei 4 Wechseln, Skalierung in jedem Schritt passend, pid $PID gleich, kein Absturz"; fi
 exit $fehler

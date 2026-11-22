@@ -1,5 +1,11 @@
 # Änderungen
 
+## A 1.3.2
+Eine kleine Pflege-Version für Handy und Tablet.
+
+- Stellst du am Handy oder Tablet in den Einstellungen eine andere Anzeigegröße ein, übernimmt das Programm sie jetzt sofort: Schrift, Knöpfe und Bilder haben gleich die neue Größe. Vorher passte sich die Größe erst an, wenn du das Gerät gedreht oder die Fenstergröße gewechselt hast.
+- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und das Spiel bleiben genau gleich.
+
 ## A 1.3.1
 Deine Figur sitzt auf Sofa, Sessel und Liegestuhl jetzt richtig, ein Bild ohne Wand steht auf einer Staffelei, und das Programm lädt die Lerninhalte schneller. Dazu kommen weitere kleine Fehlerbehebungen aus einer gründlichen Prüfung.
 
