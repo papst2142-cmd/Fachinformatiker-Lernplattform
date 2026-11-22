@@ -218,8 +218,9 @@ public class PruefungTests
             var innen = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), Grundriss(ort), InnenGrundriss.Personen(D.Fassung.Innenraeume, ort), D.Grafik);
             Assert.Equal(soll[ort], StadtbauGrenzen.Innen(innen));
         }
-        // Gegenprobe Sammelliste 380: mit den Betten wie bis A 0.89.0 (quer) wieder der alte Wert
+        // Gegenprobe Sammelliste 380: mit den Betten wie bis A 0.89.0 (quer) wieder der alte Wert (Bild wie damals ohne Staffelei)
         Innenraum.BettQuerAltFuerTests.Value = true;
+        Innenraum.BildAltFuerTests.Value = true;
         try
         {
             var alt = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht("moebelhaus"), Grundriss("moebelhaus"),
@@ -229,6 +230,7 @@ public class PruefungTests
         finally
         {
             Innenraum.BettQuerAltFuerTests.Value = false;
+            Innenraum.BildAltFuerTests.Value = false;
         }
         // Gegenprobe Sammelliste 432: mit dem Bild wie bis A 1.3.0 (ohne Staffelei) wieder der alte Wert
         Innenraum.BildAltFuerTests.Value = true;
