@@ -123,6 +123,82 @@ public sealed class PaketTests : IDisposable
         Assert.Null(Grund(Zip([(Paket.KopfDatei, Encoding.UTF8.GetBytes(andersKopf.ToJsonString())), (Paket.StadtDatei, d[Paket.StadtDatei]), ("stadt2.fistadt", d[Paket.StadtDatei])])));
     }
 
+    /// <summary>
+    /// Welle Fehlerpruefung Teil 2 (Weisung P12-345, Sammelliste 429): ein Dateiname, den Windows nicht speichern kann, ist
+    /// „Datei fremd“ wie F2, auch wenn der Kopf ihn mit richtiger Pruefsumme nennt. Gegenprobe: dasselbe Paket mit einem
+    /// erlaubten Namen ist gut (bis A 1.3.0 galten auch die verbotenen Namen als gut).
+    /// </summary>
+    [Theory]
+    [InlineData("CON")]
+    [InlineData("con.txt")]
+    [InlineData("Nul.fistadt")]
+    [InlineData("aux.tar.gz")]
+    [InlineData("PRN")]
+    [InlineData("COM1")]
+    [InlineData("com9.png")]
+    [InlineData("LPT1")]
+    [InlineData("lpt9.json")]
+    [InlineData("COM0")]
+    [InlineData("LPT²")]
+    [InlineData("nul .txt")]
+    [InlineData("stadt2.fistadt.")]
+    [InlineData("stadt2.fistadt ")]
+    [InlineData("a<b")]
+    [InlineData("a>b")]
+    [InlineData("a:b")]
+    [InlineData("a\"b")]
+    [InlineData("a|b")]
+    [InlineData("a?b")]
+    [InlineData("a*b")]
+    [InlineData("a\u0001b")]
+    [InlineData("a\tb")]
+    public void A2_UnterWindowsVerboteneNamen_Fremd(string name)
+    {
+        Assert.Equal(PaketTexte.Format(PaketTexte.DateiFremd, name), Grund(MitZusatzDatei(name)));
+        Assert.True(Paket.UnterWindowsVerboten(name));
+    }
+
+    /// <summary>Gegenprobe 429: aehnliche, aber erlaubte Namen bleiben gut (die Regel trifft nur die verbotenen).</summary>
+    [Theory]
+    [InlineData("stadt2.fistadt")]
+    [InlineData("console.txt")]
+    [InlineData("nulpunkt.png")]
+    [InlineData("com10.json")]
+    [InlineData("lpt.txt")]
+    [InlineData("xcon")]
+    [InlineData("auxiliar.bin")]
+    [InlineData("bild 1.png")]
+    [InlineData(".versteckt")]
+    public void A2_AehnlicheErlaubteNamen_Gut(string name)
+    {
+        Assert.Null(Grund(MitZusatzDatei(name)));
+        Assert.False(Paket.UnterWindowsVerboten(name));
+    }
+
+    /// <summary>429: alle echten Pakete und Testpakete im Repo bleiben gueltig (kein Name ist betroffen).</summary>
+    [Fact]
+    public void A2_AlleHeutigenPakete_KeinVerbotenerName()
+    {
+        var alle = Directory.GetFiles(Path.Combine(Pfade.Wurzel, "tests/Lernplattform.Tests/Testdaten"), "*.fipaket", SearchOption.AllDirectories);
+        Assert.True(alle.Length >= 8, alle.Length.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        foreach (var datei in alle)
+        {
+            using var strom = File.OpenRead(datei);
+            var (dateien, grund) = Paket.Entpacken(strom);
+            Assert.True(dateien is not null, datei + ": " + grund);
+            Assert.DoesNotContain(dateien.Keys, Paket.UnterWindowsVerboten);
+        }
+    }
+
+    /// <summary>Das kleine echte Paket mit einer zusaetzlichen Datei <paramref name="name"/>, die der Kopf richtig nennt.</summary>
+    private static byte[] MitZusatzDatei(string name)
+    {
+        var d = Dateien(Klein);
+        var kopf = JsonNode.Parse(d[Paket.KopfDatei])!.AsObject();
+        kopf["dateien"]![name] = kopf["dateien"]![Paket.StadtDatei]!.DeepClone();
+        return Zip([(Paket.KopfDatei, Encoding.UTF8.GetBytes(kopf.ToJsonString())), (Paket.StadtDatei, d[Paket.StadtDatei]), (name, d[Paket.StadtDatei])]);
+    }
+
     [Fact]
     public void A2_Kaputt_Abgeschnitten_Fehlt_Fremd_ZuNeu()
     {
