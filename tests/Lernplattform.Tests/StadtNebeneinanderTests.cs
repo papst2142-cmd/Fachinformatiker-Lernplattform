@@ -82,8 +82,9 @@ public sealed class StadtNebeneinanderTests
             Assert.True(wert == neben.Abschnitte[abschnitt], name + ": Abschnitt " + abschnitt + " weicht ab");
         }
         // feste Zaehlwerte, gemessen auf main 643f429 (vor der Welle)
-        Assert.Equal(Fest[name], reihe.Zaehlung);
-        Assert.Equal(Fest[name], neben.Zaehlung);
+        // bei Abweichung die Einzelwerte je Kachel und Netz in der Meldung (Vergleich zwischen Rechnern)
+        Assert.True(Fest[name] == reihe.Zaehlung, name + ": " + reihe.Zaehlung + "\nEinzeln: " + reihe.Einzeln);
+        Assert.True(Fest[name] == neben.Zaehlung, name + ": " + neben.Zaehlung + "\nEinzeln: " + neben.Einzeln);
     }
 
     [Fact]
@@ -132,6 +133,9 @@ internal sealed class Bauabdruck
     public Dictionary<string, string> Abschnitte { get; } = new(StringComparer.Ordinal);
 
     public string Zaehlung { get; private set; } = "";
+
+    /// <summary>Einzelwerte (Anzahl je Art, Ecken/Indizes je Kachel und Netz) fuer die Meldung bei einer Abweichung.</summary>
+    public string Einzeln { get; private set; } = "";
 
     private sealed class Schreiber : IDisposable
     {
@@ -309,24 +313,29 @@ internal sealed class Bauabdruck
         });
         var kacheln = Stadtteile.Alle(szene.Breite, szene.Tiefe).ToList();
         long ecken = 0, indizes = 0;
+        var einzeln = new StringBuilder();
+        einzeln.Append(CultureInfo.InvariantCulture, $"baeume {szene.Baeume.Count}, questgeber {szene.Questgeber.Count}, fest {szene.FestGesetzt.Count}, licht {szene.LichtTeile.Count}, gruen {szene.GruenKlein?.Stuecke.Count ?? -1}/{szene.GruenKlein?.Teile.Count ?? -1}/{szene.GruenKlein?.Baeume.Count ?? -1}/{szene.GruenKlein?.Plaetze.Count ?? -1}");
         a.Abschnitt("Kacheln", s =>
         {
             foreach (var k in kacheln)
             {
                 var n = szene.KachelVorbereiten(k);
                 s.Text(k.Name);
+                einzeln.Append("; ").Append(k.Name).Append(':');
                 foreach (var netz in n.Netze)
                 {
                     aendern?.Invoke(k, netz);
                     s.Netz(netz);
                     ecken += netz.Ecken.Count;
                     indizes += netz.Indizes.Count;
+                    einzeln.Append(CultureInfo.InvariantCulture, $" {netz.Ecken.Count}/{netz.Indizes.Count}");
                 }
                 foreach (var (haus, _) in n.Haeuser) { s.Text(haus.Id); }
             }
         });
         a.Zaehlung = string.Create(CultureInfo.InvariantCulture,
             $"teile {szene.Teile.Count}, streifen {szene.Streifen.Count}, stuecke {szene.Stuecke.Count}, haeuser {szene.Haeuser.Count}, frei {raster.AnzahlFrei}, laternen {szene.Laternen.Count}, saetze {plan?.Saetze.Count ?? 0}, kacheln {kacheln.Count}, ecken {ecken}, indizes {indizes}");
+        a.Einzeln = einzeln.ToString();
         return a;
     }
 }
