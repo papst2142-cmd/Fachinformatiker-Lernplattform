@@ -95,8 +95,16 @@ if warten "^ONCREATE 1 .*gegenprobe" 1 90; then
   if warten "^ANSICHT " 1 30; then
     sleep 3; lesen
     G=$(grep '^ANSICHT ' "$LOG" | tail -n 1)
-    if passt "$G"; then rot "Gegenprobe Dichte: ohne Behebung passt die Skalierung trotzdem ($G), die Probe saehe 434 nicht"
-    else zeile "Gegenprobe Dichte: ohne Behebung falsche Skalierung ($G), die Probe sieht den Fehler"; fi
+    # Bildpunkte der Flaeche (Breite x Skalierung, Hoehe x Skalierung) vor dem Wechsel (Schritt 4 = Startwerte) und danach.
+    # 434 tritt nur auf, wenn sich die Flaeche in Bildpunkten NICHT aendert (dann meldet Android kein SurfaceChanged); aendert sie
+    # sich (z. B. sichtbare Systemleisten, Lauf 1171 im Werkzeug: 320x556 -> 320x592), liest Avalonia die Dichte dort selbst
+    # und die Gegenprobe kann nichts zeigen. Pflicht ist sie darum genau dann, wenn die Bildpunkte gleich bleiben.
+    px() { echo "$1" | awk '{printf "%dx%d", $3 * $7 + 0.5, $5 * $7 + 0.5}'; }
+    PXV=$(px "${LETZTE[4]:-}"); PXN=$(px "$G")
+    if [ -n "${LETZTE[4]:-}" ] && [ "$PXV" != "$PXN" ]; then
+      zeile "Gegenprobe Dichte: Hinweis, die Flaeche aendert hier ihre Bildpunkte ($PXV -> $PXN), Avalonia liest die Dichte dabei selbst ($G); 434 kann hier nicht auftreten"
+    elif passt "$G"; then rot "Gegenprobe Dichte: ohne Behebung passt die Skalierung trotzdem ($G, Bildpunkte $PXV -> $PXN), die Probe saehe 434 nicht"
+    else zeile "Gegenprobe Dichte: ohne Behebung falsche Skalierung ($G, Bildpunkte $PXV -> $PXN gleich), die Probe sieht den Fehler"; fi
   else
     rot "Gegenprobe Dichte: Schritt kam nicht an (Zeilen: $(tr '\n' ';' < "$LOG"))"
   fi
