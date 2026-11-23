@@ -575,6 +575,7 @@ PAKET_REGELN = [
     ("paket_bauen.py selbsttest pakete", "Selbsttest des Paketbaus"),
     ("paket_release.py selbsttest pakete", "Selbsttest der Release-Hilfen"),
     ("paket_bauen.py ordner", "Bau nur mit paket_bauen.py"),
+    ("paket_release.py lernen-bauen", "Fachrichtungs-Pakete nur geschnitten und gleich der echten Testdatei (A 1.5.0)"),
     ('case "$tag" in "vP$KENNUNG".*)', "Tag vP<kennung>.<stand>"),
     ("pruefe_tag.sh fehlt", "Tag gibt es noch nicht"),
     ("gh release create \"$TAG\" paket/entwurf/* --draft --latest=false", "Entwurf, nie latest"),
@@ -624,7 +625,8 @@ def paket_release_gegenprobe(pfad=PAKET_RELEASE):
               ("Lauf werkzeug", text.replace("          export SOLL=", "          soll_werkzeug='tests (ubuntu-latest)'\n          export SOLL=")),
               ("Tag vS", text.replace('"vP$KENNUNG".*)', '"vS$KENNUNG".*)')),
               ("Vorab", text.replace("-F prerelease=false", "-F prerelease=true")),
-              ("Push", text.replace("on:\n  workflow_dispatch:\n", "on:\n  push:\n  workflow_dispatch:\n"))]
+              ("Push", text.replace("on:\n  workflow_dispatch:\n", "on:\n  push:\n  workflow_dispatch:\n")),
+              ("Fachrichtungs-Paket ohne Vergleich", text.replace("paket_release.py lernen-bauen", "paket_bauen.py lernen"))]
     rot = 0
     for name, falsch in faelle:
         if falsch == text:

@@ -14,16 +14,41 @@ public static class PaketDienst
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(30) };
     private static PaketVerwaltung? _verwaltung;
 
-    public static PaketVerwaltung Verwaltung => _verwaltung ??= Neu();
+    private static readonly Lock VerwaltungSperre = new();
+
+    // Welle A 1.5.0: der erste Zugriff kann beim Start im Hintergrund kommen (Pruefung der Fachrichtungs-Pakete, waehrend die
+    // bisherigen Inhalte laden): nur eine Verwaltung, auch bei gleichzeitigem Zugriff
+    public static PaketVerwaltung Verwaltung
+    {
+        get
+        {
+            if (Volatile.Read(ref _verwaltung) is { } v)
+            {
+                return v;
+            }
+            lock (VerwaltungSperre)
+            {
+                return _verwaltung ??= Neu();
+            }
+        }
+    }
 
     // Welle A 0.88.0 (Nico 5a): Entfernen gesperrt, solange die Figur in der Stadt des Pakets ist
     // Welle A 0.91.0 (Weisung P12-300): Fachrichtungs-Pakete werden gegen die Inhalte der App geprueft („nur angehaengt“);
     // Entfernen gesperrt, solange ein Pruefungssatz im echten Format dieser Fachrichtung offen ist
-    private static PaketVerwaltung Neu() => new(new PaketAblage(Ablage.Datenordner(), Zustand.Eingebaut),
+    // Welle A 1.5.0 (Lauf 1193): ganz gepruefte Fachrichtungs-Pakete gemerkt je Programmstand (PruefKennung)
+    private static PaketVerwaltung Neu() => new(new PaketAblage(Ablage.Datenordner(), Zustand.Eingebaut, PruefKennung),
         () => PaketQuelle.Fuer(Http, zeile => Updateprotokoll.Schreiben(zeile)), Aktualisierung.Aktualisierung.Anzeige)
     {
         EntfernenSperre = kennung => Spiel.SpielStart.EntfernenSperre(kennung) ?? FachrichtungsPaket.EntfernenSperre(kennung, OffenerSatz()),
     };
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193): Kennung des Programmstands fuer <see cref="PaketAblage.PruefKennung"/>: die Kennungen der
+    /// Module von Core (Pruefung, Ladepruefung) und App (eingebaute Inhalte); jeder andere Bau ergibt eine andere Kennung.
+    /// </summary>
+    internal static string PruefKennung =>
+        typeof(Paket).Assembly.ManifestModule.ModuleVersionId.ToString("N") + "/" + typeof(Zustand).Assembly.ManifestModule.ModuleVersionId.ToString("N");
 
     /// <summary>Kennung des offenen Pruefungssatzes im echten Format (null = keiner); nur lesen.</summary>
     internal static string? OffenerSatz()

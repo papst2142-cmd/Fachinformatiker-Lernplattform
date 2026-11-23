@@ -21,7 +21,8 @@
     <EmbeddedResource Include="..\..\inhalte_csharp\spiel\*.json" LogicalName="inhalte_csharp/spiel/%(Filename)%(Extension)" Visible="false" />
     <EmbeddedResource Include="..\..\inhalte_csharp\spiel\stadtbau\*.*" LogicalName="inhalte_csharp/spiel/stadtbau/%(Filename)%(Extension)" Visible="false" />
     <!-- Phase 9 W2: Lerninhalte nur der C#-Linie (Fachrichtungen, Einteilung, Rahmenplan-Zusatz) -->
-    <EmbeddedResource Include="..\..\inhalte_csharp\lernen\*.json" LogicalName="inhalte_csharp/lernen/%(Filename)%(Extension)" Visible="false" />
+    <!-- Welle A 1.5.0 (Sammelliste 386): die sechs Lern-Listen kommen geschnitten aus LernenTeile.targets (ganz/), die uebrigen unveraendert -->
+    <EmbeddedResource Include="..\..\inhalte_csharp\lernen\*.json" Exclude="..\..\inhalte_csharp\lernen\karteikarten.json;..\..\inhalte_csharp\lernen\quizfragen.json;..\..\inhalte_csharp\lernen\szenarien_ap2.json;..\..\inhalte_csharp\lernen\projektarbeiten.json;..\..\inhalte_csharp\lernen\fachgespraech.json;..\..\inhalte_csharp\lernen\pruefungssaetze.json" LogicalName="inhalte_csharp/lernen/%(Filename)%(Extension)" Visible="false" />
     <EmbeddedResource Include="..\..\inhalte_csharp\grafik\*.*" LogicalName="inhalte_csharp/grafik/%(Filename)%(Extension)" Visible="false" />
     <!-- Fuer "Über das Programm": Lizenz und Hinweise zu Fremdbestandteilen -->
     <EmbeddedResource Include="..\..\LICENSE.txt;..\..\THIRD_PARTY_NOTICES.txt;..\..\THIRD_PARTY_LICENSES.txt" LogicalName="texte/%(Filename)%(Extension)" Visible="false" />

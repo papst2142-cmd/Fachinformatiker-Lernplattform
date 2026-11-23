@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Lernplattform.Bau;
 using Lernplattform.Core.Daten;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Pakete;
@@ -21,7 +22,7 @@ namespace Lernplattform.Tests;
 /// </summary>
 public sealed class FachrichtungsPaketTests : IDisposable
 {
-    private const string App = "A 0.91.0";
+    private const string App = "A 1.5.0";
     private static readonly string Lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
     private static readonly string Echt = Path.Combine(Pfade.Wurzel, "tests/Lernplattform.Tests/Testdaten/pakete_echt");
     private static readonly string[] Frs = ["ae", "dpa", "dv"];
@@ -481,8 +482,11 @@ public sealed class FachrichtungsPaketTests : IDisposable
         var e = Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, 1))), App, RepoOrdner.Value);
         Assert.True(e.Gut, e.Grund);
         Assert.Equal(fr, e.Lernen!.Fachrichtung);
-        // Gegenprobe: eine aeltere App (A 0.90.0) nimmt es nicht (braucht_app), Lern-Pakete gibt es erst ab A 0.91.0
-        Assert.Equal(PaketTexte.Format(PaketTexte.AppAlt, App), Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, 1))), "A 0.90.0").Grund);
+        // Gegenprobe (A 1.5.0, Nico 3a): eine aeltere App (A 1.4.1, auch A 0.91.0) nimmt es nicht: „braucht A 1.5.0“
+        foreach (var alt in new[] { "A 1.4.1", "A 0.91.0", "A 0.90.0" })
+        {
+            Assert.Equal(PaketTexte.Format(PaketTexte.AppAlt, App), Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, 1))), alt).Grund);
+        }
     }
 
     /// <summary>
@@ -577,6 +581,304 @@ public sealed class FachrichtungsPaketTests : IDisposable
         {
             Lerninhalte.PaketNeuGanzFuerTests = false;
         }
+    }
+
+    // ---- (6) A 1.5.0 (Weisung P12-358, Kurzplan P12-225): AE, DPA und DV nur noch im Paket ---------------------------------
+
+    private static readonly string[] Geschnitten = ["ae", "dpa", "dv"];
+
+    /// <summary>Die Lern-Dateien, wie der Bau der App sie einbettet (LernenTeile.targets mit LernenNurImPaket).</summary>
+    private static readonly Lazy<Dictionary<string, byte[]>> AppBau = new(() => LernenTeiler.Teilen(n => Repo(n)!, Geschnitten));
+
+    /// <summary>Lern-Ordner wie die gebaute App (Zustand.Eingebaut): ganze Dateien geschnitten, dazu die Teile.</summary>
+    private static LernenOrdner AppOrdner() => new(
+        n => AppBau.Value.TryGetValue(LernenTeiler.Ganz + n + ".json", out var b) ? b : Repo(n),
+        n => AppBau.Value.TryGetValue(n, out var b) ? b : null);
+
+    private static PaketErgebnis EchtesPaket(string fr, LernenOrdner app) =>
+        Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, 1))), App, app);
+
+    /// <summary>
+    /// Abnahmesatz 1: der Bau der App schneidet genau AE, DPA und DV heraus. Liest die Einstellung aus LernenTeile.targets und
+    /// die Liste der nicht eingebetteten Quellen aus Lernplattform.App.csproj; in den eingebetteten Dateien steht fuer jeden
+    /// Eintrag von AE/DPA/DV nur ein Platzhalter an seiner Stelle, alles andere gleich dem Repo, die Teile kennen nur SI.
+    /// Gegenprobe: ohne Schnitt (alter Bau) stehen die Inhalte drin.
+    /// </summary>
+    [Fact]
+    public void A6_BauDerApp_SchneidetAeDpaDv_PlatzhalterHaltenJedeStelle()
+    {
+        var targets = File.ReadAllText(Path.Combine(Pfade.Wurzel, "werkzeuge", "bau", "LernenTeile.targets"));
+        Assert.Contains("<LernenNurImPaket>ae;dpa;dv</LernenNurImPaket>", targets, StringComparison.Ordinal);
+        Assert.Contains("NurImPaket=\"$(LernenNurImPaket)\"", targets, StringComparison.Ordinal);
+        Assert.Equal(Geschnitten, LernenTeiler.NurImPaket);
+        var csproj = File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Lernplattform.App.csproj"));
+        var ausgenommen = System.Text.RegularExpressions.Regex.Match(csproj, @"lernen\\\*\.json"" Exclude=""([^""]*)""").Groups[1].Value
+            .Split(';').Select(d => d[(d.LastIndexOf('\\') + 1)..^".json".Length]).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(LernenTeiler.GanzDateien.Order(StringComparer.Ordinal).ToArray(), ausgenommen);
+        var bau = AppBau.Value;
+        var platzhalter = 0;
+        foreach (var name in LernenTeiler.GanzDateien)
+        {
+            var quelle = Liste(JsonNode.Parse(Repo(name)!)!, name);
+            var app = Liste(JsonNode.Parse(bau[LernenTeiler.Ganz + name + ".json"])!, name);
+            Assert.Equal(quelle.Count, app.Count);
+            for (var i = 0; i < quelle.Count; i++)
+            {
+                var fr = (string?)quelle[i]!["fachrichtung"];
+                if (fr is not null && Geschnitten.Contains(fr))
+                {
+                    Assert.Equal("{\"fachrichtung\":\"" + fr + "\",\"im_paket\":true}", app[i]!.ToJsonString());
+                    platzhalter++;
+                }
+                else
+                {
+                    Assert.True(JsonNode.DeepEquals(quelle[i], app[i]), name + " Stelle " + i);
+                }
+            }
+        }
+        // Kurzplan P12-225: 4 500 Karteikarten, 6 361 Quizfragen, 990 AP2-Szenarien, 150 Testprojekte, 54 Fachfragen, 40 Saetze
+        Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40, platzhalter);
+        Assert.DoesNotContain(bau.Keys, k => Geschnitten.Any(fr => k.Contains("." + fr + ".", StringComparison.Ordinal)));
+        var ordner = AppOrdner();
+        Assert.All(Geschnitten, fr => Assert.True(ordner.Fehlt(fr), fr));
+        Assert.False(ordner.Fehlt("si"));
+        // Gegenprobe: der Bau ohne Schnitt hat keine geschnittenen Dateien und Teile je Fachrichtung
+        var alt = LernenTeiler.Teilen(n => Repo(n)!);
+        Assert.DoesNotContain(alt.Keys, k => k.StartsWith(LernenTeiler.Ganz, StringComparison.Ordinal));
+        Assert.All(Geschnitten, fr => Assert.Contains(alt.Keys, k => k.Contains("." + fr + ".", StringComparison.Ordinal)));
+    }
+
+    /// <summary>
+    /// Abnahmesaetze 1 und 2: die App ohne AE/DPA/DV zeigt SI genau wie heute (SI laedt nichts); App + echtes Paket = Repo
+    /// (gleiche Nummern, Sicht, Fachgespraech, Saetze), auch beim Start nur mit der gewaehlten Fachrichtung und beim Nachladen.
+    /// </summary>
+    [Theory]
+    [InlineData("ae")]
+    [InlineData("dpa")]
+    [InlineData("dv")]
+    public void A6_AppGeschnitten_PlusEchtesPaket_GleichRepo(string fr)
+    {
+        var soll = Laden(RepoOrdner.Value);
+        var app = AppOrdner();
+        Assert.True(app.MitTeilen);
+        var ohne = Laden(app, ["si", fr]);
+        Assert.Equal(Abdruck(soll, "si"), Abdruck(Laden(app, ["si"]), "si"));
+        Assert.Equal(Abdruck(soll, "si"), Abdruck(ohne, "si"));
+        Assert.DoesNotContain(ohne.Fuer(fr).Karteikarten, e => e.Zugehoerigkeit == fr);
+        var paket = EchtesPaket(fr, app);
+        Assert.True(paket.Gut, paket.Grund);
+        var mit = app.MitPaketen([paket.Lernen!]);
+        Assert.False(mit.Fehlt(fr));
+        Assert.All(Geschnitten.Where(f => f != fr), f => Assert.True(mit.Fehlt(f)));
+        Assert.Equal(Abdruck(soll, fr), Abdruck(Laden(mit, ["si", fr]), fr));
+        Assert.Equal(Abdruck(soll, fr), Abdruck(Laden(mit, ["si"]).MitFachrichtung(fr), fr));
+        Assert.Equal(Abdruck(soll, "si"), Abdruck(Laden(mit, ["si", fr]), "si"));
+        Assert.Equal(Saetze(RepoOrdner.Value).Where(s => !Geschnitten.Where(f => f != fr).Any(f => s.StartsWith(f + "_", StringComparison.Ordinal))),
+            Saetze(mit));
+        // alle drei Pakete: jede Sicht gleich dem Repo
+        var alle = app.MitPaketen([.. Geschnitten.Select(f => EchtesPaket(f, app).Lernen!)]);
+        var geladen = Laden(alle);
+        foreach (var sicht in new[] { "si", "ae", "dpa", "dv" })
+        {
+            Assert.Equal(Abdruck(soll, sicht), Abdruck(geladen, sicht));
+        }
+        Assert.Equal(Saetze(RepoOrdner.Value), Saetze(alle));
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden AE“ zu langsam): mit Paketen und Platzhaltern nimmt das Laden die Eintraege der
+    /// App aus den Teilen der geladenen Fachrichtungen (GemischtTeile) statt die ganze Datei zu zerlegen. Je Liste und je Auswahl
+    /// der Fachrichtungen stehen dort genau die Eintraege von Eintraege mit dieser Fachrichtung, an denselben Stellen, Byte fuer
+    /// Byte; ohne, mit einem und mit allen drei Paketen. Gegenprobe: ohne Paket fehlen die AE-Eintraege, mit Paket nicht.
+    /// </summary>
+    [Fact]
+    public void A6_GemischtTeile_GleichEintraege()
+    {
+        var app = AppOrdner();
+        var ae = EchtesPaket("ae", app).Lernen!;
+        var ordner = new[] { app, app.MitPaketen([ae]), app.MitPaketen([.. Geschnitten.Select(f => EchtesPaket(f, app).Lernen!)]) };
+        string[][] auswahl = [["si"], ["si", "ae"], ["si", "dpa"], ["si", "dv"], ["ae"], ["si", "ae", "dpa", "dv"]];
+        static List<string> Mit(IReadOnlyList<(int Index, JsonElement Eintrag)> liste, IReadOnlySet<string> frs) =>
+            [.. liste.Where(e => FachrichtungsPaket.FachrichtungVon(e.Eintrag) is { } f && frs.Contains(f)).Select(e => e.Index + ":" + e.Eintrag.GetRawText())];
+        var geprueft = 0;
+        foreach (var o in ordner)
+        {
+            foreach (var name in Lerninhalte.LernenListen.Select(l => l.Name))
+            {
+                Assert.True(o.TeileKennen(name), name);
+                foreach (var frs in auswahl)
+                {
+                    var menge = frs.ToHashSet(StringComparer.Ordinal);
+                    var soll = Mit(o.Eintraege(name), menge);
+                    Assert.Equal(soll, Mit(o.GemischtTeile(name, frs), menge));
+                    geprueft += soll.Count;
+                }
+            }
+        }
+        Assert.True(geprueft > 10_000, geprueft.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        // Gegenprobe: ohne Paket keine AE-Karte, mit Paket alle aus dem Paket
+        HashSet<string> nurAe = ["ae"];
+        Assert.Empty(Mit(app.GemischtTeile("karteikarten", ["ae"]), nurAe));
+        Assert.Equal(ae.Listen["karteikarten"].Count, Mit(ordner[1].GemischtTeile("karteikarten", ["ae"]), nurAe).Count);
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden AE“ 416 ms): ein Fachrichtungs-Paket, das mit genau diesem Programmstand
+    /// (Kennung der Ablage) schon ganz gut war, wird beim naechsten Lesen nicht noch einmal ganz geprueft (Ladepruefung der Saetze,
+    /// „nur angehaengt“); das Ergebnis ist dasselbe wie ohne Merker. Belege: der Merker steht nach dem Einsetzen da; unter
+    /// derselben Kennung bleibt sogar eine (so nie vorkommende) fremde App gut, unter einer anderen Kennung ist sie rot wie ohne
+    /// Merker und nichts wird gemerkt; mit offenen Saetzen erst nach deren Ladepruefung; ohne Paket verschwindet der Merker.
+    /// </summary>
+    [Fact]
+    public async Task A6_GanzGeprueft_Gemerkt_GleichesErgebnis_NurMitGleicherApp()
+    {
+        var app = AppOrdner();
+        // fremde App: an der ersten AE-Stelle der Karteikarten steht ein SI-Platzhalter statt des AE-Platzhalters
+        var text = Encoding.UTF8.GetString(AppBau.Value[LernenTeiler.Ganz + "karteikarten.json"]);
+        var stelle = text.IndexOf(LernenTeiler.Platzhalter("ae"), StringComparison.Ordinal);
+        Assert.True(stelle > 0);
+        var fremdeKarten = Encoding.UTF8.GetBytes(text[..stelle] + LernenTeiler.Platzhalter("si") + text[(stelle + LernenTeiler.Platzhalter("ae").Length)..]);
+        LernenOrdner Fremd() => new(
+            n => n == "karteikarten" ? fremdeKarten : AppBau.Value.TryGetValue(LernenTeiler.Ganz + n + ".json", out var b) ? b : Repo(n),
+            n => AppBau.Value.TryGetValue(n, out var b) ? b : null);
+        var ordner = Directory.CreateTempSubdirectory("lp_gemerkt_").FullName;
+        try
+        {
+            var ablage = new PaketAblage(ordner, app, "K1");
+            var ziel = ablage.Ladedatei("lernen_ae", 1);
+            File.Copy(Path.Combine(Echt, Paket.Dateiname("lernen_ae", 1)), ziel, true);
+            Assert.True(ablage.Einsetzen(ziel, "lernen_ae", 1, App).Gut);
+            List<string> Zeilen(PaketAblage a) => File.Exists(a.GeprueftDatei) ? [.. File.ReadAllLines(a.GeprueftDatei)] : [];
+            Assert.Equal("K1", Zeilen(ablage)[0]);
+            Assert.Single(Zeilen(ablage).Skip(1), z => z.StartsWith("ae:1:", StringComparison.Ordinal));
+            // gleiche App: dasselbe Ergebnis wie ohne Merker, offene Saetze sind schon gut
+            var ohne = new PaketAblage(ordner, app).Liste(App).Single();
+            var mit = ablage.Liste(App).Single();
+            Assert.Null(ohne.Grund);
+            Assert.Null(mit.Grund);
+            Assert.Equal(Abdruck(Laden(app.MitPaketen([ohne.Lernen!]), ["si", "ae"]), "ae"), Abdruck(Laden(app.MitPaketen([mit.Lernen!]), ["si", "ae"]), "ae"));
+            Assert.Equal(Saetze(app.MitPaketen([ohne.Lernen!])), Saetze(app.MitPaketen([mit.Lernen!])));
+            var offen = ablage.Liste(App, true).Single();
+            Assert.True(offen.SaetzeOffen!.IsCompletedSuccessfully);
+            Assert.Null(await offen.SaetzeOffen);
+            // Beleg, dass gemerkt nicht neu gerechnet wird: eine fremde App unter derselben Kennung bleibt gut
+            Assert.Null(new PaketAblage(ordner, Fremd(), "K1").Liste(App).Single().Grund);
+            // anderer Programmstand: ganz geprueft, rot wie ohne Merker, nichts gemerkt
+            var rot = new PaketAblage(ordner, Fremd()).Liste(App).Single().Grund;
+            Assert.NotNull(rot);
+            var k2 = new PaketAblage(ordner, Fremd(), "K2");
+            Assert.Equal(rot, k2.Liste(App).Single().Grund);
+            Assert.Equal(rot, k2.Liste(App, true).Single().Grund);
+            Assert.Equal("K1", Zeilen(k2)[0]);
+            // offene Saetze: gemerkt erst nach ihrer Ladepruefung
+            File.Delete(ablage.GeprueftDatei);
+            var k3 = new PaketAblage(ordner, app, "K3");
+            var o3 = k3.Liste(App, true).Single();
+            Assert.Null(o3.Grund);
+            Assert.Null(await o3.SaetzeOffen!);
+            for (var n = 0; n < 100 && Zeilen(k3).Count < 2; n++)
+            {
+                await Task.Delay(20, TestContext.Current.CancellationToken);
+            }
+            Assert.Equal("K3", Zeilen(k3)[0]);
+            Assert.Single(Zeilen(k3).Skip(1), z => z.StartsWith("ae:1:", StringComparison.Ordinal));
+            // ohne Paket kein Merker: der Datenordner ist danach wie vorher
+            Assert.True(k3.Entfernen("lernen_ae"));
+            Assert.False(Directory.Exists(k3.Ordner));
+        }
+        finally
+        {
+            if (Directory.Exists(ordner))
+            {
+                Directory.Delete(ordner, true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Abnahmesatz 3: ein neuer Stand 2 (ein AE-Eintrag hinten angehaengt) laeuft mit der App A 1.5.0 ohne App-Update; davor
+    /// liegt eine Luecke (ein SI-Eintrag, den diese App nicht kennt): er ruht, nichts verschiebt sich; DPA/DV unveraendert.
+    /// </summary>
+    [Fact]
+    public void A6_Stand2_OhneAppUpdate_MitLuecke_NichtsVerschiebt()
+    {
+        const string name = "karteikarten";
+        var liste = JsonNode.Parse(Repo(name)!)!.AsArray();
+        var laenge = liste.Count;
+        var si = liste.First(e => (string?)e!["fachrichtung"] == "si")!.DeepClone().AsObject();
+        si["q"] = "Neue Karte si (nur Test, Luecke)";
+        var ae = liste.First(e => (string?)e!["fachrichtung"] == "ae")!.DeepClone().AsObject();
+        ae["q"] = "Neue Karte ae (nur Test, Stand 2)";
+        liste.Add(si);
+        liste.Add(ae);
+        var bytes = Encoding.UTF8.GetBytes(liste.ToJsonString());
+        Func<string, byte[]?> stand2Repo = n => n == name ? bytes : Repo(n);
+        var app = AppOrdner();
+        var paket1 = EchtesPaket("ae", app);
+        var paket2 = Pruefen(Schnitt("ae", 2, stand2Repo), app);
+        Assert.True(paket2.Gut, paket2.Grund);
+        Assert.Equal(laenge + 2, paket2.Lernen!.Ende(name));
+        var dpaDv = Geschnitten.Skip(1).Select(f => EchtesPaket(f, app).Lernen!).ToList();
+        var mit1 = Laden(app.MitPaketen([paket1.Lernen!, .. dpaDv]));
+        var mit2 = Laden(app.MitPaketen([paket2.Lernen!, .. dpaDv]));
+        var a1 = Abdruck(mit1, "ae");
+        var a2 = Abdruck(mit2, "ae");
+        Assert.Equal(a1.Count + 1, a2.Count);
+        Assert.All(a1, z => Assert.Contains(z, a2));   // jeder alte Eintrag mit derselben Nummer
+        var alteKarte = mit1.Fuer("ae").Karteikarten.First(e => e.Zugehoerigkeit == "ae");
+        var neue = Assert.Single(mit2.Fuer("ae").Karteikarten, e => (string?)e.Daten["q"] == "Neue Karte ae (nur Test, Stand 2)");
+        Assert.Equal(alteKarte.Nummer - Stelle(name, "ae", 0) + laenge + 1, neue.Nummer);   // Nummer hinter der Luecke
+        Assert.DoesNotContain(mit2.Fuer("si").Karteikarten, e => (string?)e.Daten["q"] == "Neue Karte si (nur Test, Luecke)");
+        foreach (var sicht in new[] { "si", "dpa", "dv" })
+        {
+            Assert.Equal(Abdruck(mit1, sicht), Abdruck(mit2, sicht));
+        }
+        // Gegenprobe: dasselbe Paket mit dem neuen Eintrag an der Stelle der Luecke (die eine neuere App fuer SI haette) ist rot
+        var appMitSi = new LernenOrdner(n => n == name ? Encoding.UTF8.GetBytes(JsonNode.Parse(stand2Repo(name)!)!.AsArray().Take(laenge + 1)
+            .Select(e => e!.DeepClone()).Aggregate(new JsonArray(), (l, e) => { l.Add(e); return l; }).ToJsonString()) : Repo(n));
+        Assert.StartsWith("Das Paket verschiebt Inhalte", Pruefen(Schnitt("ae", 2, n => n == name
+            ? Encoding.UTF8.GetBytes(JsonNode.Parse(Repo(name)!)!.AsArray().Append(ae.DeepClone()).Aggregate(new JsonArray(), (l, e) => { l.Add(e!.DeepClone()); return l; }).ToJsonString())
+            : Repo(n)), appMitSi).Grund, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0: beim Start wartet die Pruefung nicht auf die Ladepruefung der Saetze (sie laeuft nebenher), das Ergebnis
+    /// ist aber dasselbe: ein Paket, dessen Satz durchfaellt, ist mit Schalter gut mit offenem Grund (gleich dem Grund ohne
+    /// Schalter) und faellt aus <c>FachrichtungenOffen</c> nach dem Abwarten heraus wie aus <c>Fachrichtungen</c>.
+    /// </summary>
+    [Fact]
+    public async Task A6_SaetzeOffen_GleichesErgebnisWieOhneSchalter()
+    {
+        var app = AppOrdner();
+        var kaputt = Schnitt("ae", aendern: (_, s) => s["saetze"]![0]!["satz"]!.AsObject().Remove("bereich"));
+        var rot = Paket.Pruefen(kaputt, App, app);
+        Assert.False(rot.Gut);
+        Assert.StartsWith(PaketTexte.Format(PaketTexte.LernenAufbau, FachrichtungsPaket.SaetzeDatei, "ae_")[..^2], rot.Grund, StringComparison.Ordinal);
+        var offen = Paket.Pruefen(kaputt, App, app, true);
+        Assert.True(offen.Gut, offen.Grund);
+        Assert.Equal(rot.Grund, await offen.SaetzeOffen!);
+        // ohne Schalter nie ein offener Teil
+        var gut = Paket.Pruefen(Schnitt("ae"), App, app);
+        Assert.True(gut.Gut, gut.Grund);
+        Assert.Null(gut.SaetzeOffen);
+        var gutOffen = Paket.Pruefen(Schnitt("ae"), App, app, true);
+        Assert.Null(await gutOffen.SaetzeOffen!);
+        Assert.Same(gut.Lernen, gutOffen.Lernen);
+        // aus dem Datenordner: Fachrichtungen ohne das kaputte Paket, FachrichtungenOffen mit ihm und seinem Grund
+        foreach (var (fr, dateien) in new[] { ("ae", kaputt), ("dpa", Schnitt("dpa")) })
+        {
+            var ziel = Path.Combine(_tmp, "offen", PaketAblage.OrdnerName, FachrichtungsPaket.Kennung(fr), "1");
+            Directory.CreateDirectory(ziel);
+            foreach (var (name, inhalt) in dateien)
+            {
+                File.WriteAllBytes(Path.Combine(ziel, name), inhalt);
+            }
+        }
+        var v = new PaketVerwaltung(new PaketAblage(Path.Combine(_tmp, "offen"), app), () => new OrdnerQuelle(_tmp), App);
+        Assert.Equal(["dpa"], v.Fachrichtungen().Select(f => f.Fachrichtung));
+        var liste = v.FachrichtungenOffen();
+        Assert.Equal(["ae", "dpa"], liste.Select(p => p.Inhalt.Fachrichtung));
+        Assert.Equal([rot.Grund, null], await Task.WhenAll(liste.Select(p => p.Saetze)));
     }
 
     // ---- Helfer ---------------------------------------------------------------------------------------------------------------

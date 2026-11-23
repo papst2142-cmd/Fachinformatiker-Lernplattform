@@ -33,7 +33,8 @@ public static partial class AutoMessung
         var ms = Zustand.InhalteLadenMs;
         var inv = CultureInfo.InvariantCulture;
         Messwerte.Notiere(string.Create(inv, $"{InhalteAeZeile}{ms ?? -1:F3}|{Zustand.Sicht}|{Zustand.Eingebaut.MitTeilen}|{Zustand.InhalteLadenTeile}"));
-        var gut = ms is not null && inhalte is not null && Zustand.Sicht == "ae";
+        // Welle A 1.5.0: AE kommt aus dem Paket im Datenordner (die App selbst traegt nur Platzhalter)
+        var gut = ms is not null && inhalte is not null && Zustand.Sicht == "ae" && !Zustand.Aktuell.Fehlt("ae");
         Messwerte.Notiere(gut ? "URTEIL: gruen" : "URTEIL: rot (Inhalte laden AE)");
         return gut ? 0 : 1;
     }
@@ -60,6 +61,12 @@ public static partial class AutoMessung
         if (!gewaehlt)
         {
             return Fund("Fachrichtung AE im Lernstand nicht gespeichert");
+        }
+        // Welle A 1.5.0 (Weisung P12-358): AE kommt nur als Paket; der Datenordner traegt es wie bei einem Nutzer nach „Laden“
+        // (eingesetzt wie dort ueber die Ablage mit der Kennung dieses Programms, also ganz geprueft und gemerkt)
+        if (EinsetzenAus(new Core.Pakete.PaketAblage(ordner, Zustand.Eingebaut, PaketDienst.PruefKennung), Core.Pakete.FachrichtungsPaket.Kennung("ae")) is { } grund)
+        {
+            return Fund("Fachrichtungs-Paket AE nicht eingesetzt: " + grund);
         }
         if (Environment.ProcessPath is not { } programm)
         {

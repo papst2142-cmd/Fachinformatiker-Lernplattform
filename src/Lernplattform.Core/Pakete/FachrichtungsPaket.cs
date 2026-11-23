@@ -73,10 +73,38 @@ public static class FachrichtungsPaket
     /// </summary>
     public static (FachrichtungsInhalt? Inhalt, string? Grund) Lesen(IReadOnlyDictionary<string, byte[]> dateien, string fachrichtung, long stand)
     {
+        var (inhalt, grund, ladepruefung) = LesenOffen(dateien, fachrichtung, stand);
+        return inhalt is null ? (null, grund) : ladepruefung.GetAwaiter().GetResult() is { } satzGrund ? (null, satzGrund) : (inhalt, null);
+    }
+
+    /// <summary>Gelungene Ladepruefung der Saetze (nichts offen).</summary>
+    private static readonly Task<string?> OhneGrund = Task.FromResult<string?>(null);
+
+    /// <summary>
+    /// Welle A 1.5.0 (Weisung P12-358): wie <see cref="Lesen"/>, aber die Ladepruefung der Saetze (dieselbe wie fuer die Saetze
+    /// der App, EchtSaetze) ist eine eigene Aufgabe, die neben dem Rest laeuft: <c>Ladepruefung</c> ergibt null (gut) oder den
+    /// Grund. Ein Paket ist erst gut, wenn auch sie gut ist (<see cref="Lesen"/> und <see cref="Paket.Pruefen"/> warten auf sie;
+    /// nur der Start der App bildet die Inhalte schon vorher und verwirft sie, wenn die Saetze durchfallen).
+    /// </summary>
+    public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenOffen(IReadOnlyDictionary<string, byte[]> dateien,
+        string fachrichtung, long stand) => LesenOffen(dateien, fachrichtung, stand, true);
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193): wie <see cref="LesenOffen(IReadOnlyDictionary{string, byte[]}, string, long)"/>; ohne
+    /// <paramref name="mitLadepruefung"/> entfaellt nur die Ladepruefung der Saetze (Ergebnis gut). Nur fuer ein Paket, dessen
+    /// Dateien (Pruefsummen) mit genau dieser App schon ganz geprueft und gut waren (<see cref="IPaketPruefMerker"/>).
+    /// </summary>
+    public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenOffen(IReadOnlyDictionary<string, byte[]> dateien,
+        string fachrichtung, long stand, bool mitLadepruefung)
+    {
         if (!dateien.TryGetValue(LernenDatei, out var lernen) || !dateien.TryGetValue(SaetzeDatei, out var saetze))
         {
-            return (null, PaketTexte.Format(PaketTexte.DateiFehlt, dateien.ContainsKey(LernenDatei) ? SaetzeDatei : LernenDatei));
+            return (null, PaketTexte.Format(PaketTexte.DateiFehlt, dateien.ContainsKey(LernenDatei) ? SaetzeDatei : LernenDatei), OhneGrund);
         }
+        // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV kommen beim Start nur noch aus den Paketen; die Saetze (Aufbau, danach
+        // die Ladepruefung) werden darum neben der grossen Datei lernen.json gelesen, nicht danach. Die Reihenfolge der Gruende
+        // bleibt: erst lernen.json, dann der Aufbau der Saetze, dann ihre Ausschluesse, zuletzt die Ladepruefung.
+        var satzAufgabe = Task.Run(() => SaetzeLesen(saetze, fachrichtung, mitLadepruefung));
         try
         {
             var l = JsonDocument.Parse(lernen).RootElement;
@@ -84,31 +112,31 @@ public static class FachrichtungsPaket
             if (l.ValueKind != JsonValueKind.Object || !l.TryGetProperty("format", out var f) || f.ValueKind != JsonValueKind.Number
                 || !f.TryGetInt64(out var format) || format < 1)
             {
-                return (null, Falsch("format"));
+                return (null, Falsch("format"), OhneGrund);
             }
             if (format > Format)
             {
-                return (null, PaketTexte.Format(PaketTexte.FormatNeu, format, Format));
+                return (null, PaketTexte.Format(PaketTexte.FormatNeu, format, Format), OhneGrund);
             }
             if (FachrichtungVon(l) != fachrichtung)
             {
-                return (null, Falsch("fachrichtung"));
+                return (null, Falsch("fachrichtung"), OhneGrund);
             }
             if (!l.TryGetProperty("listen", out var listen) || listen.ValueKind != JsonValueKind.Object)
             {
-                return (null, Falsch("listen"));
+                return (null, Falsch("listen"), OhneGrund);
             }
             var ergebnis = new Dictionary<string, IReadOnlyList<(int, JsonElement)>>(StringComparer.Ordinal);
             foreach (var liste in listen.EnumerateObject())
             {
                 if (!Listen.Contains(liste.Name) || ergebnis.ContainsKey(liste.Name))
                 {
-                    return (null, Falsch("listen." + liste.Name));
+                    return (null, Falsch("listen." + liste.Name), OhneGrund);
                 }
                 var (eintraege, grund) = Stellen(liste.Value, "eintrag", fachrichtung);
                 if (eintraege is null)
                 {
-                    return (null, Falsch(liste.Name + ": " + grund));
+                    return (null, Falsch(liste.Name + ": " + grund), OhneGrund);
                 }
                 ergebnis[liste.Name] = eintraege;
             }
@@ -118,7 +146,7 @@ public static class FachrichtungsPaket
             {
                 if (aus.ValueKind != JsonValueKind.Array)
                 {
-                    return (null, Falsch("ausschluss"));
+                    return (null, Falsch("ausschluss"), OhneGrund);
                 }
                 foreach (var a in aus.EnumerateArray())
                 {
@@ -129,7 +157,7 @@ public static class FachrichtungsPaket
                         if (!a.TryGetProperty("stelle", out var ss) || !ss.TryGetInt32(out var satzStelle)
                             || !a.TryGetProperty("kennung", out var sk) || sk.ValueKind != JsonValueKind.String)
                         {
-                            return (null, Falsch("ausschluss"));
+                            return (null, Falsch("ausschluss"), OhneGrund);
                         }
                         satzAusschluss.Add((satzStelle, sk.GetString()!));
                         continue;
@@ -141,53 +169,85 @@ public static class FachrichtungsPaket
                         || ziel.FirstOrDefault(e => e.Item1 == stelle) is not { Item2.ValueKind: JsonValueKind.Object } treffer
                         || !treffer.Item2.TryGetProperty("q", out var tq) || tq.ValueKind != JsonValueKind.String || tq.GetString() != q.GetString())
                     {
-                        return (null, Falsch("ausschluss"));
+                        return (null, Falsch("ausschluss"), OhneGrund);
                     }
                     ausschluss.Add((d.GetString()!, stelle, q.GetString()!));
                 }
             }
-            var s2 = JsonDocument.Parse(saetze).RootElement;
-            if (s2.ValueKind != JsonValueKind.Object || !s2.TryGetProperty("format", out var sf) || !sf.TryGetInt32(out var sformat)
-                || sformat < 1 || sformat > Pruefung.Echt.EchtSaetze.Format || !s2.TryGetProperty("saetze", out var sl))
-            {
-                return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, "format"));
-            }
-            var (satzListe, satzGrund) = Stellen(sl, "satz", fachrichtung);
+            var (satzListe, satzGrund, ladepruefung) = satzAufgabe.GetAwaiter().GetResult();
             if (satzListe is null)
             {
-                return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, satzGrund!));
-            }
-            foreach (var (_, satz) in satzListe)
-            {
-                if (!satz.TryGetProperty("kennung", out var k) || k.ValueKind != JsonValueKind.String
-                    || Pruefung.Echt.EchtSaetze.BereichAusKennung(k.GetString()!) is not { } b || b.Fachrichtung != fachrichtung)
-                {
-                    return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, "kennung"));
-                }
+                return (null, satzGrund, OhneGrund);
             }
             foreach (var (stelle, kennung) in satzAusschluss)
             {
                 if (satzListe.FirstOrDefault(e => e.Item1 == stelle) is not { Item2.ValueKind: JsonValueKind.Object } treffer
                     || !treffer.Item2.TryGetProperty("kennung", out var tk) || tk.GetString() != kennung)
                 {
-                    return (null, Falsch("ausschluss"));
+                    return (null, Falsch("ausschluss"), OhneGrund);
                 }
                 ausschluss.Add((Pruefung.Echt.EchtSaetze.DateiName, stelle, kennung));
-            }
-            // jeder Satz besteht dieselbe Ladepruefung wie die Saetze der App (EchtSaetze), nie still weglassen
-            var probe = Pruefung.Echt.EchtSaetze.Laden(SaetzeBytes(sformat, satzListe.Select(s => s.Item2)));
-            if (probe.Fehler.FirstOrDefault() is { } fehler)
-            {
-                return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, fehler.Kennung + ": " + fehler.Meldung));
             }
             return (new FachrichtungsInhalt(fachrichtung, stand, ergebnis, satzListe, ausschluss)
             {
                 Groesse = lernen.LongLength + saetze.LongLength,
-            }, null);
+            }, null, ladepruefung!);
         }
         catch (Exception x) when (x is JsonException or InvalidOperationException or FormatException)
         {
-            return (null, PaketTexte.Format(PaketTexte.LernenAufbau, LernenDatei, "JSON"));
+            return (null, PaketTexte.Format(PaketTexte.LernenAufbau, LernenDatei, "JSON"), OhneGrund);
+        }
+    }
+
+    /// <summary>
+    /// Saetze eines Fachrichtungs-Pakets: Format, Stellen, Kennung dieser Fachrichtung und die Ladepruefung wie die Saetze der
+    /// App (EchtSaetze, nie still weglassen). Liste = null: Grund ist der fertige Text (wie bisher in <see cref="Lesen"/>).
+    /// </summary>
+    private static (List<(int, JsonElement)>? Liste, string? Grund, Task<string?>? Ladepruefung) SaetzeLesen(byte[] saetze, string fachrichtung,
+        bool mitLadepruefung)
+    {
+        try
+        {
+            var s2 = JsonDocument.Parse(saetze).RootElement;
+            if (s2.ValueKind != JsonValueKind.Object || !s2.TryGetProperty("format", out var sf) || !sf.TryGetInt32(out var sformat)
+                || sformat < 1 || sformat > Pruefung.Echt.EchtSaetze.Format || !s2.TryGetProperty("saetze", out var sl))
+            {
+                return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, "format"), null);
+            }
+            var (satzListe, satzGrund) = Stellen(sl, "satz", fachrichtung);
+            if (satzListe is null)
+            {
+                return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, satzGrund!), null);
+            }
+            foreach (var (_, satz) in satzListe)
+            {
+                if (!satz.TryGetProperty("kennung", out var k) || k.ValueKind != JsonValueKind.String
+                    || Pruefung.Echt.EchtSaetze.BereichAusKennung(k.GetString()!) is not { } b || b.Fachrichtung != fachrichtung)
+                {
+                    return (null, PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, "kennung"), null);
+                }
+            }
+            // jeder Satz besteht dieselbe Ladepruefung wie die Saetze der App (EchtSaetze), nie still weglassen; sie beginnt sofort
+            return (satzListe, null, mitLadepruefung ? Task.Run(() => Ladepruefung(sformat, satzListe)) : OhneGrund);
+        }
+        catch (Exception x) when (x is JsonException or InvalidOperationException or FormatException)
+        {
+            return (null, PaketTexte.Format(PaketTexte.LernenAufbau, LernenDatei, "JSON"), null);
+        }
+    }
+
+    /// <summary>Ladepruefung der Saetze eines Pakets wie die der App (EchtSaetze): null = gut, sonst der Grund.</summary>
+    private static string? Ladepruefung(int sformat, List<(int, JsonElement)> satzListe)
+    {
+        try
+        {
+            var probe = Pruefung.Echt.EchtSaetze.Laden(SaetzeBytes(sformat, satzListe.Select(s => s.Item2)));
+            return probe.Fehler.FirstOrDefault() is { } fehler
+                ? PaketTexte.Format(PaketTexte.LernenAufbau, SaetzeDatei, fehler.Kennung + ": " + fehler.Meldung) : null;
+        }
+        catch (Exception x) when (x is JsonException or InvalidOperationException or FormatException)
+        {
+            return PaketTexte.Format(PaketTexte.LernenAufbau, LernenDatei, "JSON");
         }
     }
 
@@ -221,15 +281,31 @@ public static class FachrichtungsPaket
     }
 
     private static readonly ConditionalWeakTable<LernenOrdner, Dictionary<string, string?>> Geprueft = new();
-    private static readonly Dictionary<string, (FachrichtungsInhalt?, string?)> Gelesen = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, (FachrichtungsInhalt?, string?, Task<string?>)> Gelesen = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Wie <see cref="Lesen"/>, je <paramref name="schluessel"/> (Fachrichtung, Stand und die schon gepruefte Pruefsumme
-    /// beider Dateien) nur einmal; hoechstens 8 Inhalte gemerkt.
+    /// Wie <see cref="LesenOffen"/>, je <paramref name="schluessel"/> (Fachrichtung, Stand und die schon gepruefte Pruefsumme
+    /// beider Dateien) nur einmal (auch die Ladepruefung der Saetze); hoechstens 8 Inhalte gemerkt.
     /// </summary>
-    public static (FachrichtungsInhalt? Inhalt, string? Grund) LesenGemerkt(string schluessel, IReadOnlyDictionary<string, byte[]> dateien,
-        string fachrichtung, long stand)
+    public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenGemerkt(string schluessel,
+        IReadOnlyDictionary<string, byte[]> dateien, string fachrichtung, long stand) => LesenGemerkt(schluessel, dateien, fachrichtung, stand, true);
+
+    /// <summary>Wie oben; ohne <paramref name="mitLadepruefung"/> siehe <see cref="LesenOffen(IReadOnlyDictionary{string, byte[]}, string, long, bool)"/>.</summary>
+    public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenGemerkt(string schluessel,
+        IReadOnlyDictionary<string, byte[]> dateien, string fachrichtung, long stand, bool mitLadepruefung)
     {
+        // ein Eintrag mit Ladepruefung taugt auch ohne; einer ohne nur ohne
+        if (!mitLadepruefung)
+        {
+            lock (Gelesen)
+            {
+                if (Gelesen.TryGetValue(schluessel, out var mit))
+                {
+                    return mit;
+                }
+            }
+            schluessel += "|ohne";
+        }
         lock (Gelesen)
         {
             if (Gelesen.TryGetValue(schluessel, out var gemerkt))
@@ -237,7 +313,7 @@ public static class FachrichtungsPaket
                 return gemerkt;
             }
         }
-        var ergebnis = Lesen(dateien, fachrichtung, stand);
+        var ergebnis = LesenOffen(dateien, fachrichtung, stand, mitLadepruefung);
         lock (Gelesen)
         {
             if (Gelesen.Count >= 8)

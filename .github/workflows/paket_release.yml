@@ -12,13 +12,18 @@
 # rot; kein voller CI-Lauf 18/18 auf diesem Commit oder mit gleichem Tree; Tag oder veroeffentlichtes Release gibt es
 # schon; mehr als ein Paket-Entwurf oder einer mit anderem Tag. Rechte nur lesen, nur Entwurf/Veroeffentlichen mit
 # contents: write; keine Geheimnisse.
+# Welle A 1.5.0 (Weisung P12-358, Sammelliste 386): die Fachrichtungs-Pakete lernen_ae, lernen_dpa, lernen_dv haben keinen
+# Ordner unter pakete/; sie werden mit paket_release.py lernen-bauen aus inhalte_csharp/lernen/ geschnitten und muessen
+# Byte fuer Byte gleich der echten Testdatei des Commits sein (Stand und braucht_app: paket_bauen.LERNEN_TESTDATEI).
+# Reihenfolge nach dem Merge von A 1.5.0: zuerst diese drei Pakete veroeffentlichen, danach erst vA1.5.0 (release.yml
+# prueft das und wird sonst rot).
 name: Paket-Release
 
 on:
   workflow_dispatch:
     inputs:
       kennung:
-        description: "Kennung des Pakets (Ordner pakete/<kennung>)"
+        description: "Kennung des Pakets (Ordner pakete/<kennung>, oder lernen_ae, lernen_dpa, lernen_dv)"
         type: string
         required: true
       art:
@@ -68,10 +73,14 @@ jobs:
           KENNUNG: ${{ inputs.kennung }}
         run: |
           python -I -c "import os, re, sys; sys.exit(0 if re.fullmatch(r'[a-z][a-z0-9_]{1,31}', os.environ['KENNUNG']) else 'FEHLER: Kennung ungueltig')"
-          if [ ! -d "pakete/$KENNUNG" ]; then echo "FEHLER: kein Ordner pakete/$KENNUNG"; exit 1; fi
           python -I werkzeuge/pakete/paket_bauen.py selbsttest pakete
           python -I werkzeuge/pakete/paket_release.py selbsttest pakete
-          python -I werkzeuge/pakete/paket_release.py kopf "pakete/$KENNUNG" | tee kopf.txt
+          case "$KENNUNG" in
+            lernen_ae|lernen_dpa|lernen_dv) python -I werkzeuge/pakete/paket_release.py lernen-kopf "$KENNUNG" | tee kopf.txt ;;
+            *)
+              if [ ! -d "pakete/$KENNUNG" ]; then echo "FEHLER: kein Ordner pakete/$KENNUNG"; exit 1; fi
+              python -I werkzeuge/pakete/paket_release.py kopf "pakete/$KENNUNG" | tee kopf.txt ;;
+          esac
           tag="$(grep -m1 '^TAG=' kopf.txt | cut -d= -f2-)"
           case "$tag" in "vP$KENNUNG".*) ;; *) echo "FEHLER: Tag '$tag' ist kein Paket-Tag vP$KENNUNG.<stand>"; exit 1 ;; esac
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
@@ -132,9 +141,15 @@ jobs:
           LAUF: ${{ needs.pruefen.outputs.lauf }}
         run: |
           mkdir -p paket/entwurf
-          gebaut="$(python -I werkzeuge/pakete/paket_bauen.py ordner "pakete/$KENNUNG" paket/entwurf)"
+          case "$KENNUNG" in
+            lernen_ae|lernen_dpa|lernen_dv) gebaut="$(python -I werkzeuge/pakete/paket_release.py lernen-bauen "$KENNUNG" paket/entwurf)" ;;
+            *) gebaut="$(python -I werkzeuge/pakete/paket_bauen.py ordner "pakete/$KENNUNG" paket/entwurf)" ;;
+          esac
           if [ "$(basename "$gebaut")" != "$DATEI" ] || [ "$(ls paket/entwurf)" != "$DATEI" ]; then echo "FEHLER: gebaut $gebaut statt $DATEI"; exit 1; fi
-          python -I werkzeuge/pakete/paket_release.py text "pakete/$KENNUNG" "$gebaut" paket/release.md
+          case "$KENNUNG" in
+            lernen_ae|lernen_dpa|lernen_dv) python -I werkzeuge/pakete/paket_release.py lernen-text "$KENNUNG" "$gebaut" paket/release.md ;;
+            *) python -I werkzeuge/pakete/paket_release.py text "pakete/$KENNUNG" "$gebaut" paket/release.md ;;
+          esac
           if [ -z "$LAUF" ]; then echo "FEHLER: kein genommener CI-Lauf aus dem Job pruefen"; exit 1; fi
           python -I werkzeuge/release/lauf_waehlen.py text paket/release.md "$LAUF"
           cat paket/release.md

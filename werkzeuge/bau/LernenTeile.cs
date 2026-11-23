@@ -10,6 +10,11 @@
 //
 // Der Teiler braucht keine JSON-Bibliothek (die MSBuild-Aufgabe kennt nur netstandard): er sucht nur die Grenzen der
 // Eintraege und die Felder "fachrichtung" und "im_paket" der obersten Ebene eines Eintrags.
+//
+// Welle A 1.5.0 (Weisung P12-358, Sammelliste 386, Nico 1b): AE, DPA und DV gibt es nur noch als Fachrichtungs-Paket. Der Bau
+// der App schneidet ihre Eintraege heraus (Schneiden): an ihrer Stelle steht der Platzhalter {"fachrichtung":"ae","im_paket":true}
+// (die Stelle bleibt, also auch jede Nummer im Lernstand), ihre Teile entfallen, und die ganzen Dateien kommen geschnitten als
+// "ganz/<datei>.json" ins Programm. Alle anderen Eintraege werden Byte fuer Byte kopiert. Die Quelle im Repo bleibt unveraendert.
 
 #nullable disable
 
@@ -38,8 +43,25 @@ namespace Lernplattform.Bau
         /// Alle Dateien der Teile und den Index aus den Quellen (Name ohne ".json" -> Inhalt; fehlende Dateien fehlen auch hier).
         /// Ergebnis: Dateiname -> Inhalt (UTF-8).
         /// </summary>
-        public static Dictionary<string, byte[]> Teilen(Func<string, byte[]> lesen)
+        public static Dictionary<string, byte[]> Teilen(Func<string, byte[]> lesen) => Teilen(lesen, null);
+
+        /// <summary>Unterordner der geschnittenen ganzen Dateien (nur mit <see cref="Teilen(Func{string, byte[]}, ICollection{string})"/> und Fachrichtungen).</summary>
+        public const string Ganz = "ganz/";
+
+        /// <summary>Fachrichtungen, die die App seit A 1.5.0 nur noch als Paket kennt (Sammelliste 386).</summary>
+        public static readonly string[] NurImPaket = { "ae", "dpa", "dv" };
+
+        /// <summary>Dateien, die beim Schneiden als ganze Datei neu entstehen (die uebrigen Lern-Dateien bleiben unveraendert).</summary>
+        public static readonly string[] GanzDateien = { "karteikarten", "quizfragen", "szenarien_ap2", "projektarbeiten", "fachgespraech", "pruefungssaetze" };
+
+        /// <summary>
+        /// Welle A 1.5.0: wie <see cref="Teilen(Func{string, byte[]})"/>; die Eintraege der Fachrichtungen in
+        /// <paramref name="nurImPaket"/> werden zu Platzhaltern, ihre Teile entfallen, dazu die ganzen Dateien unter <see cref="Ganz"/>
+        /// (null = keine ganzen Dateien; leer = ganze Dateien unveraendert).
+        /// </summary>
+        public static Dictionary<string, byte[]> Teilen(Func<string, byte[]> lesen, ICollection<string> nurImPaket)
         {
+            var schneiden = nurImPaket != null;
             var dateien = new Dictionary<string, byte[]>(StringComparer.Ordinal);
             var index = new StringBuilder("{\"format\":1,\"listen\":{");
             var erste = true;
@@ -51,9 +73,17 @@ namespace Lernplattform.Bau
                     continue;
                 }
                 var eintraege = Eintraege(quelle, 0, name);
+                if (schneiden)
+                {
+                    dateien[Ganz + name + ".json"] = Geschnitten(quelle, eintraege, nurImPaket);
+                }
                 var teile = new SortedDictionary<string, List<int>>(StringComparer.Ordinal);
                 for (var i = 0; i < eintraege.Count; i++)
                 {
+                    if (schneiden && Herausnehmen(eintraege[i], nurImPaket))
+                    {
+                        continue;
+                    }
                     var fr = Teil(eintraege[i].Fachrichtung);
                     if (!teile.TryGetValue(fr, out var liste))
                     {
@@ -85,7 +115,7 @@ namespace Lernplattform.Bau
                 }
                 index.Append(erste ? "" : ",");
                 erste = false;
-                IndexEintrag(index, name, quelle, eintraege, teile);
+                IndexEintrag(index, name, quelle, eintraege, teile, schneiden ? nurImPaket : null);
             }
             foreach (var paar in NurIndex)
             {
@@ -95,16 +125,51 @@ namespace Lernplattform.Bau
                     continue;
                 }
                 var start = ListeImObjekt(quelle, paar[1], paar[0]);
+                var eintraege = start < 0 ? new List<Eintrag>() : Eintraege(quelle, start, paar[0]);
+                if (schneiden)
+                {
+                    dateien[Ganz + paar[0] + ".json"] = Geschnitten(quelle, eintraege, nurImPaket);
+                }
                 index.Append(erste ? "" : ",");
                 erste = false;
-                IndexEintrag(index, paar[0], quelle, start < 0 ? new List<Eintrag>() : Eintraege(quelle, start, paar[0]), null);
+                IndexEintrag(index, paar[0], quelle, eintraege, null, schneiden ? nurImPaket : null);
             }
             index.Append("}}");
             dateien[IndexName] = Encoding.UTF8.GetBytes(index.ToString());
             return dateien;
         }
 
-        private static void IndexEintrag(StringBuilder index, string name, byte[] quelle, List<Eintrag> eintraege, SortedDictionary<string, List<int>> teile)
+        /// <summary>Wird dieser Eintrag beim Schneiden zum Platzhalter (eigener Eintrag einer Fachrichtung nur im Paket)?</summary>
+        private static bool Herausnehmen(Eintrag e, ICollection<string> nurImPaket) =>
+            !e.Platzhalter && e.Fachrichtung != null && nurImPaket.Contains(e.Fachrichtung);
+
+        /// <summary>Platzhalter einer Fachrichtung (wie FachrichtungsPaket.IstPlatzhalter ihn erkennt).</summary>
+        public static string Platzhalter(string fachrichtung) => "{\"fachrichtung\":" + Text(fachrichtung) + ",\"im_paket\":true}";
+
+        /// <summary>Die Quelle mit Platzhaltern statt der herausgenommenen Eintraege, alles andere Byte fuer Byte.</summary>
+        private static byte[] Geschnitten(byte[] quelle, List<Eintrag> eintraege, ICollection<string> nurImPaket)
+        {
+            using (var strom = new MemoryStream(quelle.Length))
+            {
+                var bisher = 0;
+                foreach (var e in eintraege)
+                {
+                    if (!Herausnehmen(e, nurImPaket))
+                    {
+                        continue;
+                    }
+                    strom.Write(quelle, bisher, e.Start - bisher);
+                    var platz = Encoding.UTF8.GetBytes(Platzhalter(e.Fachrichtung));
+                    strom.Write(platz, 0, platz.Length);
+                    bisher = e.Ende;
+                }
+                strom.Write(quelle, bisher, quelle.Length - bisher);
+                return strom.ToArray();
+            }
+        }
+
+        private static void IndexEintrag(StringBuilder index, string name, byte[] quelle, List<Eintrag> eintraege, SortedDictionary<string, List<int>> teile,
+            ICollection<string> nurImPaket)
         {
             index.Append(Text(name)).Append(":{\"laenge\":").Append(eintraege.Count.ToString(System.Globalization.CultureInfo.InvariantCulture));
             index.Append(",\"sha256\":").Append(Text(Pruefsumme(quelle)));
@@ -114,7 +179,8 @@ namespace Lernplattform.Bau
                 index.Append(string.Join(",", teile.Select(t => Text(t.Key) + ":" + t.Value.Count.ToString(System.Globalization.CultureInfo.InvariantCulture))));
                 index.Append('}');
             }
-            var platzhalter = eintraege.Where(e => e.Platzhalter && e.Fachrichtung != null).Select(e => e.Fachrichtung).Distinct().OrderBy(f => f, StringComparer.Ordinal);
+            var platzhalter = eintraege.Where(e => (e.Platzhalter || (nurImPaket != null && Herausnehmen(e, nurImPaket))) && e.Fachrichtung != null)
+                .Select(e => e.Fachrichtung).Distinct().OrderBy(f => f, StringComparer.Ordinal);
             index.Append(",\"platzhalter\":[").Append(string.Join(",", platzhalter.Select(Text))).Append("]}");
         }
 
@@ -348,6 +414,9 @@ namespace Lernplattform.Bau
         [Microsoft.Build.Framework.Required]
         public string Ziel { get; set; }
 
+        /// <summary>Welle A 1.5.0: Fachrichtungen nur im Paket, mit Semikolon getrennt (leer = nichts schneiden).</summary>
+        public string NurImPaket { get; set; }
+
         public override bool Execute()
         {
             try
@@ -356,11 +425,13 @@ namespace Lernplattform.Bau
                 {
                     var pfad = Path.Combine(Quelle, n + ".json");
                     return File.Exists(pfad) ? File.ReadAllBytes(pfad) : null;
-                });
+                }, (NurImPaket ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList());
                 Directory.CreateDirectory(Ziel);
-                foreach (var alt in Directory.GetFiles(Ziel, "*.json"))
+                Directory.CreateDirectory(Path.Combine(Ziel, LernenTeiler.Ganz));
+                foreach (var alt in Directory.GetFiles(Ziel, "*.json").Concat(Directory.GetFiles(Path.Combine(Ziel, LernenTeiler.Ganz), "*.json")))
                 {
-                    if (!dateien.ContainsKey(Path.GetFileName(alt)))
+                    var relativ = alt.Substring(Ziel.TrimEnd('/', '\\').Length + 1).Replace('\\', '/');
+                    if (!dateien.ContainsKey(relativ))
                     {
                         File.Delete(alt);
                     }

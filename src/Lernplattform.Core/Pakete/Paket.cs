@@ -20,6 +20,12 @@ public sealed record PaketErgebnis(PaketKopf? Kopf, string? Grund)
 
     /// <summary>Welle A 0.91.0: Inhalt eines gueltigen Fachrichtungs-Pakets (sonst null).</summary>
     public FachrichtungsInhalt? Lernen { get; init; }
+
+    /// <summary>
+    /// Welle A 1.5.0: nur bei <c>saetzeOffen</c> (Start der App): die Ladepruefung der Saetze, die noch laeuft (null = gut, sonst
+    /// der Grund; dann ist das Paket rot wie bei <see cref="Paket.Pruefen"/> ohne diesen Schalter). Sonst null.
+    /// </summary>
+    public Task<string?>? SaetzeOffen { get; init; }
 }
 
 /// <summary>
@@ -169,7 +175,25 @@ public static partial class Paket
     /// (Stadt: <see cref="StadtFassung.Lesen"/>; Fachrichtungs-Paket: Aufbau und „nur angehaengt“ gegenueber
     /// <paramref name="eingebaut"/>, den Inhalten der App; ohne Angabe gegenueber leeren Inhalten). Gibt den ersten Grund zurueck.
     /// </summary>
-    public static PaketErgebnis Pruefen(IReadOnlyDictionary<string, byte[]> dateien, string app, Inhalte.LernenOrdner? eingebaut = null)
+    public static PaketErgebnis Pruefen(IReadOnlyDictionary<string, byte[]> dateien, string app, Inhalte.LernenOrdner? eingebaut = null) =>
+        Pruefen(dateien, app, eingebaut, false);
+
+    /// <summary>
+    /// Wie <see cref="Pruefen(IReadOnlyDictionary{string, byte[]}, string, Inhalte.LernenOrdner?)"/>; mit
+    /// <paramref name="saetzeOffen"/> wartet ein Fachrichtungs-Paket nicht auf die Ladepruefung seiner Saetze, sondern gibt sie
+    /// als <see cref="PaketErgebnis.SaetzeOffen"/> mit (Welle A 1.5.0, nur fuer den Start der App: die Inhalte werden schon
+    /// gebildet und verworfen, wenn die Saetze durchfallen). Alle anderen Pruefungen sind gleich.
+    /// </summary>
+    public static PaketErgebnis Pruefen(IReadOnlyDictionary<string, byte[]> dateien, string app, Inhalte.LernenOrdner? eingebaut, bool saetzeOffen) =>
+        Pruefen(dateien, app, eingebaut, saetzeOffen, null);
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193): wie oben; mit <paramref name="merker"/> entfallen bei einem Fachrichtungs-Paket, das mit dieser
+    /// App schon ganz gut war (gleiche Pruefsummen), die Ladepruefung der Saetze und „nur angehaengt“ (gleiches Ergebnis, siehe
+    /// <see cref="IPaketPruefMerker"/>); nach jeder ganzen, guten Pruefung wird es gemerkt.
+    /// </summary>
+    public static PaketErgebnis Pruefen(IReadOnlyDictionary<string, byte[]> dateien, string app, Inhalte.LernenOrdner? eingebaut, bool saetzeOffen,
+        IPaketPruefMerker? merker)
     {
         if (!dateien.TryGetValue(KopfDatei, out var kopfBytes))
         {
@@ -292,16 +316,57 @@ public static partial class Paket
         {
             // Schluessel = gepruefte Pruefsummen der zwei Dateien: Lesen und „nur angehaengt“ rechnen je Inhalt nur einmal
             var schluessel = fachrichtung + ":" + stand + ":" + angaben[FachrichtungsPaket.LernenDatei].Item1 + angaben[FachrichtungsPaket.SaetzeDatei].Item1;
-            var (inhalt, lernGrund) = FachrichtungsPaket.LesenGemerkt(schluessel, dateien, fachrichtung!, stand);
+            var bekannt = merker?.Bekannt(schluessel) == true;
+            if (!bekannt)
+            {
+                // „nur angehaengt“ braucht die ganzen Listen der App: schon nebenher lesen, waehrend das Paket gelesen wird
+                eingebaut?.GanzVorab();
+            }
+            var (inhalt, lernGrund, ladepruefung) = FachrichtungsPaket.LesenGemerkt(schluessel, dateien, fachrichtung!, stand, !bekannt);
             if (inhalt is null)
             {
                 return new(null, lernGrund);
+            }
+            if (bekannt)
+            {
+                return new(new PaketKopf(format, art, kennung, name, stand, braucht, text, angaben), null)
+                {
+                    Lernen = inhalt,
+                    SaetzeOffen = saetzeOffen ? ladepruefung : null,
+                };
+            }
+            // wie bisher: ein Satz, der die Ladepruefung nicht besteht, macht das Paket rot (vor „nur angehaengt“)
+            if (!saetzeOffen && ladepruefung.GetAwaiter().GetResult() is { } satzGrund)
+            {
+                return new(null, satzGrund);
             }
             if (FachrichtungsPaket.NurAngehaengt(inhalt, schluessel, eingebaut ?? Inhalte.LernenOrdner.Leer) is { } angehaengt)
             {
                 return new(null, angehaengt);
             }
-            return new(new PaketKopf(format, art, kennung, name, stand, braucht, text, angaben), null) { Lernen = inhalt };
+            if (merker is not null)
+            {
+                if (!saetzeOffen)
+                {
+                    merker.Merken(schluessel);
+                }
+                else
+                {
+                    // erst gemerkt, wenn auch die Saetze die Ladepruefung bestanden haben
+                    _ = ladepruefung.ContinueWith(t =>
+                    {
+                        if (t.Status == TaskStatus.RanToCompletion && t.Result is null)
+                        {
+                            merker.Merken(schluessel);
+                        }
+                    }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                }
+            }
+            return new(new PaketKopf(format, art, kennung, name, stand, braucht, text, angaben), null)
+            {
+                Lernen = inhalt,
+                SaetzeOffen = saetzeOffen ? ladepruefung : null,
+            };
         }
         return new(new PaketKopf(format, art, kennung, name, stand, braucht, text, angaben), null);
     }

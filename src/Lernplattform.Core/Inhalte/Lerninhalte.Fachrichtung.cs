@@ -102,7 +102,7 @@ public sealed partial class Lerninhalte
         // Welle A 0.97.0 (Weisung P12-312 Punkt 2, W1): Ausschluss ueber eine Nachschlagetabelle statt den Vergleich jedes
         // Eintrags mit der ganzen Liste; gleiches Ergebnis (Gegenprobe gegen Ausgeschlossen in den Tests)
         var tabelle = AusschlussTabelle.Aus(ausschluss);
-        if (!gemischt && umwandeln is not null && ordner.MitTeilen)
+        if (umwandeln is not null && ordner.MitTeilen)
         {
             ordner.TeileVorab(umwandeln);
         }
@@ -124,8 +124,11 @@ public sealed partial class Lerninhalte
                 InhaltArt.Ap2Szenario => bisher.Ap2Szenarien.Count,
                 _ => bisher.Testprojekte.Count,
             };
+            // Welle A 1.5.0 (Weisung P12-358): gemischt mit Teilen nur die Teile der geladenen Fachrichtungen und die Pakete
+            // (gleiche Eintraege, gleiche Stellen wie die ganze Datei, siehe LernenOrdner.GemischtTeile), ohne Teile wie bisher
             List<(int Index, JsonObject Daten)> daten = gemischt
-                ? LadeListeFuer(ordner.Eintraege(name), name, umwandeln ?? AlleWerte)
+                ? umwandeln is not null && ordner.TeileKennen(name) ? LadeListeFuer(ordner.GemischtTeile(name, umwandeln), name, umwandeln)
+                : LadeListeFuer(ordner.Eintraege(name), name, umwandeln ?? AlleWerte)
                 : umwandeln is null
                 ? lernen(name) is { } dateiInhalt ? LadeListe(_ => dateiInhalt, name).Select((d, i) => (i, d)).ToList() : []
                 // Welle A 0.97.0 (Weisung P12-312 Punkt 3, W2): nur die beim Bauen aufgeteilten Eintraege der geladenen
@@ -645,6 +648,41 @@ public sealed class LernenOrdner
         return liste;
     }
 
+    /// <summary>Welle A 1.5.0: steht die Liste <paramref name="name"/> im Index der Teile?</summary>
+    public bool TeileKennen(string name) => _index.Value?.Kennt(name) == true;
+
+    /// <summary>
+    /// Welle A 1.5.0 (Weisung P12-358): wie <see cref="Eintraege"/>, aber die Eintraege der App nur aus den Teilen der
+    /// <paramref name="fachrichtungen"/> (statt die ganze Datei zu zerlegen); die Pakete wie dort. Fuer jede dieser
+    /// Fachrichtungen stehen hier genau die Eintraege von <see cref="Eintraege"/> mit diesem Wert im Feld "fachrichtung", an
+    /// denselben Stellen (Test GemischtTeile_GleichEintraege); Eintraege anderer Fachrichtungen koennen fehlen.
+    /// </summary>
+    public IReadOnlyList<(int Index, JsonElement Eintrag)> GemischtTeile(string name, IEnumerable<string> fachrichtungen)
+    {
+        var ergebnis = new List<(int Index, JsonElement Eintrag)>();
+        foreach (var (i, e) in TeilEintraege(name, fachrichtungen))
+        {
+            if (Core.Pakete.FachrichtungsPaket.IstPlatzhalter(e)
+                || (Pakete.Count > 0 && Core.Pakete.FachrichtungsPaket.FachrichtungVon(e) is { } fr && Pakete.ContainsKey(fr)))
+            {
+                continue;
+            }
+            ergebnis.Add((i, e));
+        }
+        foreach (var paket in Pakete.Values)
+        {
+            if (name == Pruefung.Echt.EchtSaetze.DateiName)
+            {
+                ergebnis.AddRange(paket.Saetze);
+            }
+            else if (paket.Listen.TryGetValue(name, out var eintraege))
+            {
+                ergebnis.AddRange(eintraege);
+            }
+        }
+        return ergebnis.OrderBy(e => e.Index).ToList();
+    }
+
     /// <summary>Welle A 0.97.0: die Teile der <paramref name="fachrichtungen"/> schon nebeneinander zerlegen (je Datei eine Aufgabe).</summary>
     public void TeileVorab(IEnumerable<string> fachrichtungen)
     {
@@ -722,6 +760,34 @@ public sealed class LernenOrdner
     /// <summary>Liste <paramref name="name"/> als Dokument (null = Datei fehlt); ein Lesefehler kommt hier an.</summary>
     public JsonDocument? Dokument(string name) =>
         _dokumente.GetOrAdd(name, n => new Lazy<JsonDocument?>(() => Lesen(n) is { } datei ? Diagnose.LadeTeile.Json(() => JsonDocument.Parse(datei)) : null)).Value;
+
+    private int _ganzVorab;
+
+    /// <summary>
+    /// Welle A 1.5.0: die ganzen Listen der App (mit Platzhaltern), die „nur angehaengt“ eines Fachrichtungs-Pakets braucht, je
+    /// Datei nebeneinander schon lesen (einmal je Ordner); Fehler zeigen sich erst bei <see cref="Dokument"/>.
+    /// </summary>
+    public void GanzVorab()
+    {
+        if (Interlocked.Exchange(ref _ganzVorab, 1) == 1)
+        {
+            return;
+        }
+        foreach (var name in Core.Pakete.FachrichtungsPaket.Listen.Append(Pruefung.Echt.EchtSaetze.DateiName))
+        {
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    Dokument(name);
+                }
+                catch (Exception)
+                {
+                    // nur vorab; derselbe Fehler kommt bei der Pruefung wieder und wird dort behandelt
+                }
+            });
+        }
+    }
 
     /// <summary>Alle Listen schon im Hintergrund lesen (je Datei eine Aufgabe); Fehler zeigen sich erst bei <see cref="Dokument"/>.</summary>
     public void Vorab()

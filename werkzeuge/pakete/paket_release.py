@@ -13,6 +13,17 @@ des echten Ladens (python3.12 -I). Nichts hier laedt hoch, legt einen Tag an ode
       falscher Pruefsumme (probe_kaputt), ein Entwurf und ein Vorab-Release (beide darf die App nie zeigen).
   paket_release.py selbsttest [pakete]
       Kopf, Text und Tag je Paket, die Probe-Liste im Repo gleich dem Erzeuger, Gegenproben.
+
+Welle A 1.5.0 (Weisung P12-358, Sammelliste 386): die drei Fachrichtungs-Pakete lernen_ae, lernen_dpa, lernen_dv haben
+keinen Ordner unter pakete/: sie werden mit paket_bauen.py lernen aus inhalte_csharp/lernen/ geschnitten (eine Quelle).
+Stand und braucht_app des Releases stehen an genau einer Stelle (paket_bauen.LERNEN_TESTDATEI), und die gebaute Datei muss
+Byte fuer Byte gleich der echten Testdatei tests/Lernplattform.Tests/Testdaten/pakete_echt/lernen_<fr>_<stand>.fipaket sein.
+  paket_release.py lernen-kopf <lernen_fr>
+      gibt KENNUNG=, STAND=, TAG=, DATEI=, NAME=, ART=lernen, FR= aus.
+  paket_release.py lernen-bauen <lernen_fr> <zielordner>
+      baut das Paket (paket_bauen.py lernen) und prueft es gegen die echte Testdatei; gibt den Pfad aus.
+  paket_release.py lernen-text <lernen_fr> <paket.fipaket> <release.md>
+      Release-Text wie bei den anderen Paketen (Art, Text, Beschreibung, Pruefsummen-Tabelle, Release-Seite).
 """
 import hashlib
 import importlib.util
@@ -21,6 +32,7 @@ import os
 import re
 import sys
 import tempfile
+import zipfile
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
@@ -60,6 +72,80 @@ def text(ordner, paket):
               "| `%s` | %d | `%s` |" % (w["DATEI"], os.path.getsize(paket), sha256(paket)),
               "", "Release-Seite: " + SEITE + w["TAG"]]
     return "\n".join(zeilen) + "\n"
+
+
+def lernen_kopf(kennung):
+    fr = kennung[len("lernen_"):] if kennung.startswith("lernen_") else ""
+    if fr not in paket_bauen.FACHRICHTUNGEN:
+        raise ValueError(kennung + " ist kein Fachrichtungs-Paket (lernen_ae, lernen_dpa, lernen_dv)")
+    stand, _ = paket_bauen.LERNEN_TESTDATEI
+    werte = {"KENNUNG": kennung, "STAND": str(stand), "TAG": "vP%s.%d" % (kennung, stand), "DATEI": "%s_%d.fipaket" % (kennung, stand),
+             "NAME": "Fachrichtungs-Paket " + fr.upper(), "ART": "lernen", "FR": fr}
+    if not TAG.match(werte["TAG"]):
+        raise ValueError(werte["TAG"] + " ist kein Paket-Tag vP<kennung>.<stand>")
+    return werte
+
+
+def lernen_echt(kennung):
+    w = lernen_kopf(kennung)
+    return os.path.join(WURZEL, "tests", "Lernplattform.Tests", "Testdaten", "pakete_echt", w["DATEI"])
+
+
+def lernen_bauen(kennung, ziel, repo=WURZEL):
+    w = lernen_kopf(kennung)
+    stand, braucht = paket_bauen.LERNEN_TESTDATEI
+    pfad = paket_bauen.lernen_bauen(repo, w["FR"], ziel, stand, braucht)
+    echt = lernen_echt(kennung)
+    if not os.path.exists(echt):
+        raise ValueError("echte Testdatei fehlt: " + os.path.relpath(echt, WURZEL))
+    if sha256(pfad) != sha256(echt):
+        raise ValueError(w["DATEI"] + ": Bau weicht von der echten Testdatei ab (paket_bauen.py lernen neu bauen)")
+    return pfad
+
+
+def lernen_text(kennung, paket):
+    w = lernen_kopf(kennung)
+    if os.path.basename(paket) != w["DATEI"]:
+        raise ValueError("Paketdatei %s statt %s" % (os.path.basename(paket), w["DATEI"]))
+    with zipfile.ZipFile(paket) as z:
+        q = json.loads(z.read("paket.json"))
+    if q["kennung"] != kennung or str(q["stand"]) != w["STAND"] or q["art"] != "lernen":
+        raise ValueError(w["DATEI"] + ": Kopf passt nicht zu " + kennung)
+    zeilen = ["Art: lernen", q["text"], "",
+              "„%s“ (Kennung %s, Stand %s). Es braucht die Lernplattform ab %s und wird in der App auf der "
+              "Startseite oder unter Optionen, Inhaltspakete geladen; ein Programm-Update nimmt es nie." % (q["name"], kennung, w["STAND"], q["braucht_app"]),
+              "", "| Datei | Größe (Bytes) | SHA-256 |", "|---|---|---|",
+              "| `%s` | %d | `%s` |" % (w["DATEI"], os.path.getsize(paket), sha256(paket)),
+              "", "Release-Seite: " + SEITE + w["TAG"]]
+    return "\n".join(zeilen) + "\n"
+
+
+def lernen_selbsttest():
+    funde = []
+    with tempfile.TemporaryDirectory() as tmp:
+        for fr in paket_bauen.FACHRICHTUNGEN:
+            k = "lernen_" + fr
+            try:
+                pfad = lernen_bauen(k, tmp)
+                t = lernen_text(k, pfad)
+            except (ValueError, OSError, KeyError) as e:
+                funde.append(str(e))
+                continue
+            if not t.startswith("Art: lernen\n") or "A 1.5.0" not in t or "\nRelease-Seite: " + SEITE + "vP%s.1" % k not in t:
+                funde.append(k + ": Release-Text falsch")
+        # Gegenproben: fremde Kennung, falsche Datei
+        for falsch in ("lernen_si", "stadt1", "lernen_"):
+            try:
+                lernen_kopf(falsch)
+                funde.append("Gegenprobe Kennung " + falsch + " nicht erkannt")
+            except ValueError:
+                pass
+        try:
+            lernen_text("lernen_ae", os.path.join(tmp, "lernen_dpa_1.fipaket"))
+            funde.append("Gegenprobe andere Datei (lernen) nicht erkannt")
+        except (ValueError, OSError):
+            pass
+    return funde
 
 
 def _datei(name, pfad, digest=None):
@@ -137,6 +223,7 @@ def selbsttest(wurzel):
         for falsch in ("vPProbe.1", "vPprobe.0", "vA0.89.0", "vS0.57.0", "vPprobe.1.2"):
             if TAG.match(falsch):
                 funde.append("Gegenprobe Tag " + falsch + " nicht erkannt")
+    funde.extend(lernen_selbsttest())
     for f in funde:
         print("FEHLER:", f)
     print("paket_release selbsttest:", "gruen" if not funde else "rot")
@@ -157,6 +244,17 @@ def main():
         if len(a) == 3 and a[0] == "github-probe":
             with open(a[2], "w", encoding="utf-8", newline="\n") as f:
                 f.write(github_probe(a[1]))
+            return 0
+        if len(a) == 2 and a[0] == "lernen-kopf":
+            for schluessel, wert in lernen_kopf(a[1]).items():
+                print("%s=%s" % (schluessel, wert))
+            return 0
+        if len(a) == 3 and a[0] == "lernen-bauen":
+            print(lernen_bauen(a[1], a[2]))
+            return 0
+        if len(a) == 4 and a[0] == "lernen-text":
+            with open(a[3], "w", encoding="utf-8", newline="\n") as f:
+                f.write(lernen_text(a[1], a[2]))
             return 0
         if len(a) in (1, 2) and a[0] == "selbsttest":
             return selbsttest(a[1] if len(a) == 2 else os.path.join(WURZEL, "pakete"))

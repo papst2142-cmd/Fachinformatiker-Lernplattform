@@ -229,6 +229,14 @@ public sealed class PaketVerwaltung
     public IReadOnlyList<FachrichtungsInhalt> Fachrichtungen() => [.. _ablage.Liste(_app).Where(g => g.Lernen is not null).Select(g => g.Lernen!)];
 
     /// <summary>
+    /// Welle A 1.5.0 (Weisung P12-358): wie <see cref="Fachrichtungen"/> fuer den Start der App, aber die Ladepruefung der Saetze
+    /// jedes Pakets laeuft noch (<c>Saetze</c>: null = gut, sonst Grund). Wer die Inhalte damit bildet, muss sie abwarten und
+    /// ein Paket mit Grund verwerfen; dann ist es genau wie bei <see cref="Fachrichtungen"/> nicht dabei.
+    /// </summary>
+    public IReadOnlyList<(FachrichtungsInhalt Inhalt, Task<string?> Saetze)> FachrichtungenOffen() =>
+        [.. _ablage.Liste(_app, true).Where(g => g.Lernen is not null).Select(g => (g.Lernen!, g.SaetzeOffen ?? Task.FromResult<string?>(null)))];
+
+    /// <summary>
     /// Welle A 0.91.0 (Nico 3a): Angebote mit neuerem Stand eines Fachrichtungs-Pakets (gegenueber dem geladenen Paket, sonst
     /// gegenueber dem Grundstand der App = Stand 0). Nur aus der letzten Suche; nichts laedt von allein.
     /// </summary>
