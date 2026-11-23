@@ -40,6 +40,7 @@ public partial class App : Application
         Core.Spiel.Gehbedienung.AntippenAn = Core.Spiel.Gehbedienung.Lesen(Programm.Zustand.Werte);
         Core.Spiel.Umsehbedienung.Uebernehmen(Programm.Zustand.Werte);
         Core.Spiel.Blickfeldbedienung.Uebernehmen(Programm.Zustand.Werte);
+        Core.Spiel.Empfindlichkeit.AlleUebernehmen(Programm.Zustand.Werte);
         Spiel.TonDienst.Regler(Core.Spiel.Ton.TonEinstellungen.Lesen(Programm.Zustand.Werte));
         Spiel.TonDienst.Lieder = new Core.Spiel.Ton.EigeneLieder(Core.Daten.Ablage.Datenordner());
         Spiel.Vollbild.DauerhaftSetzen(Core.Spiel.Ton.VollbildWahl.Lesen(Programm.Zustand.Werte));

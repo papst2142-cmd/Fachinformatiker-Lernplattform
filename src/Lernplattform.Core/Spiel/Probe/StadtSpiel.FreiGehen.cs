@@ -220,7 +220,8 @@ public sealed partial class StadtSpiel
         }
         if (Innen is { } innen)
         {
-            return FreiDrinnen(innen, x, z, vonX, vonZ);
+            // Welle A 1.6.0 (Sammelliste 443): eine geschlossene Tuer ist ein Hindernis
+            return FreiDrinnen(innen, x, z, vonX, vonZ) && TuerFrei(x, z, vonX, vonZ);
         }
         if (GeladenAn is { } geladen && !geladen(x, z))
         {

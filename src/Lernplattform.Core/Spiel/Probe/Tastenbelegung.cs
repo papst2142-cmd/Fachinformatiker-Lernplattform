@@ -60,6 +60,13 @@ public sealed class Tastenbelegung
     /// <summary>Welle A 0.95.0: frei gehen, nach rechts (seitwaerts).</summary>
     public const string GehRechts = "geh_rechts";
 
+    /// <summary>
+    /// Welle A 1.6.0 (Sammelliste 444, Weisungen P12-359/P12-360, Nico: Taste „F“): die Handlung an der Stelle der Figur (Tür, Bus,
+    /// Schrank, Regal, Werkbank, Person ...). Gedrueckt = Haupthandlung, gehalten = kleine Auswahl. Weil „F“ bis A 1.5.0 die Kamera
+    /// draussen flacher stellte, hat <see cref="Flacher"/> seitdem die Standardtaste „G“ (rechts neben F).
+    /// </summary>
+    public const string Handeln = "handeln";
+
     /// <summary>Die vier Gehtasten (werden gehalten, nicht nur gedrueckt).</summary>
     public static readonly IReadOnlySet<string> Gehen = new HashSet<string>(StringComparer.Ordinal) { GehVor, GehZurueck, GehLinks, GehRechts };
 
@@ -68,7 +75,7 @@ public sealed class Tastenbelegung
     /// behaelt diese eigene Wahl beim Lesen Vorrang (nie still verloren); die neue Aufgabe hat dann keine Taste, bis man ihr in
     /// den Optionen eine gibt (<see cref="OhneTaste"/>).
     /// </summary>
-    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher, IchSicht, Springen, Ducken, Kriechen, GehVor, GehZurueck, GehLinks, GehRechts };
+    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher, IchSicht, Springen, Ducken, Kriechen, GehVor, GehZurueck, GehLinks, GehRechts, Handeln };
 
     /// <summary>Gespeicherter Wert „keine Taste“ (nur fuer die Aufgaben aus <see cref="NeuAb080"/> nach einem Zusammenstoss).</summary>
     public const string OhneTaste = "";
@@ -88,7 +95,7 @@ public sealed class Tastenbelegung
         (Vollbild, "Vollbild ein und aus", ["F11"]),
         (Auftraege, "Aufträge öffnen", ["L"]),
         (Steiler, "Draußen: Kamera steiler", ["R"]),
-        (Flacher, "Draußen: Kamera flacher", ["F"]),
+        (Flacher, "Draußen: Kamera flacher", ["G"]),
         (IchSicht, "Ich-Sicht ein und aus", ["I"]),
         (Springen, "Springen", ["Space"]),
         (Ducken, "Ducken und wieder aufstehen", ["C"]),
@@ -97,6 +104,7 @@ public sealed class Tastenbelegung
         (GehZurueck, "Gehen: rückwärts", ["S"]),
         (GehLinks, "Gehen: nach links", ["A"]),
         (GehRechts, "Gehen: nach rechts", ["D"]),
+        (Handeln, "Handlung hier (Tür, Bus, Gegenstand)", ["F"]),
     ];
 
     /// <summary>Bleiben dem Programm (Esc bricht ab, die anderen braucht die Bedienung).</summary>

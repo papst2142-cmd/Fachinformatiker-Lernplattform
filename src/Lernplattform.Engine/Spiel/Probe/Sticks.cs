@@ -51,8 +51,23 @@ public sealed class Sticks
         /// </summary>
         public (double X1, double Y1, double X2, double Y2) Sperre { get; init; }
 
-        /// <summary>Liegt (x, y) in der <see cref="Sperre"/>?</summary>
-        public bool Gesperrt(double x, double y) => Sperre.X2 > Sperre.X1 && x >= Sperre.X1 && x <= Sperre.X2 && y >= Sperre.Y1 && y <= Sperre.Y2;
+        /// <summary>
+        /// Welle A 1.6.0 (Sammelliste 444): Flaeche, die der linke Stick frei haelt (Knopf der Handlung und Symbol der Ich-Sicht
+        /// ueber dem linken Stick, mit Rand); default = keine.
+        /// </summary>
+        public (double X1, double Y1, double X2, double Y2) SperreLinks { get; init; }
+
+        /// <summary>Liegt (x, y) in der <see cref="Sperre"/> oder der <see cref="SperreLinks"/>?</summary>
+        /// <summary>
+        /// Welle A 1.6.0 (Weisung P12-361): Flaeche des Handy-Symbols neben einem Stick (x1, y1, x2, y2); dort setzt kein Stick auf,
+        /// und ein Stick daneben rueckt nach aussen (in die Ecke); default = keines.
+        /// </summary>
+        public (double X1, double Y1, double X2, double Y2) SperreTelefon { get; init; }
+
+        public bool Gesperrt(double x, double y) => In(Sperre, x, y) || In(SperreLinks, x, y) || In(SperreTelefon, x, y);
+
+        private static bool In((double X1, double Y1, double X2, double Y2) q, double x, double y) =>
+            q.X2 > q.X1 && x >= q.X1 && x <= q.X2 && y >= q.Y1 && y <= q.Y2;
     }
 
     /// <summary>
@@ -176,6 +191,28 @@ public sealed class Sticks
         var my = unten < oben ? (oben + unten) / 2 : Math.Clamp(y, oben, unten);
         // A 1.0.0: nie in die Sperre (runde Knoepfe): zuerst nach links (in der eigenen Haelfte), sonst nach oben ruecken.
         // A 1.2.0 (Sammelliste 412): stehen die Knoepfe ueber dem Stick, rueckt er zuerst nach unten (in die Ecke)
+        // Welle A 1.6.0 (Sammelliste 444): der linke Stick haelt den Knopf der Handlung frei (gespiegelt: zuerst nach unten in die
+        // Ecke, sonst nach rechts, sonst nach links (sehr flaches Bild: die Knoepfe stehen rechts neben der Ecke), sonst nach oben)
+        if (!Alt.Value && seite == Seite.Links && b.SperreLinks.X2 > b.SperreLinks.X1 && KreisInRechteck(mx, my, r, b.SperreLinks))
+        {
+            var q = b.SperreLinks;
+            if (q.Y2 + r <= unten + 1e-9)
+            {
+                my = Math.Max(my, q.Y2 + r);
+            }
+            else if (q.X2 + r <= rechts)
+            {
+                mx = Math.Max(mx, q.X2 + r);
+            }
+            else if (q.X1 - r >= links)
+            {
+                mx = Math.Min(mx, q.X1 - r);
+            }
+            else
+            {
+                my = Math.Max(oben, Math.Min(my, q.Y1 - r));
+            }
+        }
         if (!Alt.Value && b.Sperre.X2 > b.Sperre.X1 && KreisInRechteck(mx, my, r, b.Sperre))
         {
             var linksDavor = b.Sperre.X1 - r;
@@ -190,6 +227,23 @@ public sealed class Sticks
             else
             {
                 my = Math.Max(oben, Math.Min(my, b.Sperre.Y1 - r));
+            }
+        }
+        // Welle A 1.6.0 (Weisung P12-361): neben dem Handy-Symbol rueckt der Stick nach aussen (in die Ecke), sonst nach oben
+        if (!Alt.Value && b.SperreTelefon.X2 > b.SperreTelefon.X1 && KreisInRechteck(mx, my, r, b.SperreTelefon))
+        {
+            var q = b.SperreTelefon;
+            if (seite == Seite.Links && q.X1 - r >= links)
+            {
+                mx = Math.Min(mx, q.X1 - r);
+            }
+            else if (seite == Seite.Rechts && q.X2 + r <= rechts)
+            {
+                mx = Math.Max(mx, q.X2 + r);
+            }
+            else
+            {
+                my = Math.Max(oben, Math.Min(my, q.Y1 - r));
             }
         }
         return (mx, my, r);

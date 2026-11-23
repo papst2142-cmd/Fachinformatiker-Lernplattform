@@ -429,6 +429,28 @@ public static partial class AutoMessung
             }
             pruefe("Regler Blickfeld Ich-Sicht", blickStandard && blickNeu && blickZurueck,
                 $"Vorgabe {vorgabe} {blickStandard}, 105 wirkt und gespeichert {blickNeu}, zurueck auf {vorgabe} {blickZurueck}");
+            // Welle A 1.6.0 (Weisung P12-360 Punkte 6 und 7): drei Regler „Empfindlichkeit“ (Maus, linker Stick, rechter Stick), 25 bis
+            // 200 %, Vorgabe 100 % ohne Eintrag, Name fuer den Screenreader; 50 % wirkt sofort und bleibt gespeichert, zurueck auf 100 %
+            // entfernt den Eintrag wieder (Gegenprobe)
+            var regler = optionen.EmpfindlichkeitRegler;
+            var namen = new[] { SpielProbeTexte.EmpfindlichkeitMaus, SpielProbeTexte.EmpfindlichkeitStickLinks, SpielProbeTexte.EmpfindlichkeitStickRechts };
+            var reglerStandard = regler.Count == 3 && regler.Select(r => r.Art).SequenceEqual(Empfindlichkeit.Alle)
+                && regler.Select(r => Avalonia.Automation.AutomationProperties.GetName(r.Regler)).SequenceEqual(namen)
+                && regler.All(r => (int)r.Regler.Value == Empfindlichkeit.Vorgabe && (int)r.Regler.Minimum == 25 && (int)r.Regler.Maximum == 200
+                    && r.Art.Prozent == 100 && !Zustand.Werte.ContainsKey(r.Art.Schluessel) && r.Zahl.Text == "100 %" && r.Regler.IsEffectivelyVisible);
+            var reglerNeu = regler.Count == 3;
+            var reglerZurueck = regler.Count == 3;
+            foreach (var (art, r, zahl) in regler)
+            {
+                r.Value = 50;
+                await ansicht.BildFertigAsync();
+                reglerNeu &= art.Prozent == 50 && art.Faktor == 0.5 && optionen.EmpfindlichkeitSpeichern() && art.Lesen(Zustand.Werte) == 50 && zahl.Text == "50 %";
+                r.Value = Empfindlichkeit.Vorgabe;
+                await ansicht.BildFertigAsync();
+                reglerZurueck &= optionen.EmpfindlichkeitSpeichern() && art.Prozent == 100 && !Zustand.Werte.ContainsKey(art.Schluessel);
+            }
+            pruefe("Regler Empfindlichkeit", reglerStandard && reglerNeu && reglerZurueck,
+                $"{regler.Count} Regler, Vorgabe 100 {reglerStandard}, 50 wirkt und gespeichert {reglerNeu}, zurueck auf 100 {reglerZurueck}");
             klappe.IsExpanded = false;
         }
         else

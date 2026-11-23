@@ -60,7 +60,24 @@ public static partial class AutoMessung
         }
         // Inhalte laden im Hintergrund; ohne Spiel gibt es nichts zu pruefen (zaehlt als Fehler)
         var fertig = await Task.WhenAny(seite.Geladen, Task.Delay(TimeSpan.FromSeconds(30)));
-        return fertig == seite.Geladen && seite.Geladen.IsCompletedSuccessfully ? seite : null;
+        if (fertig != seite.Geladen || !seite.Geladen.IsCompletedSuccessfully)
+        {
+            return null;
+        }
+        // Welle A 1.6.0 (Sammelliste 443/444): die Teile vor A 1.6.0 pruefen weiter mit dem Menue und gehen durch offene Tueren
+        // (Wege, Knoepfe und Layout wie bisher, ohne 3D gibt es das Menue weiter); Handlung, Tueren, X und Handy oben rechts prueft
+        // der Teil „Handlung 444“ (Handlung444Async), der beides abschaltet
+        if (!seite.MenueAltFuerTests || !seite.TuerenSelbstFuerTests)
+        {
+            seite.MenueAltFuerTests = true;
+            seite.TuerenSelbstFuerTests = true;
+            if (seite.Spiel is { } spiel)
+            {
+                spiel.TuerenOeffnenSelbst = true;
+            }
+            seite.Beschriften();
+        }
+        return seite;
     }
 
     /// <summary>Frischer Spielstand je Durchgang (sonst waere es nach vielen Wegen Abend).</summary>

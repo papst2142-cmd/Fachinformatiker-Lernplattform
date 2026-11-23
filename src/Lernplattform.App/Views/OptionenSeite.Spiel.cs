@@ -115,6 +115,100 @@ public sealed partial class OptionenSeite
         panel.Children.Add(new LernText(SpielProbeTexte.UmsehenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
         // Welle A 1.1.0 (Weisung P12-328 Punkt 2): Regler „Blickfeld Ich-Sicht“ 60 bis 110 Grad, Vorgabe 90
         BlickfeldReglerAnhaengen(panel);
+        // Welle A 1.6.0 (Weisung P12-360 Punkte 6 und 7, Sammelliste 445/446): Regler „Empfindlichkeit“ Maus, linker und rechter Stick
+        _empfindlich.Clear();
+        EmpfindlichkeitAnhaengen(panel, Empfindlichkeit.Maus, SpielProbeTexte.EmpfindlichkeitMaus);
+        EmpfindlichkeitAnhaengen(panel, Empfindlichkeit.StickLinks, SpielProbeTexte.EmpfindlichkeitStickLinks);
+        EmpfindlichkeitAnhaengen(panel, Empfindlichkeit.StickRechts, SpielProbeTexte.EmpfindlichkeitStickRechts);
+        panel.Children.Add(new LernText(SpielProbeTexte.EmpfindlichkeitSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
+    }
+
+    private readonly List<(Empfindlichkeit Art, Slider Regler, TextBlock Zahl)> _empfindlich = [];
+    private DispatcherTimer? _empfindlichSpeichern;
+
+    /// <summary>Start-Test: die drei Regler „Empfindlichkeit“ (Maus, linker Stick, rechter Stick) mit Anzeige (leer ohne aufgeklappte Karte).</summary>
+    public IReadOnlyList<(Empfindlichkeit Art, Slider Regler, TextBlock Zahl)> EmpfindlichkeitRegler => _empfindlich;
+
+    private void EmpfindlichkeitAnhaengen(Panel panel, Empfindlichkeit art, string name)
+    {
+        var titel = new LernText(name, "Normal", FontWeight.Normal, "Pinsel.text") { Margin = new Avalonia.Thickness(0, GruppenAbstand, 0, 0) };
+        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 12 };
+        var wert = art.Lesen(Zustand.Werte);
+        var regler = new Slider
+        {
+            Minimum = Empfindlichkeit.Min, Maximum = Empfindlichkeit.Max, Value = wert,
+            SmallChange = Empfindlichkeit.Schritt, LargeChange = 4 * Empfindlichkeit.Schritt,
+            TickFrequency = Empfindlichkeit.Schritt, IsSnapToTickEnabled = true,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+        Avalonia.Automation.AutomationProperties.SetName(regler, name);
+        if (Avalonia.Application.Current!.TryFindResource(Akzent(Optionen.Tasten), out var farbe))
+        {
+            foreach (var n in (string[])["SliderTrackValueFill", "SliderTrackValueFillPointerOver", "SliderTrackValueFillPressed",
+                         "SliderThumbBackground", "SliderThumbBackgroundPointerOver", "SliderThumbBackgroundPressed"])
+            {
+                regler.Resources[n] = farbe;
+            }
+        }
+        var zahl = Schrift.Text(string.Format(SpielProbeTexte.EmpfindlichkeitProzent, wert), "Normal", FontWeight.Bold, "Pinsel.text");
+        zahl.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        zahl.MinWidth = 64 * Schrift.Faktor;
+        zahl.TextAlignment = TextAlignment.Right;
+        regler.ValueChanged += (_, e) =>
+        {
+            var p = Empfindlichkeit.Begrenzen((int)Math.Round(e.NewValue));
+            zahl.Text = string.Format(SpielProbeTexte.EmpfindlichkeitProzent, p);
+            if (_setzen)
+            {
+                return;
+            }
+            // das Spiel folgt sofort, geschrieben wird erst, wenn der Regler ruht (nicht jeder Zwischenwert)
+            art.Prozent = p;
+            _empfindlichSpeichern ??= new DispatcherTimer(TimeSpan.FromMilliseconds(500), DispatcherPriority.Background, (_, _) => EmpfindlichkeitSpeichern());
+            _empfindlichSpeichern.Stop();
+            _empfindlichSpeichern.Start();
+        };
+        _empfindlich.Add((art, regler, zahl));
+        Grid.SetColumn(zahl, 1);
+        zeile.Children.Add(regler);
+        zeile.Children.Add(zahl);
+        panel.Children.Add(titel);
+        panel.Children.Add(zeile);
+    }
+
+    /// <summary>Die Regler „Empfindlichkeit“ speichern (auch sofort fuer den Start-Test); false = nicht gespeichert.</summary>
+    public bool EmpfindlichkeitSpeichern()
+    {
+        _empfindlichSpeichern?.Stop();
+        if (_empfindlich.Count == 0)
+        {
+            return true;
+        }
+        var werte = _empfindlich.Select(e => (e.Art, P: Empfindlichkeit.Begrenzen((int)Math.Round(e.Regler.Value)))).ToList();
+        if (Ergebnis(Zustand.Aendere(w =>
+            {
+                foreach (var (art, p) in werte)
+                {
+                    art.Wert(w, p);
+                }
+            })))
+        {
+            foreach (var (art, p) in werte)
+            {
+                art.Prozent = p;
+            }
+            return true;
+        }
+        // nicht gespeichert: die Regler zeigen wieder, was gilt (nie still verloren)
+        _setzen = true;
+        foreach (var (art, regler, _) in _empfindlich)
+        {
+            var gilt = art.Lesen(Zustand.Werte);
+            art.Prozent = gilt;
+            regler.Value = gilt;
+        }
+        _setzen = false;
+        return false;
     }
 
     private Slider? _blickfeld;

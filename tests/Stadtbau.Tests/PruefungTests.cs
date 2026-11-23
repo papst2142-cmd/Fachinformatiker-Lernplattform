@@ -213,11 +213,38 @@ public class PruefungTests
             ["amt"] = (9739, 12),
             ["kaufhaus"] = (18144, 12),
         };
-        foreach (var ort in D.Orte)
+        // A 1.6.0 (Sammelliste 443): mit der Ausgangstuer (Zarge, Sturz, Blatt, Griff: 72 Dreiecke im Netz ohne Waende; die fuenf
+        // Geschaefte haben nur offene Bereiche, keine Raumtuer); die Werte ohne Tueren (oben, wie bis A 1.5.0) prueft die Gegenprobe
+        var mitTueren = new Dictionary<string, (long, int)>
         {
-            var innen = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), Grundriss(ort), InnenGrundriss.Personen(D.Fassung.Innenraeume, ort), D.Grafik);
-            Assert.Equal(soll[ort], StadtbauGrenzen.Innen(innen));
+            ["moebelhaus"] = (9965, 12),
+            ["elektromarkt"] = (15354, 12),
+            ["bank"] = (7540, 12),
+            ["amt"] = (9811, 12),
+            ["kaufhaus"] = (18216, 12),
+        };
+        var ist = D.Orte.ToDictionary(o => o, o => StadtbauGrenzen.Innen(Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(o), Grundriss(o),
+            InnenGrundriss.Personen(D.Fassung.Innenraeume, o), D.Grafik)));
+        Assert.True(D.Orte.All(o => mitTueren[o] == ist[o]), string.Join(", ", D.Orte.Select(o => $"{o} {ist[o]}")));
+        Innenraum.OhneTuerenFuerTests = true;
+        try
+        {
+            foreach (var ort in D.Orte)
+            {
+                var innen = Innenraum.AusGrundrissMitPersonen(StadtbauPruefung.Ansicht(ort), Grundriss(ort), InnenGrundriss.Personen(D.Fassung.Innenraeume, ort), D.Grafik);
+                Assert.Equal(soll[ort], StadtbauGrenzen.Innen(innen));
+            }
+            GegenprobenAlteStaende();
         }
+        finally
+        {
+            Innenraum.OhneTuerenFuerTests = false;
+        }
+    }
+
+    /// <summary>Gegenproben der Staende vor A 1.6.0 (ohne Tueren gezaehlt): alte Werte mit den alten Schaltern.</summary>
+    private static void GegenprobenAlteStaende()
+    {
         // Gegenprobe Sammelliste 380: mit den Betten wie bis A 0.89.0 (quer) wieder der alte Wert (Bild wie damals ohne Staffelei)
         Innenraum.BettQuerAltFuerTests.Value = true;
         Innenraum.BildAltFuerTests.Value = true;

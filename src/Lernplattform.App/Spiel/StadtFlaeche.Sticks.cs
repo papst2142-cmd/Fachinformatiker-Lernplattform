@@ -37,12 +37,22 @@ public sealed partial class StadtFlaeche
         get
         {
             var b = new Sticks.Bereich(Bounds.Width, Bounds.Height, Frei.Oben, Frei.Unten, LeisteX.Von, LeisteX.Bis);
-            return KnopfSperre is { } sperre ? b with { Sperre = sperre(b) } : b;
+            b = KnopfSperre is { } sperre ? b with { Sperre = sperre(b) } : b;
+            // Welle A 1.6.0 (Sammelliste 444): Knopf der Handlung und Ich-Sicht ueber dem linken Stick
+            b = KnopfSperreLinks is { } links ? b with { SperreLinks = links(b) } : b;
+            // Welle A 1.6.0 (Weisung P12-361): Handy-Symbol neben einem Stick
+            return KnopfSperreTelefon is { } handy ? b with { SperreTelefon = handy(b) } : b;
         }
     }
 
+    /// <summary>Welle A 1.6.0 (Weisung P12-361): Flaeche des Handy-Symbols, die beide Sticks frei halten (setzt die Seite).</summary>
+    public Func<Sticks.Bereich, (double X1, double Y1, double X2, double Y2)>? KnopfSperreTelefon { get; set; }
+
     /// <summary>Welle A 1.0.0 (Sammelliste 405): Flaeche der runden Knoepfe, die der rechte Stick frei haelt (setzt die Seite).</summary>
     public Func<Sticks.Bereich, (double X1, double Y1, double X2, double Y2)>? KnopfSperre { get; set; }
+
+    /// <summary>Welle A 1.6.0 (Sammelliste 444): Flaeche von Handlung und Ich-Sicht, die der linke Stick frei haelt (setzt die Seite).</summary>
+    public Func<Sticks.Bereich, (double X1, double Y1, double X2, double Y2)>? KnopfSperreLinks { get; set; }
 
     /// <summary>Finger setzt auf (Touch und Stift; auch der Start-Test mit gedachten Fingern).</summary>
     public void FingerAuf(long id, Point p)
@@ -201,7 +211,8 @@ public sealed partial class StadtFlaeche
             SticksGeaendert?.Invoke();
             return;
         }
-        var (dx, dy) = _sticks.Drehen(dt);
+        // Welle A 1.6.0 (Sammelliste 446): Regler „Empfindlichkeit rechter Stick“ (Vorgabe = unveraendert)
+        var (dx, dy) = Empfindlichkeit.Umsehen(_sticks.Drehen(dt));
         if (Math.Abs(dx) + Math.Abs(dy) > 1e-9)
         {
             // wie die rechte Maustaste: waagrecht drehen, senkrecht neigen (draussen und in der Ich-Sicht)

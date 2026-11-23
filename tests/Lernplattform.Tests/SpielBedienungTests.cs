@@ -25,7 +25,9 @@ public sealed class SpielBedienungTests
         Assert.Equal(Tastenbelegung.Naeher, tasten.AufgabeFuer("OemPlus"));
         Assert.Equal(Tastenbelegung.Vollbild, tasten.AufgabeFuer("F11"));
         Assert.Equal(Tastenbelegung.Steiler, tasten.AufgabeFuer("R"));
-        Assert.Equal(Tastenbelegung.Flacher, tasten.AufgabeFuer("F"));
+        // Welle A 1.6.0 (Sammelliste 444): F = Handlung hier, „Kamera flacher“ seitdem G
+        Assert.Equal(Tastenbelegung.Handeln, tasten.AufgabeFuer("F"));
+        Assert.Equal(Tastenbelegung.Flacher, tasten.AufgabeFuer("G"));
         Assert.Null(tasten.AufgabeFuer("Escape"));
         Assert.Equal("+", tasten.AnzeigeFuer(Tastenbelegung.Naeher));
         Assert.Equal(SpielProbeTexte.Hinweis, SpielProbeTexte.HinweisFuer(tasten));
@@ -50,13 +52,13 @@ public sealed class SpielBedienungTests
         Assert.Equal(Tastenbelegung.Ergebnis.Ok, tasten.Setzen(Tastenbelegung.DrehLinks, "Q", out _));
         Assert.Equal([Tastenbelegung.Naeher], tasten.Eigen.Keys);
         Assert.Equal("Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. "
-            + "Am PC: W, A, S und D gehen, rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.",
+            + "Am PC: W, A, S und D gehen, rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und G neigen, F für die Handlung hier (Tür, Bus, Gegenstand). Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.",
             SpielProbeTexte.HinweisFuer(tasten));
         // Welle A 0.80.0: die Pfeiltasten verschieben draussen nicht mehr, der Hinweis nennt sie nicht; eigene Neige-Tasten stehen darin
         tasten.Setzen(Tastenbelegung.Links, "J", out _);
         Assert.DoesNotContain("J", SpielProbeTexte.HinweisFuer(tasten), StringComparison.Ordinal);
         tasten.Setzen(Tastenbelegung.Steiler, "T", out _);
-        Assert.Contains("T und F neigen", SpielProbeTexte.HinweisFuer(tasten), StringComparison.Ordinal);
+        Assert.Contains("T und G neigen", SpielProbeTexte.HinweisFuer(tasten), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -97,17 +99,20 @@ public sealed class SpielBedienungTests
     [Fact]
     public void FruehereEigeneTaste_GewinntGegenNeueStandardtaste()
     {
-        // Welle A 0.80.0: wer vorher F fuer Vollbild gewaehlt hatte, behaelt das; „Kamera flacher“ hat dann keine Taste
+        // Welle A 0.80.0: wer vorher F fuer Vollbild gewaehlt hatte, behaelt das; seit A 1.6.0 hat dann „Handlung hier“ (Standard F)
+        // keine Taste, „Kamera flacher“ (seitdem G) behaelt G, „Kamera steiler“ (R, hier fuer Hineingehen gewaehlt) hat keine
         var gelesen = Tastenbelegung.Lesen(JsonNode.Parse("{\"tasten\":{\"vollbild\":\"F\",\"hinein\":\"R\"}}")!.AsObject());
         Assert.Equal(Tastenbelegung.Vollbild, gelesen.AufgabeFuer("F"));
         Assert.Equal(Tastenbelegung.Hinein, gelesen.AufgabeFuer("R"));
-        Assert.Equal("keine Taste", gelesen.AnzeigeFuer(Tastenbelegung.Flacher));
+        Assert.Equal("keine Taste", gelesen.AnzeigeFuer(Tastenbelegung.Handeln));
+        Assert.Equal("G", gelesen.AnzeigeFuer(Tastenbelegung.Flacher));
         Assert.Equal("keine Taste", gelesen.AnzeigeFuer(Tastenbelegung.Steiler));
-        Assert.DoesNotContain("neigen.", SpielProbeTexte.HinweisFuer(gelesen), StringComparison.Ordinal);
+        Assert.DoesNotContain(" neigen", SpielProbeTexte.HinweisFuer(gelesen).Split("Am PC:")[1], StringComparison.Ordinal);
+        Assert.DoesNotContain("Handlung hier", SpielProbeTexte.HinweisFuer(gelesen), StringComparison.Ordinal);
         // gespeichert und wieder gelesen: dieselbe Belegung (die leere Taste gilt beim Lesen als nicht gesetzt, der Vorrang greift erneut)
         var wieder = Tastenbelegung.Lesen(new JsonObject { [Tastenbelegung.Schluessel] = gelesen.AlsJson() });
         Assert.Equal(Tastenbelegung.Vollbild, wieder.AufgabeFuer("F"));
-        Assert.Equal("keine Taste", wieder.AnzeigeFuer(Tastenbelegung.Flacher));
+        Assert.Equal("keine Taste", wieder.AnzeigeFuer(Tastenbelegung.Handeln));
         // Gegenprobe: eine Aufgabe von vorher behaelt die alte Regel (Zusammenstoss = Standard dieser Aufgabe)
         var alt = Tastenbelegung.Lesen(JsonNode.Parse("{\"tasten\":{\"hinein\":\"Q\"}}")!.AsObject());
         Assert.Equal(Tastenbelegung.DrehLinks, alt.AufgabeFuer("Q"));
@@ -125,10 +130,10 @@ public sealed class SpielBedienungTests
             var tasten = new Tastenbelegung();
             // seit A 0.93.0 ist die Leertaste der Standard fuer „Springen“ (B ist frei)
             tasten.Setzen(Tastenbelegung.Hinein, "B", out _);
-            tasten.Setzen(Tastenbelegung.Vollbild, "G", out _);    // A 0.80.0: F ist Standard fuer „Kamera flacher“
+            tasten.Setzen(Tastenbelegung.Vollbild, "H", out _);    // A 0.80.0: F, seit A 1.6.0 G sind Standard fuer „Kamera flacher“, F fuer die Handlung
             Assert.True(tasten.Speichern(einstellungen));
             var werte = JsonNode.Parse(File.ReadAllText(einstellungen.Pfad))!.AsObject();
-            Assert.Equal("{\"hinein\":\"B\",\"vollbild\":\"G\"}", werte[Tastenbelegung.Schluessel]!.ToJsonString());
+            Assert.Equal("{\"hinein\":\"B\",\"vollbild\":\"H\"}", werte[Tastenbelegung.Schluessel]!.ToJsonString());
             var gelesen = Tastenbelegung.Lesen(werte);
             Assert.Equal(tasten.Eigen, gelesen.Eigen);
             Assert.Equal("B", gelesen.AnzeigeFuer(Tastenbelegung.Hinein));

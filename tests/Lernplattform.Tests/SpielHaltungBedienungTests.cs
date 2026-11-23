@@ -57,6 +57,9 @@ public class SpielHaltungBedienungTests
         var s = new StadtSpiel(stadt, spiel, SpielGrafikTests.Bibliothek.Value, SpielInnenraumTests.Innenraeume.Value, SpielGeschaefteTests.Daten.Value, null, () => null, () => Jahreszeit.Sommer);
         Assert.True(s.Betreten());
         Assert.Equal("zuhause", s.FlaecheId);
+        // Welle A 1.6.0 (Sammelliste 443): diese Tests pruefen Moebel, Haltungen und Knoepfe, nicht die Raumtueren (eigene Tests in
+        // SpielTuerenTests); die Figur oeffnet die Tueren auf ihrem Weg darum selbst wie im Werkzeug
+        s.TuerenOeffnenSelbst = true;
         return s;
     }
 

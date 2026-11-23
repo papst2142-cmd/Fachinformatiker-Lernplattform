@@ -30,7 +30,7 @@ public sealed partial class SpielSeite : Grid
     /// <summary>So lange wartet die Seite auf OpenGL, dann gilt "ohne Grafik".</summary>
     public static readonly TimeSpan GlWarten = TimeSpan.FromSeconds(4);
 
-    private const double Rand = 12;
+    internal const double Rand = 12;
     private const double OrtslisteBreite = 300;
     private const double UntenBreite = 720;
 
@@ -320,7 +320,7 @@ public sealed partial class SpielSeite : Grid
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
         klappZeile.Margin = new Thickness(0, 0, Dialog.RandFuerLeiste, 0);
-        var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { _zeileRolle, klappZeile } });
+        var unten = Schrift.Karte(new StackPanel { Spacing = 8, Children = { FAnzeigeBauen(), _zeileRolle, klappZeile } });
         unten.Padding = new Thickness(14, 10, 14 - Dialog.RandFuerLeiste, 2);
         unten.MaxWidth = UntenBreite;
         unten.HorizontalAlignment = HorizontalAlignment.Center;
@@ -383,6 +383,8 @@ public sealed partial class SpielSeite : Grid
         Ebene = ebene;
         // Welle A 0.99.0 (Sammelliste 400): runde Knoepfe am rechten Daumen ueber der Ebene (nur Handy und Tablet)
         DaumenKnoepfeAnlegen();
+        // Welle A 1.6.0 (Sammelliste 444): Handlung statt Dreieck-Menue (X und Handy oben rechts, runde Knoepfe links)
+        HandlungAnlegen(ebene);
         // Nachtrag 1 zu P7-13 (Wunsch 2): die Kamera haelt die Figur zwischen Kopfzeile und Textkarte
         ebene.LayoutUpdated += (_, _) =>
         {
@@ -673,6 +675,10 @@ public sealed partial class SpielSeite : Grid
         }
         Spiel = spiel;
         Flaeche.Spiel = spiel;
+        if (TuerenSelbstFuerTests)
+        {
+            spiel.TuerenOeffnenSelbst = true;
+        }
         spiel.Ton += TonDienst.Anlass;
         spiel.GehAnsage += GehAnsage;
         spiel.Geaendert += Beschriften;
@@ -818,8 +824,13 @@ public sealed partial class SpielSeite : Grid
         _knoepfe.Margin = default;
     }
 
-    /// <summary>Hoechste Hoehe der Textrolle ohne Kuerzung (ein Viertel der Seite).</summary>
-    private double ZeileHoehe => Math.Max(40, Ebene.Bounds.Size.Height / 4);
+    /// <summary>
+    /// Hoechste Hoehe der Textrolle ohne Kuerzung (ein Viertel der Seite). Welle A 1.6.0 (Sammelliste 444): mit der Handlung ist der
+    /// Hinweis eine kurze Zeile (hoechstens zwei Zeilen hoch, der Rest rollt).
+    /// </summary>
+    private double ZeileHoehe => HandlungModus
+        ? Math.Min(Math.Max(40, Ebene.Bounds.Size.Height / 4), Math.Max(40, Math.Ceiling(_zeile.FontSize * 2.8)))
+        : Math.Max(40, Ebene.Bounds.Size.Height / 4);
 
     private void FreiSetzen()
     {
@@ -907,9 +918,22 @@ public sealed partial class SpielSeite : Grid
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        if (e.Key == Key.Escape && !e.Handled)
+        if (e.Key == Key.Escape && !e.Handled && _auswahl is { IsVisible: true })
+        {
+            // Welle A 1.6.0: Esc schliesst zuerst die Auswahl der Handlungen
+            e.Handled = true;
+            AuswahlZu();
+        }
+        else if (e.Key == Key.Escape && !e.Handled)
         {
             Zurueck(this, e);
+        }
+        else if (!e.Handled && e.Source is not TextBox && e.KeyModifiers == KeyModifiers.None && Tafel is not { IsVisible: true }
+            && Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) == Core.Spiel.Probe.Tastenbelegung.Handeln
+            && HandelnTasteRunter())
+        {
+            // Welle A 1.6.0 (Sammelliste 444): F = Handlung hier, gehalten die Auswahl (frei belegbar)
+            e.Handled = true;
         }
         else if (!e.Handled && e.Source is not TextBox && e.KeyModifiers == KeyModifiers.None
             && Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) == Core.Spiel.Probe.Tastenbelegung.Auftraege
@@ -937,6 +961,10 @@ public sealed partial class SpielSeite : Grid
     {
         base.OnKeyUp(e);
         if (Flaeche.GehTaste(e.Key, false))
+        {
+            e.Handled = true;
+        }
+        else if (Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) == Core.Spiel.Probe.Tastenbelegung.Handeln && HandelnTasteHoch())
         {
             e.Handled = true;
         }
@@ -1278,6 +1306,7 @@ public sealed partial class SpielSeite : Grid
         TafelBauen(spiel);
         BusZeitenSetzen();
         QuestKnopfSetzen(spiel);
+        HandlungSetzen();
         QuestZeileSetzen();
     }
 
@@ -1300,6 +1329,7 @@ public sealed partial class SpielSeite : Grid
             _ichKnopf.Content = text;
         }
         Avalonia.Automation.AutomationProperties.SetName(_ichKnopf, text);
+        HandlungKnoepfeLegen();
         // Sammelliste 402: Text und Sichtbarkeit aendern die gemeinsame Breite der zwei Knoepfe neben den Symbolen
         QuestZeileSetzen();
     }

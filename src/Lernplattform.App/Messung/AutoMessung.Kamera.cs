@@ -261,7 +261,7 @@ public static partial class AutoMessung
             string.Create(inv, $"naechster {fingerNah:F2}, weitester {fingerWeit:F2}, gedreht {fingerDreh}, steilste {fingerSteil:F1}, flachste {fingerFlach:F1}"));
         k.Neigung = SpielKamera.NeigungStart;
 
-        // Tastatur (Ereignisse an der Flaeche): Pfeile nichts, Q/E drehen, R/F neigen, +/− im Bereich
+        // Tastatur (Ereignisse an der Flaeche): Pfeile nichts, Q/E drehen, R/G neigen (F ist seit A 1.6.0 die Handlung), +/− im Bereich
         fl.Focus();
         (zx, zz) = (k.ZielX, k.ZielZ);
         foreach (var t in new[] { Key.Left, Key.Right, Key.Up, Key.Down })
@@ -280,8 +280,8 @@ public static partial class AutoMessung
         var tSteil = k.Neigung;
         for (var i = 0; i < 12; i++)
         {
-            TasteAn(fl, Key.F);
-            Merken("Taste F");
+            TasteAn(fl, Key.G);
+            Merken("Taste G");
         }
         var tFlach = k.Neigung;
         for (var i = 0; i < 12; i++)
@@ -300,7 +300,7 @@ public static partial class AutoMessung
         IchVerlassen(fl, k, mitte);
         pruefe("Tastatur", pfeileNichts && qDreht && tSteil == SpielKamera.NeigungMax && tFlach == SpielKamera.NeigungMin
             && Math.Abs(tWeit - SpielKamera.AbstandMax) < 0.001f && Math.Abs(tNah - SpielKamera.AbstandMin) < 0.001f && tIch,
-            string.Create(inv, $"Pfeile verschieben {(pfeileNichts ? "nicht" : "NOCH")}, Q dreht {qDreht}, R bis {tSteil:F1}, F bis {tFlach:F1}, − bis {tWeit:F2}, + bis {tNah:F2} (dann Ich-Sicht {tIch})"));
+            string.Create(inv, $"Pfeile verschieben {(pfeileNichts ? "nicht" : "NOCH")}, Q dreht {qDreht}, R bis {tSteil:F1}, G bis {tFlach:F1}, − bis {tWeit:F2}, + bis {tNah:F2} (dann Ich-Sicht {tIch})"));
         k.Neigung = SpielKamera.NeigungStart;
         k.Zoomen(k.Abstand / SpielKamera.Abstand);
 

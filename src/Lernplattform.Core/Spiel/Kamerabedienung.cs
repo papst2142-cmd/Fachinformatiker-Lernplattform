@@ -49,12 +49,15 @@ public static class Kamerabedienung
     public static bool Maus(Kamera k, bool fest, Kameragriff.Schritt s, double hoehe)
     {
         var richtung = MausAlt.Value ? 1f : -1f;
+        // Welle A 1.6.0 (Sammelliste 445): Regler „Empfindlichkeit Maus“ (Vorgabe 100 % = Faktor 1, genau wie ohne Regler)
+        var f = Empfindlichkeit.Maus.Faktor;
+        Kameragriff.Schritt Mal(Kameragriff.Schritt d) => f == 1 ? d : d with { Grad = (float)(d.Grad * f), Dy = d.Dy * f };
         switch (s.Art)
         {
             case Kameragriff.Art.Drehen:
-                return RechteMaus(k, fest, s with { Grad = s.Grad * richtung });
+                return RechteMaus(k, fest, Mal(s with { Grad = s.Grad * richtung }));
             case Kameragriff.Art.Ziehen when SpielKamera.ImIch(k):
-                return RechteMaus(k, fest, new Kameragriff.Schritt(Kameragriff.Art.Drehen, Dy: s.Dy, Grad: (float)s.Dx * Kameragriff.GradJePunkt * richtung));
+                return RechteMaus(k, fest, Mal(new Kameragriff.Schritt(Kameragriff.Art.Drehen, Dy: s.Dy, Grad: (float)s.Dx * Kameragriff.GradJePunkt * richtung)));
             case Kameragriff.Art.Ziehen:
                 return Ziehen(k, fest, s.Dx, s.Dy, hoehe);
             default:

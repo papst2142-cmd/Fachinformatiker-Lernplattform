@@ -16,7 +16,7 @@ namespace Lernplattform.Messung;
 /// Welle A 0.92.0 „Ich-Sicht“ (Weisung P12-301, Kurzplan P12-181, Nico 1a 2b 3c 4a), ueber echte Ereignisse an der Spielflaeche:
 /// ganz heranzoomen (Mausrad, zwei Finger, Taste +) fuehrt weich durch den Schulterblick in die Ich-Sicht, heraus derselbe Weg
 /// zurueck; Taste I und der Menue-Eintrag „Ich-Sicht“ schalten an und aus, der Screenreader hoert an/aus und die Blickrichtung.
-/// Umsehen mit rechter Maus, einem Finger, Q/E und R/F (nie Gehen); beim Gehen dreht der Blick in die Gehrichtung; in ein Haus
+/// Umsehen mit rechter Maus, einem Finger, Q/E und R/G (nie Gehen; seit A 1.6.0 ist F die Handlung); beim Gehen dreht der Blick in die Gehrichtung; in ein Haus
 /// hinein und hinaus bleibt die Ich-Sicht. Grenzen (<see cref="IchGrenzenAsync"/>): in jeder Grafikstufe an jeder Kachel der
 /// Stadt in acht Blickrichtungen und in jedem Innenraum in acht Blickrichtungen (Niedrig 125 000 / 32, Mittel 160 000 / 40,
 /// Hoch 200 000 / 48, nie lockern). Gegenprobe: dieselben Stellen ohne Ich-Sicht zeichnen den Kopf der Figur (mehr Dreiecke der
@@ -177,7 +177,7 @@ public static partial class AutoMessung
         await BisFertig();
         pruefe("zwei Finger hinein", k.Ich && !spiel.Geht, string.Create(inv, $"Ich {k.IchAnteil:F2}, Abstand {k.Abstand:F2}"));
 
-        // 2 Umsehen: rechte Maus (drehen und Blick heben/senken), ein Finger (drehen), Q/E, R/F; nie Gehen, Abstand bleibt
+        // 2 Umsehen: rechte Maus (drehen und Blick heben/senken), ein Finger (drehen), Q/E, R/G (F ist seit A 1.6.0 die Handlung); nie Gehen, Abstand bleibt
         var maus = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, true);
         var (d0, n0) = (k.Drehung, k.IchNeigung);
         Druecken(fl, maus, mitte, rechts: true);
@@ -196,7 +196,7 @@ public static partial class AutoMessung
         var eDreht = Math.Abs(k.Drehung - d2) > 1f;
         for (var i = 0; i < 40; i++)
         {
-            TasteAn(fl, Key.F);
+            TasteAn(fl, Key.G);
         }
         var fGrenze = k.IchNeigung;
         for (var i = 0; i < 40; i++)
@@ -205,11 +205,11 @@ public static partial class AutoMessung
         }
         var rGrenze = k.IchNeigung;
         await Bilder(2);
-        pruefe("umsehen (rechte Maus, ein Finger, Q/E, R/F)",
+        pruefe("umsehen (rechte Maus, ein Finger, Q/E, R/G)",
             Math.Abs(mausDreh - (360f - (100 * Kameragriff.GradJePunkt))) < 0.01f /* A 1.6.0 (441): Maus nach rechts = Blick nach rechts */ && Math.Abs(mausNeig) > 1f && fingerDreh && eDreht
             && new[] { fGrenze, rGrenze }.Order().SequenceEqual(new[] { SpielKamera.IchNeigungMin, SpielKamera.IchNeigungMax })
             && k.Ich && !spiel.Geht && Math.Abs(k.Abstand - SpielKamera.AbstandMin) < 0.001f,
-            string.Create(inv, $"rechte Maus dreht {mausDreh:F1}, neigt {mausNeig:F1}; ein Finger dreht {fingerDreh}; E dreht {eDreht}; F bis {fGrenze:F0}, R bis {rGrenze:F0}; Figur geht {spiel.Geht}"));
+            string.Create(inv, $"rechte Maus dreht {mausDreh:F1}, neigt {mausNeig:F1}; ein Finger dreht {fingerDreh}; E dreht {eDreht}; G bis {fGrenze:F0}, R bis {rGrenze:F0}; Figur geht {spiel.Geht}"));
         k.IchNeigung = SpielKamera.IchNeigungStart;
 
         // Ansage bei neuer Blickrichtung (acht Richtungen)

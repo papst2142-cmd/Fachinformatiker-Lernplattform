@@ -615,6 +615,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         _paket.Clear();
         _ampelLichter = null;
         GlastuerenFrei(null);
+        TuerBlaetterFrei(null);
         NachladenFrei(null);
         GrafikFrei(null);
         base.OnOpenGlLost();
@@ -629,6 +630,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
         }
         _ampelLichter = null;
         GlastuerenFrei(gl);
+        TuerBlaetterFrei(gl);
         NachladenFrei(gl);
         GrafikFrei(gl);
         _innenGl.Clear();
@@ -1237,6 +1239,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 }
                 verdecktSek += _uhr.Elapsed.TotalSeconds - d0;
                 LetzteIchDecke = ichNah;
+                // Welle A 1.6.0 (Sammelliste 443): Blaetter der Raumtueren (zu oder offen)
+                TuerBlaetterZeichnen(gl, innen, sichtProj, ichNah);
                 if (ichNah)
                 {
                     // Welle A 0.92.0: Waende 2,5 m und Decke in einem Netz (ein Aufruf; nichts ist halb durchsichtig)

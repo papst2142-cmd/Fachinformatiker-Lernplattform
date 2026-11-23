@@ -55,6 +55,8 @@ public static class Ansicht3D
         {
             var spiel = new StadtSpiel(stadt, ablauf, grafik, stand.Innenraeume, daten.Geschaefte.Daten, daten.Feste,
                 () => einstellung.Fest, () => einstellung.Jahreszeit, vorrat);
+            // Welle S 0.63.0 (Sammelliste 443): das Werkzeug hat keine Handlung, die Figur oeffnet Tueren auf ihrem Weg selbst
+            spiel.TuerenOeffnenSelbst = true;
             // Welle S 0.55.0 (Weisung P12-282 Punkt 3): grosse Karten laedt die 3D-Ansicht nach (Grundlage und Stadtteile),
             // der ganze Bau auf einmal faellt weg
             if (GrenzenLive.MitNachladenFuer(spiel.Szene.Breite, spiel.Szene.Tiefe))

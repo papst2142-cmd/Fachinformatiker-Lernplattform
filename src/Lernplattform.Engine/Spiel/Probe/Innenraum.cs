@@ -11,7 +11,14 @@ namespace Lernplattform.Core.Spiel.Probe;
 /// <see cref="Bis"/> in <see cref="Innenraum.Teile"/>) mit Kasten; <see cref="Aussen"/> zeigt bei einer
 /// Aussenwand nach draussen, bei einer Innenwand ist es null.
 /// </summary>
-public sealed record InnenWand(int Von, int Bis, Vector3 Min, Vector3 Max, Vector2 Aussen);
+public sealed record InnenWand(int Von, int Bis, Vector3 Min, Vector3 Max, Vector2 Aussen)
+{
+    /// <summary>
+    /// Welle A 1.6.0 (Sammelliste 443): Zarge und Sturz einer Raumtuer (null = Wandstueck). Der Kasten reicht ueber die ganze
+    /// Oeffnung; im Durchgang stehen unten nur die zwei Pfosten (<see cref="Innenraum.TuerPfosten"/>), der Rest liegt ueber dem Kopf.
+    /// </summary>
+    public RaumTuer? Tuer { get; init; }
+}
 
 /// <summary>Phase 9 W1 (Weisung P9-3): Stelle (X, Z) und Blick (Bogenmass wie die Figur) einer sitzenden Person, Stuhl = Mitte des Stuhls.</summary>
 /// <summary>Weisung P12-6: gezeichnete Teile eines Einrichtungsstuecks (Pruefung auf Ueberschneidung und Verdecken).</summary>
@@ -933,6 +940,8 @@ public sealed partial class Innenraum
         {
             Wand((float)x1, (float)y1, (float)x2, (float)y2);
         }
+        // Welle A 1.6.0 (Sammelliste 443): Zarge und Sturz jeder Raumtuer (das Blatt zeichnet TuerBlattNetz)
+        RaumTuerenBauen();
         // Phase 13 Welle 5: ein Obergeschoss hat keine Eingangstuer
         Aussenwaende(Get(flur, "eingang") as PyObjekt);
         var deko = Liste(Gebaeude["raeume"]).Select(Objekt).SelectMany(r => ListeOderLeer(r, "deko"))
@@ -1066,6 +1075,7 @@ public sealed partial class Innenraum
             if (!waagerecht && fest == 0 && eingang is not null)
             {
                 oeffnungen.Add(((float)Py.F(eingang["von"]), (float)Py.F(eingang["bis"]), 't'));
+                Ausgang = ((float)Py.F(eingang["von"]), (float)Py.F(eingang["bis"]));
             }
             oeffnungen.Sort((a, b) => a.Von.CompareTo(b.Von));
             var a0 = innenSeite < 0 ? fest - d : fest - d;
@@ -1090,6 +1100,10 @@ public sealed partial class Innenraum
                         Stueck(von, bis, 0, 0.9f * Meter, AussenFarbe);
                         Stueck(von, bis, 0.9f * Meter, WandHoehe - 0.12f, Farben.Glas);
                         Stueck(von, bis, WandHoehe - 0.12f, WandHoehe, Farben.Rahmen);
+                        break;
+                    case 't' when !OhneTueren.Value:
+                        // Welle A 1.6.0 (Sammelliste 443): der Ausgang ist eine geschlossene Tuer (hinaus nur ueber die Handlung)
+                        AusgangTuer(von, bis, AussenFarbe, a0, a1);
                         break;
                     case 'r':
                         Stueck(von, bis, 0, WandHoehe, Farben.Tor);

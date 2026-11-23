@@ -26,6 +26,12 @@ public static partial class StadtbauGrenzen
             dreiecke += innen.WandNetzFertig(wand).Indizes.Count / 3;
             aufrufe++;
         }
+        if (innen.RaumTueren.Count > 0)
+        {
+            // Welle A 1.6.0 (Sammelliste 443): die Blaetter der Raumtueren (ein Netz, offen wie zu gleich viele Dreiecke)
+            dreiecke += innen.TuerBlattNetz(new Dictionary<int, TuerOffen>()).Indizes.Count / 3;
+            aufrufe++;
+        }
         dreiecke += figurDreiecke ?? Figur.Netz(innen.Grafik, null, 1f).Indizes.Count / 3;
         aufrufe++;
         foreach (var person in innen.Personen)

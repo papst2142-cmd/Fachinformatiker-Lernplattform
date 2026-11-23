@@ -283,7 +283,9 @@ public sealed class IchSichtTests
                 var auge = (verschieben ?? (p => p))(echt);
                 foreach (var w in raum.Waende)
                 {
-                    var a = AbstandZumKasten(auge, w.Min, w.Max);
+                    // Welle A 1.6.0 (Sammelliste 443): an der Zarge einer Raumtuer nur die Pfosten; dass Sturz und Querholz hoch genug
+                    // ueber dem Auge liegen, prueft Drinnen_NieEineWandAnDerNahenEbene_JedeBegehbareZelle eigens
+                    var a = w.Tuer is null ? AbstandZumKasten(auge, w.Min, w.Max) : IchSicht.AbstandZurWand(auge, w);
                     if (a < bester.Item1)
                     {
                         bester = (a, $"{raum.Ansicht} Zelle {spalte}/{zeile} Richtung {r}");
@@ -314,6 +316,12 @@ public sealed class IchSichtTests
         Assert.True(geprueft > 10);
         Assert.True(funde.Count == 0, string.Join("\n", funde));
         Assert.True(IchSicht.WandAbstand > NahRadius);
+        // Welle A 1.6.0 (Sammelliste 443): der tiefste Teil ueber einer Raumtuer (Querholz der Zarge, in der Ich-Sicht gestreckt)
+        // liegt weiter als NahRadius ueber dem hoechsten Auge (stehend im hoechsten Punkt des Sprungs); es gibt solche Tueren
+        Assert.Contains(SpielWandTests.Fassungen().SelectMany(f => SpielWandTests.AlleRaeume(f.Innen)).SelectMany(r => r.Waende), w => w.Tuer is not null);
+        var querholz = (Innenraum.TuerOben - Innenraum.ZargeBreite) * Innenraum.IchWandStreckung;
+        var augeHoechstens = Innenraum.FigurHoehe * (IchSicht.AugeAnteil + Innenraum.SprungHoch);
+        Assert.True(querholz - augeHoechstens > NahRadius, $"{querholz} - {augeHoechstens} <= {NahRadius}");
         // Gegenprobe: Figur dicht vor einer Wand (halber Augenversatz), Blick auf die Wand: ohne Zurueckruecken laege das Auge in
         // oder hinter der Wand, mit Zurueckruecken davor und weiter als WandAbstand
         var wandRaum = SpielWandTests.AlleRaeume(SpielInnenraumTests.Innenraeume.Value).First();

@@ -75,6 +75,9 @@ public class SpielMoebelRaumTests
                 var s = new StadtSpiel(new Stadt(Inhalt, SpielStadtTests.Daten.Value), ablauf, SpielGrafikTests.Bibliothek.Value,
                     SpielInnenraumTests.Innenraeume.Value, SpielGeschaefteTests.Daten.Value, null, () => null, () => Jahreszeit.Sommer);
                 Assert.True(s.Betreten(), s.Zeile);
+                // Welle A 1.6.0 (Sammelliste 443): geprueft wird der Weg durch die Tuer, nicht das Oeffnen (eigene Tests in
+                // SpielTuerenTests); die Figur oeffnet die Raumtueren darum selbst wie im Werkzeug
+                s.TuerenOeffnenSelbst = true;
                 foreach (var b in bereiche)
                 {
                     for (var dreh = 0L; dreh < 4; dreh++)
