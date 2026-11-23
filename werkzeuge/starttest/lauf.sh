@@ -49,6 +49,16 @@ if [ -n "${LERNPLATTFORM_STARTTEST_PROGRAMM:-}" ] && [ "$projekt" = "src/Lernpla
   echo "Start-Test mit dem wie ein Paket gebauten Programm: $LERNPLATTFORM_STARTTEST_PROGRAMM"
   befehl=(bash -c '"$@"; r=$?; echo $r > "$0"; exit $r' "$rcdatei" "$LERNPLATTFORM_STARTTEST_PROGRAMM")
 fi
+# Welle S 0.62.2 (Sammelliste 438, Weisung P12-356): LERNPLATTFORM_STARTTEST_WERKZEUG = das wie ein Paket gebaute
+# Werkzeug (ReadyToRun, setzt ci.yml) fuer den Teil stadtbau; gleiche Regel: gesetzt, aber nicht vorhanden = sofort rot.
+if [ -n "${LERNPLATTFORM_STARTTEST_WERKZEUG:-}" ] && [ "$projekt" = "src/Stadtbau.Desktop" ]; then
+  if [ ! -f "$LERNPLATTFORM_STARTTEST_WERKZEUG" ]; then
+    echo "FEHLER: LERNPLATTFORM_STARTTEST_WERKZEUG nicht gefunden: $LERNPLATTFORM_STARTTEST_WERKZEUG"
+    exit 1
+  fi
+  echo "Start-Test mit dem wie ein Paket gebauten Werkzeug: $LERNPLATTFORM_STARTTEST_WERKZEUG"
+  befehl=(bash -c '"$@"; r=$?; echo $r > "$0"; exit $r' "$rcdatei" "$LERNPLATTFORM_STARTTEST_WERKZEUG")
+fi
 if [ "${RUNNER_OS:-Linux}" = "Linux" ]; then
   # Phase 7 W1: Xvfb hat nur den Mesa-Softwaretreiber llvmpipe, den Avalonia fuer OpenGL sperrt;
   # der Start-Test erlaubt ihn, damit der Pflicht-Messpunkt "GL-Zusammenhang erzeugt" messbar ist

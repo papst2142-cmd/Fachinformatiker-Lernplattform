@@ -9,6 +9,20 @@
     <ApplicationIcon>..\Stadtbau.App\Assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <!-- Welle A 1.4.1 / S 0.62.2 (Sammelliste 438, Weisung P12-356, Nico 2a): das ausgelieferte Paket (dotnet publish -r <rid>)
+       wird vorab uebersetzt (ReadyToRun) wie die Lernplattform seit A 0.97.0. Gemessen (Linux, Stadt 1 Winter, Median aus
+       5 Starts): erster Bau 467 -> 277 ms, Laden bis bereit 2166 -> 1457 ms. Der Start-Test des Werkzeugs misst denselben
+       Bau (ci.yml, LERNPLATTFORM_STARTTEST_WERKZEUG in werkzeuge/starttest/lauf.sh). -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <!-- Am Mac wie in der Lernplattform ohne vorab uebersetzte Engine (Lauf 1103, siehe Lernplattform.Desktop.csproj);
+       das Werkzeug wird heute fuer den Mac nicht ausgeliefert, die Regel gilt fuer einen spaeteren Mac-Bau. -->
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx'))">
+    <PublishReadyToRunExclude Include="Lernplattform.Engine.dll" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Velopack" />

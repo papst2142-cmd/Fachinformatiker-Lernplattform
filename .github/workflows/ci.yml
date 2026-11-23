@@ -301,6 +301,12 @@ jobs:
         id: bauen_werkzeug
         if: matrix.lernen && runner.os != 'macOS'
         run: dotnet build src/Stadtbau.Desktop -c Release
+      # Welle S 0.62.2 (Sammelliste 438, Weisung P12-356, Nico 2a): das Werkzeug wie sein Paket bauen (ReadyToRun);
+      # lauf.sh startet im Teil stadtbau dieses Programm (LERNPLATTFORM_STARTTEST_WERKZEUG)
+      - name: Werkzeug wie das Paket bauen (ReadyToRun)
+        id: werkzeug_paketbau
+        if: steps.bauen_werkzeug.outcome == 'success'
+        run: dotnet publish src/Stadtbau.Desktop -c Release -r ${{ startsWith(matrix.os, 'windows') && 'win-x64' || 'linux-x64' }} --self-contained -p:DebugType=none -o starttest-werkzeug
       # Phase 11 (Weisung P11-29): Gegenprobe ohne Schluessel, das Programm sendet nichts und meldet "nicht verfuegbar"
       - name: Fehlerbericht-Gegenprobe ohne Schluessel
         if: runner.os == 'Linux' && matrix.einzel
@@ -422,13 +428,14 @@ jobs:
         run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
       - name: Werkzeug ohne Bedienung (1. Lauf, frischer Datenordner)
         id: werkzeug1
-        if: always() && steps.bauen_werkzeug.outcome == 'success' && (runner.os != 'Windows' || steps.anzeige_werkzeug.outcome == 'success')
+        if: always() && steps.werkzeug_paketbau.outcome == 'success' && (runner.os != 'Windows' || steps.anzeige_werkzeug.outcome == 'success')
         timeout-minutes: 10
         shell: bash
         env:
           LERNPLATTFORM_MESSUNG_TEIL: stadtbau
           STARTTEST_WACHHUND_MINUTEN: 9
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug1
+          LERNPLATTFORM_STARTTEST_WERKZEUG: starttest-werkzeug/Stadtbau${{ startsWith(matrix.os, 'windows') && '.exe' || '' }}
         run: bash werkzeuge/starttest/lauf.sh 1 messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
       - name: Werkzeug ohne Bedienung (2. Lauf, neuer Prozess, frischer Datenordner)
         if: always() && steps.werkzeug1.outputs.rc == '3' && steps.werkzeug1.outputs.zweiter_lauf != 'nein'
@@ -438,6 +445,7 @@ jobs:
           LERNPLATTFORM_MESSUNG_TEIL: stadtbau
           STARTTEST_WACHHUND_MINUTEN: ${{ matrix.os == 'macos-15-intel' && 9 || 10 }}
           LERNPLATTFORM_DATEN: ${{ runner.temp }}/daten_werkzeug2
+          LERNPLATTFORM_STARTTEST_WERKZEUG: starttest-werkzeug/Stadtbau${{ startsWith(matrix.os, 'windows') && '.exe' || '' }}
         run: bash werkzeuge/starttest/lauf.sh 2 messung_${{ env.MESS_OS }}_werkzeug2_versuch${{ github.run_attempt }}.txt messung_${{ env.MESS_OS }}_werkzeug1_versuch${{ github.run_attempt }}.txt
       # Phase 7 W1, nur Messung (Plan Abschnitt 3, Weg 1). Mac-Welle (Weisung P11-28): am Mac ist OpenGL jetzt die
       # Vorgabe (der Standard-Start-Test oben misst sie, Rueckfall Ortsliste, weil die CI-Macs kein GL haben); dieser

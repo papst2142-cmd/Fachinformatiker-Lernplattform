@@ -9,6 +9,7 @@ Eine kleine Pflege-Version für die Winter-Ansicht in 3D.
 
 - Im Winter fasst die 3D-Ansicht gleiche Grasbüschel, Büsche, Steine und Bäume jetzt genauso zusammen wie im Sommer. Vorher bekam ein Stück je nach Drehung eine winzig andere Schneefarbe und wurde einzeln gezeichnet, auf verschiedenen Rechnern verschieden. Jetzt ist das Ergebnis auf jedem Rechner gleich.
 - Die Stadt sieht aus wie vorher, und die Datei für das Spiel ist dieselbe.
+- Das Werkzeug startet am PC schneller, und die Stadt ist beim ersten Mal schneller gebaut: Das Programm wird jetzt schon beim Packen übersetzt statt erst beim Start. Der Download wird dadurch etwas größer.
 - Deine Projekte und die Dateien für das Spiel bleiben, wie sie sind.
 
 ## S 0.62.1
