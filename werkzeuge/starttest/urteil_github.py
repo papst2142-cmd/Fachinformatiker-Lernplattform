@@ -47,7 +47,11 @@ FOLGE_PAKETE = re.compile(r"FEHLER: (pakete( \(stadtbau win-x64\))?|android) nic
 TESTFEHLER = re.compile(r"\[FAIL\]|Test Run Failed|\berror (CS|MSB|NU|NETSDK)\d+|Unhandled exception|URTEIL: rot|"
                         r"Absturz|Wachhund|failed!", re.I)
 FEHLERZEILE = re.compile(r"FEHLER|##\[error\]")
+INFO_INTEL = re.compile(r"INFO Intel-Mac \(Ausnahme P11-19, zaehlt nicht\): ")
 EXIT = re.compile(r"^##\[error\]Process completed with exit code \d+\.?$")
+
+
+EINE_SEKUNDE = datetime.timedelta(seconds=1)
 
 
 def zeit(text):
@@ -56,18 +60,34 @@ def zeit(text):
 
 def schrittzeilen(log, schritt):
     """Zeilen des Protokolls im Zeitfenster des Schritts (Sekunden, +1 s), ohne Skripttext und Umgebung, ohne Zeitstempel
-    und Farbcodes. Ohne Zeiten des Schritts: keine Zeilen."""
+    und Farbcodes. Ohne Zeiten des Schritts: keine Zeilen.
+    Sammelliste 389 (Lauf 1078): die Zeiten der API haben nur ganze Sekunden. Zeilen des Schritts davor aus derselben
+    Sekunde stehen im Protokoll VOR dem Kopf des Schritts ("##[group]Run ..."); sie fallen weg, sobald der erste Kopf im
+    Fenster kommt. Ab der letzten Sekunde des Schritts beendet der Kopf des naechsten Schritts (oder "Post job cleanup.")
+    das Fenster, damit ein Beleg des naechsten Schritts nie einen roten Schritt zu "GitHub" macht (nie falsches Gruen).
+    Steht ein Kopf in der Sekunde vor dem Beginn, ist offen, welcher Kopf der eigene ist: dann gilt das Fenster wie bisher
+    (nichts faellt weg, nichts endet frueher)."""
     anfang, ende = zeit(schritt.get("started_at")), zeit(schritt.get("completed_at"))
     if not anfang or not ende:
         return []
-    ende += datetime.timedelta(seconds=1)
-    zeilen, gruppe = [], False
+    letzte = ende
+    ende += EINE_SEKUNDE
+    zeilen, gruppe, kopf, unklar = [], False, False, False
     for roh in log.splitlines():
         m = ZEIT.match(roh)
         if not m:
             continue
         t = datetime.datetime.strptime(m.group(1), "%Y-%m-%dT%H:%M:%S")
         text = FARBE.sub("", roh[m.end():]).strip()
+        if text.startswith("##[group]Run ") or text == "Post job cleanup.":
+            if anfang - EINE_SEKUNDE <= t < anfang:
+                unklar = True  # Kopf kurz vor dem Beginn: welcher Kopf der eigene ist, bleibt offen -> wie bisher
+            elif anfang <= t <= ende and not unklar:
+                if kopf and t >= letzte:
+                    break
+                if not kopf and t == anfang:
+                    zeilen = []
+                kopf = True
         if text.startswith("##[group]Run "):
             gruppe = True
             continue
@@ -86,6 +106,8 @@ def schritt_urteil(zeilen):
     for z in zeilen:
         if z.startswith("WIEDERHOLUNG"):
             continue
+        if INFO_INTEL.match(z):
+            continue  # Ausnahme P11-19: zaehlt nach urteil.py nicht (Sammelliste 389); rot macht den Job eine andere Zeile
         if TESTFEHLER.search(z):
             return "echt", "Testfehler: " + z[:160]
         if BELEG.search(z) and (FEHLERZEILE.search(z) or "Exception" in z or "Failed" in z or "error" in z.lower()):
@@ -279,6 +301,56 @@ RELEASE = "release (Entwuerfe zusammenstellen)"
 FOLGE_ANDROID = [(T3, "FEHLER: android nicht gruen (failure), kein Release-Entwurf"), (T3, "##[error]Process completed with exit code 1.")]
 ZWEI = ["pakete (osx-arm64)", "tests (ubuntu-latest)"]
 
+# Lauf 1078 (Sammelliste 389): Start-Test-Schritt gruen bis 19:54:01, seine letzten Zeilen (INFO Intel-Mac) stehen in
+# derselben Sekunde VOR dem Kopf des roten Schritts upload-artifact (Beginn 19:54:01, Ende 19:54:32)
+U0, U1, U2, U3 = "2026-11-18T19:41:40", "2026-11-18T19:54:01", "2026-11-18T19:54:32", "2026-11-18T19:54:33"
+START_1078 = ("Start ohne Bedienung (1. Lauf)", "success", U0, U1)
+UPLOAD_1078 = ("Run actions/upload-artifact@v7", "failure", U1, U2)
+INFO_1078 = [(U1, "Start-Test gruen im 1. Lauf: nur Messzeiten der Ausnahme Intel-Mac, kein 2. Lauf (Weisung P11-38):"),
+             (U1, "  INFO Intel-Mac (Ausnahme P11-19, zaehlt nicht): FEHLER: Wechsel Hell/Dunkel: 1010 ms ueber Grenze 1000 ms; "
+                  "Einzelmessungen 1040 ms / 1010 ms / 1163 ms (3 Messungen)")]
+KOPF_1078 = [(U1, "##[group]Run actions/upload-artifact@v7"), (U1, "with:"), (U1, "  name: messung-macOS-intel-lernen-1"),
+             (U1, "##[endgroup]"), (U1, "With the provided path, there will be 1 file uploaded")]
+ENOTFOUND_1078 = [(U2, "##[error]Failed to CreateArtifact: Unable to make request: ENOTFOUND")]
+NACH_1078 = [(U2, "Post job cleanup."), (U3, "[command]/usr/local/bin/git version")]
+INTEL_LERNEN = "tests (macos-15-intel, Lernteil)"
+TESTS_ROT = ("Tests", "failure", T1, T2)
+NACH_TESTS = [(T2, "##[error]Process completed with exit code 1."), (T2, "##[group]Run actions/upload-artifact@v7"),
+              (T2, "##[endgroup]"), ("2026-11-09T20:10:01", "##[error]Failed to CreateArtifact: Unable to make request: ENOTFOUND")]
+
+FAELLE_389 = [
+    ("Lauf 1078: Zeilen des Vorschritts derselben Sekunde fallen weg, Hochladen ENOTFOUND",
+     [_job(30, INTEL_LERNEN, [OK, START_1078, UPLOAD_1078])], {30: _log(*(INFO_1078 + KOPF_1078 + ENOTFOUND_1078 + NACH_1078))},
+     [INTEL_LERNEN], "nur GitHub"),
+    ("INFO-Intel-Mac-Zeile im roten Schritt zaehlt nicht, Beleg ENOTFOUND",
+     [_job(31, INTEL_LERNEN, [OK, ("Start ohne Bedienung (1. Lauf)", "failure", U0, U2)])],
+     {31: _log(*([(U0, "##[group]Run bash werkzeuge/starttest/lauf.sh 1 x"), (U0, "##[endgroup]")] + INFO_1078 + ENOTFOUND_1078))},
+     [INTEL_LERNEN], "nur GitHub"),
+    ("Gegenprobe Lauf 1078 mit echter FEHLER-Zeile nach dem Kopf",
+     [_job(32, INTEL_LERNEN, [OK, START_1078, UPLOAD_1078])],
+     {32: _log(*(INFO_1078 + KOPF_1078 + [(U2, "FEHLER: Artefakt unvollstaendig")] + ENOTFOUND_1078))}, [INTEL_LERNEN], "echt rot"),
+    ("Gegenprobe INFO-Zeile und echter Layoutfund im roten Schritt",
+     [_job(33, INTEL_LERNEN, [OK, ("Start ohne Bedienung (1. Lauf)", "failure", U0, U2)])],
+     {33: _log(*([(U0, "##[group]Run bash werkzeuge/starttest/lauf.sh 1 x"), (U0, "##[endgroup]")] + INFO_1078
+                 + [(U2, "  FEHLER: Layout: Knopf abgeschnitten")] + ENOTFOUND_1078))}, [INTEL_LERNEN], "echt rot"),
+    ("Gegenprobe INFO Intel-Mac nur mitten in der Zeile",
+     [_job(34, INTEL_LERNEN, [OK, ("Start ohne Bedienung (1. Lauf)", "failure", U0, U2)])],
+     {34: _log((U0, "##[group]Run x"), (U0, "##[endgroup]"), (U2, "FEHLER: Spiel: x (nicht INFO Intel-Mac (Ausnahme P11-19, zaehlt nicht): )"),
+               *ENOTFOUND_1078)}, [INTEL_LERNEN], "echt rot"),
+    ("Gegenprobe Beleg erst im naechsten Schritt (Sekunde nach dem Ende)",
+     [_job(35, "tests (ubuntu-latest)", [OK, TESTS_ROT])],
+     {35: _log((T1, "##[group]Run dotnet test"), (T1, "##[endgroup]"), *NACH_TESTS)}, ["tests (ubuntu-latest)"], "echt rot"),
+    ("Gegenprobe Kopf des Vorschritts in der Sekunde davor: Zeilen bleiben wie bisher",
+     [_job(36, INTEL_LERNEN, [OK, ("Kurz", "success", "2026-11-18T19:54:00", U1), UPLOAD_1078])],
+     {36: _log(("2026-11-18T19:54:00", "##[group]Run kurz.sh"), ("2026-11-18T19:54:00", "##[endgroup]"),
+               (U1, "FEHLER: Kurzschritt"), *(KOPF_1078 + ENOTFOUND_1078))}, [INTEL_LERNEN], "echt rot"),
+    ("Gegenprobe echter Testfehler bleibt echt, Beleg nur im Vorschritt derselben Sekunde",
+     [_job(37, "tests (ubuntu-latest)", [OK, ("Hochladen", "success", T0, T1), TESTS_ROT])],
+     {37: _log((T1, "##[error]Failed to CreateArtifact: Unable to make request: ENOTFOUND"), (T1, "##[group]Run dotnet test"),
+               (T1, "##[endgroup]"), (T2, "[FAIL] Lernplattform.Tests.X"), (T2, "##[error]Process completed with exit code 1."))},
+     ["tests (ubuntu-latest)"], "echt rot"),
+]
+
 FAELLE = [
     # (Name, Jobs, Logs, erwartet, Ergebnis)
     ("kein Rechner (Lauf 738)", [_job(1, "tests (macos-15-intel, Metal)", [("Set up job", None, None, None)])], {},
@@ -336,12 +408,12 @@ FAELLE = [
 
 def selbsttest():
     rot = 0
-    for name, jobs, logs, erwartet, soll in FAELLE:
+    for name, jobs, logs, erwartet, soll in FAELLE + FAELLE_389:
         ist, zeilen = urteilen(jobs, logs, erwartet)
         if ist != soll:
             print("\n".join(zeilen))
             print("FEHLER: Selbsttest GitHub-Urteil Fall '%s': %s statt %s" % (name, ist, soll))
             rot = 1
     print("Selbsttest GitHub-Urteil: %d Faelle (davon %d Gegenproben echt rot), %s"
-          % (len(FAELLE), sum(1 for f in FAELLE if f[4] == "echt rot"), "rot" if rot else "gruen"))
+          % (len(FAELLE + FAELLE_389), sum(1 for f in FAELLE + FAELLE_389 if f[4] == "echt rot"), "rot" if rot else "gruen"))
     return rot
