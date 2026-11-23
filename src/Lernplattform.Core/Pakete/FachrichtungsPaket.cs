@@ -87,7 +87,15 @@ public static class FachrichtungsPaket
     /// nur der Start der App bildet die Inhalte schon vorher und verwirft sie, wenn die Saetze durchfallen).
     /// </summary>
     public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenOffen(IReadOnlyDictionary<string, byte[]> dateien,
-        string fachrichtung, long stand)
+        string fachrichtung, long stand) => LesenOffen(dateien, fachrichtung, stand, true);
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193): wie <see cref="LesenOffen(IReadOnlyDictionary{string, byte[]}, string, long)"/>; ohne
+    /// <paramref name="mitLadepruefung"/> entfaellt nur die Ladepruefung der Saetze (Ergebnis gut). Nur fuer ein Paket, dessen
+    /// Dateien (Pruefsummen) mit genau dieser App schon ganz geprueft und gut waren (<see cref="IPaketPruefMerker"/>).
+    /// </summary>
+    public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenOffen(IReadOnlyDictionary<string, byte[]> dateien,
+        string fachrichtung, long stand, bool mitLadepruefung)
     {
         if (!dateien.TryGetValue(LernenDatei, out var lernen) || !dateien.TryGetValue(SaetzeDatei, out var saetze))
         {
@@ -96,7 +104,7 @@ public static class FachrichtungsPaket
         // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV kommen beim Start nur noch aus den Paketen; die Saetze (Aufbau, danach
         // die Ladepruefung) werden darum neben der grossen Datei lernen.json gelesen, nicht danach. Die Reihenfolge der Gruende
         // bleibt: erst lernen.json, dann der Aufbau der Saetze, dann ihre Ausschluesse, zuletzt die Ladepruefung.
-        var satzAufgabe = Task.Run(() => SaetzeLesen(saetze, fachrichtung));
+        var satzAufgabe = Task.Run(() => SaetzeLesen(saetze, fachrichtung, mitLadepruefung));
         try
         {
             var l = JsonDocument.Parse(lernen).RootElement;
@@ -195,7 +203,8 @@ public static class FachrichtungsPaket
     /// Saetze eines Fachrichtungs-Pakets: Format, Stellen, Kennung dieser Fachrichtung und die Ladepruefung wie die Saetze der
     /// App (EchtSaetze, nie still weglassen). Liste = null: Grund ist der fertige Text (wie bisher in <see cref="Lesen"/>).
     /// </summary>
-    private static (List<(int, JsonElement)>? Liste, string? Grund, Task<string?>? Ladepruefung) SaetzeLesen(byte[] saetze, string fachrichtung)
+    private static (List<(int, JsonElement)>? Liste, string? Grund, Task<string?>? Ladepruefung) SaetzeLesen(byte[] saetze, string fachrichtung,
+        bool mitLadepruefung)
     {
         try
         {
@@ -219,7 +228,7 @@ public static class FachrichtungsPaket
                 }
             }
             // jeder Satz besteht dieselbe Ladepruefung wie die Saetze der App (EchtSaetze), nie still weglassen; sie beginnt sofort
-            return (satzListe, null, Task.Run(() => Ladepruefung(sformat, satzListe)));
+            return (satzListe, null, mitLadepruefung ? Task.Run(() => Ladepruefung(sformat, satzListe)) : OhneGrund);
         }
         catch (Exception x) when (x is JsonException or InvalidOperationException or FormatException)
         {
@@ -279,8 +288,24 @@ public static class FachrichtungsPaket
     /// beider Dateien) nur einmal (auch die Ladepruefung der Saetze); hoechstens 8 Inhalte gemerkt.
     /// </summary>
     public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenGemerkt(string schluessel,
-        IReadOnlyDictionary<string, byte[]> dateien, string fachrichtung, long stand)
+        IReadOnlyDictionary<string, byte[]> dateien, string fachrichtung, long stand) => LesenGemerkt(schluessel, dateien, fachrichtung, stand, true);
+
+    /// <summary>Wie oben; ohne <paramref name="mitLadepruefung"/> siehe <see cref="LesenOffen(IReadOnlyDictionary{string, byte[]}, string, long, bool)"/>.</summary>
+    public static (FachrichtungsInhalt? Inhalt, string? Grund, Task<string?> Ladepruefung) LesenGemerkt(string schluessel,
+        IReadOnlyDictionary<string, byte[]> dateien, string fachrichtung, long stand, bool mitLadepruefung)
     {
+        // ein Eintrag mit Ladepruefung taugt auch ohne; einer ohne nur ohne
+        if (!mitLadepruefung)
+        {
+            lock (Gelesen)
+            {
+                if (Gelesen.TryGetValue(schluessel, out var mit))
+                {
+                    return mit;
+                }
+            }
+            schluessel += "|ohne";
+        }
         lock (Gelesen)
         {
             if (Gelesen.TryGetValue(schluessel, out var gemerkt))
@@ -288,7 +313,7 @@ public static class FachrichtungsPaket
                 return gemerkt;
             }
         }
-        var ergebnis = LesenOffen(dateien, fachrichtung, stand);
+        var ergebnis = LesenOffen(dateien, fachrichtung, stand, mitLadepruefung);
         lock (Gelesen)
         {
             if (Gelesen.Count >= 8)

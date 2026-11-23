@@ -63,7 +63,8 @@ public static partial class AutoMessung
             return Fund("Fachrichtung AE im Lernstand nicht gespeichert");
         }
         // Welle A 1.5.0 (Weisung P12-358): AE kommt nur als Paket; der Datenordner traegt es wie bei einem Nutzer nach „Laden“
-        if (EinsetzenAus(new Core.Pakete.PaketAblage(ordner, Zustand.Eingebaut), Core.Pakete.FachrichtungsPaket.Kennung("ae")) is { } grund)
+        // (eingesetzt wie dort ueber die Ablage mit der Kennung dieses Programms, also ganz geprueft und gemerkt)
+        if (EinsetzenAus(new Core.Pakete.PaketAblage(ordner, Zustand.Eingebaut, PaketDienst.PruefKennung), Core.Pakete.FachrichtungsPaket.Kennung("ae")) is { } grund)
         {
             return Fund("Fachrichtungs-Paket AE nicht eingesetzt: " + grund);
         }

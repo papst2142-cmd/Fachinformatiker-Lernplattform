@@ -36,11 +36,19 @@ public static class PaketDienst
     // Welle A 0.88.0 (Nico 5a): Entfernen gesperrt, solange die Figur in der Stadt des Pakets ist
     // Welle A 0.91.0 (Weisung P12-300): Fachrichtungs-Pakete werden gegen die Inhalte der App geprueft („nur angehaengt“);
     // Entfernen gesperrt, solange ein Pruefungssatz im echten Format dieser Fachrichtung offen ist
-    private static PaketVerwaltung Neu() => new(new PaketAblage(Ablage.Datenordner(), Zustand.Eingebaut),
+    // Welle A 1.5.0 (Lauf 1193): ganz gepruefte Fachrichtungs-Pakete gemerkt je Programmstand (PruefKennung)
+    private static PaketVerwaltung Neu() => new(new PaketAblage(Ablage.Datenordner(), Zustand.Eingebaut, PruefKennung),
         () => PaketQuelle.Fuer(Http, zeile => Updateprotokoll.Schreiben(zeile)), Aktualisierung.Aktualisierung.Anzeige)
     {
         EntfernenSperre = kennung => Spiel.SpielStart.EntfernenSperre(kennung) ?? FachrichtungsPaket.EntfernenSperre(kennung, OffenerSatz()),
     };
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193): Kennung des Programmstands fuer <see cref="PaketAblage.PruefKennung"/>: die Kennungen der
+    /// Module von Core (Pruefung, Ladepruefung) und App (eingebaute Inhalte); jeder andere Bau ergibt eine andere Kennung.
+    /// </summary>
+    internal static string PruefKennung =>
+        typeof(Paket).Assembly.ManifestModule.ModuleVersionId.ToString("N") + "/" + typeof(Zustand).Assembly.ManifestModule.ModuleVersionId.ToString("N");
 
     /// <summary>Kennung des offenen Pruefungssatzes im echten Format (null = keiner); nur lesen.</summary>
     internal static string? OffenerSatz()

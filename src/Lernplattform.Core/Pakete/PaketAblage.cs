@@ -19,10 +19,81 @@ public sealed record GeladenesPaket(string Kennung, long Stand, PaketKopf? Kopf,
 /// Reste in <c>_laden/</c> raeumt <see cref="Aufraeumen"/> (Start der Verwaltung und Ende jedes Ladens) weg. Entfernen setzt den Ordner zuerst nach
 /// <c>_laden/</c> und loescht ihn dort; leere Ordner verschwinden, der Datenordner ist danach wie vorher.
 /// </summary>
-public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingebaut = null)
+public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingebaut = null, string? pruefKennung = null) : IPaketPruefMerker
 {
     /// <summary>Welle A 0.91.0: Inhalte der App, gegen die ein Fachrichtungs-Paket „nur angehaengt“ geprueft wird.</summary>
     public Inhalte.LernenOrdner? Eingebaut { get; } = eingebaut;
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193): Kennung des Programmstands (Code und Inhalte der App, aendert sich mit jedem anderen Bau), unter
+    /// der ganz gepruefte Fachrichtungs-Pakete gemerkt werden (<see cref="IPaketPruefMerker"/>); null = nichts merken.
+    /// </summary>
+    public string? PruefKennung { get; } = pruefKennung;
+
+    /// <summary>Welle A 1.5.0: Datei der gemerkten Pakete (Zeile 1 die Kennung der App, danach je Zeile ein Schluessel).</summary>
+    public const string GeprueftName = "_geprueft.txt";
+
+    public string GeprueftDatei => Path.Combine(Ordner, GeprueftName);
+
+    private static readonly Lock MerkerSperre = new();
+
+    private IPaketPruefMerker? Merker => PruefKennung is not null && Eingebaut is not null ? this : null;
+
+    private List<string> GemerktLesen()
+    {
+        try
+        {
+            if (!File.Exists(GeprueftDatei))
+            {
+                return [];
+            }
+            var zeilen = File.ReadAllLines(GeprueftDatei);
+            return zeilen.Length > 0 && zeilen[0] == PruefKennung ? [.. zeilen.Skip(1)] : [];
+        }
+        catch (Exception x) when (x is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
+
+    /// <inheritdoc/>
+    public bool Bekannt(string schluessel)
+    {
+        lock (MerkerSperre)
+        {
+            return PruefKennung is not null && GemerktLesen().Contains(schluessel, StringComparer.Ordinal);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Merken(string schluessel)
+    {
+        if (PruefKennung is null || schluessel.Contains('\n', StringComparison.Ordinal))
+        {
+            return;
+        }
+        lock (MerkerSperre)
+        {
+            try
+            {
+                var zeilen = GemerktLesen();
+                if (zeilen.Contains(schluessel, StringComparer.Ordinal))
+                {
+                    return;
+                }
+                // je Fachrichtung und Stand haelt ein Paket hoechstens wenige Eintraege; alte Zeilen bleiben (kurze Datei)
+                zeilen.Add(schluessel);
+                Directory.CreateDirectory(Ordner);
+                var neu = GeprueftDatei + ".neu";
+                File.WriteAllLines(neu, [PruefKennung, .. zeilen.TakeLast(64)]);
+                File.Move(neu, GeprueftDatei, true);
+            }
+            catch (Exception x) when (x is IOException or UnauthorizedAccessException)
+            {
+                // nur ein Merker: ohne ihn wird beim naechsten Start wieder ganz geprueft
+            }
+        }
+    }
 
     public const string OrdnerName = "pakete";
     public const string LadenName = "_laden";
@@ -45,6 +116,15 @@ public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingeb
                 foreach (var kennung in Directory.GetDirectories(Ordner).Where(d => !Directory.EnumerateFileSystemEntries(d).Any()))
                 {
                     Directory.Delete(kennung);
+                }
+                // Welle A 1.5.0: ohne Paket braucht es auch keinen Merker gepruefter Pakete
+                if (!Directory.EnumerateDirectories(Ordner).Any())
+                {
+                    lock (MerkerSperre)
+                    {
+                        File.Delete(GeprueftDatei);
+                        File.Delete(GeprueftDatei + ".neu");
+                    }
                 }
                 if (!Directory.EnumerateFileSystemEntries(Ordner).Any())
                 {
@@ -111,7 +191,7 @@ public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingeb
                 }
                 dateien[Path.GetFileName(datei)] = File.ReadAllBytes(datei);
             }
-            return Paket.Pruefen(dateien, app, Eingebaut, saetzeOffen);
+            return Paket.Pruefen(dateien, app, Eingebaut, saetzeOffen, Merker);
         }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException)
         {
@@ -141,7 +221,7 @@ public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingeb
             {
                 string? grund;
                 (dateien, grund) = Paket.Entpacken(strom);
-                ergebnis = dateien is null ? new(null, grund) : Paket.Pruefen(dateien, app, Eingebaut);
+                ergebnis = dateien is null ? new(null, grund) : Paket.Pruefen(dateien, app, Eingebaut, false, Merker);
             }
             if (!ergebnis.Gut)
             {

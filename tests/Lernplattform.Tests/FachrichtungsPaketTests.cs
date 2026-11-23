@@ -686,6 +686,116 @@ public sealed class FachrichtungsPaketTests : IDisposable
     }
 
     /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden AE“ zu langsam): mit Paketen und Platzhaltern nimmt das Laden die Eintraege der
+    /// App aus den Teilen der geladenen Fachrichtungen (GemischtTeile) statt die ganze Datei zu zerlegen. Je Liste und je Auswahl
+    /// der Fachrichtungen stehen dort genau die Eintraege von Eintraege mit dieser Fachrichtung, an denselben Stellen, Byte fuer
+    /// Byte; ohne, mit einem und mit allen drei Paketen. Gegenprobe: ohne Paket fehlen die AE-Eintraege, mit Paket nicht.
+    /// </summary>
+    [Fact]
+    public void A6_GemischtTeile_GleichEintraege()
+    {
+        var app = AppOrdner();
+        var ae = EchtesPaket("ae", app).Lernen!;
+        var ordner = new[] { app, app.MitPaketen([ae]), app.MitPaketen([.. Geschnitten.Select(f => EchtesPaket(f, app).Lernen!)]) };
+        string[][] auswahl = [["si"], ["si", "ae"], ["si", "dpa"], ["si", "dv"], ["ae"], ["si", "ae", "dpa", "dv"]];
+        static List<string> Mit(IReadOnlyList<(int Index, JsonElement Eintrag)> liste, IReadOnlySet<string> frs) =>
+            [.. liste.Where(e => FachrichtungsPaket.FachrichtungVon(e.Eintrag) is { } f && frs.Contains(f)).Select(e => e.Index + ":" + e.Eintrag.GetRawText())];
+        var geprueft = 0;
+        foreach (var o in ordner)
+        {
+            foreach (var name in Lerninhalte.LernenListen.Select(l => l.Name))
+            {
+                Assert.True(o.TeileKennen(name), name);
+                foreach (var frs in auswahl)
+                {
+                    var menge = frs.ToHashSet(StringComparer.Ordinal);
+                    var soll = Mit(o.Eintraege(name), menge);
+                    Assert.Equal(soll, Mit(o.GemischtTeile(name, frs), menge));
+                    geprueft += soll.Count;
+                }
+            }
+        }
+        Assert.True(geprueft > 10_000, geprueft.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        // Gegenprobe: ohne Paket keine AE-Karte, mit Paket alle aus dem Paket
+        HashSet<string> nurAe = ["ae"];
+        Assert.Empty(Mit(app.GemischtTeile("karteikarten", ["ae"]), nurAe));
+        Assert.Equal(ae.Listen["karteikarten"].Count, Mit(ordner[1].GemischtTeile("karteikarten", ["ae"]), nurAe).Count);
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden AE“ 416 ms): ein Fachrichtungs-Paket, das mit genau diesem Programmstand
+    /// (Kennung der Ablage) schon ganz gut war, wird beim naechsten Lesen nicht noch einmal ganz geprueft (Ladepruefung der Saetze,
+    /// „nur angehaengt“); das Ergebnis ist dasselbe wie ohne Merker. Belege: der Merker steht nach dem Einsetzen da; unter
+    /// derselben Kennung bleibt sogar eine (so nie vorkommende) fremde App gut, unter einer anderen Kennung ist sie rot wie ohne
+    /// Merker und nichts wird gemerkt; mit offenen Saetzen erst nach deren Ladepruefung; ohne Paket verschwindet der Merker.
+    /// </summary>
+    [Fact]
+    public async Task A6_GanzGeprueft_Gemerkt_GleichesErgebnis_NurMitGleicherApp()
+    {
+        var app = AppOrdner();
+        // fremde App: an der ersten AE-Stelle der Karteikarten steht ein SI-Platzhalter statt des AE-Platzhalters
+        var text = Encoding.UTF8.GetString(AppBau.Value[LernenTeiler.Ganz + "karteikarten.json"]);
+        var stelle = text.IndexOf(LernenTeiler.Platzhalter("ae"), StringComparison.Ordinal);
+        Assert.True(stelle > 0);
+        var fremdeKarten = Encoding.UTF8.GetBytes(text[..stelle] + LernenTeiler.Platzhalter("si") + text[(stelle + LernenTeiler.Platzhalter("ae").Length)..]);
+        LernenOrdner Fremd() => new(
+            n => n == "karteikarten" ? fremdeKarten : AppBau.Value.TryGetValue(LernenTeiler.Ganz + n + ".json", out var b) ? b : Repo(n),
+            n => AppBau.Value.TryGetValue(n, out var b) ? b : null);
+        var ordner = Directory.CreateTempSubdirectory("lp_gemerkt_").FullName;
+        try
+        {
+            var ablage = new PaketAblage(ordner, app, "K1");
+            var ziel = ablage.Ladedatei("lernen_ae", 1);
+            File.Copy(Path.Combine(Echt, Paket.Dateiname("lernen_ae", 1)), ziel, true);
+            Assert.True(ablage.Einsetzen(ziel, "lernen_ae", 1, App).Gut);
+            List<string> Zeilen(PaketAblage a) => File.Exists(a.GeprueftDatei) ? [.. File.ReadAllLines(a.GeprueftDatei)] : [];
+            Assert.Equal("K1", Zeilen(ablage)[0]);
+            Assert.Single(Zeilen(ablage).Skip(1), z => z.StartsWith("ae:1:", StringComparison.Ordinal));
+            // gleiche App: dasselbe Ergebnis wie ohne Merker, offene Saetze sind schon gut
+            var ohne = new PaketAblage(ordner, app).Liste(App).Single();
+            var mit = ablage.Liste(App).Single();
+            Assert.Null(ohne.Grund);
+            Assert.Null(mit.Grund);
+            Assert.Equal(Abdruck(Laden(app.MitPaketen([ohne.Lernen!]), ["si", "ae"]), "ae"), Abdruck(Laden(app.MitPaketen([mit.Lernen!]), ["si", "ae"]), "ae"));
+            Assert.Equal(Saetze(app.MitPaketen([ohne.Lernen!])), Saetze(app.MitPaketen([mit.Lernen!])));
+            var offen = ablage.Liste(App, true).Single();
+            Assert.True(offen.SaetzeOffen!.IsCompletedSuccessfully);
+            Assert.Null(await offen.SaetzeOffen);
+            // Beleg, dass gemerkt nicht neu gerechnet wird: eine fremde App unter derselben Kennung bleibt gut
+            Assert.Null(new PaketAblage(ordner, Fremd(), "K1").Liste(App).Single().Grund);
+            // anderer Programmstand: ganz geprueft, rot wie ohne Merker, nichts gemerkt
+            var rot = new PaketAblage(ordner, Fremd()).Liste(App).Single().Grund;
+            Assert.NotNull(rot);
+            var k2 = new PaketAblage(ordner, Fremd(), "K2");
+            Assert.Equal(rot, k2.Liste(App).Single().Grund);
+            Assert.Equal(rot, k2.Liste(App, true).Single().Grund);
+            Assert.Equal("K1", Zeilen(k2)[0]);
+            // offene Saetze: gemerkt erst nach ihrer Ladepruefung
+            File.Delete(ablage.GeprueftDatei);
+            var k3 = new PaketAblage(ordner, app, "K3");
+            var o3 = k3.Liste(App, true).Single();
+            Assert.Null(o3.Grund);
+            Assert.Null(await o3.SaetzeOffen!);
+            for (var n = 0; n < 100 && Zeilen(k3).Count < 2; n++)
+            {
+                await Task.Delay(20, TestContext.Current.CancellationToken);
+            }
+            Assert.Equal("K3", Zeilen(k3)[0]);
+            Assert.Single(Zeilen(k3).Skip(1), z => z.StartsWith("ae:1:", StringComparison.Ordinal));
+            // ohne Paket kein Merker: der Datenordner ist danach wie vorher
+            Assert.True(k3.Entfernen("lernen_ae"));
+            Assert.False(Directory.Exists(k3.Ordner));
+        }
+        finally
+        {
+            if (Directory.Exists(ordner))
+            {
+                Directory.Delete(ordner, true);
+            }
+        }
+    }
+
+    /// <summary>
     /// Abnahmesatz 3: ein neuer Stand 2 (ein AE-Eintrag hinten angehaengt) laeuft mit der App A 1.5.0 ohne App-Update; davor
     /// liegt eine Luecke (ein SI-Eintrag, den diese App nicht kennt): er ruht, nichts verschiebt sich; DPA/DV unveraendert.
     /// </summary>

@@ -342,9 +342,9 @@ public static class Zustand
             eingebaut.Vorab();     // die Listen aus inhalte_csharp/lernen lesen schon, waehrend die bisherigen laden
             // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV kommen nur noch aus den Paketen im Datenordner. Ihre Pruefung
             // („nur angehaengt“) laeuft auf eigenem Faden schon, waehrend die bisherigen Inhalte laden (vorher danach); die
-            // Ladepruefung ihrer Saetze laeuft weiter nebenher, waehrend die Inhalte gebildet werden (siehe unten)
+            // Ladepruefung ihrer Saetze laeuft weiter nebenher, waehrend die Inhalte gebildet werden (siehe unten). Ein Paket, das
+            // mit genau dieser App schon ganz gut war, pruefen beide nicht noch einmal (PaketAblage.PruefKennung, Lauf 1193)
             var paketeLesen = Task.Factory.StartNew(PaketeOffenLesen, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-            GanzVorab(eingebaut);
             var bisher = Lerninhalte.Laden(n => Core.Diagnose.LadeTeile.Datei(() => EingebauteDatei(n)));
             // Welle A 0.91.0 (Weisung P12-300): gueltige Fachrichtungs-Pakete aus dem Datenordner (geprueft „nur angehaengt“)
             var pakete = paketeLesen.GetAwaiter().GetResult();
@@ -402,41 +402,6 @@ public static class Zustand
     private static LernenOrdner? _aktuell;
 
     private static LernenOrdner MitPaketen(LernenOrdner eingebaut) => MitPaketen(eingebaut, PaketeLesen());
-
-    /// <summary>
-    /// Welle A 1.5.0: liegt ein Fachrichtungs-Paket im Datenordner, braucht seine Pruefung („nur angehaengt“) die ganzen Listen
-    /// der App mit den Platzhaltern; sie werden je Datei nebeneinander schon gelesen, waehrend das Paket gelesen wird. Ohne
-    /// Paket (SI) wird nichts zusaetzlich gelesen. Fehler zeigen sich erst bei der Pruefung selbst.
-    /// </summary>
-    private static void GanzVorab(LernenOrdner eingebaut)
-    {
-        try
-        {
-            var ordner = Path.Combine(Ablage.Datenordner(), Core.Pakete.PaketAblage.OrdnerName);
-            if (!Directory.Exists(ordner) || !Directory.EnumerateDirectories(ordner, Core.Pakete.FachrichtungsPaket.Praefix + "*").Any())
-            {
-                return;
-            }
-        }
-        catch (Exception fehler) when (fehler is IOException or UnauthorizedAccessException)
-        {
-            return;
-        }
-        foreach (var name in Core.Pakete.FachrichtungsPaket.Listen.Append(Core.Pruefung.Echt.EchtSaetze.DateiName))
-        {
-            _ = Task.Run(() =>
-            {
-                try
-                {
-                    eingebaut.Dokument(name);
-                }
-                catch (Exception)
-                {
-                    // nur vorab; derselbe Fehler kommt bei der Pruefung wieder und wird dort behandelt
-                }
-            });
-        }
-    }
 
     /// <summary>Gueltige Fachrichtungs-Pakete aus dem Datenordner (geprueft); nie ein Absturz: bei einem Fehler keine.</summary>
     private static IReadOnlyList<Core.Pakete.FachrichtungsInhalt> PaketeLesen()
