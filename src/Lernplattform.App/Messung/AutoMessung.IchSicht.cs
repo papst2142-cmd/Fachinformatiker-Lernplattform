@@ -206,7 +206,7 @@ public static partial class AutoMessung
         var rGrenze = k.IchNeigung;
         await Bilder(2);
         pruefe("umsehen (rechte Maus, ein Finger, Q/E, R/F)",
-            Math.Abs(mausDreh - (100 * Kameragriff.GradJePunkt)) < 0.01f && Math.Abs(mausNeig) > 1f && fingerDreh && eDreht
+            Math.Abs(mausDreh - (360f - (100 * Kameragriff.GradJePunkt))) < 0.01f /* A 1.6.0 (441): Maus nach rechts = Blick nach rechts */ && Math.Abs(mausNeig) > 1f && fingerDreh && eDreht
             && new[] { fGrenze, rGrenze }.Order().SequenceEqual(new[] { SpielKamera.IchNeigungMin, SpielKamera.IchNeigungMax })
             && k.Ich && !spiel.Geht && Math.Abs(k.Abstand - SpielKamera.AbstandMin) < 0.001f,
             string.Create(inv, $"rechte Maus dreht {mausDreh:F1}, neigt {mausNeig:F1}; ein Finger dreht {fingerDreh}; E dreht {eDreht}; F bis {fGrenze:F0}, R bis {rGrenze:F0}; Figur geht {spiel.Geht}"));

@@ -194,7 +194,7 @@ public static partial class AutoMessung
         Loslassen(fl, maus, new Point(mitte.X + 100, mitte.Y + 400), rechts: true);
         var gedreht = ((k.Drehung - d0) % 360f + 360f) % 360f;
         pruefe("rechte Maustaste dreht und neigt", steil == SpielKamera.NeigungMax && flach == SpielKamera.NeigungMin
-            && Math.Abs(gedreht - (100 * Kameragriff.GradJePunkt)) < 0.01f && !spiel.Geht,
+            && Math.Abs(gedreht - (360f - (100 * Kameragriff.GradJePunkt))) < 0.01f /* A 1.6.0 (441): Blick nach rechts */ && !spiel.Geht,
             string.Create(inv, $"steilste {steil:F1}, flachste {flach:F1}, gedreht {gedreht:F1}, Figur geht {spiel.Geht}"));
         k.Neigung = SpielKamera.NeigungStart;
 

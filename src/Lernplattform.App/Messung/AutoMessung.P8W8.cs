@@ -182,7 +182,7 @@ public static partial class AutoMessung
             var drehung = kamera.Drehung;
             var keinTippen = flaeche.ProbeRechtsZiehen(100, 150, 200);
             var gedreht = ((kamera.Drehung - drehung) % 360f + 360f) % 360f;
-            Pruefe("Rechte Maustaste dreht", keinTippen && Math.Abs(gedreht - (50 * Kameragriff.GradJePunkt)) < 0.01f && !spiel.Geht,
+            Pruefe("Rechte Maustaste dreht", keinTippen && Math.Abs(gedreht - (360f - (50 * Kameragriff.GradJePunkt))) < 0.01f /* A 1.6.0 (441): Blick nach rechts */ && !spiel.Geht,
                 string.Create(inv, $"um {gedreht:F1} Grad bei 50 Punkten"));
 
             // 5. eine neu belegte Taste wirkt im Spiel (W statt - fuer weiter weg), die alte nicht mehr; danach wieder wie vorher.

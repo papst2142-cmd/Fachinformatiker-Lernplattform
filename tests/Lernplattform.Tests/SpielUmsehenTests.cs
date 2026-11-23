@@ -124,6 +124,78 @@ public sealed class SpielUmsehenTests
         }
     }
 
+    /// <summary>Maus mit echter Taste ueber den <see cref="Kameragriff"/> um dx Punkte waagrecht ziehen (dieselbe Rechnung wie StadtFlaeche.MausSchritt).</summary>
+    private static void MausZiehen(Kamera k, bool fest, bool rechteTaste, double dx)
+    {
+        var griff = new Kameragriff(8);
+        griff.Druecken(rechteTaste, 400, 300);
+        // in kleinen Schritten wie echte Mausereignisse (die linke Taste braucht erst die Schwelle zum Ziehen)
+        for (var i = 1; i <= 20; i++)
+        {
+            Kamerabedienung.Maus(k, fest, griff.Bewegen(400 + (dx * i / 20), 300), 800);
+        }
+        griff.Loslassen(rechteTaste);
+    }
+
+    /// <summary>
+    /// Welle A 1.6.0 (Sammelliste 441, Weisung P12-359, Fund Nico 23.11.2026: „am PC auch die Seiten links und rechts vertauscht
+    /// bei der Maus“). Abnahmesatz: Maus nach rechts dreht den Blick nach rechts, nach links nach links, wie der rechte Stick.
+    /// Draussen (feste Kamera), drinnen (frei) und in der Ich-Sicht (rechte und linke Taste); Gegenprobe A 1.5.0 dreht falsch.
+    /// </summary>
+    [Theory]
+    [InlineData(false, true, true, 0f)]
+    [InlineData(false, true, true, 137f)]
+    [InlineData(false, false, true, 0f)]
+    [InlineData(false, false, true, 250f)]
+    [InlineData(true, true, true, 0f)]
+    [InlineData(true, true, false, 0f)]
+    [InlineData(true, true, false, 300f)]
+    public void Maus_NachRechts_BlickNachRechts_NachLinks_BlickNachLinks_GegenprobeA150(bool ich, bool fest, bool rechteTaste, float drehung)
+    {
+        (bool R, bool L) Messen()
+        {
+            var k = NeueKamera(ich, drehung);
+            var rechts = Rechts(Blick(k));
+            MausZiehen(k, fest, rechteTaste, 100);
+            var r = Vector2.Dot(Blick(k), rechts) > 0.05f;
+            k = NeueKamera(ich, drehung);
+            MausZiehen(k, fest, rechteTaste, -100);
+            var l = Vector2.Dot(Blick(k), rechts) < -0.05f;
+            return (r, l);
+        }
+        var (nachRechts, nachLinks) = Messen();
+        Assert.True(nachRechts, "Maus nach rechts dreht den Blick nicht nach rechts");
+        Assert.True(nachLinks, "Maus nach links dreht den Blick nicht nach links");
+        Kamerabedienung.MausAltFuerTests = true;
+        try
+        {
+            var (rAlt, lAlt) = Messen();
+            Assert.False(rAlt || lAlt, "Gegenprobe greift nicht: die Maus von A 1.5.0 waere auch richtig");
+        }
+        finally
+        {
+            Kamerabedienung.MausAltFuerTests = false;
+        }
+    }
+
+    /// <summary>Welle A 1.6.0 (441): Maus und rechter Stick drehen gleich herum; oben/unten der Maus bleibt (nach oben = steiler).</summary>
+    [Fact]
+    public void Maus_GleichWieRechterStick_ObenUntenUnveraendert()
+    {
+        var maus = NeueKamera(false, 30f);
+        MausZiehen(maus, true, true, 50);
+        var stick = NeueKamera(false, 30f);
+        StickZiehen(stick, Sticks.Radius, 0);
+        Assert.True(Vector2.Dot(Blick(maus), Rechts(Blick(NeueKamera(false, 30f)))) > 0.05f);
+        Assert.Equal(MathF.Sign(((stick.Drehung - 30f + 540f) % 360f) - 180f), MathF.Sign(((maus.Drehung - 30f + 540f) % 360f) - 180f));
+        var k = NeueKamera(false, 0f);
+        var n0 = k.Neigung;
+        var griff = new Kameragriff(8);
+        griff.Druecken(true, 400, 300);
+        Kamerabedienung.Maus(k, true, griff.Bewegen(400, 260), 800);
+        Assert.True(k.Neigung > n0, "Maus nach oben macht nicht mehr steiler");
+    }
+
     [Fact]
     public void PC_MausUndTasten_OhneSchalter_WieBisher()
     {

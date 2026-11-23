@@ -2515,12 +2515,8 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     public void MausSchritt(Kamera kamera, Kameragriff.Schritt schritt)
     {
         var fest = KameraFest;
-        var bewegt = schritt.Art switch
-        {
-            Kameragriff.Art.Ziehen => Kamerabedienung.Ziehen(kamera, fest, schritt.Dx, schritt.Dy, Bounds.Height),
-            Kameragriff.Art.Drehen => Kamerabedienung.RechteMaus(kamera, fest, schritt),
-            _ => false,
-        };
+        // Welle A 1.6.0 (Sammelliste 441): Maus nach rechts = Blick nach rechts (Regel in Kamerabedienung.Maus)
+        var bewegt = Kamerabedienung.Maus(kamera, fest, schritt, Bounds.Height);
         if (!bewegt)
         {
             return;

@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 1.6.0
+Die Steuerung im Spiel ist jetzt stimmiger.
+
+- Am PC dreht die Maus den Blick jetzt in die Richtung, in die du sie bewegst: Maus nach rechts schaut nach rechts, Maus nach links nach links. Das gilt mit der rechten Maustaste draußen und drinnen und in der Ich-Sicht auch mit der linken Taste. Vorher war es genau umgekehrt. Am Handy und Tablet dreht der rechte Stick schon so. Oben und unten bleiben, wie sie waren.
+- Wenn du in der Ich-Sicht ein Gebäude betrittst, schaust du jetzt in den Flur, weg von der Eingangstür. Vorher behielt der Blick die Richtung von draußen und zeigte drinnen oft auf eine Wand.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.5.0
 Die Lerninhalte der Fachrichtungen Anwendungsentwicklung (AE), Daten- und Prozessanalyse (DPA) und Digitale Vernetzung (DV) kommen jetzt als eigenes Fachrichtungs-Paket. Du lädst nur das Paket deiner Fachrichtung; neue Inhalte für eine Fachrichtung kommen künftig als neuer Stand ihres Pakets, ohne App-Update.
 

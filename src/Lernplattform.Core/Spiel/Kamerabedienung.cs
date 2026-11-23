@@ -32,6 +32,36 @@ public static class Kamerabedienung
         return true;
     }
 
+    private static readonly AsyncLocal<bool> MausAlt = new();
+
+    /// <summary>
+    /// Welle A 1.6.0 (Sammelliste 441, Weisung P12-359, Fund Nico 23.11.2026): Gegenprobe. true = die Maus dreht wie bis
+    /// A 1.5.0 (sie zieht die Welt: nach rechts gezogen dreht der Blick nach links). AsyncLocal, wirkt nicht in der Bildschleife.
+    /// </summary>
+    public static bool MausAltFuerTests { get => MausAlt.Value; set => MausAlt.Value = value; }
+
+    /// <summary>
+    /// Welle A 1.6.0 (Sammelliste 441): ein Schritt der Maus (linke oder rechte Taste, aus <see cref="Kameragriff"/>). Maus nach
+    /// rechts = Blick nach rechts, nach links = Blick nach links, wie der rechte Stick am Handy (<see cref="Sticks.Drehen"/>).
+    /// Das gilt fuer die rechte Taste (draussen, drinnen, Ich-Sicht) und fuer die linke Taste in der Ich-Sicht. Oben/unten bleibt
+    /// wie bisher (Nico nannte nur links/rechts). Finger gehen nie hier durch (Ziehen mit dem Finger bleibt wie bisher).
+    /// </summary>
+    public static bool Maus(Kamera k, bool fest, Kameragriff.Schritt s, double hoehe)
+    {
+        var richtung = MausAlt.Value ? 1f : -1f;
+        switch (s.Art)
+        {
+            case Kameragriff.Art.Drehen:
+                return RechteMaus(k, fest, s with { Grad = s.Grad * richtung });
+            case Kameragriff.Art.Ziehen when SpielKamera.ImIch(k):
+                return RechteMaus(k, fest, new Kameragriff.Schritt(Kameragriff.Art.Drehen, Dy: s.Dy, Grad: (float)s.Dx * Kameragriff.GradJePunkt * richtung));
+            case Kameragriff.Art.Ziehen:
+                return Ziehen(k, fest, s.Dx, s.Dy, hoehe);
+            default:
+                return false;
+        }
+    }
+
     /// <summary>Linke Maustaste oder ein Finger gezogen: drinnen verschieben, draussen (fest) nichts. true = Kamera bewegt.</summary>
     public static bool Ziehen(Kamera k, bool fest, double dx, double dy, double hoehe)
     {

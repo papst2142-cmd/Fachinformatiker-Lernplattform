@@ -151,6 +151,11 @@ public sealed class IchSicht
     public static float FigurDrehung(Kamera k, StadtSpiel s) =>
         k.IchAnteil >= NahAb && s.Haltung is null ? DrehungZu(k.Drehung) : s.FigurRichtung;
 
+    private static readonly AsyncLocal<bool> BetretenAlt = new();
+
+    /// <summary>Welle A 1.6.0 (Sammelliste 442): Gegenprobe, true = beim Betreten bleibt die Drehung von draussen (bis A 1.5.0). AsyncLocal.</summary>
+    public static bool BetretenAltFuerTests { get => BetretenAlt.Value; set => BetretenAlt.Value = value; }
+
     /// <summary>Drehung der Kamera, die in die Richtung der Figur schaut (Figur 0 = +Z, Kamera 0 = Blick nach -Z).</summary>
     public static float DrehungZu(float figurRichtung) => ((figurRichtung + 180f) % 360f + 360f) % 360f;
 
@@ -167,7 +172,9 @@ public sealed class IchSicht
             {
                 // in ein Haus hinein oder hinaus: in der Ich-Sicht bleiben (ohne neuen Uebergang)
                 k.IchNeigung = alt.IchNeigung;
-                k.Drehung = alt.Drehung;
+                // Welle A 1.6.0 (Sammelliste 442, Weisung P12-359): beim Betreten schaut man in den Flur (in die Richtung der
+                // Figur, weg von der Eingangstuer), nicht mehr in die Richtung von draussen (die lag drinnen oft an einer Wand)
+                k.Drehung = s.Innen is not null && !BetretenAltFuerTests ? DrehungZu(s.FigurRichtung) : alt.Drehung;
                 if (_pause is null)
                 {
                     k.IchZiel = 1f;
