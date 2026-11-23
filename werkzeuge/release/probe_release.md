@@ -1,20 +1,23 @@
-Eine kleine Pflege-Version für die Stadt im Winter.
+Die Lerninhalte der Fachrichtungen Anwendungsentwicklung (AE), Daten- und Prozessanalyse (DPA) und Digitale Vernetzung (DV) kommen jetzt als eigenes Fachrichtungs-Paket. Du lädst nur das Paket deiner Fachrichtung; neue Inhalte für eine Fachrichtung kommen künftig als neuer Stand ihres Pakets, ohne App-Update.
 
-- Im Winter fasst das Spiel gleiche Grasbüschel, Büsche, Steine und Bäume jetzt genauso zusammen wie im Sommer und zeichnet sie gemeinsam. Vorher bekam ein Stück je nach Drehung eine winzig andere Schneefarbe und wurde deshalb einzeln gezeichnet, und das auf verschiedenen Rechnern verschieden. Jetzt ist das Ergebnis auf jedem Rechner gleich, und die Stadt hat im Winter weniger einzeln gezeichnete Stücke.
-- Die Stadt sieht aus wie vorher: Die Farben unterscheiden sich höchstens um einen Bruchteil einer sichtbaren Farbstufe, jedes Stück steht an derselben Stelle.
-- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+- Die App selbst bringt nur noch die Inhalte für Systemintegration (SI) und die gemeinsamen Inhalte aller Fachrichtungen mit. Dadurch ist sie kleiner. Wer SI lernt, lädt nichts und merkt keinen Unterschied.
+- Hast du AE, DPA oder DV gewählt, fragt die App beim ersten Start nach diesem Update einmal: „Für AE fehlt das Fachrichtungs-Paket (1,2 MB). Jetzt laden?“ Ein Tipp auf „Laden“ holt das Paket, und du lernst genau dieselben Inhalte wie vorher. Am Handy ohne WLAN fragt die App vorher, ob sie mobile Daten nutzen darf. Nichts lädt von allein.
+- Tippst du „Später“, siehst du die gemeinsamen Inhalte, und auf der Startseite steht die Karte „Für AE fehlt das Fachrichtungs-Paket“ mit dem Knopf „Laden“, bis das Paket da ist. Laden geht auch unter Optionen › Inhaltspakete.
+- Dein Lernstand bleibt vollständig erhalten. Was du zu Inhalten deiner Fachrichtung schon bearbeitet hast, ruht nur, solange das Paket fehlt, und ist nach dem Laden genau wieder da. Auch ein angefangener Prüfungssatz bleibt gespeichert.
+- Ohne Internet zeigt die App einen klaren Hinweis; SI und die gemeinsamen Inhalte gehen weiter vollständig.
+- Aussehen, Bedienung, die Prüfungen und deine Spielstände bleiben, wie sie sind.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.4.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.5.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.4.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.4.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.4.1-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.4.1-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.5.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.5.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.5.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.5.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

@@ -8,6 +8,7 @@
     <ParameterGroup>
       <Quelle ParameterType="System.String" Required="true" />
       <Ziel ParameterType="System.String" Required="true" />
+      <NurImPaket ParameterType="System.String" Required="false" />
     </ParameterGroup>
     <Task>
       <Code Type="Class" Language="cs" Source="$(MSBuildThisFileDirectory)LernenTeile.cs" />
@@ -16,6 +17,9 @@
 
   <PropertyGroup>
     <LernenTeileQuelle>$(MSBuildThisFileDirectory)../../inhalte_csharp/lernen/</LernenTeileQuelle>
+    <!-- Welle A 1.5.0 (Weisung P12-358, Sammelliste 386, Nico 1b): AE, DPA und DV nur als Fachrichtungs-Paket; ihre Eintraege
+         werden beim Bauen zu Platzhaltern (die Quelle im Repo bleibt unveraendert und einzige Quelle der Pakete) -->
+    <LernenNurImPaket>ae;dpa;dv</LernenNurImPaket>
   </PropertyGroup>
 
   <!-- IntermediateOutputPath steht erst nach dem Projekt fest: Ziel darum in einem eigenen Ziel vorab setzen -->
@@ -27,8 +31,8 @@
 
   <Target Name="LernenTeileErzeugen" BeforeTargets="BeforeBuild" DependsOnTargets="LernenTeileZielSetzen"
           Inputs="@(LernenTeileQuellen);$(MSBuildThisFileDirectory)LernenTeile.cs"
-          Outputs="$(LernenTeileZiel)teile.json">
-    <Lernplattform.Bau.LernenTeileBauen Quelle="$(LernenTeileQuelle)" Ziel="$(LernenTeileZiel)" />
+          Outputs="$(LernenTeileZiel)teile.json;$(LernenTeileZiel)ganz/quizfragen.json">
+    <Lernplattform.Bau.LernenTeileBauen Quelle="$(LernenTeileQuelle)" Ziel="$(LernenTeileZiel)" NurImPaket="$(LernenNurImPaket)" />
   </Target>
 
   <!-- WithCulture="false": sonst haelt MSBuild ".si" in "quizfragen.si.json" fuer die Sprache Singhalesisch und legt die
@@ -38,6 +42,10 @@
       <LernenTeileDatei Include="$(LernenTeileZiel)*.json" />
       <EmbeddedResource Include="@(LernenTeileDatei)" LogicalName="inhalte_csharp/lernen_teile/%(Filename)%(Extension)" WithCulture="false" Visible="false" />
       <FileWrites Include="@(LernenTeileDatei)" />
+      <!-- Welle A 1.5.0: die geschnittenen ganzen Dateien ersetzen die Quelle im Programm (Name wie bisher inhalte_csharp/lernen/...) -->
+      <LernenGanzDatei Include="$(LernenTeileZiel)ganz/*.json" />
+      <EmbeddedResource Include="@(LernenGanzDatei)" LogicalName="inhalte_csharp/lernen/%(Filename)%(Extension)" WithCulture="false" Visible="false" />
+      <FileWrites Include="@(LernenGanzDatei)" />
     </ItemGroup>
   </Target>
 

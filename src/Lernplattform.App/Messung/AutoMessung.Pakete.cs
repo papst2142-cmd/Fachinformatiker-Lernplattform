@@ -89,7 +89,9 @@ public static partial class AutoMessung
 
     private static void PaketQuelleWeg(string? quelle)
     {
-        foreach (var z in PaketDienst.Verwaltung.Zeilen())
+        // A 1.5.0: die vorab eingesetzten Fachrichtungs-Pakete (AE, DPA, DV gibt es nur noch als Paket) bleiben fuer die
+        // folgenden Teile; entfernt werden nur die Probe-Pakete dieser Probe
+        foreach (var z in PaketDienst.Verwaltung.Zeilen().Where(z => FachrichtungsPaket.FachrichtungAus(z.Kennung) is null))
         {
             PaketDienst.Verwaltung.Entfernen(z.Kennung);
         }

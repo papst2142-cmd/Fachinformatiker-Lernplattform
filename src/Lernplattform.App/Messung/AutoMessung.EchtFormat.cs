@@ -28,9 +28,11 @@ public static partial class AutoMessung
             Messwerte.Notiere("  FEHLER: Pruefung im echten Format: " + text);
             funde++;
         }
-        // Laden und Ladepruefung der eingebauten Datei (einmalig, streng): keine Meldung erlaubt
+        // Laden und Ladepruefung der Saetze (einmalig, streng): keine Meldung erlaubt. A 1.5.0: wie die App selbst aus dem
+        // Ordner der aktuellen Inhalte (Programm mit den vorab eingesetzten Fachrichtungs-Paketen), die eingebaute Datei allein
+        // hat fuer AE/DPA/DV nur Platzhalter
         var uhr = Stopwatch.StartNew();
-        var bestand = EchtSaetze.Laden(Zustand.LernenDateiFuerMessung(EchtSaetze.DateiName), Zustand.Aktuell.AusgeschlosseneSaetze());
+        var bestand = EchtSaetze.Laden(Zustand.Aktuell.Saetze(), Zustand.Aktuell.AusgeschlosseneSaetze());
         funde += Ergebnis("Pruefungssaetze im echten Format laden und pruefen", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Abbruch));
         Messwerte.Notiere("Pruefung im echten Format: " + bestand.Saetze.Count + " Saetze, " + bestand.Fehler.Count + " Meldungen der Ladepruefung");
         foreach (var fehler in bestand.Fehler)

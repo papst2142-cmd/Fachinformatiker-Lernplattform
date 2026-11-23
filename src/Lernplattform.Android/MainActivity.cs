@@ -130,15 +130,22 @@ public class MainActivity : AvaloniaMainActivity
         {
             var ordner = System.IO.Path.Combine(CacheDir!.AbsolutePath, "paketquelle");
             System.IO.Directory.CreateDirectory(ordner);
-            var datei = System.IO.Path.Combine(ordner, "probe_testkarte_1.fipaket");
-            using (var strom = typeof(MainActivity).Assembly.GetManifestResourceStream("probe_testkarte_1.fipaket"))
+            // A 1.5.0 (Weisung P12-358, Nico 4b): dazu die drei echten Fachrichtungs-Pakete (Laden ohne Netz aus der Probe-APK)
+            var gefunden = false;
+            foreach (var name in new[] { "probe_testkarte_1.fipaket", "lernen_ae_1.fipaket", "lernen_dpa_1.fipaket", "lernen_dv_1.fipaket" })
             {
+                using var strom = typeof(MainActivity).Assembly.GetManifestResourceStream(name);
                 if (strom is null)
                 {
-                    return;
+                    continue;
                 }
-                using var ziel = System.IO.File.Create(datei);
+                using var ziel = System.IO.File.Create(System.IO.Path.Combine(ordner, name));
                 strom.CopyTo(ziel);
+                gefunden = true;
+            }
+            if (!gefunden)
+            {
+                return;
             }
             Lernplattform.Core.Pakete.PaketQuelle.ProbeOrdner = ordner;
         }

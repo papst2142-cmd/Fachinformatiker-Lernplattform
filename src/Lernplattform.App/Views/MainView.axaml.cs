@@ -311,6 +311,8 @@ public partial class MainView : UserControl
                     Neu();
                 },
                 AusbildungAnderswoAsync, RundgangAsync);
+            // Welle A 1.5.0 (Weisung P12-358, Nico 1a): fehlen der gewaehlten Fachrichtung die Inhalte, einmal die Rueckfrage
+            await Programm.FachrichtungsPaketDienst.BeimStartAsync();
             // Phase 6 W2 (maybe_ask_shortcut): unter Linux im AppImage einmal fragen, 400 ms nach dem Rundgang, sonst nach 2,5 s
             if (Programm.VerknuepfungDienst.Unterstuetzt)
             {

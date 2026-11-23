@@ -146,20 +146,22 @@ public static partial class AutoMessung
         {
             return await InhalteAeTeilAsync();
         }
+        // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV nur noch als Paket; der Start-Test setzt die drei echten Pakete ein
+        funde += await FachrichtungsPaketeVorabAsync();
         // Phase 7 W1: eigener kurzer Lauf ohne OpenGL (CI-Schritt mit --software)
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilErsatz)
         {
-            return await ErsatzLaufAsync(ansicht);
+            return funde + await ErsatzLaufAsync(ansicht);
         }
         // Weisung P8-51: eigener Messlauf W12 (Anlaesse langsamer Bilder, Vorlade-Kosten), nur Messung
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilW12)
         {
-            return await W12LaufAsync(ansicht);
+            return funde + await W12LaufAsync(ansicht);
         }
         // Welle Nachladen A 0.82.0 (Weisung P12-280): eigener Teil mit der grossen Testkarte (eigener Schritt in der CI)
         if (Teil == TeilNachladen)
         {
-            var n = await LeisteUndDaumenAsync(ansicht);
+            var n = funde + await LeisteUndDaumenAsync(ansicht);
             Zeitplan("NachladenTeilAsync");
             n += await NachladenTeilAsync(ansicht);
             Messwerte.Notiere(n == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({n} Funde)"));
@@ -168,7 +170,7 @@ public static partial class AutoMessung
         // Phase 11 W3 (Weisung P11-21): nur die Layoutpruefung, z. B. mit Windows-Skalierung 150 % (ci.yml)
         if (Teil == TeilLayout)
         {
-            return await P11W3LayoutLaufAsync(ansicht);
+            return funde + await P11W3LayoutLaufAsync(ansicht);
         }
         // Sammelliste 106 (Weisung P8-2): die CI startet Lernteil und Spielansichten als eigene Schritte
         Messwerte.Notiere("Start-Test Teil: " + (MitLernen && MitSpiel ? "alles" : MitLernen ? TeilLernen : TeilSpiel));

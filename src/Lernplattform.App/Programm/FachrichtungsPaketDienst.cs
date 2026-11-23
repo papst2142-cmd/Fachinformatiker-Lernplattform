@@ -74,6 +74,8 @@ public static class FachrichtungsPaketDienst
     {
         try
         {
+            // Welle A 1.5.0 (Nico 1a): wer die Rueckfrage zu dieser Fachrichtung gesehen hat, bekommt sie beim Start nicht noch einmal
+            Gefragt(fachrichtung);
             var v = PaketDienst.Verwaltung;
             var kennung = FachrichtungsPaket.Kennung(fachrichtung);
             if (v.Angebote.All(a => a.Kennung != kennung))
@@ -95,6 +97,60 @@ public static class FachrichtungsPaketDienst
             {
                 await Dialog.Zeigen(PaketTexte.FrFehltTitel, grund, Dialog.Ok);
             }
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+        }
+    }
+
+    /// <summary>Welle A 1.5.0: Merker in einstellungen.json, zu welchen Fachrichtungen die Rueckfrage schon kam (Liste ae/dpa/dv).</summary>
+    public const string GefragtSchluessel = "fachrichtungs_paket_gefragt";
+
+    /// <summary>Kam die Rueckfrage zu <paramref name="fachrichtung"/> auf diesem Geraet schon einmal?</summary>
+    public static bool SchonGefragt(System.Text.Json.Nodes.JsonObject werte, string fachrichtung) =>
+        werte[GefragtSchluessel] is System.Text.Json.Nodes.JsonArray liste
+        && liste.Any(w => w is System.Text.Json.Nodes.JsonValue v && v.TryGetValue<string>(out var s) && s == fachrichtung);
+
+    private static void Gefragt(string fachrichtung)
+    {
+        var einstellungen = Zustand.Einstellungen;
+        if (einstellungen.NurAnzeige || SchonGefragt(einstellungen.Laden(), fachrichtung))
+        {
+            return;
+        }
+        // nur ueber Einstellungen.Aendern (nach einem Lesefehler schreibt es nichts)
+        einstellungen.Aendern(werte =>
+        {
+            var liste = werte[GefragtSchluessel] as System.Text.Json.Nodes.JsonArray ?? [];
+            if (!liste.Any(w => w is System.Text.Json.Nodes.JsonValue v && v.TryGetValue<string>(out var s) && s == fachrichtung))
+            {
+                liste.Add(fachrichtung);
+            }
+            werte[GefragtSchluessel] = liste.DeepClone();
+        });
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0 (Weisung P12-358, Nico 1a): beim ersten Start nach dem Update einmal die Rueckfrage, wenn der gewaehlten
+    /// Fachrichtung die Inhalte fehlen (sie kommen seit A 1.5.0 nur als Paket). Danach bleibt die Karte auf der Startseite mit
+    /// „Laden“. Nichts laedt von allein; der Lernstand wird nie geaendert.
+    /// </summary>
+    public static async Task BeimStartAsync()
+    {
+        try
+        {
+            if (await Zustand.AlleInhalte is null)
+            {
+                return;
+            }
+            var sicht = Zustand.Sicht;
+            if (!Zustand.Aktuell.Fehlt(sicht) || Zustand.Einstellungen.NurAnzeige || SchonGefragt(Zustand.Einstellungen.Laden(), sicht)
+                || Dialog.Offen is not null)
+            {
+                return;
+            }
+            await FehltAsync(sicht);
         }
         catch (Exception fehler)
         {

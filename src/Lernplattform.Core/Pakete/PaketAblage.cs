@@ -7,6 +7,9 @@ public sealed record GeladenesPaket(string Kennung, long Stand, PaketKopf? Kopf,
 {
     /// <summary>Welle A 0.91.0: Inhalt eines gueltigen Fachrichtungs-Pakets (sonst null).</summary>
     public FachrichtungsInhalt? Lernen { get; init; }
+
+    /// <summary>Welle A 1.5.0: nur aus <see cref="PaketAblage.Liste(string, bool)"/> mit saetzeOffen, siehe <see cref="PaketErgebnis.SaetzeOffen"/>.</summary>
+    public Task<string?>? SaetzeOffen { get; init; }
 }
 
 /// <summary>
@@ -56,7 +59,10 @@ public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingeb
     }
 
     /// <summary>Alle geladenen Pakete, je Kennung der hoechste Stand, jedes vollstaendig geprueft (nie Absturz).</summary>
-    public IReadOnlyList<GeladenesPaket> Liste(string app)
+    public IReadOnlyList<GeladenesPaket> Liste(string app) => Liste(app, false);
+
+    /// <summary>Welle A 1.5.0: wie <see cref="Liste(string)"/>; mit <paramref name="saetzeOffen"/> siehe <see cref="Paket.Pruefen(IReadOnlyDictionary{string, byte[]}, string, Inhalte.LernenOrdner?, bool)"/>.</summary>
+    public IReadOnlyList<GeladenesPaket> Liste(string app, bool saetzeOffen)
     {
         var liste = new List<GeladenesPaket>();
         if (!Directory.Exists(Ordner))
@@ -78,15 +84,19 @@ public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingeb
                 continue;
             }
             var stand = staende[0];
-            var ergebnis = OrdnerPruefen(Path.Combine(ordner, stand.ToString(System.Globalization.CultureInfo.InvariantCulture)), app);
+            var ergebnis = OrdnerPruefen(Path.Combine(ordner, stand.ToString(System.Globalization.CultureInfo.InvariantCulture)), app, saetzeOffen);
             var grund = ergebnis.Grund ?? (ergebnis.Kopf!.Kennung != kennung || ergebnis.Kopf.Stand != stand
                 ? PaketTexte.Format(PaketTexte.Anders, kennung, stand) : null);
-            liste.Add(new GeladenesPaket(kennung, stand, grund is null ? ergebnis.Kopf : null, grund) { Lernen = grund is null ? ergebnis.Lernen : null });
+            liste.Add(new GeladenesPaket(kennung, stand, grund is null ? ergebnis.Kopf : null, grund)
+            {
+                Lernen = grund is null ? ergebnis.Lernen : null,
+                SaetzeOffen = grund is null ? ergebnis.SaetzeOffen : null,
+            });
         }
         return liste;
     }
 
-    private PaketErgebnis OrdnerPruefen(string ordner, string app)
+    private PaketErgebnis OrdnerPruefen(string ordner, string app, bool saetzeOffen)
     {
         try
         {
@@ -101,7 +111,7 @@ public sealed class PaketAblage(string datenordner, Inhalte.LernenOrdner? eingeb
                 }
                 dateien[Path.GetFileName(datei)] = File.ReadAllBytes(datei);
             }
-            return Paket.Pruefen(dateien, app, Eingebaut);
+            return Paket.Pruefen(dateien, app, Eingebaut, saetzeOffen);
         }
         catch (Exception x) when (x is IOException or UnauthorizedAccessException)
         {

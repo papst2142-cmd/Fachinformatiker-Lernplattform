@@ -41,7 +41,8 @@ LERNEN_LISTEN = ("karteikarten", "quizfragen", "szenarien_ap2", "projektarbeiten
 LERNEN_ORDNER = os.path.join("inhalte_csharp", "lernen")
 # echte Testdateien der App (Stand 1, je Fachrichtung); nach jeder Inhalte-Aenderung einer Fachrichtung neu bauen
 # (selbsttest prueft die Gleichheit mit dem heutigen Bau)
-LERNEN_TESTDATEI = (1, "A 0.91.0")
+# Welle A 1.5.0 (Weisung P12-358, Nico 3a): die echten Pakete Stand 1 brauchen A 1.5.0 (die erste App ohne eigene Inhalte AE/DPA/DV)
+LERNEN_TESTDATEI = (1, "A 1.5.0")
 KENNUNG = re.compile(r"^[a-z][a-z0-9_]{1,31}\Z")
 RESERVIERT = {"stadt1", "falschlieferung"}
 
@@ -235,7 +236,7 @@ def lernen_selbsttest(repo):
                 with open(echt, "rb") as f:
                     if f.read() != neu:
                         funde.append("Testdatei " + os.path.basename(echt) + " weicht vom Bau ab (neu bauen: paket_bauen.py lernen " + fr + " "
-                                     + "tests/Lernplattform.Tests/Testdaten/pakete_echt --stand 1 --braucht-app \"A 0.91.0\")")
+                                     + "tests/Lernplattform.Tests/Testdaten/pakete_echt --stand %d --braucht-app \"%s\")" % LERNEN_TESTDATEI)
         try:
             lernen_schnitt(repo, "si")
             funde.append("Gegenprobe Fachrichtung si: nicht abgelehnt")

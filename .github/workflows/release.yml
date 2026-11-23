@@ -112,6 +112,14 @@ jobs:
         env:
           TAG: ${{ steps.version.outputs.tag }}
         run: bash werkzeuge/release/pruefe_tag.sh fehlt "$TAG"
+      # Welle A 1.5.0 (Weisung P12-358, Nico Zusatz a): die App bringt AE, DPA und DV nicht mehr selbst mit; ohne die drei
+      # veroeffentlichten Fachrichtungs-Pakete (gleich den Testdateien dieses Commits) kein Release der App
+      - name: Fachrichtungs-Pakete veroeffentlicht (vPlernen_ae, vPlernen_dpa, vPlernen_dv)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -I werkzeuge/release/pruefe_fachrichtungspakete.py selbsttest
+          python -I werkzeuge/release/pruefe_fachrichtungspakete.py pruefen
       # Entwuerfe sieht nur ein Token mit Schreibrecht: diese Regeln prueft werkzeuge/release/pruefe_entwuerfe.sh
       # in den Jobs entwurf und veroeffentlichen vor jedem Hochladen.
 
@@ -312,6 +320,8 @@ jobs:
         run: |
           # unmittelbar davor: den Tag gibt es noch nicht (sonst naehme GitHub einen fremden Tag)
           bash werkzeuge/release/pruefe_tag.sh fehlt "$TAG"
+          # A 1.5.0 (Zusatz a): unmittelbar davor noch einmal: die drei Fachrichtungs-Pakete sind veroeffentlicht
+          python -I werkzeuge/release/pruefe_fachrichtungspakete.py pruefen
           gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -F prerelease=false -f make_latest=true -f target_commitish="$GITHUB_SHA" >/dev/null
       - name: Tag zeigt auf diesen Commit
         env:

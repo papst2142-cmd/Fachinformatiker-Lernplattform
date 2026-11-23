@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 1.5.0
+Die Lerninhalte der Fachrichtungen Anwendungsentwicklung (AE), Daten- und Prozessanalyse (DPA) und Digitale Vernetzung (DV) kommen jetzt als eigenes Fachrichtungs-Paket. Du lädst nur das Paket deiner Fachrichtung; neue Inhalte für eine Fachrichtung kommen künftig als neuer Stand ihres Pakets, ohne App-Update.
+
+- Die App selbst bringt nur noch die Inhalte für Systemintegration (SI) und die gemeinsamen Inhalte aller Fachrichtungen mit. Dadurch ist sie kleiner. Wer SI lernt, lädt nichts und merkt keinen Unterschied.
+- Hast du AE, DPA oder DV gewählt, fragt die App beim ersten Start nach diesem Update einmal: „Für AE fehlt das Fachrichtungs-Paket (1,2 MB). Jetzt laden?“ Ein Tipp auf „Laden“ holt das Paket, und du lernst genau dieselben Inhalte wie vorher. Am Handy ohne WLAN fragt die App vorher, ob sie mobile Daten nutzen darf. Nichts lädt von allein.
+- Tippst du „Später“, siehst du die gemeinsamen Inhalte, und auf der Startseite steht die Karte „Für AE fehlt das Fachrichtungs-Paket“ mit dem Knopf „Laden“, bis das Paket da ist. Laden geht auch unter Optionen › Inhaltspakete.
+- Dein Lernstand bleibt vollständig erhalten. Was du zu Inhalten deiner Fachrichtung schon bearbeitet hast, ruht nur, solange das Paket fehlt, und ist nach dem Laden genau wieder da. Auch ein angefangener Prüfungssatz bleibt gespeichert.
+- Ohne Internet zeigt die App einen klaren Hinweis; SI und die gemeinsamen Inhalte gehen weiter vollständig.
+- Aussehen, Bedienung, die Prüfungen und deine Spielstände bleiben, wie sie sind.
+
 ## A 1.4.1
 Eine kleine Pflege-Version für die Stadt im Winter.
 

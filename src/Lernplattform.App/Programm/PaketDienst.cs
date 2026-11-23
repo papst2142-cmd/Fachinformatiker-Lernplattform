@@ -14,7 +14,24 @@ public static class PaketDienst
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(30) };
     private static PaketVerwaltung? _verwaltung;
 
-    public static PaketVerwaltung Verwaltung => _verwaltung ??= Neu();
+    private static readonly Lock VerwaltungSperre = new();
+
+    // Welle A 1.5.0: der erste Zugriff kann beim Start im Hintergrund kommen (Pruefung der Fachrichtungs-Pakete, waehrend die
+    // bisherigen Inhalte laden): nur eine Verwaltung, auch bei gleichzeitigem Zugriff
+    public static PaketVerwaltung Verwaltung
+    {
+        get
+        {
+            if (Volatile.Read(ref _verwaltung) is { } v)
+            {
+                return v;
+            }
+            lock (VerwaltungSperre)
+            {
+                return _verwaltung ??= Neu();
+            }
+        }
+    }
 
     // Welle A 0.88.0 (Nico 5a): Entfernen gesperrt, solange die Figur in der Stadt des Pakets ist
     // Welle A 0.91.0 (Weisung P12-300): Fachrichtungs-Pakete werden gegen die Inhalte der App geprueft („nur angehaengt“);

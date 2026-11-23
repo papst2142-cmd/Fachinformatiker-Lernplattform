@@ -340,19 +340,35 @@ public static class Zustand
             // inhalte_csharp/lernen nur die neuen Inhalte der gewaehlten Fachrichtung (die anderen beim Wechsel)
             var eingebaut = Eingebaut;
             eingebaut.Vorab();     // die Listen aus inhalte_csharp/lernen lesen schon, waehrend die bisherigen laden
+            // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV kommen nur noch aus den Paketen im Datenordner. Ihre Pruefung
+            // („nur angehaengt“) laeuft auf eigenem Faden schon, waehrend die bisherigen Inhalte laden (vorher danach); die
+            // Ladepruefung ihrer Saetze laeuft weiter nebenher, waehrend die Inhalte gebildet werden (siehe unten)
+            var paketeLesen = Task.Factory.StartNew(PaketeOffenLesen, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            GanzVorab(eingebaut);
             var bisher = Lerninhalte.Laden(n => Core.Diagnose.LadeTeile.Datei(() => EingebauteDatei(n)));
             // Welle A 0.91.0 (Weisung P12-300): gueltige Fachrichtungs-Pakete aus dem Datenordner (geprueft „nur angehaengt“)
-            var lernen = MitPaketen(eingebaut);
+            var pakete = paketeLesen.GetAwaiter().GetResult();
+            var lernen = MitPaketen(eingebaut, [.. pakete.Select(p => p.Inhalt)]);
             uhr.Stop();
             var wahlUhr = Stopwatch.StartNew();
             Sicht = Wahl();
             Messwerte.Notiere(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Fachrichtung aus dem Lernstand gelesen: {wahlUhr.ElapsedMilliseconds} ms"));
             uhr.Start();
-            var inhalte = Lerninhalte.MitLernenSicher(() => bisher, lernen, fehler =>
+            IReadOnlyCollection<string> geladen = Sicht == Fachrichtungen.Systemintegration ? [Sicht] : [Fachrichtungen.Systemintegration, Sicht];
+            Lerninhalte Bilden(LernenOrdner ordner) => Lerninhalte.MitLernenSicher(() => bisher, ordner, fehler =>
             {
                 Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
                 Messwerte.Notiere("Lerninhalte: FEHLER in inhalte_csharp/lernen " + fehler.GetType().Name + ", nur die bisherigen Inhalte");
-            }, Sicht == Fachrichtungen.Systemintegration ? [Sicht] : [Fachrichtungen.Systemintegration, Sicht]);
+            }, geladen);
+            var inhalte = Bilden(lernen);
+            // erst wenn auch die Saetze jedes Pakets die Ladepruefung bestanden haben, gelten seine Inhalte; faellt eines durch
+            // (wie bisher: das Paket ist rot und zaehlt nicht), werden die Inhalte ohne es neu gebildet
+            var gute = SaetzeGeprueft(pakete);
+            if (gute.Count != pakete.Count)
+            {
+                lernen = MitPaketen(eingebaut, gute);
+                inhalte = Bilden(lernen);
+            }
             var sichtUhr = Stopwatch.StartNew();
             _ersteSicht = inhalte.Fuer(Sicht);
             InhalteLadenMs = uhr.Elapsed.TotalMilliseconds;
@@ -385,19 +401,103 @@ public static class Zustand
 
     private static LernenOrdner? _aktuell;
 
-    private static LernenOrdner MitPaketen(LernenOrdner eingebaut)
+    private static LernenOrdner MitPaketen(LernenOrdner eingebaut) => MitPaketen(eingebaut, PaketeLesen());
+
+    /// <summary>
+    /// Welle A 1.5.0: liegt ein Fachrichtungs-Paket im Datenordner, braucht seine Pruefung („nur angehaengt“) die ganzen Listen
+    /// der App mit den Platzhaltern; sie werden je Datei nebeneinander schon gelesen, waehrend das Paket gelesen wird. Ohne
+    /// Paket (SI) wird nichts zusaetzlich gelesen. Fehler zeigen sich erst bei der Pruefung selbst.
+    /// </summary>
+    private static void GanzVorab(LernenOrdner eingebaut)
     {
-        IReadOnlyList<Core.Pakete.FachrichtungsInhalt> pakete;
         try
         {
-            pakete = PaketDienst.Verwaltung.Fachrichtungen();
+            var ordner = Path.Combine(Ablage.Datenordner(), Core.Pakete.PaketAblage.OrdnerName);
+            if (!Directory.Exists(ordner) || !Directory.EnumerateDirectories(ordner, Core.Pakete.FachrichtungsPaket.Praefix + "*").Any())
+            {
+                return;
+            }
+        }
+        catch (Exception fehler) when (fehler is IOException or UnauthorizedAccessException)
+        {
+            return;
+        }
+        foreach (var name in Core.Pakete.FachrichtungsPaket.Listen.Append(Core.Pruefung.Echt.EchtSaetze.DateiName))
+        {
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    eingebaut.Dokument(name);
+                }
+                catch (Exception)
+                {
+                    // nur vorab; derselbe Fehler kommt bei der Pruefung wieder und wird dort behandelt
+                }
+            });
+        }
+    }
+
+    /// <summary>Gueltige Fachrichtungs-Pakete aus dem Datenordner (geprueft); nie ein Absturz: bei einem Fehler keine.</summary>
+    private static IReadOnlyList<Core.Pakete.FachrichtungsInhalt> PaketeLesen()
+    {
+        try
+        {
+            return PaketDienst.Verwaltung.Fachrichtungen();
         }
         catch (Exception fehler)
         {
             // nie ein Absturz: ohne Pakete gilt der Grundstand
             Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
-            pakete = [];
+            return [];
         }
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0: wie <see cref="PaketeLesen"/> fuer den Start, die Ladepruefung der Saetze laeuft noch (siehe
+    /// <see cref="SaetzeGeprueft"/>); nie ein Absturz: bei einem Fehler keine.
+    /// </summary>
+    private static IReadOnlyList<(Core.Pakete.FachrichtungsInhalt Inhalt, Task<string?> Saetze)> PaketeOffenLesen()
+    {
+        try
+        {
+            return PaketDienst.Verwaltung.FachrichtungenOffen();
+        }
+        catch (Exception fehler)
+        {
+            Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0: wartet die Ladepruefung der Saetze jedes Pakets ab und gibt nur die Pakete zurueck, deren Saetze sie
+    /// bestanden haben (gleich dem Ergebnis von <see cref="PaketeLesen"/>). Ein unerwarteter Fehler verwirft das Paket.
+    /// </summary>
+    private static IReadOnlyList<Core.Pakete.FachrichtungsInhalt> SaetzeGeprueft(IReadOnlyList<(Core.Pakete.FachrichtungsInhalt Inhalt, Task<string?> Saetze)> pakete)
+    {
+        var gute = new List<Core.Pakete.FachrichtungsInhalt>(pakete.Count);
+        foreach (var (inhalt, saetze) in pakete)
+        {
+            try
+            {
+                if (saetze.GetAwaiter().GetResult() is { } grund)
+                {
+                    Messwerte.Notiere("Fachrichtungs-Paket " + inhalt.Fachrichtung + " nicht genommen: " + grund);
+                    continue;
+                }
+                gute.Add(inhalt);
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
+            }
+        }
+        return gute;
+    }
+
+    private static LernenOrdner MitPaketen(LernenOrdner eingebaut, IReadOnlyList<Core.Pakete.FachrichtungsInhalt> pakete)
+    {
         var ordner = pakete.Count == 0 ? eingebaut : eingebaut.MitPaketen(pakete);
         _aktuell = ordner;
         _echt = NeuerBestand();
@@ -512,7 +612,6 @@ public static class Zustand
     public static void EchtVorab() => _ = Task.Run(() => _echt.Value);
 
     /// <summary>Nur Start ohne Bedienung: eine eingebaute Datei aus inhalte_csharp/lernen.</summary>
-    internal static byte[]? LernenDateiFuerMessung(string name) => LernenDatei(name);
 
     /// <summary>inhalte_csharp/lernen/&lt;name&gt;.json aus dem Programm selbst, null wenn es die Datei nicht gibt.</summary>
     private static byte[]? LernenDatei(string name) => Ressource("inhalte_csharp/lernen/" + name + ".json");

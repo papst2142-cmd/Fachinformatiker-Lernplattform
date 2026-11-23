@@ -75,6 +75,13 @@ public sealed class DashboardSeite : UserControl
     /// </summary>
     private void FachrichtungsKarte()
     {
+        // Welle A 1.5.0 (Weisung P12-358, Nico 2a): fehlen der Sicht alle Inhalte, nur EINE Karte (Abnahmebild P12-225 Bild 4);
+        // der Hinweis auf einen neuen Stand kommt dann nicht dazu (Befund doppelte Karte, Bild 1)
+        if (Zustand.Aktuell.Fehlt(Zustand.Sicht))
+        {
+            FehltKarte();
+            return;
+        }
         if (Programm.FachrichtungsPaketDienst.Hinweis() is { } neu)
         {
             var text = Programm.FachrichtungsPaketDienst.HinweisText(neu.Fachrichtung, neu.Angebot);
@@ -112,11 +119,47 @@ public sealed class DashboardSeite : UserControl
             };
             _liste.Children.Add(karte);
         }
-        if (Zustand.Aktuell.Fehlt(Zustand.Sicht))
+    }
+
+    /// <summary>
+    /// Welle A 1.5.0 (Weisung P12-358, Nico 2a, Abnahmebild P12-225 Bild 4): der Sicht fehlen alle Inhalte (AE, DPA, DV nur als
+    /// Paket): Karte mit Text und Knopf „Laden“ (gleicher Weg wie der Hinweis: am Handy ohne WLAN erst die Rueckfrage). Sie bleibt,
+    /// bis das Paket da ist; nichts laedt von allein.
+    /// </summary>
+    private void FehltKarte()
+    {
+        var fr = Zustand.Sicht;
+        var text = Core.Texte.PaketTexte.Format(Core.Texte.PaketTexte.FrFehltSicht, Core.Texte.PaketTexte.Fr(fr));
+        var laden = Schrift.Knopf(Core.Texte.PaketTexte.Laden);
+        AutomationProperties.SetName(laden, Core.Texte.PaketTexte.Laden + ": " + text);
+        var karte = Schrift.Karte(new StackPanel
         {
-            _liste.Children.Add(Schrift.Karte(Schrift.Text(Core.Texte.PaketTexte.Format(Core.Texte.PaketTexte.FrFehltSicht,
-                Core.Texte.PaketTexte.Fr(Zustand.Sicht)), "Normal", FontWeight.SemiBold, "Pinsel.orange")));
-        }
+            Spacing = 6,
+            Children =
+            {
+                Schrift.Text(text, "Normal", FontWeight.SemiBold, "Pinsel.orange"),
+                new WrapPanel { Children = { laden } },
+            },
+        });
+        karte.Name = "FachrichtungFehlt";
+        laden.Click += async (_, _) =>
+        {
+            laden.IsEnabled = false;
+            var grund = await Programm.FachrichtungsPaketDienst.LadenAsync(fr);
+            if (grund is null)
+            {
+                _liste.Children.Remove(karte);
+            }
+            else
+            {
+                laden.IsEnabled = true;
+                if (grund != Core.Texte.PaketTexte.Abgebrochen)
+                {
+                    await Dialog.Zeigen(PaketTexte.Format(PaketTexte.FrName, PaketTexte.Fr(fr)), grund, Dialog.Ok);
+                }
+            }
+        };
+        _liste.Children.Add(karte);
     }
 
     private async Task LadenAsync()
