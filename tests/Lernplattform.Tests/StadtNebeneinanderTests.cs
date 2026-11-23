@@ -81,16 +81,11 @@ public sealed class StadtNebeneinanderTests
         {
             Assert.True(wert == neben.Abschnitte[abschnitt], name + ": Abschnitt " + abschnitt + " weicht ab");
         }
-        // feste Zaehlwerte, gemessen auf main 643f429 (vor der Welle)
-        // bei Abweichung die Einzelwerte je Kachel und Netz in der Meldung (Vergleich zwischen Rechnern)
-        Assert.True(Fest[name] == Zaehlung(name, reihe), name + ": " + reihe.Zaehlung + "\nEinzeln: " + reihe.Einzeln);
-        Assert.True(Fest[name] == Zaehlung(name, neben), name + ": " + neben.Zaehlung + "\nEinzeln: " + neben.Einzeln);
+        // feste Zaehlwerte (siehe Fest); bei Abweichung die Einzelwerte je Kachel und Netz in der Meldung (Vergleich zwischen Rechnern)
+        Assert.True(Fest[name] == reihe.Zaehlung, name + ": " + reihe.Zaehlung + "\nEinzeln: " + reihe.Einzeln);
+        Assert.True(Fest[name] == neben.Zaehlung, name + ": " + neben.Zaehlung + "\nEinzeln: " + neben.Einzeln);
         Assert.Equal(reihe.Zaehlung, neben.Zaehlung);
     }
-
-    /// <summary>Zaehlzeile fuer den festen Vergleich; bei der Paket-Stadt ohne die Zahl des Kleingruens (siehe <see cref="Fest"/>).</summary>
-    private static string Zaehlung(string name, Bauabdruck a) =>
-        name == "paket" ? a.Zaehlung[..a.Zaehlung.LastIndexOf(", gruen ", StringComparison.Ordinal)] : a.Zaehlung;
 
     [Fact]
     public void Gegenprobe_VertauschteReihenfolge_UndVeraenderteEcke_WerdenErkannt()
@@ -122,15 +117,20 @@ public sealed class StadtNebeneinanderTests
         }
     }
 
-    /// <summary>Zaehlwerte je Stadt (main 643f429): Teile, Streifen, Stuecke, Haeuser, freie Zellen, Laternen, Saetze, Kacheln, Ecken und Indizes aller Kacheln ohne Gruen, Ecken/Indizes des Gruens.</summary>
+    /// <summary>
+    /// Zaehlwerte je Stadt: Teile, Streifen, Stuecke, Haeuser, freie Zellen, Laternen, Saetze, Kacheln, Ecken und Indizes aller
+    /// Kacheln ohne Gruen, Ecken/Indizes des Gruens. Sommer (stadt1) gemessen auf main 643f429. Die Winter-Staedte seit A 1.4.1
+    /// (Sammelliste 437, Weisung P12-354): die Entscheidungen je Dreieck einer nur um die Hochachse gedrehten Lage kommen aus dem
+    /// Raum des Modells, darum fasst das Instancing im Winter gleiche Stuecke so zusammen wie im Sommer (vorher trennte die je
+    /// Drehung leicht andere Schneefarbe sie, und das je Rechner verschieden). Alle Zahlen gelten auf jedem Rechner, auch die
+    /// Zahl des Kleingruens der Paket-Stadt (vorher GitHub 226908/28116, Container 230472/28512).
+    /// </summary>
     private static readonly Dictionary<string, string> Fest = new()
     {
         ["stadt1"] = "teile 855, streifen 902, stuecke 58, haeuser 9, frei 58199, laternen 74, saetze 4, kacheln 16, ecken 3087072, indizes 362748, gruen 216864/27084",
-        ["stadt1-winter"] = "teile 855, streifen 902, stuecke 58, haeuser 9, frei 58199, laternen 74, saetze 1, kacheln 16, ecken 3370176, indizes 394380, gruen 243108/30000",
-        ["testkarte"] = "teile 12444, streifen 14312, stuecke 928, haeuser 174, frei 925469, laternen 1184, saetze 8, kacheln 256, ecken 46623114, indizes 5464566, gruen 3037716/395508",
-        // Paket-Stadt ohne die Zahl des Kleingruens: das Gruen-Netz der Kachel B1 hat je nach Rechner 132 Dreiecke mehr oder weniger
-        // (GitHub Linux und Windows 226908/28116, Container 230472/28512, Sammelliste 437); der Abdruck oben vergleicht es je Rechner bitgenau
-        ["paket"] = "teile 302, streifen 258, stuecke 32, haeuser 7, frei 10393, laternen 22, saetze 8, kacheln 4, ecken 1615887, indizes 186471",
+        ["stadt1-winter"] = "teile 855, streifen 902, stuecke 58, haeuser 9, frei 58199, laternen 74, saetze 4, kacheln 16, ecken 3087072, indizes 362748, gruen 216864/27084",
+        ["testkarte"] = "teile 12444, streifen 14312, stuecke 928, haeuser 174, frei 925469, laternen 1184, saetze 8, kacheln 256, ecken 40459050, indizes 4777782, gruen 2191572/301200",
+        ["paket"] = "teile 302, streifen 258, stuecke 32, haeuser 7, frei 10393, laternen 22, saetze 8, kacheln 4, ecken 1615887, indizes 186471, gruen 136512/18072",
     };
 }
 

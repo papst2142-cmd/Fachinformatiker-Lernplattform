@@ -170,24 +170,58 @@ public sealed partial class Netz
     public void HinzuLokal(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung) =>
         HinzuMit(modell, lage, faerbung, null, lokal: true);
 
+    /// <summary>Gegenprobe Sammelliste 437: Entscheidungen je Dreieck wie bis A 1.4.0 aus den gedrehten Weltkoordinaten (nur Tests, je Ablauf).</summary>
+    public static bool ObenAusWeltFuerTests { get => ObenAusWelt.Value; set => ObenAusWelt.Value = value; }
+
+    private static readonly AsyncLocal<bool> ObenAusWelt = new();
+
     private void HinzuMit(GrafikModell modell, Matrix4x4 lage, Modellfaerbung? faerbung, List<Vector3>? dreiecksfarben, bool lokal)
     {
         var e = modell.Ecken;
         // Welle Nachladen A 0.82.0: Platz vorab (nur schneller, gleicher Inhalt)
         _ecken.EnsureCapacity(_ecken.Count + (modell.Dreiecke * 3 * Zahlen));
         _indizes.EnsureCapacity(_indizes.Count + (modell.Dreiecke * 3));
+        // Sammelliste 437 (Weisung P12-354): ist die Lage nur eine Drehung um die Hochachse mit gleichmaessiger Groesse (dazu
+        // Verschiebung), haengen die Entscheidungen je Dreieck (zu klein, Unterseite, Betrag der Normale nach oben fuer die
+        // Faerbung) mathematisch nicht von der Drehung ab. Dann werden sie aus dem Dreieck im Raum des Modells gerechnet
+        // (Normale = Groesse^2 mal die Normale im Modell, Hoehe ohne Drehung), nicht aus den gedrehten Ecken: die letzten Bits
+        // der Drehung (Sinus/Kosinus der Rechenbibliothek) und die Rundung der grossen Weltkoordinaten entschieden sonst je
+        // Rechner verschieden (Kleingruen der Paket-Stadt: Farbe eines Grasbueschels an der Grenze einer Farbstufe, Instancing
+        // je Rechner anders). Alle anderen Lagen wie bisher.
+        var hochachse = !ObenAusWelt.Value && lage.M12 == 0 && lage.M32 == 0 && lage.M21 == 0 && lage.M23 == 0 && lage.M22 != 0 && Instanzen.Geeignet(lage);
+        var hochQuadrat = lage.M22 * lage.M22;
         for (var d = 0; d < modell.Dreiecke; d++)
         {
-            var a = Vector3.Transform(new Vector3(e[d * 9], e[(d * 9) + 1], e[(d * 9) + 2]), lage);
-            var b = Vector3.Transform(new Vector3(e[(d * 9) + 3], e[(d * 9) + 4], e[(d * 9) + 5]), lage);
-            var c = Vector3.Transform(new Vector3(e[(d * 9) + 6], e[(d * 9) + 7], e[(d * 9) + 8]), lage);
-            var kreuz = Vector3.Cross(b - a, c - a);
-            if (kreuz.LengthSquared() < 1e-14f)
+            var la = new Vector3(e[d * 9], e[(d * 9) + 1], e[(d * 9) + 2]);
+            var lb = new Vector3(e[(d * 9) + 3], e[(d * 9) + 4], e[(d * 9) + 5]);
+            var lc = new Vector3(e[(d * 9) + 6], e[(d * 9) + 7], e[(d * 9) + 8]);
+            var a = Vector3.Transform(la, lage);
+            var b = Vector3.Transform(lb, lage);
+            var c = Vector3.Transform(lc, lage);
+            Vector3 kreuz;
+            float laengeQuadrat;
+            if (hochachse)
             {
-                continue;
+                // Welt: Normale.Y = Vorzeichen(M22) * M22^2 * Normale.Y im Modell, |Normale| = M22^2 * |Normale im Modell|
+                var imModell = Vector3.Cross(lb - la, lc - la);
+                kreuz = new Vector3(0, lage.M22 > 0 ? imModell.Y : -imModell.Y, 0);
+                laengeQuadrat = imModell.LengthSquared();
+                if (laengeQuadrat * hochQuadrat * hochQuadrat < 1e-14f)
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                kreuz = Vector3.Cross(b - a, c - a);
+                laengeQuadrat = kreuz.LengthSquared();
+                if (laengeQuadrat < 1e-14f)
+                {
+                    continue;
+                }
             }
             if (UnterseiteBis is { } bis && MathF.Max(a.Y, MathF.Max(b.Y, c.Y)) <= bis
-                && kreuz.Y < -UnterseiteNeigung * MathF.Sqrt(kreuz.LengthSquared()))
+                && kreuz.Y < -UnterseiteNeigung * MathF.Sqrt(laengeQuadrat))
             {
                 UnterseitenWeg++;
                 continue;
@@ -196,7 +230,7 @@ public sealed partial class Netz
             float oben = 0, hoehe = 0;
             if (faerbung is not null)
             {
-                oben = MathF.Abs(kreuz.Y) / MathF.Sqrt(kreuz.LengthSquared());
+                oben = MathF.Abs(kreuz.Y) / MathF.Sqrt(laengeQuadrat);
                 hoehe = (a.Y + b.Y + c.Y) / 3;
             }
             Vector3 Farbe(Vector3 f) => faerbung is null ? f : faerbung(d, f, oben, hoehe);

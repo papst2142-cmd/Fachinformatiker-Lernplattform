@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 1.4.1
+Eine kleine Pflege-Version für die Stadt im Winter.
+
+- Im Winter fasst das Spiel gleiche Grasbüschel, Büsche, Steine und Bäume jetzt genauso zusammen wie im Sommer und zeichnet sie gemeinsam. Vorher bekam ein Stück je nach Drehung eine winzig andere Schneefarbe und wurde deshalb einzeln gezeichnet, und das auf verschiedenen Rechnern verschieden. Jetzt ist das Ergebnis auf jedem Rechner gleich, und die Stadt hat im Winter weniger einzeln gezeichnete Stücke.
+- Die Stadt sieht aus wie vorher: Die Farben unterscheiden sich höchstens um einen Bruchteil einer sichtbaren Farbstufe, jedes Stück steht an derselben Stelle.
+- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.4.0
 Eine Pflege-Version: Das Spiel baut die Stadt jetzt zum Teil nebeneinander auf mehreren Prozessorkernen.
 
