@@ -3,6 +3,14 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.62.1
+
+Eine kleine Pflege-Version: die automatische Probe des Werkzeugs wartet genauer auf die Prüfung.
+
+- Nach einer Änderung an der Stadt wartet die eingebaute Probe jetzt immer auf die Prüfung, die nach der Änderung begonnen hat. Vorher konnte sie bei offener 3D-Ansicht selten das Ergebnis vom Stand davor lesen und einen Fehler melden, den es nicht gab.
+- Für dich ändert sich beim Bauen nichts: Prüfung, Anzeige und 3D-Ansicht arbeiten wie bisher.
+- Deine Projekte und die Dateien für das Spiel bleiben, wie sie sind.
+
 ## S 0.62.0
 
 Das Werkzeug baut die Stadt für die 3D-Ansicht und die Prüfung zum Teil nebeneinander auf mehreren Prozessorkernen.
