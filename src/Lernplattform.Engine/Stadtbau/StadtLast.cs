@@ -54,6 +54,8 @@ public static class StadtLast
         var bauenMs = uhr.Elapsed.TotalMilliseconds;
         uhr.Restart();
         var fertig = szene.Vorbereiten();
+        // Engine-Welle A 1.4.0: auch was nebenher entsteht (Laufraster) gehoert zur Messung
+        szene.FertigWarten();
         var vorbereitenMs = uhr.Elapsed.TotalMilliseconds;
         var netze = Netze(fertig).ToList();
         return new Ergebnis(bauenMs, vorbereitenMs, netze.Sum(Bytes), netze.Count);

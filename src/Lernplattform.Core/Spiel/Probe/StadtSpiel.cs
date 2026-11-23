@@ -1311,6 +1311,8 @@ public sealed partial class StadtSpiel
             {
                 szene.Vorbereiten();
             }
+            // Engine-Welle A 1.4.0: ganz fertig (auch das Laufraster), ein Fehler bleibt in der Aufgabe wie bisher
+            szene.FertigWarten();
             return szene;
         }));
     }

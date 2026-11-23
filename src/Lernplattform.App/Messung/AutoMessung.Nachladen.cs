@@ -128,6 +128,8 @@ public static partial class AutoMessung
         {
             lader.Hochgeladen(lader.JetztBauen(k) ?? throw new InvalidOperationException(Nachlader.FehlerText(k, null)));
         }
+        // Engine-Welle A 1.4.0: auch was nebenher entsteht (Laufraster) gehoert zur Messung
+        szene.FertigWarten();
         var kacheln = uhr.Elapsed.TotalMilliseconds;
         var gesamt = bauen + grundlage + kacheln;
         var mb = lader.Bytes / 1048576.0;

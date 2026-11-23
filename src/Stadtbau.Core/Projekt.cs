@@ -398,7 +398,10 @@ public sealed partial class Projekt
             var fassung = Aussen.Fassung(aussen, Basis, Innenraeume(), 1, null, Werkzeug.Kennzeile, "", "");
             var stadt = fassung.StadtFuer(fassung.MitKarte(Daten.Inhalt));
             var stand = StadtbauSpiel.Probestand(stadt.Inhalt).Stand;
-            return StadtSzene.Bauen(stadt, stand, mitGebaeuden ? Ansicht3D.MitGebaeuden(Daten.Grafik, fassung) : Daten.Grafik, null, Daten.Feste, vorrat: _laternenVorrat);
+            var szene = StadtSzene.Bauen(stadt, stand, mitGebaeuden ? Ansicht3D.MitGebaeuden(Daten.Grafik, fassung) : Daten.Grafik, null, Daten.Feste, vorrat: _laternenVorrat);
+            // Engine-Welle A 1.4.0: ein Fehler im Laufraster (entsteht nebenher) landet hier wie bisher
+            szene.FertigWarten();
+            return szene;
         }
         catch (Exception fehler) when (fehler is InvalidDataException or IOException or KeyNotFoundException or InvalidCastException or FormatException
             or OverflowException or SpielFehler or ArgumentException or InvalidOperationException or IndexOutOfRangeException)

@@ -122,16 +122,25 @@ public static class Instanzen
     /// <summary>Die Kandidaten nach gleichem Aussehen ordnen, Gruppen ab <see cref="MindestLagen"/>, die groessten <see cref="HoechstensSaetze"/>.</summary>
     internal static Instanzplan Planen(IEnumerable<Kandidat> kandidaten)
     {
-        var gruppen = new Dictionary<string, List<Kandidat>>(StringComparer.Ordinal);
-        var reihe = new List<string>();
         // Welle Nachladen A 0.82.0: Schluessel auf allen Kernen, Gruppen der Reihe nach wie bisher
         var alle = kandidaten as IReadOnlyList<Kandidat> ?? kandidaten.ToList();
         var schluesselJe = new string[alle.Count];
-        Parallel.For(0, alle.Count, i =>
-        {
-            var k = alle[i];
-            schluesselJe[i] = k.Ziel + "|" + k.Modell + "|" + Schluessel(k.Nah) + "|" + (k.Fern is null ? "-" : Schluessel(k.Fern));
-        });
+        Parallel.For(0, alle.Count, i => schluesselJe[i] = SchluesselVon(alle[i]));
+        return Planen(alle, schluesselJe);
+    }
+
+    /// <summary>Schluessel eines Kandidaten (gleiches Aussehen = gleicher Schluessel).</summary>
+    internal static string SchluesselVon(Kandidat k) =>
+        k.Ziel + "|" + k.Modell + "|" + Schluessel(k.Nah) + "|" + (k.Fern is null ? "-" : Schluessel(k.Fern));
+
+    /// <summary>
+    /// Wie <see cref="Planen(IEnumerable{Kandidat})"/> mit schon gerechneten Schluesseln (<see cref="SchluesselVon"/>, gleiche
+    /// Stelle wie <paramref name="alle"/>; Engine-Welle A 1.4.0: der Plan der Stadt rechnet sie im selben Durchgang).
+    /// </summary>
+    internal static Instanzplan Planen(IReadOnlyList<Kandidat> alle, IReadOnlyList<string> schluesselJe)
+    {
+        var gruppen = new Dictionary<string, List<Kandidat>>(StringComparer.Ordinal);
+        var reihe = new List<string>();
         for (var i = 0; i < alle.Count; i++)
         {
             var k = alle[i];

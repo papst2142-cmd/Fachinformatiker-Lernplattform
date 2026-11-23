@@ -110,6 +110,8 @@ public static partial class StadtbauPruefung
         try
         {
             szene = StadtSzene.Bauen(stadt, stand, grafik, null, feste);
+            // Engine-Welle A 1.4.0: ein Fehler im Laufraster (entsteht nebenher) bleibt ein Fund wie bisher
+            szene.FertigWarten();
         }
         catch (Exception fehler) when (fehler is InvalidOperationException or ArgumentException or KeyNotFoundException or InvalidCastException or IndexOutOfRangeException)
         {
@@ -123,6 +125,7 @@ public static partial class StadtbauPruefung
         try
         {
             neu = fassung.Laternen.Count == 0 ? szene : StadtSzene.Bauen(stadt, null, grafik, null, feste);
+            neu.FertigWarten();
         }
         catch (Exception fehler) when (fehler is InvalidOperationException or ArgumentException or KeyNotFoundException or InvalidCastException or IndexOutOfRangeException)
         {
