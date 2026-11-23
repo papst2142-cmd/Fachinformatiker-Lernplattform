@@ -258,6 +258,32 @@ public sealed partial class Hauptansicht : UserControl
 
     private TaskCompletionSource _aussenGeprueft = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+    /// <summary>
+    /// Sammelliste 439 (Weisung P12-353): Zaehler der Aenderungen draussen. Eine Pruefung merkt sich beim Start den Zaehler;
+    /// <see cref="AussenGeprueftAb"/> wartet auf eine Pruefung, die NACH der Aenderung gestartet ist. <see cref="AussenGeprueft"/>
+    /// allein kann eine Pruefung vom Stand davor melden: bei sichtbarer 3D-Ansicht startet die neue Pruefung erst nach dem Bau
+    /// der Szene, bis dahin darf die laufende alte fertig werden (Wackelfehler Lauf 1183, Pinsel-Gegenprobe „rot False“).
+    /// </summary>
+    internal int AussenAenderung => _aussenStand;
+
+    /// <summary>Fertig, sobald eine Pruefung draussen fertig ist, die bei Zaehler <paramref name="aenderung"/> oder spaeter begann.</summary>
+    internal Task AussenGeprueftAb(int aenderung)
+    {
+        if (_aussenGeprueftAb >= aenderung)
+        {
+            return Task.CompletedTask;
+        }
+        var warten = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _aussenGeprueftWarten.Add((aenderung, warten));
+        return warten.Task;
+    }
+
+    /// <summary>Nur Start-Test (Gegenprobe 439): die naechste Pruefung draussen beginnt um diese Zeit spaeter.</summary>
+    internal TimeSpan PruefStartVerzoegerungFuerTests { get; set; }
+
+    private int _aussenGeprueftAb = -1;
+    private readonly List<(int Ab, TaskCompletionSource Warten)> _aussenGeprueftWarten = [];
+
     /// <summary>3D-Ansicht mit dem aktuellen Stand gezeigt (Start-Test wartet darauf).</summary>
     public Task DreiFertig => _dreiFertig.Task;
 
@@ -1946,8 +1972,16 @@ public sealed partial class Hauptansicht : UserControl
         {
             return;
         }
+        if (PruefStartVerzoegerungFuerTests > TimeSpan.Zero)
+        {
+            var spaeter = PruefStartVerzoegerungFuerTests;
+            PruefStartVerzoegerungFuerTests = TimeSpan.Zero;
+            DispatcherTimer.RunOnce(AussenPruefenStarten, spaeter);
+            return;
+        }
         _pruefungWartet = false;
         var stand = ++_aussenPruefStand;
+        var aenderung = _aussenStand;
         var daten = _daten;
         // Kopie auf dem Oberflaechen-Thread: der Hintergrund liest nie den Stand, der gerade bearbeitet wird
         var fassung = Aussen.Fassung((PyObjekt)Py.Kopie(_projekt.AussenStand)!, _projekt.Basis, _projekt.Innenraeume(), 1, 0, Werkzeug.Kennzeile, "", "");
@@ -1988,6 +2022,12 @@ public sealed partial class Hauptansicht : UserControl
             Messwerte.Reihe("Prüfen draußen im Hintergrund (Angabe)", uhr.Elapsed.TotalMilliseconds);
             AussenPruefungZeigen(fertig: true);
             _aussenGeprueft.TrySetResult();
+            _aussenGeprueftAb = Math.Max(_aussenGeprueftAb, aenderung);
+            foreach (var w in _aussenGeprueftWarten.Where(w => w.Ab <= aenderung).ToList())
+            {
+                _aussenGeprueftWarten.Remove(w);
+                w.Warten.TrySetResult();
+            }
             // danach die 3D-Szene im Voraus bauen: "3D-Ansicht" zeigt sie dann ohne Wartezeit
             DreiAktualisieren();
         }), TaskScheduler.Default);

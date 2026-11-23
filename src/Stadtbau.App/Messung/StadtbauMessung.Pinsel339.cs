@@ -265,13 +265,14 @@ public static partial class StadtbauMessung
             Fund(string.Create(Inv, $"Pinsel an der Strasse (P12-254): 3D {laengs3D.Item1} Schritte, Hoehe {laengs3D.Item2:0.00}, Meldung „{laengs3D.StatusText}“, Draufsicht geaendert {laengs2D} (erwartet: nichts, kein Schritt, „{Texte.PinselNichts}“)"));
         }
         await Zug3DAsync(a, b3, 11, 1, 11, 9, "links");
+        var querAb = a.AussenAenderung;
         await a.DreiFertig;
-        await a.AussenGeprueft;
+        await a.AussenGeprueftAb(querAb);
         var quer3D = (Wiese: HoeheAn(11, 7), Strasse: HoeheAn(11, 3), Rand: HoeheAn(11, 5.5f), Rot: GemaltRot(), Schritte: p.SchritteZurueck - s3);
         a.Rueckgaengig();
         await a.DreiFertig;
         k.PinselZugAnwenden([new(11, 1), new(11, 9)]);
-        await a.AussenGeprueft;
+        await a.AussenGeprueftAb(a.AussenAenderung);
         var quer2D = (Wiese: HoeheAn(11, 7), Strasse: HoeheAn(11, 3), Rand: HoeheAn(11, 5.5f), Rot: GemaltRot());
         a.Rueckgaengig();
         await a.AussenGeprueft;
@@ -286,7 +287,8 @@ public static partial class StadtbauMessung
         {
             AussenBearbeitung.PinselOhneSperreFuerTests = true;
             k.PinselZugAnwenden([new(8, 3), new(14, 3)]);
-            await a.AussenGeprueft;
+            // Sammelliste 439: auf die Pruefung NACH dem Zug warten, nie auf eine laufende vom Stand davor
+            await a.AussenGeprueftAb(a.AussenAenderung);
             (gegenHoehe, gegenRot) = (HoeheAn(11, 3), GemaltRot());
         }
         finally
@@ -299,6 +301,7 @@ public static partial class StadtbauMessung
         {
             Fund(string.Create(Inv, $"Pinsel an der Strasse Gegenprobe ohne Sperre: Hoehe {gegenHoehe:0.00}, rot {gegenRot} (erwartet gemalt und rot)"));
         }
+        await Gegenprobe439Async(a, k, GemaltRot, HoeheAn);
         Messwerte.Notiere(string.Create(Inv, $"Pinsel an der Strasse (P12-254): laengs nichts ({laengs3D.Item1} Schritte); quer 3D Wiese {quer3D.Wiese:0.00}, Draufsicht {quer2D.Wiese:0.00}, Strasse und Rand 0, Pruefung rot {quer3D.Rot}/{quer2D.Rot}; Gegenprobe ohne Sperre Hoehe {gegenHoehe:0.00}, rot {gegenRot}"));
         await AlleGroessenAsync(a, f, "Pinsel 3D");
         k.GelaendePinsel = null;
@@ -399,5 +402,58 @@ public static partial class StadtbauMessung
         }
         a.SetzenKnopfDrueckenFuerTests(knoepfe[1]);
         await Pruefen("Gegenprobe zurueck auf Mittel", 1);
+    }
+
+    /// <summary>
+    /// Sammelliste 439 (Weisung P12-353), Gegenprobe zum Warten auf die Pruefung: eine Pruefung vom Stand davor laeuft noch
+    /// (Zug auf der Wiese), die Pruefung nach dem Zug an der Strasse beginnt kuenstlich 1,5 s spaeter. Das alte Warten
+    /// (<see cref="Hauptansicht.AussenGeprueft"/>) endet dann mit dem Ergebnis vom Stand davor (Gelaende an der Strasse gemalt,
+    /// aber nicht rot = der Fehler von Lauf 1183), das neue (<see cref="Hauptansicht.AussenGeprueftAb"/>) sieht rot. Dazu:
+    /// ein echtes „nicht rot“ (Zug nur auf der Wiese) bleibt mit dem neuen Warten „nicht rot“, die Pruefung der Gegenprobe
+    /// meldet es also weiter.
+    /// </summary>
+    private static async Task Gegenprobe439Async(Hauptansicht a, KartenFlaeche k, Func<bool> gemaltRot, Func<float, float, float> hoeheAn)
+    {
+        var p = a.Projekt!;
+        // Draufsicht: dort beginnt die Pruefung sofort nach dem Zug, die vom Zug auf der Wiese laeuft also sicher noch
+        a.ReiterZeigen(innen: false);
+        await a.AussenGeprueftAb(a.AussenAenderung);
+        var s0 = p.SchritteZurueck;
+        bool altRot, neuRot, wieseRot;
+        float altHoehe;
+        try
+        {
+            AussenBearbeitung.PinselOhneSperreFuerTests = true;
+            // 1. Zug nur auf der Wiese: seine Pruefung laeuft, waehrend gleich darauf an der Strasse gemalt wird
+            k.PinselZugAnwenden([new(20, 14), new(24, 14)]);
+            a.PruefStartVerzoegerungFuerTests = TimeSpan.FromMilliseconds(1500);
+            k.PinselZugAnwenden([new(8, 3), new(14, 3)]);
+            var strasse = a.AussenAenderung;
+            // altes Warten: kommt mit der Pruefung vom Stand davor
+            await a.AussenGeprueft;
+            (altHoehe, altRot) = (hoeheAn(11, 3), gemaltRot());
+            await a.AussenGeprueftAb(strasse);
+            neuRot = gemaltRot();
+            // echtes „nicht rot“: beide Zuege zurueck bis auf den auf der Wiese, neue Pruefung abwarten
+            a.Rueckgaengig();
+            await a.AussenGeprueftAb(a.AussenAenderung);
+            wieseRot = gemaltRot();
+        }
+        finally
+        {
+            AussenBearbeitung.PinselOhneSperreFuerTests = false;
+            a.PruefStartVerzoegerungFuerTests = TimeSpan.Zero;
+        }
+        a.Rueckgaengig();
+        await a.AussenGeprueftAb(a.AussenAenderung);
+        a.DreiZeigen();
+        await a.DreiFertig;
+        // die Bedingung der Gegenprobe oben (gemalt und rot erwartet) haette den Stand „Wiese“ als Fehler gemeldet
+        var wieseWaereFund = !wieseRot;
+        if (altHoehe <= 0f || altRot || !neuRot || !wieseWaereFund || p.SchritteZurueck != s0)
+        {
+            Fund(string.Create(Inv, $"Pinsel Gegenprobe 439: altes Warten Hoehe {altHoehe:0.00} rot {altRot} (erwartet gemalt, nicht rot), neues Warten rot {neuRot} (erwartet rot), nur Wiese rot {wieseRot} (erwartet nicht rot), Schritte {p.SchritteZurueck - s0}"));
+        }
+        Messwerte.Notiere(string.Create(Inv, $"Pinsel Gegenprobe 439 (Pruefstart 1,5 s spaeter): altes Warten rot {altRot}, neues Warten rot {neuRot}, nur Wiese rot {wieseRot}"));
     }
 }
