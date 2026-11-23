@@ -83,9 +83,14 @@ public sealed class StadtNebeneinanderTests
         }
         // feste Zaehlwerte, gemessen auf main 643f429 (vor der Welle)
         // bei Abweichung die Einzelwerte je Kachel und Netz in der Meldung (Vergleich zwischen Rechnern)
-        Assert.True(Fest[name] == reihe.Zaehlung, name + ": " + reihe.Zaehlung + "\nEinzeln: " + reihe.Einzeln);
-        Assert.True(Fest[name] == neben.Zaehlung, name + ": " + neben.Zaehlung + "\nEinzeln: " + neben.Einzeln);
+        Assert.True(Fest[name] == Zaehlung(name, reihe), name + ": " + reihe.Zaehlung + "\nEinzeln: " + reihe.Einzeln);
+        Assert.True(Fest[name] == Zaehlung(name, neben), name + ": " + neben.Zaehlung + "\nEinzeln: " + neben.Einzeln);
+        Assert.Equal(reihe.Zaehlung, neben.Zaehlung);
     }
+
+    /// <summary>Zaehlzeile fuer den festen Vergleich; bei der Paket-Stadt ohne die Zahl des Kleingruens (siehe <see cref="Fest"/>).</summary>
+    private static string Zaehlung(string name, Bauabdruck a) =>
+        name == "paket" ? a.Zaehlung[..a.Zaehlung.LastIndexOf(", gruen ", StringComparison.Ordinal)] : a.Zaehlung;
 
     [Fact]
     public void Gegenprobe_VertauschteReihenfolge_UndVeraenderteEcke_WerdenErkannt()
@@ -117,13 +122,15 @@ public sealed class StadtNebeneinanderTests
         }
     }
 
-    /// <summary>Zaehlwerte je Stadt (main 643f429): Teile, Streifen, Stuecke, Haeuser, freie Zellen, Laternen, Saetze, Kacheln, Ecken und Indizes aller Kacheln.</summary>
+    /// <summary>Zaehlwerte je Stadt (main 643f429): Teile, Streifen, Stuecke, Haeuser, freie Zellen, Laternen, Saetze, Kacheln, Ecken und Indizes aller Kacheln ohne Gruen, Ecken/Indizes des Gruens.</summary>
     private static readonly Dictionary<string, string> Fest = new()
     {
-        ["stadt1"] = "teile 855, streifen 902, stuecke 58, haeuser 9, frei 58199, laternen 74, saetze 4, kacheln 16, ecken 3303936, indizes 389832",
-        ["stadt1-winter"] = "teile 855, streifen 902, stuecke 58, haeuser 9, frei 58199, laternen 74, saetze 1, kacheln 16, ecken 3613284, indizes 424380",
-        ["testkarte"] = "teile 12444, streifen 14312, stuecke 928, haeuser 174, frei 925469, laternen 1184, saetze 8, kacheln 256, ecken 49660830, indizes 5860074",
-        ["paket"] = "teile 302, streifen 258, stuecke 32, haeuser 7, frei 10393, laternen 22, saetze 8, kacheln 4, ecken 1846359, indizes 214983",
+        ["stadt1"] = "teile 855, streifen 902, stuecke 58, haeuser 9, frei 58199, laternen 74, saetze 4, kacheln 16, ecken 3087072, indizes 362748, gruen 216864/27084",
+        ["stadt1-winter"] = "teile 855, streifen 902, stuecke 58, haeuser 9, frei 58199, laternen 74, saetze 1, kacheln 16, ecken 3370176, indizes 394380, gruen 243108/30000",
+        ["testkarte"] = "teile 12444, streifen 14312, stuecke 928, haeuser 174, frei 925469, laternen 1184, saetze 8, kacheln 256, ecken 46623114, indizes 5464566, gruen 3037716/395508",
+        // Paket-Stadt ohne die Zahl des Kleingruens: das Gruen-Netz der Kachel B1 hat je nach Rechner 132 Dreiecke mehr oder weniger
+        // (GitHub Linux und Windows 226908/28116, Container 230472/28512, Sammelliste 437); der Abdruck oben vergleicht es je Rechner bitgenau
+        ["paket"] = "teile 302, streifen 258, stuecke 32, haeuser 7, frei 10393, laternen 22, saetze 8, kacheln 4, ecken 1615887, indizes 186471",
     };
 }
 
@@ -312,7 +319,7 @@ internal sealed class Bauabdruck
             }
         });
         var kacheln = Stadtteile.Alle(szene.Breite, szene.Tiefe).ToList();
-        long ecken = 0, indizes = 0;
+        long ecken = 0, indizes = 0, gruenEcken = 0, gruenIndizes = 0;
         var einzeln = new StringBuilder();
         einzeln.Append(CultureInfo.InvariantCulture, $"baeume {szene.Baeume.Count}, questgeber {szene.Questgeber.Count}, fest {szene.FestGesetzt.Count}, licht {szene.LichtTeile.Count}, gruen {szene.GruenKlein?.Stuecke.Count ?? -1}/{szene.GruenKlein?.Teile.Count ?? -1}/{szene.GruenKlein?.Baeume.Count ?? -1}/{szene.GruenKlein?.Plaetze.Count ?? -1}");
         a.Abschnitt("Kacheln", s =>
@@ -330,11 +337,16 @@ internal sealed class Bauabdruck
                     indizes += netz.Indizes.Count;
                     einzeln.Append(CultureInfo.InvariantCulture, $" {netz.Ecken.Count}/{netz.Indizes.Count}");
                 }
+                if (n.Gruen is { } gruen)
+                {
+                    gruenEcken += gruen.Ecken.Count;
+                    gruenIndizes += gruen.Indizes.Count;
+                }
                 foreach (var (haus, _) in n.Haeuser) { s.Text(haus.Id); }
             }
         });
         a.Zaehlung = string.Create(CultureInfo.InvariantCulture,
-            $"teile {szene.Teile.Count}, streifen {szene.Streifen.Count}, stuecke {szene.Stuecke.Count}, haeuser {szene.Haeuser.Count}, frei {raster.AnzahlFrei}, laternen {szene.Laternen.Count}, saetze {plan?.Saetze.Count ?? 0}, kacheln {kacheln.Count}, ecken {ecken}, indizes {indizes}");
+            $"teile {szene.Teile.Count}, streifen {szene.Streifen.Count}, stuecke {szene.Stuecke.Count}, haeuser {szene.Haeuser.Count}, frei {raster.AnzahlFrei}, laternen {szene.Laternen.Count}, saetze {plan?.Saetze.Count ?? 0}, kacheln {kacheln.Count}, ecken {ecken - gruenEcken}, indizes {indizes - gruenIndizes}, gruen {gruenEcken}/{gruenIndizes}");
         a.Einzeln = einzeln.ToString();
         return a;
     }
