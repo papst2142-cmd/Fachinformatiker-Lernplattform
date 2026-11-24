@@ -74,6 +74,25 @@ public static partial class AutoMessung
             + string.Join(", ", teile.Select(t => t.Name + " " + (t.Ms is { } ms ? ms.ToString("F0", inv) : "?") + " ms")));
     }
 
+    /// <summary>
+    /// Sammelliste 452: naechstes Bild des Spiels abwarten (ohne GL nichts) und den Zeitpunkt sowie die Dauer des Zeichnens
+    /// in diesem Bild zurueckgeben (nur fuer die Teilschritte).
+    /// </summary>
+    private static async Task<(double? Spielbild, double? Zeichnen)> SpielbildAsync(Lernplattform.Spiel.SpielSeite seite, bool gl, Stopwatch uhr)
+    {
+        if (!gl)
+        {
+            return (null, null);
+        }
+        await seite.Flaeche.NaechstesBildAsync();
+        return (uhr.Elapsed.TotalMilliseconds, seite.Flaeche.LetzteZeichenzeitMs);
+    }
+
+    /// <summary>Sammelliste 452: Teilschritte eines Gangs der Figur (Weg, Ankunft, Spielbild, Zeichnen als Dauer, fertiges Bild).</summary>
+    private static void GangTeile(string titel, double weg, double an, double? spielbild, double? zeichnen, double fertig, double speicher) =>
+        Teilschritte(titel, [("Weg gerechnet", weg), ("angekommen", an), ("Spielbild da", spielbild), ("Zeichnen (Dauer)", zeichnen), ("Bild fertig", fertig),
+            ("Speicherbereinigung (Dauer)", speicher)]);
+
     /// <summary>Teilschritte der ersten Messung des letzten <see cref="BildMessenAsync"/> (Bauen, erstes Bild).</summary>
     private static void TeileNotieren(string titel) =>
         Teilschritte(titel, [("Bauen", ErsteTeile?.Bauen), ("erstes Bild", ErsteTeile?.Bild)]);

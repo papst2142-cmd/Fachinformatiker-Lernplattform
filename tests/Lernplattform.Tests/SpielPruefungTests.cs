@@ -76,49 +76,95 @@ public class SpielPruefungTests
         "Steuersatz Text Strich", "Steuersatz Text unendlich", "Steuersatz Text arabisch", "Steuer faellig arabisch",
     ];
 
-    [Fact]
-    public void KaputteInhalteWiePython()
+    /// <summary>Sammelliste 453: die Faelle in so vielen Teilen (Fall i gehoert zu Teil i % Teile), jeder Teil ein eigener Testfall.</summary>
+    private const int KaputteTeile = 6;
+
+    private static List<int> KaputteTeilListe => [.. Enumerable.Range(0, KaputteTeile)];
+
+    public static TheoryData<int> KaputteTeilNummern()
     {
+        var daten = new TheoryData<int>();
+        foreach (var teil in KaputteTeilListe)
+        {
+            daten.Add(teil);
+        }
+        return daten;
+    }
+
+    /// <summary>Alle Faelle der kaputten Inhalte (G42 „faelle“) in ihrer Reihenfolge.</summary>
+    private static List<JsonElement> KaputteFaelle() => [.. Soll.GetProperty("faelle").EnumerateArray()];
+
+    /// <summary>
+    /// Sammelliste 453: dieselben Faelle wie vorher in einem Test, jetzt in <see cref="KaputteTeile"/> Teilen (jeder Fall in genau
+    /// einem Teil, Beleg in <see cref="KaputteInhalteWiePython_AlleFaelleUndZahlen"/>); jeder Fall fuer sich (eigene Kopie des Inhalts),
+    /// darum nebeneinander gerechnet; gesammelt wird danach in der Reihenfolge der Faelle.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(KaputteTeilNummern))]
+    public void KaputteInhalteWiePython(int teil)
+    {
+        var faelle = KaputteFaelle();
+        var meine = Enumerable.Range(0, faelle.Count).Where(i => i % KaputteTeile == teil).ToList();
+        var je = new string?[meine.Count];
+        Nebeneinander.Fuer(meine.Count, n => je[n] = Fall(faelle[meine[n]]).Abweichung);
+        var abweichungen = je.OfType<string>().ToList();
+        Assert.True(abweichungen.Count == 0, abweichungen.Count + " Abweichungen:\n" + string.Join("\n", abweichungen));
+        Assert.True(meine.Count > 60, meine.Count + " Faelle im Teil " + teil);
+    }
+
+    /// <summary>
+    /// Sammelliste 453: die Zahlen von <see cref="KaputteInhalteWiePython"/> wie vorher (ueber 400 verglichene Faelle, mindestens
+    /// 15 Abbrueche, jeder strengere Fall da); die Art eines Falls haengt nur an G42, und die Teile decken jeden Fall genau einmal ab.
+    /// </summary>
+    [Fact]
+    public void KaputteInhalteWiePython_AlleFaelleUndZahlen()
+    {
+        var faelle = KaputteFaelle();
         var anzahl = 0;
         var abbrueche = 0;
-        var abweichungen = new List<string>();
         var strenger = 0;
-        foreach (var fall in Soll.GetProperty("faelle").EnumerateArray())
+        foreach (var fall in faelle)
         {
-            var name = fall.GetProperty("name").GetString();
-            var inhalt = Anwenden((PyObjekt)Py.Kopie(SpielInhaltTests.Inhalt)!, fall.GetProperty("aenderungen"));
-            if (fall.TryGetProperty("ausnahme", out var art))
+            if (fall.TryGetProperty("ausnahme", out _))
             {
-                // Python bricht hier mitten in der Pruefung ab (Fehler in der Python-Linie). C# darf
-                // nicht still "in Ordnung" melden: entweder ebenfalls abbrechen oder das Problem nennen.
-                List<string>? gemeldet = null;
-                var fehler = Record.Exception(() => gemeldet = SpielPruefung.Pruefen(inhalt, Lernen));
-                if (fehler is null && gemeldet!.Count == 0)
-                    abweichungen.Add(name + ": Python bricht ab (" + art + "), C# meldet nichts");
                 abbrueche++;
                 continue;
             }
-            var soll = T(W(fall.GetProperty("probleme")));
-            List<string>? liste = null;
-            var ausnahme = Record.Exception(() => liste = SpielPruefung.Pruefen(inhalt, Lernen));
-            var ist = ausnahme is null ? T(liste!.Cast<object?>().ToList()) : "Abbruch: " + ausnahme.Message;
-            if (CSharpStrenger.Contains(name!))
-            {
-                // C# lehnt ab, was Python als Zahl umdeutet; abgelehnt werden muss es (sonst stuerzt das Spiel spaeter)
-                if (ausnahme is null && liste!.Count == 0)
-                    abweichungen.Add(name + ": C# muss strenger sein als Python, meldet aber nichts");
+            if (CSharpStrenger.Contains(fall.GetProperty("name").GetString()!))
                 strenger++;
-            }
-            else if (soll != ist)
-            {
-                abweichungen.Add(name + "\n  Python: " + soll + "\n  C#:     " + ist);
-            }
             anzahl++;
         }
-        Assert.True(abweichungen.Count == 0, abweichungen.Count + " Abweichungen:\n" + string.Join("\n", abweichungen));
+        var teile = KaputteTeilListe;
+        Assert.Equal(KaputteTeile, KaputteTeilNummern().Count);
+        Assert.Equal(faelle.Count, Enumerable.Range(0, faelle.Count).Count(i => teile.Count(t => i % KaputteTeile == t) == 1));
         Assert.Equal(CSharpStrenger.Count, strenger);
         Assert.True(anzahl > 400, anzahl + " Faelle");
         Assert.True(abbrueche >= 15, abbrueche + " Abbrueche");
+    }
+
+    /// <summary>Ein Fall von <see cref="KaputteInhalteWiePython"/>: Art 0 = Python bricht ab, 1 = verglichen, 2 = C# strenger; dazu die Abweichung.</summary>
+    private static (int Art, string? Abweichung) Fall(JsonElement fall)
+    {
+        var name = fall.GetProperty("name").GetString();
+        var inhalt = Anwenden((PyObjekt)Py.Kopie(SpielInhaltTests.Inhalt)!, fall.GetProperty("aenderungen"));
+        if (fall.TryGetProperty("ausnahme", out var art))
+        {
+            // Python bricht hier mitten in der Pruefung ab (Fehler in der Python-Linie). C# darf
+            // nicht still "in Ordnung" melden: entweder ebenfalls abbrechen oder das Problem nennen.
+            List<string>? gemeldet = null;
+            var fehler = Record.Exception(() => gemeldet = SpielPruefung.Pruefen(inhalt, Lernen));
+            return (0, fehler is null && gemeldet!.Count == 0 ? name + ": Python bricht ab (" + art + "), C# meldet nichts" : null);
+        }
+        var soll = T(W(fall.GetProperty("probleme")));
+        List<string>? liste = null;
+        var ausnahme = Record.Exception(() => liste = SpielPruefung.Pruefen(inhalt, Lernen));
+        var ist = ausnahme is null ? T(liste!.Cast<object?>().ToList()) : "Abbruch: " + ausnahme.Message;
+        if (CSharpStrenger.Contains(name!))
+        {
+            // C# lehnt ab, was Python als Zahl umdeutet; abgelehnt werden muss es (sonst stuerzt das Spiel spaeter)
+            return (2, ausnahme is null && liste!.Count == 0 ? name + ": C# muss strenger sein als Python, meldet aber nichts" : null);
+        }
+        return (1, soll != ist ? name + "\n  Python: " + soll + "\n  C#:     " + ist : null);
     }
 
     /// <summary>

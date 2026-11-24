@@ -143,11 +143,18 @@ public static partial class AutoMessung
             async Task<double?> Ansprechen()
             {
                 var q = draussen[reihe++ % 2];
+                var gc = GC.GetTotalPauseDuration();
                 var u = Stopwatch.StartNew();
                 spiel.GeheZu(q.X, q.Z);
+                var weg = u.Elapsed.TotalMilliseconds;
                 spiel.SofortAnkommen();
-                await Bild();
-                return u.Elapsed.TotalMilliseconds;
+                var an = u.Elapsed.TotalMilliseconds;
+                var (spielbild, zeichnen) = await SpielbildAsync(seite, gl, u);
+                await ansicht.BildFertigAsync();
+                var ms = u.Elapsed.TotalMilliseconds;
+                // Sammelliste 452: Teilschritte jeder Messung, nur Bericht (aendert kein Urteil)
+                GangTeile("Spiel: Questgeber draussen ansprechen, Messung " + reihe, weg, an, spielbild, zeichnen, ms, (GC.GetTotalPauseDuration() - gc).TotalMilliseconds);
+                return ms;
             }
             var erstes = await Ansprechen();
             Pruefe("draussen Knopf", spiel.Knoepfe.Any(k => k.Aktion == "auftrag:neu-q-1"),

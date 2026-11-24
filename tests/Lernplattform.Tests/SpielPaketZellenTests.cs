@@ -111,8 +111,9 @@ public sealed class SpielPaketZellenTests
     {
         var szene = Stadt1.Value.Szene;
         var nah = szene.PaketNetzBauen(false);
-        var laeufe = new List<(int Start, int Anzahl)>();
-        var weg = 0;
+        // Sammelliste 453: dieselben Kamerastellen, je Stelle fuer sich nebeneinander gerechnet; gemeldet wird der erste Fund in der
+        // Reihenfolge der Stellen, genau wie nacheinander
+        var stellen = new List<(float X, float Z, float Ab, float Dreh)>();
         for (var x = 2f; x < szene.Breite; x += 6)
         {
             for (var z = 2f; z < szene.Tiefe; z += 6)
@@ -121,28 +122,43 @@ public sealed class SpielPaketZellenTests
                 {
                     foreach (var dreh in new[] { 0f, 90f, 180f, 270f })
                     {
-                        var sp = SichtProj(x, z, ab, dreh);
-                        nah.Laeufe(sp, false, laeufe);
-                        var gezeichnet = new bool[nah.Indizes.Count];
-                        foreach (var (s, a) in laeufe)
-                        {
-                            Array.Fill(gezeichnet, true, s, a);
-                        }
-                        for (var i = 0; i < gezeichnet.Length; i++)
-                        {
-                            if (gezeichnet[i])
-                            {
-                                continue;
-                            }
-                            weg++;
-                            var c = Vector4.Transform(new Vector4(nah.Ort((int)nah.Indizes[i]), 1f), sp);
-                            var imBild = c.W > 0 && MathF.Abs(c.X) <= c.W && MathF.Abs(c.Y) <= c.W && c.Z >= -c.W && c.Z <= c.W;
-                            Assert.False(imBild, string.Create(CultureInfo.InvariantCulture, $"Ecke {i} fehlt im Bild bei ({x};{z}) Abstand {ab} Drehung {dreh}"));
-                        }
+                        stellen.Add((x, z, ab, dreh));
                     }
                 }
             }
         }
+        var fehlt = new string?[stellen.Count];
+        long weg = 0;
+        Nebeneinander.Fuer(stellen.Count, () => (Laeufe: new List<(int Start, int Anzahl)>(), Gezeichnet: new bool[nah.Indizes.Count]), (n, lokal) =>
+        {
+            var (x, z, ab, dreh) = stellen[n];
+            var sp = SichtProj(x, z, ab, dreh);
+            nah.Laeufe(sp, false, lokal.Laeufe);
+            var gezeichnet = lokal.Gezeichnet;
+            Array.Clear(gezeichnet);
+            foreach (var (s, a) in lokal.Laeufe)
+            {
+                Array.Fill(gezeichnet, true, s, a);
+            }
+            var hier = 0L;
+            for (var i = 0; i < gezeichnet.Length; i++)
+            {
+                if (gezeichnet[i])
+                {
+                    continue;
+                }
+                hier++;
+                var c = Vector4.Transform(new Vector4(nah.Ort((int)nah.Indizes[i]), 1f), sp);
+                var imBild = c.W > 0 && MathF.Abs(c.X) <= c.W && MathF.Abs(c.Y) <= c.W && c.Z >= -c.W && c.Z <= c.W;
+                if (imBild)
+                {
+                    fehlt[n] = string.Create(CultureInfo.InvariantCulture, $"Ecke {i} fehlt im Bild bei ({x};{z}) Abstand {ab} Drehung {dreh}");
+                    break;
+                }
+            }
+            Interlocked.Add(ref weg, hier);
+        });
+        Assert.True(fehlt.All(f => f is null), fehlt.FirstOrDefault(f => f is not null));
         // Gegenprobe: es wurde wirklich etwas weggelassen
         Assert.True(weg > 0);
     }

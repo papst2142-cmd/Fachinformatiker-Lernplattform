@@ -303,6 +303,12 @@ public sealed class SpielWandTests
     internal static bool KanteDurch(Vector3 a, Vector3 b, WandTeil w, Vector2 anker)
     {
         var (lo, hi) = Halbe(w, anker);
+        return KanteDurch(a, b, lo, hi);
+    }
+
+    /// <summary>Wie oben, mit der schon gerechneten Haelfte (<see cref="Halbe"/>) der Wand (Sammelliste 453: einmal je Wand statt je Kante).</summary>
+    internal static bool KanteDurch(Vector3 a, Vector3 b, Vector3 lo, Vector3 hi)
+    {
         if (lo.X >= hi.X || lo.Y >= hi.Y || lo.Z >= hi.Z)
         {
             return false;

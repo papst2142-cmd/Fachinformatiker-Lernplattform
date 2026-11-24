@@ -63,8 +63,12 @@ public class SpielHaltungTests
             return 0;
         }
         bool Drin(Vector3 e) => e.X >= u.X && e.Y >= u.Y && e.Z >= u.Z && e.X <= o.X && e.Y <= o.Y && e.Z <= o.Z;
-        return a.SelectMany(d => new[] { d.A, d.B, d.C }).Where(Drin).Distinct().Count(e => SpielSitzenTests.Innen(e, b))
-            + b.SelectMany(d => new[] { d.A, d.B, d.C }).Where(Drin).Distinct().Count(e => SpielSitzenTests.Innen(e, a));
+        // Sammelliste 453: jedes Netz einmal vorbereitet, und nur, wenn eine Ecke in der Ueberschneidung liegt (gleiches Ergebnis)
+        var inA = a.SelectMany(d => new[] { d.A, d.B, d.C }).Where(Drin).Distinct().ToList();
+        var inB = b.SelectMany(d => new[] { d.A, d.B, d.C }).Where(Drin).Distinct().ToList();
+        var vorratB = inA.Count > 0 ? new SpielSitzenTests.Netzvorrat(b) : null;
+        var vorratA = inB.Count > 0 ? new SpielSitzenTests.Netzvorrat(a) : null;
+        return inA.Count(e => SpielSitzenTests.Innen(e, vorratB!)) + inB.Count(e => SpielSitzenTests.Innen(e, vorratA!));
     }
 
     private static List<SpielSitzenTests.Dreieck> Kasten(Teil t)
@@ -113,34 +117,50 @@ public class SpielHaltungTests
     /// <summary>Funde fuer einen Platz: Durchdringung mit jedem Hindernis und Teile der Figur ueber der Mitte einer Wand.</summary>
     private static List<string> Funde(Innenraum innen, Sitzgelegenheit s, List<(string Name, List<SpielSitzenTests.Dreieck> D)> hindernisse)
     {
-        var funde = new List<string>();
-        var waende = SpielWandTests.WandQuader(innen).ToList();
+        // Sammelliste 453: gleiche Faelle, gleiche Pruefung, nur schneller: Lage und Wandhaelften einmal statt je Ecke, Huellen-Vorpruefung
+        // (ohne Ueberschneidung der Huellen meldet Durchdringung 0 und KanteDurch nichts, Muster wie in SpielHaltungenTests), die Faelle
+        // (Kleid x Schub) nebeneinander; die Funde stehen danach in derselben Reihenfolge wie nacheinander gerechnet
+        var waende = SpielWandTests.WandQuader(innen).Select(w => (W: w, H: SpielWandTests.Halbe(w, s.Mitte))).ToList();
+        var huellen = hindernisse.Select(h => SpielSitzenTests.Huelle(h.D)).ToList();
         // liegend ohne Kopfbedeckung (die Figur legt sie im Bett ab, StadtFlaeche zeichnet sie dann nicht)
-        for (var kleid = 0; kleid < (s.Art == SitzArt.Liegen ? 1 : Kleider.Count); kleid++)
+        var faelle = (from kleid in Enumerable.Range(0, s.Art == SitzArt.Liegen ? 1 : Kleider.Count) from schub in Schuebe select (Kleid: kleid, Schub: schub)).ToList();
+        var vorlagen = faelle.Select(f => f.Kleid).Distinct().ToDictionary(k => k, k => FigurDreiecke(s.Art, k, s.Modell));
+        var je = new List<string>[faelle.Count];
+        Nebeneinander.Fuer(faelle.Count, i =>
         {
-            foreach (var schub in Schuebe)
+            var (kleid, schub) = faelle[i];
+            var funde = new List<string>();
+            var lage = Lage(s.Ort, s.Blick, Innenraum.FigurHoehe, schub);
+            var figur = vorlagen[kleid].Select(d => new SpielSitzenTests.Dreieck(Vector3.Transform(d.A, lage), Vector3.Transform(d.B, lage), Vector3.Transform(d.C, lage))).ToList();
+            var (fmin, fmax) = SpielSitzenTests.Huelle(figur);
+            for (var j = 0; j < hindernisse.Count; j++)
             {
-                var figur = FigurDreiecke(s.Art, kleid, s.Modell).Select(d => new SpielSitzenTests.Dreieck(
-                    Vector3.Transform(d.A, Lage(s.Ort, s.Blick, Innenraum.FigurHoehe, schub)), Vector3.Transform(d.B, Lage(s.Ort, s.Blick, Innenraum.FigurHoehe, schub)),
-                    Vector3.Transform(d.C, Lage(s.Ort, s.Blick, Innenraum.FigurHoehe, schub)))).ToList();
-                foreach (var (name, d) in hindernisse)
+                var (name, d) = hindernisse[j];
+                var (dmin, dmax) = huellen[j];
+                if (fmin.X > dmax.X || fmin.Y > dmax.Y || fmin.Z > dmax.Z || dmin.X > fmax.X || dmin.Y > fmax.Y || dmin.Z > fmax.Z)
                 {
-                    if (Durchdringung(figur, d) is > 0 and var n)
-                    {
-                        funde.Add($"{s.Modell} {s.Art} mit {name} | ({s.Ort.X:0.00}, {s.Ort.Z:0.00}) Kleid {kleid} Schub {schub}: {n} Ecken");
-                    }
+                    continue;
                 }
-                foreach (var w in waende)
+                if (Durchdringung(figur, d) is > 0 and var n)
                 {
-                    if (figur.Any(d => SpielWandTests.KanteDurch(d.A, d.B, w, s.Mitte) || SpielWandTests.KanteDurch(d.B, d.C, w, s.Mitte) || SpielWandTests.KanteDurch(d.C, d.A, w, s.Mitte)))
-                    {
-                        funde.Add($"{s.Modell} {s.Art} durch die Wand | ({s.Ort.X:0.00}, {s.Ort.Z:0.00}) Kleid {kleid} Schub {schub}: Wand ({w.Q.X1:0.00}..{w.Q.X2:0.00}, {w.Q.Z1:0.00}..{w.Q.Z2:0.00})");
-                        break;
-                    }
+                    funde.Add($"{s.Modell} {s.Art} mit {name} | ({s.Ort.X:0.00}, {s.Ort.Z:0.00}) Kleid {kleid} Schub {schub}: {n} Ecken");
                 }
             }
-        }
-        return funde;
+            foreach (var (w, (lo, hi)) in waende)
+            {
+                if (!(fmin.X < hi.X && fmax.X > lo.X && fmin.Y < hi.Y && fmax.Y > lo.Y && fmin.Z < hi.Z && fmax.Z > lo.Z))
+                {
+                    continue;
+                }
+                if (figur.Any(d => SpielWandTests.KanteDurch(d.A, d.B, lo, hi) || SpielWandTests.KanteDurch(d.B, d.C, lo, hi) || SpielWandTests.KanteDurch(d.C, d.A, lo, hi)))
+                {
+                    funde.Add($"{s.Modell} {s.Art} durch die Wand | ({s.Ort.X:0.00}, {s.Ort.Z:0.00}) Kleid {kleid} Schub {schub}: Wand ({w.Q.X1:0.00}..{w.Q.X2:0.00}, {w.Q.Z1:0.00}..{w.Q.Z2:0.00})");
+                    break;
+                }
+            }
+            je[i] = funde;
+        });
+        return [.. je.SelectMany(f => f)];
     }
 
     /// <summary>Funde gruppiert (Modell, Art, Hindernis): Zahl und das erste Beispiel.</summary>
@@ -313,5 +333,48 @@ public class SpielHaltungTests
             Vector3.Transform(d.C, Lage(ort, s.Blick, Innenraum.FigurHoehe, Vector2.Zero)))).ToList();
         Assert.Equal(0, Durchdringung(An(s.Ort), sofa));
         Assert.True(Durchdringung(An(s.Ort - new Vector3(0, 0.3f, 0)), sofa) > 0);
+    }
+
+    /// <summary>
+    /// Sammelliste 453: Innen mit vorbereitetem Netz (Huellen-Vorpruefung je Dreieck) ergibt genau dasselbe wie ohne, fuer jede Ecke
+    /// und ein dichtes Gitter um Figur (alle Haltungen) und Moebel; Gegenprobe: es gibt Punkte innen und aussen.
+    /// </summary>
+    [Fact]
+    public void Innen_MitVorrat_GleichOhne()
+    {
+        var g = SpielGrafikTests.Bibliothek.Value;
+        var netze = new List<List<SpielSitzenTests.Dreieck>>
+        {
+            FigurDreiecke(SitzArt.Liegen, 0), FigurDreiecke(SitzArt.Sitzen, 2, "loungeSofa"), FigurDreiecke(SitzArt.Sitzen, 1),
+        };
+        foreach (var name in new[] { "loungeSofa", "bedDouble", "chairDesk" })
+        {
+            netze.Add(SpielSitzenTests.Dreiecke(g.Modell(name)!, Matrix4x4.Identity));
+        }
+        int innen = 0, aussen = 0;
+        foreach (var netz in netze)
+        {
+            var vorrat = new SpielSitzenTests.Netzvorrat(netz);
+            var (min, max) = SpielSitzenTests.Huelle(netz);
+            var punkte = netz.SelectMany(d => new[] { d.A, d.B, d.C, (d.A + d.B + d.C) / 3 }).ToList();
+            for (var i = 0; i <= 16; i++)
+            {
+                for (var j = 0; j <= 16; j++)
+                {
+                    for (var k = 0; k <= 16; k++)
+                    {
+                        punkte.Add(min - new Vector3(0.05f) + ((max - min + new Vector3(0.1f)) * new Vector3(i, j, k) / 16f));
+                    }
+                }
+            }
+            foreach (var p in punkte)
+            {
+                var ohne = SpielSitzenTests.Innen(p, netz);
+                Assert.Equal(ohne, SpielSitzenTests.Innen(p, vorrat));
+                innen += ohne ? 1 : 0;
+                aussen += ohne ? 0 : 1;
+            }
+        }
+        Assert.True(innen > 1000 && aussen > 1000, $"innen {innen}, aussen {aussen}");
     }
 }
