@@ -265,7 +265,7 @@ public sealed class SpielWandTests
     /// Die Haelfte der Wand jenseits ihrer Mitte (+0,02), von <paramref name="anker"/> aus gesehen (Aussenwand: die aeussere
     /// Haelfte), seitlich und in der Hoehe um 0,02 verkleinert.
     /// </summary>
-    private static (Vector3 Lo, Vector3 Hi) Halbe(WandTeil w, Vector2 anker)
+    internal static (Vector3 Lo, Vector3 Hi) Halbe(WandTeil w, Vector2 anker)
     {
         var q = w.Q;
         var lo = new Vector3(MathF.Min(q.X1, q.X2), MathF.Min(q.Y1, q.Y2), MathF.Min(q.Z1, q.Z2));

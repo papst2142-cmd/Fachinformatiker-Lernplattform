@@ -139,6 +139,21 @@ public static partial class AutoMessung
             }
             var haltungPx = Pixel(hr.Center);
             melden(string.Create(inv, $"HALTUNG {haltungPx.X} {haltungPx.Y} durchmesser {hr.Width:F0} haltung {spiel.Koerper}"));
+            // Welle A 1.7.0 (Sammelliste 447): Mitte von „Hinlegen“ (Aufstehen aus dem Liegen) und Weg fuer das Wischen nach unten
+            var lk = seite.DaumenKnoepfe.Liegen;
+            if (seite.DaumenRechteck(lk) is not { } lr)
+            {
+                melden("FEHLER runder Knopf Hinlegen nicht sichtbar");
+                return;
+            }
+            var lMitte = fl.TranslatePoint(lr.Center, oben!) ?? lr.Center;
+            if (oben!.InputHitTest(lMitte) is not Visual lTreffer || !(ReferenceEquals(lTreffer, lk) || lk.IsVisualAncestorOf(lTreffer)))
+            {
+                melden("FEHLER Mitte des Knopfs Hinlegen trifft etwas anderes");
+                return;
+            }
+            var liegenPx = Pixel(lr.Center);
+            melden(string.Create(inv, $"LIEGEN {liegenPx.X} {liegenPx.Y} durchmesser {lr.Width:F0} wisch {(int)Math.Ceiling(2 * HaltungKnopf.WischAb * skala)}"));
             melden(string.Create(inv, $"BEREIT links {links.X} {links.Y} rechts {rechts.X} {rechts.Y} radius {radius} tipp {tipp.X} {tipp.Y}"));
             // Befund Lauf 1110: kein Stick und kein Gehen. Jeder echte Finger, der beim Fenster ankommt, steht darum im Protokoll
             // (ZEIGER ab/auf mit Bildpunkt), auch wenn ihn ein anderes Element schon behandelt hat

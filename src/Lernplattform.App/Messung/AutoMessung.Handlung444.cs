@@ -242,7 +242,7 @@ public static partial class AutoMessung
                     }
                     else
                     {
-                        var andere = new[] { seite.DaumenRechteck(rund), seite.DaumenRechteck(ich), seite.DaumenRechteck(seite.DaumenKnoepfe.Springen), seite.DaumenRechteck(seite.DaumenKnoepfe.Haltung) }
+                        var andere = new[] { seite.DaumenRechteck(rund), seite.DaumenRechteck(ich), seite.DaumenRechteck(seite.DaumenKnoepfe.Springen), seite.DaumenRechteck(seite.DaumenKnoepfe.Haltung), seite.DaumenRechteck(seite.DaumenKnoepfe.Liegen) }
                             .OfType<Rect>().ToList();
                         double dx = Math.Clamp(hx, rhy.Left, rhy.Right) - hx, dy = Math.Clamp(hy, rhy.Top, rhy.Bottom) - hy;
                         var imKreis = (dx * dx) + (dy * dy) < hr * hr;

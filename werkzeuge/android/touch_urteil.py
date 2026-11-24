@@ -9,6 +9,8 @@ und prueft je Schritt Nicos Ziel:
   rechts_umgekehrt rechter Stick nach rechts mit „Umsehen links/rechts umkehren“: der Blick dreht nach links (394)
 Welle A 0.99.0 (Sammelliste 400): dazu Zeilen "HALTUNG <name> ERWARTET <haltung> IST <haltung> AENDERUNGEN <n>" fuer den
 runden Haltung-Knopf: haltung_tippen (Ducken), haltung_tippen2 (Stehen), haltung_lang (Kriechen), haltung_auf (Stehen);
+seit A 1.7.0 (Sammelliste 447, Nico 1a 2a) ist der Haltung-Knopf „Hinknien“ und „haltung_auf“ tippt „Hinlegen“ (liegend =
+aufstehen); dazu haltung_wisch (nach unten wischen auf Hinknien = Kriechen) und haltung_auf2 (Hinlegen tippen = Stehen);
 gruen nur, wenn IST = ERWARTET und genau eine Aenderung kam.
 Rechts vom Blick (bx, bz) liegt (-bz, bx) wie in SpielUmsehenTests. Fehlt ein Schritt, ist das Urteil rot.
 Aufruf: touch_urteil.py <ergebnisdatei>  |  touch_urteil.py selbsttest (Gegenproben: jedes vertauschte Vorzeichen wird rot)
@@ -16,7 +18,8 @@ Aufruf: touch_urteil.py <ergebnisdatei>  |  touch_urteil.py selbsttest (Gegenpro
 import sys
 
 SCHRITTE = ("links_vor", "rechts_rechts", "tippen", "rechts_umgekehrt")
-HALTUNGEN = (("haltung_tippen", "Ducken"), ("haltung_tippen2", "Stehen"), ("haltung_lang", "Kriechen"), ("haltung_auf", "Stehen"))
+HALTUNGEN = (("haltung_tippen", "Ducken"), ("haltung_tippen2", "Stehen"), ("haltung_lang", "Kriechen"), ("haltung_auf", "Stehen"),
+             ("haltung_wisch", "Kriechen"), ("haltung_auf2", "Stehen"))
 
 
 def haltungen_lesen(zeilen):
@@ -91,6 +94,8 @@ GUT = [
     "HALTUNG haltung_tippen2 ERWARTET Stehen IST Stehen AENDERUNGEN 1",
     "HALTUNG haltung_lang ERWARTET Kriechen IST Kriechen AENDERUNGEN 1",
     "HALTUNG haltung_auf ERWARTET Stehen IST Stehen AENDERUNGEN 1",
+    "HALTUNG haltung_wisch ERWARTET Kriechen IST Kriechen AENDERUNGEN 1",
+    "HALTUNG haltung_auf2 ERWARTET Stehen IST Stehen AENDERUNGEN 1",
 ]
 
 
@@ -120,6 +125,9 @@ def selbsttest():
         "Aufstehen bleibt liegen": ersetzt(7, "IST Stehen", "IST Kriechen"),
         "Haltung-Schritt fehlt": GUT[:6] + GUT[7:],
         "falsch erwartet": ersetzt(5, "ERWARTET Stehen IST Stehen", "ERWARTET Ducken IST Stehen"),
+        "Wischen ohne Wirkung": ersetzt(8, "IST Kriechen AENDERUNGEN 1", "IST - AENDERUNGEN 0"),
+        "Wischen tippt nur (Ducken)": ersetzt(8, "IST Kriechen", "IST Ducken"),
+        "Wisch-Schritt fehlt": GUT[:8] + GUT[9:],
     }
     for name, zeilen in gegen.items():
         rot, aus = urteil(zeilen)

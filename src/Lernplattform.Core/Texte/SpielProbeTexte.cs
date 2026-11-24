@@ -132,6 +132,12 @@ public static class SpielProbeTexte
     /// <summary>Knopf „Kriechen“ (seit A 0.99.0 kriecht die Figur weiter, bis sie aufsteht).</summary>
     public const string KnopfKriechen = "Kriechen";
 
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447): kleiner Knopf am rechten Daumen (am PC Symbol mit Taste) zum Hinknien (geduckt; gehalten oder
+    /// nach unten gewischt: hinlegen). Der Knopf zum Hinlegen heisst wie am Bett <see cref="KnopfHinlegen"/>.
+    /// </summary>
+    public const string KnopfHinknien = "Hinknien";
+
     /// <summary>Knopf im Sitzen auf Sofa, Sessel oder Liegestuhl.</summary>
     public const string KnopfZuruecklehnen = "Zurücklehnen";
 
@@ -145,7 +151,7 @@ public static class SpielProbeTexte
     public const string DuDuckst = "Du duckst dich und kannst so auch gehen. Zum Aufstehen tippe auf „Aufstehen“.";
 
     /// <summary>Ansage und Zeile beim Kriechen.</summary>
-    public const string DuKriechst = "Du gehst auf alle viere und kannst so auch kriechen. Zum Aufstehen tippe auf „Aufstehen“.";
+    public const string DuKriechst = "Du legst dich flach auf den Bauch und kannst so auch kriechen. Zum Aufstehen tippe auf „Aufstehen“.";
 
     /// <summary>Ansage beim Aufstehen aus Ducken oder Kriechen.</summary>
     public const string DuStehst = "Du stehst wieder.";

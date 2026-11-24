@@ -24,6 +24,9 @@ public class IchSichtFigurTests
         (Figur.Ducken, 0),
         (Figur.Kriechen, 0),
         (Figur.Springen, 0),
+        // Welle A 1.7.0 (Sammelliste 447): Kriechen = flach auf dem Bauch robben, jedes Bild und still
+        .. Enumerable.Range(0, Figur.RobbenBilder).Select(i => ((string?)Figur.Robben, i)),
+        (Figur.RobbenStill, 0),
     ];
 
     /// <summary>
@@ -173,14 +176,14 @@ public class IchSichtFigurTests
         }
         var auge = AugeIn(g, bewegung);
         var naechste = ohne.Indizes.Distinct().Min(e => Vector3.Distance(ohne.Ort((int)e), auge));
-        return new Fund($"{name} {bewegung ?? "stehend"} {bild}", imKegel, drin, naechste, HalsOffen(ohne));
+        return new Fund($"{name} {bewegung ?? "stehend"} {bild}", imKegel, drin, naechste, HalsOffen(ohne, bewegung is Figur.Robben or Figur.RobbenStill));
     }
 
     /// <summary>
     /// Offene Kanten oben am Hals (Kanten nur eines Dreiecks, hoeher als 0,1 unter dem Deckel, nah an der Mitte), die nicht im
     /// Deckel (letzte 12 Dreiecke) liegen: durch sie saehe man in die Figur hinein.
     /// </summary>
-    private static int HalsOffen(Netz ohne)
+    private static int HalsOffen(Netz ohne, bool liegend = false)
     {
         var dreiecke = ohne.Indizes.Count / 3;
         var deckel = Enumerable.Range((dreiecke - 12) * 3, 36).Select(i => ohne.Ort((int)ohne.Indizes[i])).ToList();
@@ -208,6 +211,12 @@ public class IchSichtFigurTests
             {
                 var p = new Vector3(x, y, z) / 1e4f;
                 if (p.Y < dMax.Y - 0.1f || MathF.Abs(p.X) > Figur.HalsSeitlich)
+                {
+                    continue;
+                }
+                // Welle A 1.7.0: flach auf dem Bauch liegt der ganze Ruecken in Halshoehe; dort zaehlt nur der Rand nahe am Hals (laengs
+                // so weit wie zur Seite), nicht die Kante eines Kleids hinten am Ruecken (0,3 hinter dem Hals)
+                if (liegend && MathF.Abs(p.Z - ((dMin.Z + dMax.Z) / 2f)) > Figur.HalsSeitlich)
                 {
                     continue;
                 }
@@ -246,7 +255,7 @@ public class IchSichtFigurTests
                 }
             }
         }
-        Assert.True(zahl == aussehen.Count * ((2 * Figur.Bilder) + 4));
+        Assert.True(zahl == aussehen.Count * ((2 * Figur.Bilder) + 4 + Figur.RobbenBilder + 1));
         Assert.True(funde.Count == 0, string.Join("\n", funde.Take(20)));
         Assert.True(naechste >= grenze, $"naechste Ecke {naechste}");
     }

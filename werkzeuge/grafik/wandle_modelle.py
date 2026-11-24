@@ -39,6 +39,7 @@ unter der das Spiel beim Zeichnen ein Dreieck ohnehin weglaesst, Netz.Hinzu) fal
 Aufruf: python3 -I werkzeuge/grafik/wandle_modelle.py <ordner mit den ZIPs> [<ausgabeordner>]
 """
 
+import copy
 import hashlib
 import json
 import math
@@ -598,6 +599,186 @@ def kriechen_haltung(sk, arme):
     return G
 
 
+# --- Welle A 1.7.0 (Sammelliste 447, Weisungen P12-364/365/367): Kriechen = flach auf dem Bauch robben ---
+# Abnahmebilder Fi-Austausch bilder/A1.7.0_Entwurf_447/12_Kriechen_nachgebessert (Meldung P12-233). Der Rumpf (Brust, Bauch,
+# Becken) liegt auf dem Boden, nichts ragt darunter; rechter Arm geht mit linkem Bein vor und umgekehrt, die greifende Hand hebt
+# sich nur kurz. Die Bilder der alten Haltungen bleiben unveraendert (neue Modelle hinten angehaengt).
+
+ROBBEN_BRUST = ("Chest", "UpperChest")
+ROBBEN_BAUCH = ("Spine",)
+ROBBEN_BECKEN = ("Hips",)
+ROBBEN_RUMPF = ROBBEN_BRUST + ROBBEN_BAUCH + ROBBEN_BECKEN
+
+
+def achse_drehen(G, eltern, knochen, achse, grad):
+    """Wie welt_drehen, aber um eine beliebige Achse (Einheitsvektor) durch das Gelenk."""
+    x, y, zz = achse
+    c, s = math.cos(math.radians(grad)), math.sin(math.radians(grad))
+    C = 1 - c
+    R = [[c + x * x * C, x * y * C - zz * s, x * zz * C + y * s, 0], [y * x * C + zz * s, c + y * y * C, y * zz * C - x * s, 0],
+         [zz * x * C - y * s, zz * y * C + x * s, c + zz * zz * C, 0], [0, 0, 0, 1]]
+    p = (G[knochen][0][3], G[knochen][1][3], G[knochen][2][3])
+    m = mul(trans(p), mul(R, trans((-p[0], -p[1], -p[2]))))
+    def unter(n):
+        while n is not None:
+            if n == knochen:
+                return True
+            n = eltern.get(n)
+        return False
+    for n in list(G):
+        if unter(n):
+            G[n] = mul(m, G[n])
+
+
+def senken(G, eltern, knochen, kind, ziel_y):
+    """Knochen um die waagrechte Achse quer zu seiner Richtung kippen, bis das Gelenk <kind> auf Hoehe ziel_y liegt (Halbierung)."""
+    a = [G[knochen][i][3] for i in range(3)]
+    b = [G[kind][i][3] for i in range(3)]
+    d = (b[0] - a[0], b[2] - a[2])
+    n = math.hypot(*d) or 1
+    achse = (-d[1] / n, 0.0, d[0] / n)
+    def suchen(lo, hi):
+        for _ in range(40):
+            mid = (lo + hi) / 2
+            H = copy.deepcopy(G)
+            achse_drehen(H, eltern, knochen, achse, mid)
+            if H[kind][1][3] > ziel_y:
+                lo = mid
+            else:
+                hi = mid
+        return (lo + hi) / 2
+    grad = suchen(-80.0, 80.0)
+    H = copy.deepcopy(G)
+    achse_drehen(H, eltern, knochen, achse, grad)
+    if abs(H[kind][1][3] - ziel_y) > 1:
+        grad = suchen(80.0, -80.0)
+    achse_drehen(G, eltern, knochen, achse, grad)
+
+
+class FigurNetz:
+    """Netz der FBX-Figur mit dem staerksten Knochen je Dreieck (gleiche Reihenfolge wie fbx_figur_haltung)."""
+
+    def __init__(self, z, pfad, haut_png):
+        self.z, self.pfad, self.haut_png = z, pfad, haut_png
+        wurzel = fbx_lesen(z.read(pfad))
+        self.haut = fbx_haut(wurzel)
+        self.netz_lage = Skelett(wurzel).global_()[eintrag_netz(wurzel)]
+        objekte = next(k for k in wurzel if k[0] == "Objects")
+        netz = next(k for k in objekte[2] if k[0] == "Geometry" and k[1][2] == b"Mesh")
+        ecken = _fbx_feld(netz, "Vertices")
+        self.punkte = [tuple(ecken[i * 3:i * 3 + 3]) for i in range(len(ecken) // 3)]
+        stark, staerke = [None] * len(self.punkte), [0.0] * len(self.punkte)
+        for knochen, indizes, werte, _, _ in self.haut:
+            for i, g in zip(indizes, werte):
+                if g > staerke[i]:
+                    staerke[i], stark[i] = g, knochen
+        self.stark = stark
+        self.knochen = []
+        vieleck = []
+        for wert in _fbx_feld(netz, "PolygonVertexIndex"):
+            vieleck.append(wert if wert >= 0 else ~wert)
+            if wert >= 0:
+                continue
+            ks = [stark[e] for e in vieleck]
+            kn = max(sorted(set(ks), key=str), key=ks.count)
+            self.knochen.extend([kn] * (len(vieleck) - 2))
+            vieleck = []
+
+    def dreiecke(self, G):
+        return fbx_figur_haltung(self.z, self.pfad, self.haut_png, G)
+
+    def ecken_y(self, G, praefix):
+        """Hoehen (Einheiten wie fbx_figur_haltung) aller Ecken, deren staerkster Knochen mit <praefix> beginnt."""
+        idx = {i for i, k in enumerate(self.stark) if (k or "").startswith(praefix)}
+        summe, gewicht = dict.fromkeys(idx, 0.0), dict.fromkeys(idx, 0.0)
+        for knochen, indizes, werte, _, TL in self.haut:
+            m = None
+            for i, g in zip(indizes, werte):
+                if i in idx:
+                    if m is None:
+                        m = mul(G[knochen], mul(invers(TL), self.netz_lage))
+                    summe[i] += anwenden(m, self.punkte[i])[1] * g
+                    gewicht[i] += g
+        # wie fbx_figur_haltung: Teilung durch 100 und durch das Gewicht
+        return [summe[i] / 100.0 / (gewicht[i] or 1.0) for i in idx]
+
+    def tief(self, dreiecke, knochen=None, praefix=None):
+        ys = [p[1] for (e, _), k in zip(dreiecke, self.knochen)
+              if (knochen is None or k in knochen) and (praefix is None or (k or "").startswith(praefix)) for p in e]
+        return min(ys)
+
+
+def robben_haltung(sk, figur, phase, arme, heben=True, arm_ziel=None, bein_heb=None):
+    """Eine Stelle (phase 0..1) der Robben-Bewegung: Huefte 90 Grad nach vorn gekippt (flach auf dem Bauch, Kopf nach +Z), Arme
+    auf dem Boden (rechts weit vorn bei phase 0, links bei 0,5), Beine gegengleich angezogen, Fussruecken flach, Kopf leicht
+    angehoben (Hals 40 Grad zurueck). Die Haende werden flach gedreht (kleinste Hoehenspanne der Handecken). -> (G, hub je Seite)"""
+    G = sk.global_()
+    E = sk.eltern
+    s = math.cos(2 * math.pi * phase)
+    r, l = (1 + s) / 2, (1 - s) / 2
+    welt_drehen(G, E, "LeftArm", 2, -arme)
+    welt_drehen(G, E, "RightArm", 2, arme)
+    welt_drehen(G, E, "Hips", 0, 90)
+    for seite, a, sz in (("Right", r, 1), ("Left", l, -1)):
+        welt_drehen(G, E, seite + "Arm", 1, sz * (50 + 110 * a))
+        welt_drehen(G, E, seite + "ForeArm", 1, sz * (70 * (1 - a) ** 2))
+    for seite, a, sz in (("Left", r, -1), ("Right", l, 1)):
+        welt_drehen(G, E, seite + "UpLeg", 1, sz * (6 + 54 * a))
+        welt_drehen(G, E, seite + "Leg", 1, -sz * (80 * a))
+        welt_drehen(G, E, seite + "Foot", 0, 75)
+    welt_drehen(G, E, "Neck", 0, -40)
+    sn = math.sin(2 * math.pi * phase) if heben else 0.0
+    hub = {"Right": max(0.0, -sn), "Left": max(0.0, sn)}
+    az = arm_ziel or {"Right": 100.0, "Left": 100.0}
+    for seite in ("Right", "Left"):
+        senken(G, E, seite + "Arm", seite + "ForeArm", az[seite] + 2 + 3 * hub[seite])
+        senken(G, E, seite + "ForeArm", seite + "Hand", az[seite] + 6 * hub[seite])
+    for seite in ("Right", "Left"):
+        h = [G[seite + "Hand"][i][3] for i in range(3)]
+        u = [G[seite + "ForeArm"][i][3] for i in range(3)]
+        ax = [h[i] - u[i] for i in range(3)]
+        n = math.sqrt(sum(v * v for v in ax)) or 1
+        ax = [v / n for v in ax]
+        beste = None
+        for grad in range(-180, 180, 10):
+            H = copy.deepcopy(G)
+            achse_drehen(H, E, seite + "Hand", ax, grad)
+            ys = figur.ecken_y(H, seite + "Hand")
+            wert = max(ys) - min(ys)
+            if beste is None or wert < beste[0]:
+                beste = (wert, grad)
+        achse_drehen(G, E, seite + "Hand", ax, beste[1])
+    for seite, grad in (bein_heb or {}).items():
+        welt_drehen(G, E, seite + "UpLeg", 0, grad)
+    return G, hub
+
+
+def robben_bild(sk, figur, phase, arme, heben=True):
+    """Haltung so gesucht, dass der Rumpf auf dem Boden liegt und nichts darunter ragt: Arme so weit gesenkt, dass sie 0,004 ueber
+    dem tiefsten Rumpfpunkt aufliegen (gehobene Hand nur leicht hoeher), Beine gehoben, falls sie unter den Rumpf ragen.
+    -> Dreiecke (Rumpf unten auf Hoehe 0)."""
+    az = {"Right": 100.0, "Left": 100.0}
+    bh = {"Right": 0.0, "Left": 0.0}
+    for _ in range(6):
+        G, hub = robben_haltung(sk, figur, phase, arme, heben, az, bh)
+        dr = figur.dreiecke(G)
+        boden = figur.tief(dr, ROBBEN_RUMPF)
+        fertig = True
+        for seite in ("Right", "Left"):
+            ta = min(figur.tief(dr, praefix=seite + k) for k in ("Arm", "ForeArm", "Hand"))
+            d = ta - boden
+            if hub[seite] == 0 and abs(d - 0.004) > 0.003 or d < -0.002:
+                az[seite] += -(d - 0.004) * 100 * 0.9
+                fertig = False
+            tb = min(figur.tief(dr, praefix=seite + k) for k in ("UpLeg", "Leg", "Foot", "Toes"))
+            if tb - boden < 0:
+                bh[seite] += 2.0
+                fertig = False
+        if fertig:
+            break
+    return [(tuple((p[0], p[1] - boden, p[2]) for p in e), f) for e, f in dr]
+
+
 def sitzen_zurueck_haltung(sk, arme):
     """Welle A 0.93.0 (Sammelliste 352): zurueckgelehnt sitzen (Sofa, Sessel, Liegestuhl). Beine wie ohne Tisch (92/70 Grad),
     Oberkoerper 25 Grad nach hinten, der Kopf bleibt aufrecht (Hals 25 Grad vor: Gesicht, Haar und Kopfbedeckung sitzen wie im
@@ -766,6 +947,15 @@ def bewegung_bilder(z, eintrag):
     if eintrag["bewegung"] in ("sitzen", "sitzen_frei"):
         G = (sitzen_haltung if eintrag["bewegung"] == "sitzen" else sitzen_frei_haltung)(modell, eintrag.get("arme", 72))
         return [auf_sitz(fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], G), G, eintrag["sitz"])]
+    if eintrag["bewegung"] in ("robben", "robben_still"):
+        # Welle A 1.7.0 (Sammelliste 447): Kriechen flach auf dem Bauch; "robben" = <bilder> Bilder einer ganzen Bewegung (rechter
+        # Arm mit linkem Bein vor, dann umgekehrt), "robben_still" = ein Bild im Stand (beide Haende vorn auf dem Boden). Kopf
+        # ueber der Stelle wie im Stehen (am_boden_kopf_fest), der Koerper liegt dahinter.
+        figur = FigurNetz(z, eintrag["datei"], eintrag["haut"])
+        ruhe = fbx_figur_haltung(z, eintrag["datei"], eintrag["haut"], modell.global_())
+        phasen = [0.25] if eintrag["bewegung"] == "robben_still" else [b / bilder for b in range(bilder)]
+        return [am_boden_kopf_fest(robben_bild(modell, figur, ph, eintrag.get("arme", 72), eintrag["bewegung"] == "robben"), ruhe)
+                for ph in phasen]
     haltungen = {"springen": springen_haltung, "ducken": ducken_haltung, "kriechen": kriechen_haltung}
     if eintrag["bewegung"] in haltungen:
         # Welle A 0.93.0 (Sammelliste 352): je ein Bild, auf dem Boden, der Kopf ueber der Stelle wie im Stehen

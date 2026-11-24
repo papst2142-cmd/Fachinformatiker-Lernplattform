@@ -66,13 +66,7 @@ public static partial class AutoMessung
                 }
             }
             void Taste(Key taste) => seite.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = taste, Source = fl });
-            // eine Stelle mitten im Raum, an der Ducken und Kriechen Platz haben; seit A 0.98.0 (Sammelliste 396) dreht sich die Figur
-            // dafuer nicht mehr von selbst, darum in jeder Richtung (15 Grad), in der sie nach dem Hingehen stehen kann
-            var stelle = Enumerable.Range(0, 900).Select(i => new Vector2(0.6f + (i % 30 * 0.3f), 0.6f + (i / 30 * 0.3f)))
-                .FirstOrDefault(p => p.X < innen.Breite && p.Y < innen.Tiefe
-                    && Enumerable.Range(0, 24).All(r => innen.KoerperFrei(p, r * MathF.PI / 12f, Koerperhaltung.Kriechen)
-                        && innen.KoerperFrei(p, r * MathF.PI / 12f, Koerperhaltung.Ducken)) && Enumerable.Range(0, 8).All(r => innen.SprungFrei(p, r * MathF.PI / 4f)) && spiel.GeheZu(p.X, p.Y));
-            spiel.SofortAnkommen();
+            var stelle = HaltungsStelle(spiel, innen);
             await ansicht.BildFertigAsync();
             await Bilder(3);
             if (seite.HinweisZu)
@@ -219,6 +213,30 @@ public static partial class AutoMessung
     }
 
     /// <summary>Frischer Probe-Ablauf mit aufgestelltem Sofa, in der Wohnung (null = nicht gelungen).</summary>
+    /// <summary>
+    /// Eine Stelle mitten im Raum, an der Ducken, Kriechen und Springen Platz haben; die Figur geht hin und steht dort. Seit A 0.98.0
+    /// (Sammelliste 396) dreht sie sich dafuer nicht von selbst; seit A 1.7.0 (flach liegen, Sammelliste 447) passt Kriechen nicht
+    /// mehr in jede Richtung, darum zaehlt die Richtung, in der sie nach dem Hingehen steht.
+    /// </summary>
+    private static Vector2 HaltungsStelle(StadtSpiel spiel, Innenraum innen)
+    {
+        foreach (var p in Enumerable.Range(0, 900).Select(i => new Vector2(0.6f + (i % 30 * 0.3f), 0.6f + (i / 30 * 0.3f))).Where(p => p.X < innen.Breite && p.Y < innen.Tiefe))
+        {
+            if (!Enumerable.Range(0, 8).All(r => innen.SprungFrei(p, r * MathF.PI / 4f)) || !spiel.GeheZu(p.X, p.Y))
+            {
+                continue;
+            }
+            spiel.SofortAnkommen();
+            var hier = new Vector2(spiel.FigurX, spiel.FigurZ);
+            var blick = spiel.FigurRichtung * MathF.PI / 180f;
+            if (innen.KoerperFrei(hier, blick, Koerperhaltung.Kriechen) && innen.KoerperFrei(hier, blick, Koerperhaltung.Ducken) && innen.SprungFrei(hier, blick))
+            {
+                return hier;
+            }
+        }
+        return default;
+    }
+
     private static StadtSpiel? HaltungenWohnung(SpielSeite seite)
     {
         var spiel = Frisch(seite);

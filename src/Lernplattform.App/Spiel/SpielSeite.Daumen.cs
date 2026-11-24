@@ -26,6 +26,8 @@ public sealed partial class SpielSeite
     private readonly Canvas _daumenEbene = new() { ClipToBounds = true };
     private DaumenKnopf? _springenRund;
     private DaumenKnopf? _haltungRund;
+    private DaumenKnopf? _liegenRund;
+    private readonly Dictionary<HaltungKnopf.Knopf, Border> _tastenSchilder = [];
 
     /// <summary>Start-Test und Fotos: die runden Knoepfe auch am PC (null = nur Android).</summary>
     internal bool? DaumenKnoepfeFuerTests { get; set; }
@@ -33,8 +35,16 @@ public sealed partial class SpielSeite
     /// <summary>Am Handy und Tablet gibt es die runden Knoepfe statt der drei Menue-Eintraege.</summary>
     public bool DaumenKnoepfeAn => DaumenKnoepfeFuerTests ?? OperatingSystem.IsAndroid();
 
-    /// <summary>Start-Test: die zwei runden Knoepfe (Springen, Haltung).</summary>
-    public (DaumenKnopf Springen, DaumenKnopf Haltung) DaumenKnoepfe => (_springenRund!, _haltungRund!);
+    /// <summary>
+    /// Start-Test: die runden Knoepfe (Springen, Haltung = seit A 1.7.0 Hinknien, Liegen = Hinlegen). Am PC sind es seit A 1.7.0
+    /// dieselben Knoepfe als kleine Symbole mit der Taste darunter (Sammelliste 447, Nico 4a).
+    /// </summary>
+    public (DaumenKnopf Springen, DaumenKnopf Haltung, DaumenKnopf Liegen) DaumenKnoepfe => (_springenRund!, _haltungRund!, _liegenRund!);
+
+    /// <summary>Start-Test: Text und Rechteck (Punkte der Spielflaeche) des Tastenschilds unter einem Symbol am PC (null = unsichtbar).</summary>
+    public (string Text, Rect Lage)? TastenSchild(HaltungKnopf.Knopf knopf) =>
+        _tastenSchilder.TryGetValue(knopf, out var b) && b.IsVisible && b.Child is TextBlock t && Flaeche.TranslatePoint(default, this) is { } f0
+            ? (t.Text ?? "", new Rect(Canvas.GetLeft(b) - f0.X, Canvas.GetTop(b) - f0.Y, b.Bounds.Width, b.Bounds.Height)) : null;
 
     /// <summary>Start-Test: Rechteck eines sichtbaren runden Knopfs in Punkten der Spielflaeche (null = unsichtbar).</summary>
     public Rect? DaumenRechteck(DaumenKnopf knopf) =>
@@ -45,17 +55,46 @@ public sealed partial class SpielSeite
     {
         _springenRund = new DaumenKnopf(DaumenSymbol.Pfeil);
         _springenRund.Getippt += () => HaltungAusfuehren(Tastenbelegung.Springen);
-        _haltungRund = new DaumenKnopf(DaumenSymbol.Stehen);
-        _haltungRund.Getippt += () => HaltungRundAusfuehren(lang: false);
-        _haltungRund.Lang += () => HaltungRundAusfuehren(lang: true);
+        _haltungRund = new DaumenKnopf(DaumenSymbol.Stehen) { WischNachUnten = true };
+        _haltungRund.Getippt += () => HaltungRundAusfuehren(HaltungKnopf.Knopf.Knien, lang: false);
+        _haltungRund.Lang += () => HaltungRundAusfuehren(HaltungKnopf.Knopf.Knien, lang: true);
+        _liegenRund = new DaumenKnopf(DaumenSymbol.Liegen);
+        _liegenRund.Getippt += () => HaltungRundAusfuehren(HaltungKnopf.Knopf.Liegen, lang: false);
+        _liegenRund.Lang += () => HaltungRundAusfuehren(HaltungKnopf.Knopf.Liegen, lang: true);
         _daumenEbene.Children.Add(_springenRund);
         _daumenEbene.Children.Add(_haltungRund);
+        _daumenEbene.Children.Add(_liegenRund);
+        foreach (var knopf in new[] { HaltungKnopf.Knopf.Springen, HaltungKnopf.Knopf.Knien, HaltungKnopf.Knopf.Liegen })
+        {
+            // Welle A 1.7.0 (Nico 4a): am PC steht unter jedem Symbol seine Taste (nur Anzeige, nicht antippbar)
+            var schild = new Border
+            {
+                IsVisible = false,
+                IsHitTestVisible = false,
+                CornerRadius = new CornerRadius(5),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(6, 1, 6, 1),
+                Child = new TextBlock { FontSize = 12, FontWeight = FontWeight.Bold },
+            };
+            schild.Bind(Border.BackgroundProperty, schild.GetResourceObservable("Pinsel.card"));
+            schild.Bind(Border.BorderBrushProperty, schild.GetResourceObservable("Pinsel.text"));
+            ((TextBlock)schild.Child).Bind(TextBlock.ForegroundProperty, schild.GetResourceObservable("Pinsel.text"));
+            _tastenSchilder[knopf] = schild;
+            _daumenEbene.Children.Add(schild);
+        }
         Children.Add(_daumenEbene);
     }
 
-    private void HaltungRundAusfuehren(bool lang)
+    private void HaltungRundAusfuehren(HaltungKnopf.Knopf knopf, bool lang)
     {
-        if (Spiel is { } spiel && HaltungKnopf.Aufgabe(spiel.Koerper, lang) is { } aufgabe)
+        if (Spiel is not { } spiel)
+        {
+            return;
+        }
+        // Gegenprobe bis A 1.6.0 (zwei Knoepfe): der eine Knopf „Haltung“
+        var aufgabe = HaltungKnopf.Lage(Flaeche.StickBereich) is { Liegen: null } && DaumenKnoepfeAn
+            ? HaltungKnopf.Aufgabe(spiel.Koerper, lang) : HaltungKnopf.Aufgabe(knopf, spiel.Koerper, lang);
+        if (aufgabe is not null)
         {
             HaltungAusfuehren(aufgabe);
         }
@@ -65,34 +104,85 @@ public sealed partial class SpielSeite
     private void DaumenSetzen()
     {
         HandlungKnoepfeLegen();
-        if (_springenRund is null || _haltungRund is null)
+        if (_springenRund is null || _haltungRund is null || _liegenRund is null)
         {
             return;
         }
-        var lage = HaltungKnopf.Lage(Flaeche.StickBereich);
-        var an = DaumenKnoepfeAn && Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true } && Ebene.IsVisible
+        // Welle A 1.7.0 (Sammelliste 447): Handy und Tablet drei runde Knoepfe im Bogen am rechten Daumen (Nico 1a), am PC drei kleine
+        // Symbole unten rechts mit ihrer Taste (Nico 4a)
+        var handy = DaumenKnoepfeAn;
+        var bereich = Flaeche.StickBereich;
+        var lage = handy ? HaltungKnopf.Lage(bereich) : HaltungKnopf.LageTasten(bereich);
+        var an = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true } && Ebene.IsVisible
             && !HandyOffen && !(Tafel?.IsVisible ?? false) && lage is not null && Flaeche.TranslatePoint(default, this) is not null;
+        var drei = lage is { Liegen: not null };
         _springenRund.IsVisible = an;
         _haltungRund.IsVisible = an;
+        _liegenRund.IsVisible = an && drei;
+        foreach (var (art0, schild) in _tastenSchilder)
+        {
+            schild.IsVisible = an && !handy && (drei || art0 != HaltungKnopf.Knopf.Liegen);
+        }
         if (!an || lage is not { } l || Flaeche.TranslatePoint(default, this) is not { } f0)
         {
             return;
         }
         var koerper = Spiel?.Koerper ?? Koerperhaltung.Stehen;
-        var (g, k) = HaltungKnopf.Groesse(Flaeche.StickBereich.Breite, Flaeche.StickBereich.Hoehe);
-        _springenRund.Setzen(g, DaumenSymbol.Pfeil, false, SpielProbeTexte.KnopfSpringen);
-        _haltungRund.Setzen(k, koerper switch
+        var (g, k) = handy ? HaltungKnopf.Groessen(bereich.Breite, bereich.Hoehe) : HaltungKnopf.GroessenTasten;
+        var knoepfe = new List<(HaltungKnopf.Knopf Art, DaumenKnopf Knopf, (double X, double Y) Mitte, double D)>
         {
-            Koerperhaltung.Ducken => DaumenSymbol.Ducken,
-            Koerperhaltung.Kriechen => DaumenSymbol.Kriechen,
-            _ => DaumenSymbol.Stehen,
-        }, koerper != Koerperhaltung.Stehen, koerper == Koerperhaltung.Stehen ? SpielProbeTexte.KnopfDucken : SpielProbeTexte.KnopfAufstehen);
-        foreach (var (knopf, (x, y), d) in new[] { (_springenRund, l.Springen, g), (_haltungRund, l.Haltung, k) })
+            (HaltungKnopf.Knopf.Springen, _springenRund, l.Springen, g),
+            (HaltungKnopf.Knopf.Knien, _haltungRund, l.Knien, k),
+        };
+        if (!drei)
+        {
+            // Gegenprobe bis A 1.6.0: Pfeil und ein Knopf „Haltung“ mit Strichfiguren
+            _springenRund.Setzen(g, DaumenSymbol.Pfeil, false, SpielProbeTexte.KnopfSpringen);
+            _haltungRund.Setzen(k, koerper switch
+            {
+                Koerperhaltung.Ducken => DaumenSymbol.Ducken,
+                Koerperhaltung.Kriechen => DaumenSymbol.Kriechen,
+                _ => DaumenSymbol.Stehen,
+            }, koerper != Koerperhaltung.Stehen, koerper == Koerperhaltung.Stehen ? SpielProbeTexte.KnopfDucken : SpielProbeTexte.KnopfAufstehen);
+        }
+        else
+        {
+            // Konzept Punkt 4 und 5: weisse Figuren auf halb durchsichtigen dunklen Scheiben; das Symbol zeigt die naechste Haltung,
+            // die aktuelle leuchtet in der Grundfarbe des Programms
+            knoepfe.Add((HaltungKnopf.Knopf.Liegen, _liegenRund, l.Liegen!.Value, k));
+            _springenRund.Setzen(g, DaumenSymbol.Springen, false, SpielProbeTexte.KnopfSpringen, scheibe: true);
+            var (knienAuf, knienLeuchtet) = HaltungKnopf.Zustand(HaltungKnopf.Knopf.Knien, koerper);
+            _haltungRund.Setzen(k, knienAuf ? DaumenSymbol.Aufstehen : DaumenSymbol.Knien, knienLeuchtet,
+                knienAuf ? SpielProbeTexte.KnopfAufstehen : SpielProbeTexte.KnopfHinknien, scheibe: true);
+            var (liegenAuf, liegenLeuchtet) = HaltungKnopf.Zustand(HaltungKnopf.Knopf.Liegen, koerper);
+            _liegenRund.Setzen(k, liegenAuf ? DaumenSymbol.Aufstehen : DaumenSymbol.Liegen, liegenLeuchtet,
+                liegenAuf ? SpielProbeTexte.KnopfAufstehen : SpielProbeTexte.KnopfHinlegen, scheibe: true);
+        }
+        foreach (var (art, knopf, (x, y), d) in knoepfe)
         {
             Canvas.SetLeft(knopf, f0.X + x - (d / 2));
             Canvas.SetTop(knopf, f0.Y + y - (d / 2));
             // sofort an die neue Stelle (Sammelliste 162)
             knopf.Arrange(new Rect(Canvas.GetLeft(knopf), Canvas.GetTop(knopf), d, d));
+            if (!handy && _tastenSchilder.TryGetValue(art, out var schild) && schild.Child is TextBlock text)
+            {
+                var aufgabe = art switch
+                {
+                    HaltungKnopf.Knopf.Springen => Tastenbelegung.Springen,
+                    HaltungKnopf.Knopf.Knien => Tastenbelegung.Ducken,
+                    _ => Tastenbelegung.Kriechen,
+                };
+                var taste = Tastenbelegung.Aktuell.Tasten(aufgabe).Count > 0 ? Tastenbelegung.Aktuell.AnzeigeFuer(aufgabe) : "–";
+                if (text.Text != taste)
+                {
+                    text.Text = taste;
+                }
+                schild.Measure(Size.Infinity);
+                var w = schild.DesiredSize.Width;
+                Canvas.SetLeft(schild, f0.X + x - (w / 2));
+                Canvas.SetTop(schild, f0.Y + y + (d / 2) + 4);
+                schild.Arrange(new Rect(Canvas.GetLeft(schild), Canvas.GetTop(schild), w, schild.DesiredSize.Height));
+            }
         }
     }
 }
@@ -119,6 +209,18 @@ public enum DaumenSymbol
 
     /// <summary>Welle A 1.6.0 (Weisung P12-361): das Spiel-Handy.</summary>
     Telefon,
+
+    /// <summary>Welle A 1.7.0 (Sammelliste 447): springende Figur mit Sprungbogen.</summary>
+    Springen,
+
+    /// <summary>Welle A 1.7.0: kniende Figur auf dem Boden (Hinknien).</summary>
+    Knien,
+
+    /// <summary>Welle A 1.7.0: flach liegende Figur auf dem Boden (Hinlegen).</summary>
+    Liegen,
+
+    /// <summary>Welle A 1.7.0: stehende Figur (in der Haltung: aufstehen).</summary>
+    Aufstehen,
 }
 
 /// <summary>
@@ -137,6 +239,15 @@ public sealed class DaumenKnopf : Klickflaeche
     private bool? _leuchtet;
     private string? _symbolFarbe;
     private string? _akzentHex;
+    private bool? _scheibe;
+    private Viewbox? _rahmen;
+    private Point? _start;
+
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447, Nico 2a): nach unten wischen (ab <see cref="HaltungKnopf.WischAb"/> Punkten, mehr nach unten
+    /// als zur Seite) loest wie langes Druecken <see cref="Lang"/> aus (Hinknien: gleich hinlegen).
+    /// </summary>
+    public bool WischNachUnten { get; init; }
 
     /// <summary>Kurz getippt (oder Screenreader).</summary>
     public event Action? Getippt;
@@ -160,7 +271,8 @@ public sealed class DaumenKnopf : Klickflaeche
         var raster = new Grid();
         raster.Children.Add(_fuellung);
         raster.Children.Add(_rand);
-        raster.Children.Add(new Viewbox { Child = _symbol, Margin = new Thickness(6) });
+        _rahmen = new Viewbox { Child = _symbol, Margin = new Thickness(6) };
+        raster.Children.Add(_rahmen);
         Child = raster;
         Klick = () => Getippt?.Invoke();
         _lang.Tick += (_, _) =>
@@ -173,17 +285,31 @@ public sealed class DaumenKnopf : Klickflaeche
     }
 
     /// <summary>Groesse, Symbol, Leuchten und Name setzen (zeichnet nur bei einer Aenderung neu).</summary>
-    public void Setzen(double durchmesser, DaumenSymbol symbol, bool leuchtet, string name)
+    /// <remarks>
+    /// <paramref name="scheibe"/> (Welle A 1.7.0, Sammelliste 447, Konzept Punkt 5): weisse Figur auf halb durchsichtiger dunkler
+    /// Scheibe mit hellem Rand (Abnahmebild P12-231 Ordner 06), das Symbol nimmt zwei Drittel des Kreises ein; leuchtend wie bisher
+    /// in der Grundfarbe mit Symbol schwarz oder weiss (<see cref="Symbolfarbe.Auf"/>).
+    /// </remarks>
+    public void Setzen(double durchmesser, DaumenSymbol symbol, bool leuchtet, string name, bool scheibe = false)
     {
         Width = Height = durchmesser;
+        if (_rahmen is { } rahmen)
+        {
+            var rand = scheibe ? durchmesser * 0.17 : 6;
+            if (Math.Abs(rahmen.Margin.Left - rand) > 1e-9)
+            {
+                rahmen.Margin = new Thickness(rand);
+            }
+        }
         CornerRadius = new CornerRadius(durchmesser / 2);
         Avalonia.Automation.AutomationProperties.SetName(this, name);
         var app = Application.Current;
         var akzent = app?.TryFindResource("Pinsel.accent", out var a) == true && a is ISolidColorBrush ab ? ab.Color : Colors.DeepSkyBlue;
         var akzentHex = $"#{akzent.R:X2}{akzent.G:X2}{akzent.B:X2}";
         var symbolFarbe = leuchtet ? Symbolfarbe.Auf(akzentHex) : null;
-        if (_leuchtet != leuchtet || _symbolFarbe != symbolFarbe || _gezeichnet != symbol || (leuchtet && _akzentHex != akzentHex))
+        if (_leuchtet != leuchtet || _symbolFarbe != symbolFarbe || _gezeichnet != symbol || (leuchtet && _akzentHex != akzentHex) || _scheibe != scheibe)
         {
+            _scheibe = scheibe;
             _leuchtet = leuchtet;
             _akzentHex = akzentHex;
             _symbolFarbe = symbolFarbe;
@@ -194,6 +320,14 @@ public sealed class DaumenKnopf : Klickflaeche
                 _rand.Stroke = new SolidColorBrush(Color.Parse(symbolFarbe!), 0.7);
                 BoxShadow = new BoxShadows(new BoxShadow { Blur = 14, Spread = 2, Color = Color.FromArgb(160, akzent.R, akzent.G, akzent.B) });
             }
+            else if (scheibe)
+            {
+                // Welle A 1.7.0: dunkle Scheibe (Deckkraft 0,47), weisser Rand (0,59), weisses Symbol
+                _fuellung.Fill = new SolidColorBrush(Color.FromRgb(0x18, 0x20, 0x28));
+                _rand.Stroke = Brushes.White;
+                BoxShadow = default;
+                symbolFarbe = "#FFFFFF";
+            }
             else
             {
                 // ruhig: Kartenfarbe halb durchsichtig, Rand und Symbol in der Textfarbe (wie die Sticks)
@@ -202,16 +336,20 @@ public sealed class DaumenKnopf : Klickflaeche
                 _rand.Bind(Shape.StrokeProperty, _rand.GetResourceObservable("Pinsel.text"));
                 BoxShadow = default;
             }
-            _fuellung.Opacity = leuchtet ? 1 : 0.5;
-            _rand.Opacity = leuchtet ? 1 : 0.55;
+            _fuellung.Opacity = leuchtet ? 1 : scheibe ? 0.47 : 0.5;
+            _rand.Opacity = leuchtet ? 1 : scheibe ? 0.59 : 0.55;
+            _rand.StrokeThickness = scheibe ? Math.Max(1, durchmesser * 0.03) : 1.5;
             Zeichnen(symbol, symbolFarbe);
             var textFarbe = app?.TryFindResource("Pinsel.text", out var t) == true && t is ISolidColorBrush tb ? tb.Color : Colors.White;
             Farben = (symbolFarbe ?? $"#{textFarbe.R:X2}{textFarbe.G:X2}{textFarbe.B:X2}", leuchtet ? akzentHex : null);
         }
     }
 
+    private string? _zeichenFarbe;
+
     private void Zeichnen(DaumenSymbol symbol, string? farbe)
     {
+        _zeichenFarbe = farbe;
         _gezeichnet = symbol;
         Symbol = symbol;
         _symbol.Children.Clear();
@@ -294,6 +432,14 @@ public sealed class DaumenKnopf : Klickflaeche
                 Linie("M9,5.5 L15,5.5 L15,16.5 L9,16.5 Z", 1.4);
                 Linie("M11,19 L13,19", 2);
                 break;
+            case DaumenSymbol.Springen:
+            case DaumenSymbol.Knien:
+            case DaumenSymbol.Liegen:
+            case DaumenSymbol.Aufstehen:
+                // Welle A 1.7.0 (Sammelliste 447, Abnahmebild P12-231 Ordner 06): Figuren auf dem Raster 100 des Entwurfs (Faktor
+                // 0,24), Glieder 1,8 dick, Rumpf 2,34, Kopf Halbmesser 2,16; Boden duenn, Sprungbogen gestrichelt
+                Figur(symbol);
+                break;
             case DaumenSymbol.Auge:
                 Linie("M2,12 Q12,3 22,12 Q12,21 2,12 Z", 2.2);
                 Kopf(12, 12, 3.2);
@@ -309,9 +455,97 @@ public sealed class DaumenKnopf : Klickflaeche
         }
     }
 
+    private static readonly Dictionary<DaumenSymbol, (char Art, double[] Werte)[]> Figuren = new()
+    {
+        [DaumenSymbol.Aufstehen] = [('k', [50, 15, 9]), ('r', [50, 28, 50, 56]), ('l', [50, 32, 36, 44, 31, 56]), ('l', [50, 32, 64, 44, 69, 56]),
+            ('l', [50, 56, 42, 71, 40, 88]), ('l', [50, 56, 58, 71, 60, 88])],
+        [DaumenSymbol.Springen] = [('k', [54, 12, 9]), ('r', [53, 25, 50, 49]), ('l', [53, 29, 39, 23, 31, 10]), ('l', [53, 29, 67, 22, 75, 10]),
+            ('l', [50, 49, 36, 57, 40, 72]), ('l', [50, 49, 63, 59, 60, 75]), ('b', [12, 94, 88, 94, 80])],
+        [DaumenSymbol.Knien] = [('k', [43, 22, 9]), ('r', [44, 35, 49, 60]), ('l', [44, 39, 57, 49, 67, 58]), ('l', [44, 39, 35, 52, 32, 64]),
+            ('l', [49, 60, 37, 83, 17, 84]), ('l', [49, 60, 69, 61, 70, 84]), ('g', [8, 90, 92])],
+        [DaumenSymbol.Liegen] = [('k', [79, 54, 9]), ('r', [68, 65, 38, 68]), ('l', [67, 66, 79, 74, 94, 72]), ('l', [65, 67, 57, 76, 69, 77]),
+            ('l', [38, 68, 22, 73, 6, 72]), ('l', [38, 68, 26, 60, 14, 67]), ('g', [2, 84, 98])],
+    };
+
+    private void Figur(DaumenSymbol symbol)
+    {
+        const double f = 0.24;
+        const double dicke = 7.5 * f;
+        string P(double x, double y) => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{x * f:0.###},{y * f:0.###}");
+        foreach (var (art, w) in Figuren[symbol])
+        {
+            switch (art)
+            {
+                case 'k':
+                    FigurKopf(w[0] * f, w[1] * f, w[2] * f);
+                    break;
+                case 'l':
+                case 'r':
+                    var daten = "M" + P(w[0], w[1]);
+                    for (var i = 2; i < w.Length; i += 2)
+                    {
+                        daten += " L" + P(w[i], w[i + 1]);
+                    }
+                    FigurLinie(daten, art == 'r' ? dicke * 1.3 : dicke);
+                    break;
+                case 'g':
+                    FigurLinie("M" + P(w[0], w[1]) + " L" + P(w[2], w[1]), dicke * 0.55);
+                    break;
+                default:
+                    // Sprungbogen: gestrichelt (jedes zweite von 14 Stuecken) unter der Figur
+                    const int n = 14;
+                    (double X, double Y) Q(double t) => (w[0] + ((w[2] - w[0]) * t), w[1] - (4 * (w[1] - w[4]) * t * (1 - t)));
+                    for (var i = 0; i < n; i += 2)
+                    {
+                        var (a, b) = (Q(i / (double)n), Q((i + 1) / (double)n));
+                        FigurLinie("M" + P(a.X, a.Y) + " L" + P(b.X, b.Y), dicke * 0.5);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void FigurLinie(string daten, double dicke)
+    {
+        var pfad = new Avalonia.Controls.Shapes.Path
+        {
+            Data = Geometry.Parse(daten),
+            StrokeThickness = dicke,
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+            Stroke = new SolidColorBrush(Color.Parse(_zeichenFarbe ?? "#FFFFFF")),
+        };
+        _symbol.Children.Add(pfad);
+    }
+
+    private void FigurKopf(double x, double y, double r)
+    {
+        var kopf = new Ellipse { Width = 2 * r, Height = 2 * r, Fill = new SolidColorBrush(Color.Parse(_zeichenFarbe ?? "#FFFFFF")) };
+        Canvas.SetLeft(kopf, x - r);
+        Canvas.SetTop(kopf, y - r);
+        _symbol.Children.Add(kopf);
+    }
+
+    protected override void OnPointerMoved(PointerEventArgs e)
+    {
+        base.OnPointerMoved(e);
+        if (WischNachUnten && _start is { } start && !_langAusgeloest)
+        {
+            var p = e.GetPosition(this);
+            var (dx, dy) = (p.X - start.X, p.Y - start.Y);
+            if (dy >= HaltungKnopf.WischAb && dy > Math.Abs(dx))
+            {
+                _lang.Stop();
+                _langAusgeloest = true;
+                Lang?.Invoke();
+            }
+        }
+    }
+
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        _start = e.GetPosition(this);
         _langAusgeloest = false;
         _lang.Stop();
         _lang.Start();
@@ -329,6 +563,7 @@ public sealed class DaumenKnopf : Klickflaeche
             Getippt?.Invoke();
         }
         _langAusgeloest = false;
+        _start = null;
         e.Pointer.Capture(null);
         e.Handled = true;
     }
@@ -341,4 +576,18 @@ public sealed class DaumenKnopf : Klickflaeche
 
     /// <summary>Start-Test: langen Druck ausloesen wie nach Ablauf der Zeit.</summary>
     public void LangFuerTests() => Lang?.Invoke();
+
+    /// <summary>Start-Test (Welle A 1.7.0): nach unten wischen wie ein Finger (Druck, Bewegung um <paramref name="dy"/> Punkte nach unten).</summary>
+    public void WischenFuerTests(double dy)
+    {
+        _start = new Point(Width / 2, Height / 2);
+        _langAusgeloest = false;
+        if (WischNachUnten && dy >= HaltungKnopf.WischAb)
+        {
+            _langAusgeloest = true;
+            Lang?.Invoke();
+        }
+        _start = null;
+        _langAusgeloest = false;
+    }
 }

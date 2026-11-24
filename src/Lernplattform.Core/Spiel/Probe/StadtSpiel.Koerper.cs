@@ -102,8 +102,17 @@ public sealed partial class StadtSpiel
     /// <summary>Hoehe ueber dem Boden im Sprung (Anteil der Figurhoehe, Parabel bis <see cref="Probe.Innenraum.SprungHoch"/>), 0 = am Boden.</summary>
     public float SprungHoehe => Springt && _sprung is { } t ? 4f * Probe.Innenraum.SprungHoch * (t / SprungDauer) * (1f - (t / SprungDauer)) : 0f;
 
-    /// <summary>Modell der Haltung zum Zeichnen (<see cref="Figur.HaltungBild"/>), null = Stehen oder Gehen wie bisher.</summary>
-    public string? HaltungModell => Figur.HaltungBild(Koerper, Springt);
+    /// <summary>
+    /// Modell der Haltung zum Zeichnen (<see cref="Figur.HaltungBild(Koerperhaltung, bool, bool)"/>), null = Stehen oder Gehen wie
+    /// bisher. Seit A 1.7.0 (Sammelliste 447) kriechend im Gehen die Bewegung <see cref="Figur.Robben"/> (Bild <see cref="HaltungBildNummer"/>).
+    /// </summary>
+    public string? HaltungModell => Figur.HaltungBild(Koerper, Springt, HaltungGeht);
+
+    /// <summary>Die Figur geht gerade (auch frei mit Stick oder Tasten); nur dann robbt sie (Sammelliste 447).</summary>
+    private bool HaltungGeht => (Geht && !ImBus) || FreiUnterwegs;
+
+    /// <summary>Bild des Haltungsmodells (Robben nach dem Weg, sonst 0), Welle A 1.7.0.</summary>
+    public int HaltungBildNummer => HaltungModell == Figur.Robben ? Figur.RobbenBildNachWeg(Schrittweg, Zyklus) : 0;
 
     /// <summary>Hinweis der letzten Haltungs-Aktion (Ansage am Screenreader und Zeile), null = keiner.</summary>
     public string? HaltungHinweis { get; private set; }
@@ -136,7 +145,7 @@ public sealed partial class StadtSpiel
     /// </summary>
     public bool Ducken(float? blick = null) => Einnehmen(Koerperhaltung.Ducken, blick);
 
-    /// <summary>Knopf „Kriechen“: auf alle viere bzw. (kriechend) wieder aufstehen (<paramref name="blick"/> wie bei <see cref="Ducken"/>).</summary>
+    /// <summary>Knopf „Kriechen“: flach auf den Bauch (seit A 1.7.0, vorher auf alle viere) bzw. (kriechend) wieder aufstehen (<paramref name="blick"/> wie bei <see cref="Ducken"/>).</summary>
     public bool Kriechen(float? blick = null) => Einnehmen(Koerperhaltung.Kriechen, blick);
 
     private bool Einnehmen(Koerperhaltung haltung, float? blick)

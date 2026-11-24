@@ -1183,11 +1183,12 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 // Welle A 0.93.0 (Weisung P12-303): geduckt, kriechend oder im Sprung das Modell der Haltung (Tabelle Figur.HaltungBild),
                 // im Sprung um die Sprunghoehe angehoben; die Figur steht logisch weiter an ihrer Stelle
                 spieler = _spiel.HaltungModell is { } modell
-                    ? FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, modell, 0, IchNah(kamera))
+                    ? FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, modell, _spiel.HaltungBildNummer, IchNah(kamera))
                     : FigurNetz(gl, "#spieler", aussehen, _spiel.Kleidung, _spiel.Bewegung, bild, IchNah(kamera));
                 // Welle A 0.99.0 (Sammelliste 400): geduckt oder kriechend gehend wiegt sich die Figur leicht im Schritt (die Haltung
                 // hat kein eigenes Gehbild; Wiegen um die Laengsachse und kleines Heben nach dem Weg, nur Darstellung)
-                var wiegen = _spiel.HaltungModell is not null && !_spiel.Springt && (_spiel.Geht || _spiel.FreiUnterwegs)
+                // Welle A 1.7.0 (Sammelliste 447): robbend bewegt sich die Figur selbst, sie wiegt sich nicht
+                var wiegen = _spiel.HaltungModell is { } hm && hm != Figur.Robben && !_spiel.Springt && (_spiel.Geht || _spiel.FreiUnterwegs)
                     ? Matrix4x4.CreateRotationZ(0.06f * MathF.Sin((float)(_spiel.Schrittweg / _spiel.Zyklus * 4 * Math.PI)))
                         * Matrix4x4.CreateTranslation(0, 0.012f * MathF.Abs(MathF.Sin((float)(_spiel.Schrittweg / _spiel.Zyklus * 4 * Math.PI))), 0)
                     : Matrix4x4.Identity;
