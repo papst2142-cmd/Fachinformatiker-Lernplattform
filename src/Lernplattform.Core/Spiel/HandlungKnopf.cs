@@ -41,6 +41,65 @@ public static class HandlungKnopf
         return Math.Min(hn.Y - (g / 2), inn.Y - (k / 2)) < b.Oben + 4 || inn.X + (k / 2) > b.Breite / 2 ? null : (hn, inn);
     }
 
+    /// <summary>Abstand (Punkte) des Namensschilds zu Knopf und Ich-Sicht.</summary>
+    public const double NameAbstand = 6;
+
+    /// <summary>
+    /// Alter Platz des Namensschilds der Handlung (linke obere Ecke, Punkte der Spielflaeche): ueber dem Handlungsknopf und der
+    /// Ich-Sicht. Nur noch, wenn er unter der Kopfzeile Platz hat (<see cref="Name"/>); kein Knopf: null.
+    /// </summary>
+    public static (double X, double Y)? NameUeber(Sticks.Bereich b, double hoehe)
+    {
+        if (Lage(b) is not { } l)
+        {
+            return null;
+        }
+        var (g, k) = Groesse(b.Breite, b.Hoehe);
+        return (Math.Max(4, l.Handlung.X - (g / 2)), Math.Min(l.Handlung.Y - (g / 2), l.Ich.Y - (k / 2)) - NameAbstand - hoehe);
+    }
+
+    /// <summary>
+    /// Welle A 1.6.0 (Weisung P12-363, Nico 1a, Sammelliste 448): Platz des Namensschilds (linke obere Ecke) und ob es ueber dem
+    /// Knopf steht. Ueber dem Handlungsknopf, wenn dort unter der Kopfzeile Platz ist; sonst (Handy quer) rechts neben dem Auge
+    /// der Ich-Sicht auf seiner Hoehe. Liegt der Platz auf dem Handy-Symbol, gilt der naechste: ueber allen Knoepfen, dann rechts
+    /// neben dem Handy-Symbol. Nie auf der Kopfzeile, nie auf Handlung, Auge oder Handy-Symbol. Kein Knopf oder kein Platz: null.
+    /// </summary>
+    public static ((double X, double Y) Ecke, bool Ueber)? Name(Sticks.Bereich b, double breite, double hoehe)
+    {
+        if (Lage(b) is not { } l || NameUeber(b, hoehe) is not { } ueber)
+        {
+            return null;
+        }
+        var (g, k) = Groesse(b.Breite, b.Hoehe);
+        var luft = NameAbstand + 2;
+        var knoepfe = new List<(double X, double Y, double D)> { (l.Handlung.X, l.Handlung.Y, g), (l.Ich.X, l.Ich.Y, k) };
+        if (Telefon(b) is { } t)
+        {
+            knoepfe.Add((t.X, t.Y, k));
+        }
+        var ganzOben = knoepfe.Min(m => m.Y - (m.D / 2));
+        var wahl = new List<((double X, double Y) Ecke, bool Ueber)>
+        {
+            (ueber, true),
+            ((l.Ich.X + (k / 2) + luft, l.Ich.Y - (hoehe / 2)), false),
+            ((ueber.X, ganzOben - NameAbstand - hoehe), true),
+        };
+        if (Telefon(b) is { } t2)
+        {
+            wahl.Add(((t2.X + (k / 2) + luft, t2.Y - (hoehe / 2)), false));
+        }
+        foreach (var (ecke, oben) in wahl)
+        {
+            var frei = ecke.Y >= b.Oben + 4 && ecke.Y + hoehe <= b.Hoehe && ecke.X >= 0 && ecke.X + breite <= b.Breite
+                && !knoepfe.Any(m => ecke.X < m.X + (m.D / 2) && m.X - (m.D / 2) < ecke.X + breite && ecke.Y < m.Y + (m.D / 2) && m.Y - (m.D / 2) < ecke.Y + hoehe);
+            if (frei)
+            {
+                return (ecke, oben);
+            }
+        }
+        return null;
+    }
+
     /// <summary>
     /// Welle A 1.6.0 (Weisung P12-361, Nico: „wesentlich schöner, wenn das sich alles um die Finger abspielt“): Mitte des runden
     /// Handy-Symbols (Groesse wie die Ich-Sicht) am Handy und Tablet rechts neben dem linken Stick (Nico 1a, Weisung P12-362), auf

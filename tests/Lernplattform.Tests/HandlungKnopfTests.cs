@@ -167,4 +167,92 @@ public sealed class HandlungKnopfTests
         Assert.True(funde.Count == 0, string.Join("\n", funde));
         Assert.True(gegen >= 6, "Gegenprobe greift nicht: " + gegen);
     }
+
+    /// <summary>
+    /// Weisung P12-363 (Nico 1a, Sammelliste 448): „ist über dem Knopf kein Platz, steht der Name rechts neben dem Auge“.
+    /// Abnahmesatz: „Am Handy quer (832×384) und in allen anderen Groessen ueberlappen sich Handlungsknopf, Name, Auge,
+    /// Handy-Symbol, Kopfzeile und X nicht; der Name steht ueber dem Knopf, wenn dort Platz ist, sonst rechts neben dem Auge.“
+    /// Kopfzeile wie im Spiel am Handy quer 64 Punkte hoch (Bild P12-229), X 40×40 oben rechts in der Kopfzeile. Name bis 180 × 28
+    /// Punkte (laengster Name mit Rand). Gegenprobe: der alte Platz (immer ueber dem Knopf) liegt am Handy quer auf der Kopfzeile.
+    /// </summary>
+    [Fact]
+    public void Name_UeberDemKnopfOderNebenDemAuge_UeberlapptNichts_HandyQuer()
+    {
+        const double nameB = 180;
+        const double nameH = 28;
+        var funde = new List<string>();
+        var gegen = new List<string>();
+        static bool Ueber((double X1, double Y1, double X2, double Y2) a, (double X1, double Y1, double X2, double Y2) c) =>
+            a.X1 < c.X2 && c.X1 < a.X2 && a.Y1 < c.Y2 && c.Y1 < a.Y2;
+        static (double X1, double Y1, double X2, double Y2) Rund((double X, double Y) m, double d) => (m.X - (d / 2), m.Y - (d / 2), m.X + (d / 2), m.Y + (d / 2));
+        // dazu der Fall aus dem Bild P12-229 (Handy quer am Ausgang: Kopfzeile 64, unten die Karte mit dem Ortstext)
+        var faelle = Groessen.SelectMany(x => new[] { 180.0, 420.0, 0.0 }.Select(leiste => (x.Name, x.W, x.H, Unten: 86.0, Leiste: leiste)))
+            .Append(("S24 quer Bild", 832.0, 384.0, 121.0, 720.0));
+        foreach (var (name, w, h, unten, leiste) in faelle)
+        {
+            {
+                var b = leiste > 0 ? new Sticks.Bereich(w, h, 64, unten, (w - leiste) / 2, (w + leiste) / 2) : new Sticks.Bereich(w, h, 64, unten);
+                var wo = $"{name} Leiste {leiste}";
+                if (HandlungKnopf.Lage(b) is not { } l || HandlungKnopf.Name(b, nameB, nameH) is not { } nl || HandlungKnopf.NameUeber(b, nameH) is not { } alt)
+                {
+                    funde.Add(wo + ": keine Lage");
+                    continue;
+                }
+                var (g, k) = HandlungKnopf.Groesse(w, h);
+                var teile = new List<(string Was, (double X1, double Y1, double X2, double Y2) R)>
+                {
+                    ("Handlungsknopf", Rund(l.Handlung, g)),
+                    ("Auge", Rund(l.Ich, k)),
+                    ("Kopfzeile", (0, 0, w, b.Oben)),
+                    ("X", (w - 48, 8, w - 8, 48)),
+                };
+                if (HandlungKnopf.Telefon(b) is { } t)
+                {
+                    teile.Add(("Handy-Symbol", Rund(t, k)));
+                }
+                var n = (nl.Ecke.X, nl.Ecke.Y, nl.Ecke.X + nameB, nl.Ecke.Y + nameH);
+                foreach (var (was, r) in teile)
+                {
+                    if (Ueber(n, r))
+                    {
+                        funde.Add($"{wo}: Name ({n.Item1:F0}/{n.Item2:F0}) liegt auf {was}");
+                    }
+                }
+                for (var i = 0; i < teile.Count; i++)
+                {
+                    for (var j = i + 1; j < teile.Count; j++)
+                    {
+                        if (!(teile[i].Was is "Kopfzeile" && teile[j].Was is "X") && Ueber(teile[i].R, teile[j].R))
+                        {
+                            funde.Add($"{wo}: {teile[i].Was} liegt auf {teile[j].Was}");
+                        }
+                    }
+                }
+                if (n.Item1 < 0 || n.Item3 > w || n.Item4 > h)
+                {
+                    funde.Add($"{wo}: Name ausserhalb ({n.Item1:F0}/{n.Item2:F0})");
+                }
+                // Nicos Wortlaut: ueber dem Knopf, wo Platz ist; sonst rechts neben dem Auge
+                if (alt.Y >= b.Oben + 4 && nl.Ecke != alt && !teile.Any(x => x.Was == "Handy-Symbol" && Ueber((alt.X, alt.Y, alt.X + nameB, alt.Y + nameH), x.R)))
+                {
+                    funde.Add($"{wo}: Name trotz Platz nicht ueber dem Knopf");
+                }
+                var neben = (l.Ich.X + (k / 2) + HandlungKnopf.NameAbstand + 2, l.Ich.Y - (nameH / 2));
+                var nebenFrei = !teile.Any(x => x.Was == "Handy-Symbol" && Ueber((neben.Item1, neben.Item2, neben.Item1 + nameB, neben.Item2 + nameH), x.R));
+                if (alt.Y < b.Oben + 4 && nebenFrei && (nl.Ueber || n.Item1 < l.Ich.X + (k / 2) || Math.Abs(n.Item2 + (nameH / 2) - l.Ich.Y) > 1e-6))
+                {
+                    funde.Add($"{wo}: Name nicht rechts neben dem Auge ({n.Item1:F0}/{n.Item2:F0})");
+                }
+                if (alt.Y < b.Oben)
+                {
+                    gegen.Add(wo);
+                }
+            }
+        }
+        Assert.True(funde.Count == 0, string.Join("\n", funde));
+        // Gegenprobe: am Handy quer lag der alte Platz auf der Kopfzeile (Bild P12-229)
+        Assert.True(gegen.Contains("S24 quer Bild Leiste 720") && gegen.Contains("S24 quer Leiste 0"), "Gegenprobe greift nicht: " + string.Join(", ", gegen));
+        // ... und hoch, wo Platz ist, bleibt er ueber dem Knopf
+        Assert.True(HandlungKnopf.Name(new Sticks.Bereich(384, 832, 64, 86), nameB, nameH) is { Ueber: true });
+    }
 }

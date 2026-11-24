@@ -456,12 +456,16 @@ public sealed partial class SpielSeite
                 _handlungNameText.Text = h.Name;
                 _handlungName.Measure(Size.Infinity);
                 var ds = _handlungName.DesiredSize;
-                var links = p0.X + Math.Max(4, l.Handlung.X - (g / 2));
-                var oben = p0.Y + obenKante - 6 - ds.Height;
-                Canvas.SetLeft(_handlungName, links);
-                Canvas.SetTop(_handlungName, oben);
-                _handlungName.Arrange(new Rect(links, oben, ds.Width, ds.Height));
-                obenKante -= 6 + ds.Height;
+                // ueber dem Knopf; ist dort unter der Kopfzeile kein Platz (Handy quer), rechts neben dem Auge (Weisung P12-363)
+                if (HandlungKnopf.Name(bereich, ds.Width, ds.Height) is { } nl)
+                {
+                    var links = p0.X + nl.Ecke.X;
+                    var oben = p0.Y + nl.Ecke.Y;
+                    Canvas.SetLeft(_handlungName, links);
+                    Canvas.SetTop(_handlungName, oben);
+                    _handlungName.Arrange(new Rect(links, oben, ds.Width, ds.Height));
+                    obenKante = Math.Min(obenKante, nl.Ecke.Y);
+                }
             }
             if (_auswahl.IsVisible)
             {
