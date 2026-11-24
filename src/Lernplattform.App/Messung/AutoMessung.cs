@@ -88,10 +88,22 @@ public static partial class AutoMessung
         return (uhr.Elapsed.TotalMilliseconds, seite.Flaeche.LetzteZeichenzeitMs);
     }
 
-    /// <summary>Sammelliste 452: Teilschritte eines Gangs der Figur (Weg, Ankunft, Spielbild, Zeichnen als Dauer, fertiges Bild).</summary>
-    private static void GangTeile(string titel, double weg, double an, double? spielbild, double? zeichnen, double fertig, double speicher) =>
-        Teilschritte(titel, [("Weg gerechnet", weg), ("angekommen", an), ("Spielbild da", spielbild), ("Zeichnen (Dauer)", zeichnen), ("Bild fertig", fertig),
-            ("Speicherbereinigung (Dauer)", speicher)]);
+    /// <summary>
+    /// Sammelliste 452: Teilschritte eines Gangs der Figur (Weg, Ankunft, Spielbild, Zeichnen als Dauer, fertiges Bild), dazu
+    /// die Dauer der Tafel-Teile waehrend der Ankunft (Summe je Teil) und der Rest der Ankunft ohne Tafel.
+    /// </summary>
+    private static void GangTeile(string titel, double weg, double an, double? spielbild, double? zeichnen, double fertig, double speicher,
+        Dictionary<string, double>? tafel = null)
+    {
+        List<(string, double?)> teile = [("Weg gerechnet", weg), ("angekommen", an), ("Spielbild da", spielbild), ("Zeichnen (Dauer)", zeichnen),
+            ("Bild fertig", fertig), ("Speicherbereinigung (Dauer)", speicher)];
+        if (tafel is not null)
+        {
+            teile.Add(("Ankunft ohne Tafel (Dauer)", an - weg - tafel.Values.Sum()));
+            teile.AddRange(tafel.Select(t => ("Tafel " + t.Key + " (Dauer)", (double?)t.Value)));
+        }
+        Teilschritte(titel, teile);
+    }
 
     /// <summary>Teilschritte der ersten Messung des letzten <see cref="BildMessenAsync"/> (Bauen, erstes Bild).</summary>
     private static void TeileNotieren(string titel) =>

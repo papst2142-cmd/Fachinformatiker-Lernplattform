@@ -1246,8 +1246,27 @@ public sealed partial class SpielSeite : Grid
         return wahl;
     }
 
+    /// <summary>
+    /// Sammelliste 452 (Weisung P12-370): Start-Test misst, wie lange die Teile der Tafel brauchen (Summe je Teil ueber alle
+    /// Aufrufe, solange gesetzt); null = nicht messen. Nur Bericht, aendert nichts an der Tafel.
+    /// </summary>
+    internal Dictionary<string, double>? BeschriftenTeile { get; set; }
+
+    private long _teilBeginn;
+
+    private void Teil(string name)
+    {
+        if (BeschriftenTeile is { } teile)
+        {
+            var jetzt = Stopwatch.GetTimestamp();
+            teile[name] = teile.GetValueOrDefault(name) + Stopwatch.GetElapsedTime(_teilBeginn, jetzt).TotalMilliseconds;
+            _teilBeginn = jetzt;
+        }
+    }
+
     internal void Beschriften()
     {
+        _teilBeginn = Stopwatch.GetTimestamp();
         var inv = CultureInfo.InvariantCulture;
         var teile = new List<string>();
         if (Flaeche.GlBereit && !_ersatzErzwungen)
@@ -1262,6 +1281,7 @@ public sealed partial class SpielSeite : Grid
         _probeZeile.Text = string.Join(" · ", teile);
         _probeZeile.IsVisible = teile.Count > 0;
         GrafikAnwenden();
+        Teil("Probezeile und Grafik");
         var leistung = Flaeche.GlBereit && !_ersatzErzwungen && Core.Spiel.Probe.Leistungsanzeige.Lesen(Programm.Zustand.Werte);
         _leistungZeile.IsVisible = leistung;
         if (leistung)
@@ -1270,6 +1290,7 @@ public sealed partial class SpielSeite : Grid
             var zeile = Core.Spiel.Probe.Leistungsanzeige.Zeile(Flaeche.BilderJeSekunde, Flaeche.LetzteDreiecke, Flaeche.LetzteZeichenaufrufe);
             _leistungZeile.Text = Flaeche.Belastung.Aktuell is { } last ? zeile + "\n" + Core.Spiel.Probe.GrafikTexte.Kurzzeile(last) : zeile;
         }
+        Teil("Leistung");
         if (Spiel is not { } spiel)
         {
             _betreten.IsVisible = _zurStadt.IsVisible = _warten.IsVisible = false;
@@ -1280,12 +1301,15 @@ public sealed partial class SpielSeite : Grid
         _kopfzeile.Text = spiel.Kopfzeile;
         // Weisung P12-307 Fund 2: mit „Antippen zum Gehen“ aus verspricht die Tafel kein Antippen (ohne 3D wie immer)
         _zeile.Text = SpielProbeTexte.Tafelzeile(spiel.Zeile, AntippenGilt);
+        Teil("Kopf und Zeile");
         HinweisfeldZeigen(spiel);
+        Teil("Hinweisfeld");
         _betreten.IsVisible = spiel.KannBetreten;
         // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss
         _zurStadt.IsVisible = spiel.ImInnenraum && !spiel.Einrichten && spiel.Etage == 0;
         _warten.IsVisible = spiel.KannWarten;
         OrteKnoepfeSetzen(spiel);
+        Teil("Orte-Knoepfe");
         if (spiel.ImInnenraum && _ortsliste.IsVisible && !_ersatz.IsVisible && !OrtslisteAltFuerTests)
         {
             // Patch A 0.75.1 (Sammelliste 343): drinnen gibt es den Knopf „Orte“ nicht; eine offene Ortsliste blieb sonst
@@ -1294,7 +1318,9 @@ public sealed partial class SpielSeite : Grid
         }
         _einrichten.IsVisible = spiel.KannEinrichten;
         IchKnopfSetzen();
+        Teil("Ich-Knopf");
         HaltungKnoepfeSetzen();
+        Teil("Haltung-Knoepfe");
         if (_einrichten.Content is TextBlock einrichtenText)
         {
             einrichtenText.Text = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
@@ -1304,10 +1330,15 @@ public sealed partial class SpielSeite : Grid
             _einrichten.Content = spiel.Einrichten ? SpielProbeTexte.Fertig : SpielProbeTexte.Einrichten;
         }
         TafelBauen(spiel);
+        Teil("Tafel bauen");
         BusZeitenSetzen();
+        Teil("Buszeiten");
         QuestKnopfSetzen(spiel);
+        Teil("Quest-Knopf");
         HandlungSetzen();
+        Teil("Handlung");
         QuestZeileSetzen();
+        Teil("Quest-Zeile");
     }
 
     private readonly Button _ichKnopf;

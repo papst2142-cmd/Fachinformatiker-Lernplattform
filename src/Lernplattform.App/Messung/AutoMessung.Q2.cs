@@ -147,13 +147,16 @@ public static partial class AutoMessung
                 var u = Stopwatch.StartNew();
                 spiel.GeheZu(q.X, q.Z);
                 var weg = u.Elapsed.TotalMilliseconds;
+                seite.BeschriftenTeile = [];
                 spiel.SofortAnkommen();
                 var an = u.Elapsed.TotalMilliseconds;
+                var tafel = seite.BeschriftenTeile;
+                seite.BeschriftenTeile = null;
                 var (spielbild, zeichnen) = await SpielbildAsync(seite, gl, u);
                 await ansicht.BildFertigAsync();
                 var ms = u.Elapsed.TotalMilliseconds;
                 // Sammelliste 452: Teilschritte jeder Messung, nur Bericht (aendert kein Urteil)
-                GangTeile("Spiel: Questgeber draussen ansprechen, Messung " + reihe, weg, an, spielbild, zeichnen, ms, (GC.GetTotalPauseDuration() - gc).TotalMilliseconds);
+                GangTeile("Spiel: Questgeber draussen ansprechen, Messung " + reihe, weg, an, spielbild, zeichnen, ms, (GC.GetTotalPauseDuration() - gc).TotalMilliseconds, tafel);
                 return ms;
             }
             var erstes = await Ansprechen();

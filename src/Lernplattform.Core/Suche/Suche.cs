@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Lernplattform.Core.Dashboard;
 using Lernplattform.Core.Design;
 using Lernplattform.Core.Inhalte;
@@ -45,35 +46,67 @@ public sealed class Suchtext
 
     private static int _aufbauten;
 
-    public Suchtext(Lerninhalte inhalte) : this(inhalte, PythonKlein.Klein)
+    public Suchtext(Lerninhalte inhalte) : this(inhalte, PythonKlein.Klein, Vorrat)
     {
     }
 
     /// <param name="klein">Kleinschreibung (nur Tests setzen eine andere, Kontrollfehler).</param>
-    internal Suchtext(Lerninhalte inhalte, Func<string, string> klein)
+    internal Suchtext(Lerninhalte inhalte, Func<string, string> klein) : this(inhalte, klein, null)
+    {
+    }
+
+    /// <summary>
+    /// Sammelliste 451 (Weisung P12-370): fertige Eintraege je Lerninhalt (Treffer und kleingeschriebene Texte). Nach einem
+    /// Wechsel der Fachrichtung baut der neue Suchtext nur die Eintraege neu, die noch keiner gebaut hat; die gemeinsamen
+    /// Inhalte (si und schon geladene Fachrichtungen) sind dieselben Objekte und werden uebernommen. Vorher legte jeder
+    /// Aufbau rund 25 MB neu an (alle Texte klein geschrieben), die Speicherbereinigung hielt dabei auch die Oberflaeche an.
+    /// Ein Lerninhalt aendert sich nach dem Laden nie; der Eintrag ist derselbe wie ohne Vorrat (SucheTests).
+    /// </summary>
+    private static readonly ConditionalWeakTable<Lerninhalt, Eintrag> Vorrat = new();
+
+    private sealed record Eintrag(SuchTreffer Treffer, string[] Texte);
+
+    private Suchtext(Lerninhalte inhalte, Func<string, string> klein, ConditionalWeakTable<Lerninhalt, Eintrag>? vorrat)
     {
         Klein = klein;
+        void Neu(Lerninhalt inhalt, Func<Lerninhalt, Eintrag> bauen)
+        {
+            var eintrag = vorrat is null ? bauen(inhalt) : vorrat.GetValue(inhalt, i => bauen(i));
+            _eintraege.Add((eintrag.Treffer, eintrag.Texte));
+        }
         foreach (var karte in inhalte.Karteikarten)
         {
-            var (frage, antwort) = (karte.Frage ?? "", karte.Text("a_full") ?? "");
-            _eintraege.Add((new SuchTreffer(SucheTexte.ArtKarte, karte.Fachbereich, frage, antwort), [klein(frage), klein(antwort)]));
+            Neu(karte, k =>
+            {
+                var (frage, antwort) = (k.Frage ?? "", k.Text("a_full") ?? "");
+                return new(new SuchTreffer(SucheTexte.ArtKarte, k.Fachbereich, frage, antwort), [klein(frage), klein(antwort)]);
+            });
         }
         foreach (var quiz in inhalte.Quizfragen)
         {
-            var (frage, erklaerung) = (quiz.Frage ?? "", quiz.Text("exp") ?? "");
-            _eintraege.Add((new SuchTreffer(SucheTexte.ArtQuiz, quiz.Fachbereich, frage, erklaerung), [klein(frage), klein(erklaerung)]));
+            Neu(quiz, q =>
+            {
+                var (frage, erklaerung) = (q.Frage ?? "", q.Text("exp") ?? "");
+                return new(new SuchTreffer(SucheTexte.ArtQuiz, q.Fachbereich, frage, erklaerung), [klein(frage), klein(erklaerung)]);
+            });
         }
         foreach (var (art, liste) in new[] { (SucheTexte.ArtAp2, inhalte.Ap2Szenarien), (SucheTexte.ArtAp1, inhalte.Ap1Szenarien) })
         {
             foreach (var szenario in liste)
             {
-                var (titel, text) = (szenario.Titel ?? "", szenario.Text("text") ?? "");
-                var heuhaufen = titel + text + (szenario.Text("solution") ?? "");
-                _eintraege.Add((new SuchTreffer(art, szenario.Fachbereich, titel, text.Split('\n')[0]), [klein(heuhaufen)]));
+                Neu(szenario, sz =>
+                {
+                    var (titel, text) = (sz.Titel ?? "", sz.Text("text") ?? "");
+                    var heuhaufen = titel + text + (sz.Text("solution") ?? "");
+                    return new(new SuchTreffer(art, sz.Fachbereich, titel, text.Split('\n')[0]), [klein(heuhaufen)]);
+                });
             }
         }
         Interlocked.Increment(ref _aufbauten);
     }
+
+    /// <summary>Fuer Tests: die Eintraege in Suchreihenfolge (Treffer und kleingeschriebene Texte).</summary>
+    internal IReadOnlyList<(SuchTreffer Treffer, string[] Texte)> Eintraege => _eintraege;
 
     internal Func<string, string> Klein { get; }
 
