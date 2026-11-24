@@ -94,10 +94,16 @@ public sealed class RahmenplanGewicht
             var themen = r!["themen"] is JsonArray liste && liste.Count > 0
                 ? liste.Select(t => (string)t!).ToHashSet(StringComparer.Ordinal)
                 : null;
-            // Python re: Muster auf Kleinschreibung; Gleichheit belegt G16 fuer alle Inhalte
-            return ((string)r["id"]!, themen, Muster.GetOrAdd((string)r["stichworte"]!,
-                m => new Regex(m, RegexOptions.CultureInvariant | RegexOptions.Compiled)));
+            // Python re: Muster auf Kleinschreibung; Gleichheit belegt G16 fuer alle Inhalte.
+            // Weisung P12-369 (Nico 24.11.2026): Muster erst beim ersten Gebrauch uebersetzen (mit der Vorab-Tabelle
+            // braucht der Start meist keines; das Uebersetzen kostete kalt den groessten Teil der Zeit).
+            var stichworte = (string)r["stichworte"]!;
+            return ((string)r["id"]!, themen, stichworte);
         }).ToList();
+        static bool Trifft(string muster, string text) =>
+            Muster.GetOrAdd(muster, m => new Regex(m, RegexOptions.CultureInvariant | RegexOptions.Compiled)).IsMatch(text);
+        // Weisung P12-369: fertige Zuordnung aus der Vorab-Tabelle, wenn die Regeln gleich sind (Pruefsumme)
+        var vorab = OhneVorabFuerTests.Value ? null : RahmenplanVorab.Fuer(zuordnung);
 
         // _compute_item_points: gleicher Fragetext spaeter ueberschreibt frueher (dict wie Python).
         // Phase 11 FW1 (Sammelliste 175): die Stichwort-Suche je Inhalt (Kleinschreibung und Muster, rein lesend)
@@ -110,24 +116,40 @@ public sealed class RahmenplanGewicht
             .SelectMany(q => q.Item2.Select(eintrag => (Quelle: q.Item1, Eintrag: eintrag, Felder: q.Item3)))
             .ToList();
         var punkte = new List<string>[eintraege.Count];
+        var einzeln = OhneVorabFuerTests.Value ? new string?[eintraege.Count] : null;
         Parallel.For(0, eintraege.Count, i =>
         {
-            var (_, eintrag, felder) = eintraege[i];
+            var (quelle, eintrag, felder) = eintraege[i];
             if (eintrag.Daten["rahmenplan"] is JsonArray eigene && eigene.Count > 0)
             {
                 punkte[i] = eigene.Select(p => p is JsonValue w && w.TryGetValue<string>(out var id) ? id : "").ToList();
                 return;
             }
             var thema = eintrag.Thema;
-            var text = Klein(string.Join(" ", felder.Select(eintrag.Text).OfType<string>()));
-            var treffer = regeln.Where(r => (r.themen is null || (thema is not null && r.themen.Contains(thema))) && r.Item3.IsMatch(text))
+            var roh = string.Join(" ", felder.Select(eintrag.Text).OfType<string>());
+            if (vorab is not null && vorab.TryGetValue(RahmenplanVorab.Schluessel(quelle, thema, roh), out var fertig))
+            {
+                punkte[i] = [.. fertig];
+                Interlocked.Increment(ref _ausVorab);
+                return;
+            }
+            var text = Klein(roh);
+            var treffer = regeln.Where(r => (r.themen is null || (thema is not null && r.themen.Contains(thema))) && Trifft(r.Item3, text))
                 .Select(r => r.Item1).ToList();
+            if (einzeln is not null)
+            {
+                einzeln[i] = RahmenplanVorab.Schluessel(quelle, thema, roh);
+            }
             if (treffer.Count == 0 && thema is not null && standard.TryGetValue(thema, out var vorgabe))
             {
                 treffer = [vorgabe];
             }
             punkte[i] = treffer;
         });
+        if (einzeln is not null)
+        {
+            Einzeln = [.. einzeln.Select((s, i) => (s, punkte[i])).Where(e => e.s is not null).Select(e => (e.s!, (IReadOnlyList<string>)e.Item2))];
+        }
         for (var i = 0; i < eintraege.Count; i++)
         {
             var schluessel = (eintraege[i].Quelle, eintraege[i].Eintrag.Frage!);
@@ -138,6 +160,17 @@ public sealed class RahmenplanGewicht
 
     /// <summary>Lernfelder (Kennung -> Stunden).</summary>
     public IReadOnlyDictionary<string, int> Lernfelder { get; }
+
+    private int _ausVorab;
+
+    /// <summary>Weisung P12-369: Schluessel und gerechnete Punkte je Inhalt (nur mit <see cref="OhneVorabFuerTests"/>).</summary>
+    internal IReadOnlyList<(string Schluessel, IReadOnlyList<string> Punkte)> Einzeln { get; } = [];
+
+    /// <summary>Weisung P12-369: Zahl der Inhalte, deren Punkte aus der Vorab-Tabelle kamen (Tests, Messung).</summary>
+    public int AusVorab => _ausVorab;
+
+    /// <summary>Weisung P12-369: Vorab-Tabelle abschalten (nur Tests, AsyncLocal wie Sammelliste 307).</summary>
+    internal static readonly AsyncLocal<bool> OhneVorabFuerTests = new();
 
     /// <summary>item_points: Punkte je Inhalt (Quelle, Fragetext).</summary>
     public IReadOnlyList<string> Punkte(string quelle, string schluessel) =>
