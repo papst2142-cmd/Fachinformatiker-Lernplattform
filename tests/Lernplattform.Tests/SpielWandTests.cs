@@ -185,11 +185,16 @@ public sealed class SpielWandTests
         Assert.False(KastenDurch(new Teil(TeilArt.Quader, 1, 0, 0, 2, 1, 0.5f, Vector3.Zero), aussen, new Vector2(5, 5)));
     }
 
-    /// <summary>Ein gezeichneter Quader eines Wandstuecks; <see cref="Aussen"/> zeigt bei einer Aussenwand nach draussen, sonst 0.</summary>
-    internal readonly record struct WandTeil(Teil Q, Vector2 Aussen);
+    /// <summary>
+    /// Ein gezeichneter Quader eines Wandstuecks; <see cref="Aussen"/> zeigt bei einer Aussenwand nach draussen, sonst 0.
+    /// <see cref="Quer"/>: die Wand laeuft laengs z (Dicke in x); null = aus der Form des Quaders. Welle A 1.6.0 (Sammelliste 443):
+    /// aus dem ganzen Wandstueck, weil ein Pfosten der Zarge (0,06 laengs, 0,16 dick) sonst als Wand quer zur echten Wand galt.
+    /// </summary>
+    internal readonly record struct WandTeil(Teil Q, Vector2 Aussen, bool? Quer = null);
 
     internal static IEnumerable<WandTeil> WandQuader(Innenraum innen) =>
-        innen.Waende.SelectMany(w => innen.Teile.Skip(w.Von).Take(w.Bis - w.Von).Where(t => t.Art == TeilArt.Quader).Select(t => new WandTeil(t, w.Aussen)));
+        innen.Waende.SelectMany(w => innen.Teile.Skip(w.Von).Take(w.Bis - w.Von).Where(t => t.Art == TeilArt.Quader)
+            .Select(t => new WandTeil(t, w.Aussen, w.Max.X - w.Min.X <= w.Max.Z - w.Min.Z)));
 
     /// <summary>
     /// Alle Funde eines Raums (oder nur der genannten Stuecke). "Durch die Wand" heisst: ein Teil reicht ueber die Mitte der
@@ -265,7 +270,7 @@ public sealed class SpielWandTests
         var q = w.Q;
         var lo = new Vector3(MathF.Min(q.X1, q.X2), MathF.Min(q.Y1, q.Y2), MathF.Min(q.Z1, q.Z2));
         var hi = new Vector3(MathF.Max(q.X1, q.X2), MathF.Max(q.Y1, q.Y2), MathF.Max(q.Z1, q.Z2));
-        var quer = hi.X - lo.X <= hi.Z - lo.Z;   // Wand laeuft laengs z: Dicke in x
+        var quer = w.Quer ?? hi.X - lo.X <= hi.Z - lo.Z;   // Wand laeuft laengs z: Dicke in x
         lo.Y += Spiel;
         hi.Y -= Spiel;
         if (quer)

@@ -629,6 +629,11 @@ public sealed partial class StadtSpiel
         {
             return BusWeiter(sekunden);
         }
+        // Welle A 1.6.0 (Sammelliste 443): vor einer geschlossenen Tuer bleibt die Figur stehen
+        if (ImInnenraum)
+        {
+            WegVorTuerKuerzen();
+        }
         var rest = sekunden * Tempo;
         var halbVorher = Math.Floor(Schrittweg / (Zyklus / 2));
         Schrittweg += rest;
@@ -999,7 +1004,8 @@ public sealed partial class StadtSpiel
             }
             knoepfe = [.. knoepfe, (Charakter.Aktion, Charakter.KnopfOeffnen)];
         }
-        Knoepfe = [.. EtagenKnoepfe(GlastuerKnoepfe(innen, HaltungKnoepfe(innen, SpielweltKnoepfe(innen, knoepfe, fx, fz))))];
+        // Welle A 1.6.0 (Sammelliste 443): an einer Raumtuer zuerst „Tür öffnen“/„Tür schließen“
+        Knoepfe = [.. EtagenKnoepfe(TuerKnoepfe(innen, GlastuerKnoepfe(innen, HaltungKnoepfe(innen, SpielweltKnoepfe(innen, knoepfe, fx, fz)))))];
     }
 
     /// <summary>
@@ -1178,6 +1184,11 @@ public sealed partial class StadtSpiel
         if (GlastuerAktion(aktion))
         {
             // Welle A 0.99.0: Glastuer am Serverschrank (nur Darstellung)
+            return true;
+        }
+        if (TuerAktion(aktion))
+        {
+            // Welle A 1.6.0 (Sammelliste 443): Raumtuer oeffnen oder schliessen (nur Darstellung und Sperre)
             return true;
         }
         if (MitfahrtAktion(aktion))

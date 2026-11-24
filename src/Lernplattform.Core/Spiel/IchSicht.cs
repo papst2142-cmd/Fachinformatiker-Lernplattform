@@ -132,11 +132,25 @@ public sealed class IchSicht
         return mitte;
     }
 
-    /// <summary>Waagrechter Abstand eines Punkts zum Kasten eines Wandstuecks (0 = darin).</summary>
+    /// <summary>
+    /// Waagrechter Abstand eines Punkts zum Kasten eines Wandstuecks (0 = darin). Welle A 1.6.0 (Sammelliste 443): bei der Zarge einer
+    /// Raumtuer zaehlen nur die zwei Pfosten (Sturz und Querholz liegen in der Ich-Sicht weit ueber dem Auge, Test
+    /// <c>IchSichtTests.Drinnen_NieEineWandAnDerNahenEbene_JedeBegehbareZelle</c>); sonst kaeme das Auge im Durchgang nicht vor.
+    /// </summary>
     public static float AbstandZurWand(Vector2 p, InnenWand w)
     {
-        var dx = MathF.Max(MathF.Max(w.Min.X - p.X, 0), p.X - w.Max.X);
-        var dz = MathF.Max(MathF.Max(w.Min.Z - p.Y, 0), p.Y - w.Max.Z);
+        if (w.Tuer is { } t)
+        {
+            var (von, bis) = Innenraum.TuerPfosten(t);
+            return MathF.Min(Abstand(p, von.Min, von.Max), Abstand(p, bis.Min, bis.Max));
+        }
+        return Abstand(p, new Vector2(w.Min.X, w.Min.Z), new Vector2(w.Max.X, w.Max.Z));
+    }
+
+    private static float Abstand(Vector2 p, Vector2 min, Vector2 max)
+    {
+        var dx = MathF.Max(MathF.Max(min.X - p.X, 0), p.X - max.X);
+        var dz = MathF.Max(MathF.Max(min.Y - p.Y, 0), p.Y - max.Y);
         return MathF.Sqrt((dx * dx) + (dz * dz));
     }
 
@@ -150,6 +164,11 @@ public sealed class IchSicht
     /// </summary>
     public static float FigurDrehung(Kamera k, StadtSpiel s) =>
         k.IchAnteil >= NahAb && s.Haltung is null ? DrehungZu(k.Drehung) : s.FigurRichtung;
+
+    private static readonly AsyncLocal<bool> BetretenAlt = new();
+
+    /// <summary>Welle A 1.6.0 (Sammelliste 442): Gegenprobe, true = beim Betreten bleibt die Drehung von draussen (bis A 1.5.0). AsyncLocal.</summary>
+    public static bool BetretenAltFuerTests { get => BetretenAlt.Value; set => BetretenAlt.Value = value; }
 
     /// <summary>Drehung der Kamera, die in die Richtung der Figur schaut (Figur 0 = +Z, Kamera 0 = Blick nach -Z).</summary>
     public static float DrehungZu(float figurRichtung) => ((figurRichtung + 180f) % 360f + 360f) % 360f;
@@ -167,7 +186,9 @@ public sealed class IchSicht
             {
                 // in ein Haus hinein oder hinaus: in der Ich-Sicht bleiben (ohne neuen Uebergang)
                 k.IchNeigung = alt.IchNeigung;
-                k.Drehung = alt.Drehung;
+                // Welle A 1.6.0 (Sammelliste 442, Weisung P12-359): beim Betreten schaut man in den Flur (in die Richtung der
+                // Figur, weg von der Eingangstuer), nicht mehr in die Richtung von draussen (die lag drinnen oft an einer Wand)
+                k.Drehung = s.Innen is not null && !BetretenAltFuerTests ? DrehungZu(s.FigurRichtung) : alt.Drehung;
                 if (_pause is null)
                 {
                     k.IchZiel = 1f;

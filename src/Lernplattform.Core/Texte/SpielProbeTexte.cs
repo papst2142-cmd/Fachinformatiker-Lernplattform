@@ -14,7 +14,7 @@ public static class SpielProbeTexte
     /// zwei Finger bzw. rechte Maustaste drehen und neigen, Rest-Zoom 7 bis 9, Ueberblick in der Karte im Handy (bis A 0.79.0:
     /// „Ziehen verschiebt die Ansicht … Pfeiltasten verschieben …“). Seit A 0.95.0 nennt er die Gehtasten W, A, S und D.
     /// </summary>
-    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. Am PC: W, A, S und D gehen, rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und F neigen. Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.";
+    public const string Hinweis = "Tippe auf ein Haus, seinen Namen oder einen freien Platz, um hinzugehen. Zwei Finger drehen und neigen die Kamera und zoomen ein wenig. Am PC: W, A, S und D gehen, rechte Maustaste dreht und neigt, Mausrad zoomt ein wenig, Q und E drehen, R und G neigen, F für die Handlung hier (Tür, Bus, Gegenstand). Ganz heranzoomen oder I führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.";
 
     /// <summary>Hinweis mit den gewaehlten Tasten (Tastenbelegung); mit Standard genau <see cref="Hinweis"/>.</summary>
     public static string HinweisFuer(Tasten tasten)
@@ -29,6 +29,8 @@ public static class SpielProbeTexte
             // ohne Taste fuers Neigen (Zusammenstoss mit einer eigenen Wahl aus frueherer Fassung) nennt der Hinweis keine
             + (tasten.Tasten(Tasten.Steiler).Contains(Tasten.OhneTaste) || tasten.Tasten(Tasten.Flacher).Contains(Tasten.OhneTaste)
                 ? "" : $", {T(Tasten.Steiler)} und {T(Tasten.Flacher)} neigen")
+            // Welle A 1.6.0 (Sammelliste 444): die Taste fuer die Handlung an der Stelle
+            + (tasten.Tasten(Tasten.Handeln).Contains(Tasten.OhneTaste) ? "" : $", {T(Tasten.Handeln)} für die Handlung hier (Tür, Bus, Gegenstand)")
             + ". Ganz heranzoomen"
             + (tasten.Tasten(Tasten.IchSicht).Contains(Tasten.OhneTaste) ? "" : $" oder {T(Tasten.IchSicht)}")
             + " führt in die Ich-Sicht. Die ganze Stadt zeigt die Karte im Handy.";
@@ -92,6 +94,13 @@ public static class SpielProbeTexte
 
     /// <summary>Knopf im Sitzen und im Liegen.</summary>
     public const string KnopfAufstehen = "Aufstehen";
+
+    /// <summary>Welle A 1.6.0 (Sammelliste 443, Weisung P12-360 Antwort 1c): Raumtuer, zu bis man sie oeffnet.</summary>
+    public const string KnopfTuerOeffnen = "Tür öffnen";
+
+    public const string KnopfTuerSchliessen = "Tür schließen";
+
+    public const string TuerIstZu = "Die Tür ist zu. Öffnen kannst du sie mit F oder dem Knopf über dem linken Stick.";
 
     /// <summary>Welle A 0.99.0 (Weisung P12-317 F2): Glastuer am Serverschrank (nur Darstellung).</summary>
     public const string KnopfGlastuerOeffnen = "Glastür öffnen";
@@ -246,6 +255,34 @@ public static class SpielProbeTexte
     public const string BlickfeldGrad = "{0}°";
 
     public const string BlickfeldSatz = "Wie weit du in der Ich-Sicht zur Seite siehst, von 60 bis 110 Grad (Vorgabe 90). Größer wirkt weiter und Räume geräumiger, kleiner wirkt näher. Die normale Kamera bleibt gleich.";
+
+    // ---- Welle A 1.6.0 (Sammelliste 444, Weisungen P12-359/P12-360): Handlung statt Dreieck-Menue ----
+
+    /// <summary>Name des runden Handy-Symbols am Daumen bzw. unten links (Screenreader, mit der Zahl der Auftraege).</summary>
+    public const string KnopfTelefon = "Handy";
+
+    /// <summary>Ueberschrift der kleinen Auswahl aller Handlungen (F bzw. Knopf gehalten).</summary>
+    public const string HandlungAuswahl = "Was möchtest du tun?";
+
+    /// <summary>Auswahl der Handlungen schliessen.</summary>
+    public const string HandlungAuswahlSchliessen = "Schließen";
+
+    /// <summary>Anzeige am PC: Taste und Haupthandlung, z. B. „F: Tür öffnen“.</summary>
+    public const string HandlungTaste = "{0}: {1}";
+
+    /// <summary>
+    /// Welle A 1.6.0 (Sammelliste 445/446, Weisung P12-360 Punkte 6 und 7): Regler „Empfindlichkeit“ in der Karte „Steuerung“
+    /// (PC und Handy gleich), Anzeige des Werts und der Satz darunter.
+    /// </summary>
+    public const string EmpfindlichkeitMaus = "Empfindlichkeit Maus";
+
+    public const string EmpfindlichkeitStickLinks = "Empfindlichkeit linker Stick (Gehen)";
+
+    public const string EmpfindlichkeitStickRechts = "Empfindlichkeit rechter Stick (Umsehen)";
+
+    public const string EmpfindlichkeitProzent = "{0} %";
+
+    public const string EmpfindlichkeitSatz = "Von 25 bis 200 Prozent (Vorgabe 100). Die Maus und der rechte Stick drehen den Blick schneller oder langsamer. Beim linken Stick reicht mehr oder weniger Ausschlag für dasselbe Tempo, schneller als volles Tempo geht die Figur nie.";
 
     public const string StickGehen = "Stick zum Gehen";
 

@@ -96,6 +96,7 @@ public static class Laufzeiten
             using (Nachsicht.Werkzeugansicht())
             {
                 var spiel = new StadtSpiel(stadt, StadtbauSpiel.Probestand(stadt.Inhalt), Ansicht3D.MitGebaeuden(grafik, stand), stand.Innenraeume);
+                spiel.TuerenOeffnenSelbst = true;
                 return spiel.Linie is null ? null : spiel;
             }
         }

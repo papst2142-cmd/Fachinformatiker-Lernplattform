@@ -3,6 +3,15 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.63.0
+
+Die Innenräume in der 3D-Ansicht haben jetzt Türen, genau wie im Spiel.
+
+- Jeder Raum bekommt eine Tür mit Rahmen in der Wand. Offene Bereiche und breite Durchgänge (breiter als 2,5) bleiben ohne Tür. Der Ausgang ist eine geschlossene Tür.
+- In der 3D-Ansicht des Werkzeugs öffnet die Figur jede Tür auf ihrem Weg von selbst, du musst nichts drücken. Im Spiel öffnet man sie mit F bzw. dem Knopf über dem linken Stick.
+- Die Anzeige der Grenzen zählt die Türen mit (Rahmen, Ausgangstür und die Türblätter als ein eigener Aufruf).
+- Deine Projekte und die Dateien für das Spiel bleiben, wie sie sind: Die Türen entstehen beim Bauen aus dem Grundriss, an der Datei ändert sich nichts.
+
 ## S 0.62.2
 
 Eine kleine Pflege-Version für die Winter-Ansicht in 3D.

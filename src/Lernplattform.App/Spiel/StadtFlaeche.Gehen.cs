@@ -59,7 +59,8 @@ public sealed partial class StadtFlaeche
     /// </summary>
     internal (double X, double Z) GehRichtung(Kamera kamera)
     {
-        var stick = _sticks.Links?.Eingabe ?? (0, 0);
+        // Welle A 1.6.0 (Sammelliste 446): Regler „Empfindlichkeit linker Stick“ (Vorgabe = unveraendert)
+        var stick = _sticks.Links is { } links ? Empfindlichkeit.Gehen(links.Eingabe) : (0, 0);
         if (_gehTasten.Count == 0 && stick == (0, 0))
         {
             return (0, 0);

@@ -64,6 +64,7 @@ public sealed partial class SpielSeite
     /// <summary>Lage, Sichtbarkeit, Symbol und Leuchten der runden Knoepfe (nach jeder Aenderung des Spiels und der Groesse).</summary>
     private void DaumenSetzen()
     {
+        HandlungKnoepfeLegen();
         if (_springenRund is null || _haltungRund is null)
         {
             return;
@@ -103,6 +104,21 @@ public enum DaumenSymbol
     Stehen,
     Ducken,
     Kriechen,
+
+    /// <summary>Welle A 1.6.0 (Sammelliste 444): Handlung an einer Tuer.</summary>
+    Tuer,
+
+    /// <summary>Welle A 1.6.0: Handlung an Bus oder Zug.</summary>
+    Bus,
+
+    /// <summary>Welle A 1.6.0: Handlung an einem Gegenstand oder einer Person.</summary>
+    Hand,
+
+    /// <summary>Welle A 1.6.0: Ich-Sicht an und aus.</summary>
+    Auge,
+
+    /// <summary>Welle A 1.6.0 (Weisung P12-361): das Spiel-Handy.</summary>
+    Telefon,
 }
 
 /// <summary>
@@ -251,6 +267,36 @@ public sealed class DaumenKnopf : Klickflaeche
                 Linie("M12.5,9.5 L10.5,15.5");
                 Linie("M12,11 L17,13.5");
                 Linie("M10.5,15.5 L16,16.5 L16,21.5 M10.5,15.5 L7.5,21.5");
+                break;
+            case DaumenSymbol.Tuer:
+                // Welle A 1.6.0 (Sammelliste 444): Tuer mit Rahmen, Klinke und Boden
+                Linie("M3,21.5 L21,21.5", 2);
+                Linie("M6.5,21.5 L6.5,2.5 L17.5,2.5 L17.5,21.5");
+                Linie("M9.5,21.5 L9.5,5.5 L17.5,5.5", 1.6);
+                Kopf(14.8, 12.8, 1.4);
+                break;
+            case DaumenSymbol.Bus:
+                Linie("M5,3.5 L19,3.5 Q20.5,3.5 20.5,5 L20.5,17.5 L3.5,17.5 L3.5,5 Q3.5,3.5 5,3.5 Z");
+                Linie("M3.5,10.5 L20.5,10.5", 2);
+                Linie("M12,3.5 L12,10.5", 1.6);
+                Kopf(7.5, 19.8, 1.9);
+                Kopf(16.5, 19.8, 1.9);
+                break;
+            case DaumenSymbol.Hand:
+                // offene Hand: Handflaeche und vier Finger, Daumen seitlich
+                Linie("M8,21 L8,13 Q8,11 6.5,10 L4.5,8.5", 2.2);
+                Linie("M8,13 L8,4.5 M11,12 L11,3 M14,12 L14,4 M17,13 L17,6.5", 2.2);
+                Linie("M17,13 L17,16 Q17,21 12.5,21 L8,21", 2.2);
+                break;
+            case DaumenSymbol.Telefon:
+                // Welle A 1.6.0 (Weisung P12-361): Handy hochkant mit Bildschirm und Knopf
+                Linie("M8.5,2.5 L15.5,2.5 Q17.5,2.5 17.5,4.5 L17.5,19.5 Q17.5,21.5 15.5,21.5 L8.5,21.5 Q6.5,21.5 6.5,19.5 L6.5,4.5 Q6.5,2.5 8.5,2.5 Z", 2.2);
+                Linie("M9,5.5 L15,5.5 L15,16.5 L9,16.5 Z", 1.4);
+                Linie("M11,19 L13,19", 2);
+                break;
+            case DaumenSymbol.Auge:
+                Linie("M2,12 Q12,3 22,12 Q12,21 2,12 Z", 2.2);
+                Kopf(12, 12, 3.2);
                 break;
             default:
                 // kriechend (Chat-Hinweis P12-320: groesser und klar, Kopf, Arme und Beine deutlich): Kopf vorn rechts, Ruecken
