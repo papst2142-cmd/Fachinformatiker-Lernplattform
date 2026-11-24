@@ -112,20 +112,31 @@ public static partial class AutoMessung
                 }
                 var uhr = Stopwatch.StartNew();
                 await ansicht.ZeigeAsync(id);
+                var gezeigt = uhr.Elapsed.TotalMilliseconds;
+                IEnumerable<(string Name, double Ms)> innen = [];
                 switch (ansicht.GebauteSeiten[id])
                 {
                     case KarteikartenSeite karten:
                         await karten.Geladen;
+                        innen = karten.Teilzeiten;
                         break;
                     case TrainerSeite neu:
                         await neu.Geladen;
+                        innen = neu.Teilzeiten;
                         break;
                     case SzenarioSeite szenarien:
                         await szenarien.Geladen;
                         break;
                 }
+                var geladen = uhr.Elapsed.TotalMilliseconds;
                 await ansicht.BildFertigAsync();
-                funde += Ergebnis(seite + " " + name + " (erstes Oeffnen, bis zum Bild)", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Geraetegrenze));
+                var titel = seite + " " + name + " (erstes Oeffnen, bis zum Bild)";
+                funde += Ergebnis(titel, Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Geraetegrenze));
+                // Weisung P12-369 Punkt 4: Teilschritte (Seite gebaut und gezeigt, Inhalt geladen, erstes Bild), nur Bericht;
+                // "Seite:" = Zeitpunkte in der Seite ab ihrem Bauen
+                Teilschritte(seite + " " + name + " (erstes Oeffnen)",
+                    new (string, double?)[] { ("Seite gebaut und gezeigt", gezeigt), ("Inhalt geladen", geladen), ("erstes Bild", uhr.Elapsed.TotalMilliseconds) }
+                        .Concat(innen.Select(t => ("Seite: " + t.Name, (double?)t.Ms))));
             }
 
             // 4. Klausurauswahl: Pruefungstrainer neu gebaut (Sicht der Fachrichtung), Wechsel zu "Prüfung" bis zum Bild (streng)

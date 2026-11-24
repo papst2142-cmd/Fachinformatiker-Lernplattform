@@ -69,22 +69,30 @@ public sealed class KarteikartenSeite : UserControl
     /// <summary>Zeit vom Bauen der Seite bis die erste Karte steht (Messwert).</summary>
     public double? InhaltMs { get; private set; }
 
+    /// <summary>Weisung P12-369 Punkt 4: Zeitpunkte ab dem Bauen der Seite (Laden, erstes Bauen), nur fuer den Bericht.</summary>
+    public List<(string Name, double Ms)> Teilzeiten { get; } = [];
+
     private async Task LadenAsync()
     {
         try
         {
             var inhalte = await Zustand.Inhalte;
+            Teilzeiten.Add(("Inhalte da", _uhr.Elapsed.TotalMilliseconds));
             if (inhalte is null)
             {
                 return;
             }
             var gewicht = await Zustand.Gewicht;
+            Teilzeiten.Add(("Gewichte da", _uhr.Elapsed.TotalMilliseconds));
             var karten = await Task.Run(() => new Karteikarten(inhalte, Zustand.BuchLesen, Zustand.Schreiber,
                 () => Zustand.NeuReihenfolge(gewicht, Quellen.Karte)));
+            Teilzeiten.Add(("Lernstand gelesen", _uhr.Elapsed.TotalMilliseconds));
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                Teilzeiten.Add(("Oberflaeche frei", _uhr.Elapsed.TotalMilliseconds));
                 _k = karten;
                 Aufbauen(inhalte);
+                Teilzeiten.Add(("Seite aufgebaut", _uhr.Elapsed.TotalMilliseconds));
                 karten.NachSpeichern += () => Nachher();
                 karten.NachSpeichern += AbgleichDienst.NachDemLernen;     // L10: bald abgleichen (schedule)
                 foreach (var schritt in _wartend)

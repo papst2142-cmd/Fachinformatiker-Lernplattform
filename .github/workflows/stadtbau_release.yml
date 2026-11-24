@@ -39,7 +39,7 @@ env:
 
 jobs:
   pruefen:
-    name: pruefen (main, 18/18 oder werkzeug, Tag vS, Entwurf)
+    name: pruefen (main, 19/19 oder werkzeug, Tag vS, Entwurf)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -71,7 +71,7 @@ jobs:
           echo "anzeige=$(grep -m1 '^ANZEIGE=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
       # Weisung P12-20: Merge-Nachweis ist der volle Lauf 18/18 ODER der gruene Lauf werkzeug (6 Jobs, Waechter
       # nur_werkzeug.py) auf demselben Commit; urteil.py selbsttest prueft beide Listen gegen ci.yml
-      - name: Voller CI-Lauf 18/18 oder Lauf werkzeug 6/6 auf diesem Commit oder mit gleichem Tree
+      - name: Voller CI-Lauf 19/19 oder Lauf werkzeug 7/7 auf diesem Commit oder mit gleichem Tree
         id: lauf
         env:
           GH_TOKEN: ${{ github.token }}
@@ -88,7 +88,8 @@ jobs:
           tests (macos-15-intel, Einzeltests und Spiel)
           tests (macos-15-intel, Lernteil)
           tests (macos-15-intel, Metal)
-          tests (ubuntu-latest)
+          tests (ubuntu-latest, Einzeltests)
+          tests (ubuntu-latest, Lernteil und Spiel)
           tests (windows-latest, Einzeltests)
           tests (windows-latest, Layout 100)
           tests (windows-latest, Layout 150)
@@ -97,7 +98,8 @@ jobs:
           soll_werkzeug='android (APK, nur arm64-v8a, Testsignatur)
           pakete (stadtbau win-x64)
           release (Entwuerfe zusammenstellen)
-          tests (ubuntu-latest)
+          tests (ubuntu-latest, Einzeltests)
+          tests (ubuntu-latest, Lernteil und Spiel)
           tests (windows-latest, Einzeltests)
           sollwerte (Pruefsummen)'
           soll="$(echo "$soll" | sed 's/^ *//' | sort)"

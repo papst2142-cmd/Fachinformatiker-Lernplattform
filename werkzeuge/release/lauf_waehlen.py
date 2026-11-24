@@ -2,7 +2,7 @@
 
 Zuerst wie bisher ein gruener Lauf (Dispatch) auf genau dem Commit von main. Gibt es keinen, gilt ein gruener Lauf
 auf einem anderen Commit nur, wenn dessen Git-Tree gleich dem Tree des main-Kopfs ist (Datei fuer Datei derselbe
-Inhalt, z. B. der volle PR-Lauf vor dem Squash-Merge). Die Jobliste (18 bzw. 6), das Ergebnis jedes Jobs, der
+Inhalt, z. B. der volle PR-Lauf vor dem Squash-Merge). Die Jobliste (19 bzw. 7, seit Weisung P12-369), das Ergebnis jedes Jobs, der
 letzte Versuch und der Filter fuer den Hinweis-Job bleiben gleich streng. Ein anderer Tree: kein Release, Meldung
 "voller Lauf auf main noetig: Inhalt weicht ab" - nie still.
 

@@ -84,23 +84,31 @@ public sealed class TrainerSeite : UserControl
     /// <summary>Zeit vom Bauen der Seite bis die Vorbereitung steht (Messwert).</summary>
     public double? InhaltMs { get; private set; }
 
+    /// <summary>Weisung P12-369 Punkt 4: Zeitpunkte ab dem Bauen der Seite (Laden, erstes Bauen), nur fuer den Bericht.</summary>
+    public List<(string Name, double Ms)> Teilzeiten { get; } = [];
+
     private async Task LadenAsync()
     {
         try
         {
             var inhalte = await Zustand.Inhalte;
+            Teilzeiten.Add(("Inhalte da", _messuhr.Elapsed.TotalMilliseconds));
             if (inhalte is null)
             {
                 return;
             }
             var gewicht = await Zustand.Gewicht;
+            Teilzeiten.Add(("Gewichte da", _messuhr.Elapsed.TotalMilliseconds));
             var uebung = await Task.Run(() => new Uebung(inhalte, Zustand.BuchLesen, Zustand.Schreiber,
                 () => Zustand.NeuReihenfolge(gewicht, Quellen.Quiz)));
+            Teilzeiten.Add(("Lernstand gelesen", _messuhr.Elapsed.TotalMilliseconds));
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                Teilzeiten.Add(("Oberflaeche frei", _messuhr.Elapsed.TotalMilliseconds));
                 _u = uebung;
                 uebung.NachSpeichern += AbgleichDienst.NachDemLernen;     // L10: bald abgleichen (schedule)
                 Aufbauen(inhalte);
+                Teilzeiten.Add(("Seite aufgebaut", _messuhr.Elapsed.TotalMilliseconds));
                 foreach (var schritt in _wartend)
                 {
                     schritt(uebung);

@@ -43,9 +43,12 @@ public static partial class AutoMessung
         {
             var uhr = Stopwatch.StartNew();
             schritt();
+            var bauen = uhr.Elapsed.TotalMilliseconds;
             await ansicht.BildFertigAsync();
+            ErsteTeile ??= (bauen, uhr.Elapsed.TotalMilliseconds);
             return uhr.Elapsed.TotalMilliseconds;
         }
+        ErsteTeile = null;
         var erste = await Einmal();
         if (zurueck is null && !wiederholbar)
         {
@@ -54,6 +57,26 @@ public static partial class AutoMessung
         return await Messwiederholung.MessenAsync(erste, grenze, Einmal,
             zurueck is null ? null : async () => { zurueck(); await ansicht.BildFertigAsync(); }, Task.Delay);
     }
+
+    /// <summary>Weisung P12-369 Punkt 4: Teilschritte der ersten Messung von <see cref="BildMessenAsync"/>
+    /// (Schritt selbst = Bauen, danach bis zum fertigen Bild).</summary>
+    private static (double Bauen, double Bild)? ErsteTeile;
+
+    /// <summary>
+    /// Weisung P12-369 Punkt 4 (Nico 4a): Teilschritte eines Wackel-Messpunkts nur notieren (Zeitpunkte ab Beginn
+    /// der Messung). Aendert kein Urteil, misst nichts doppelt, waermt nichts vor; die Zeile beginnt mit
+    /// "Teilschritte [" und wird von keiner Auswertung als Messpunkt gelesen.
+    /// </summary>
+    internal static void Teilschritte(string titel, IEnumerable<(string Name, double? Ms)> teile)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        Messwerte.Notiere("  Teilschritte [" + titel + "] "
+            + string.Join(", ", teile.Select(t => t.Name + " " + (t.Ms is { } ms ? ms.ToString("F0", inv) : "?") + " ms")));
+    }
+
+    /// <summary>Teilschritte der ersten Messung des letzten <see cref="BildMessenAsync"/> (Bauen, erstes Bild).</summary>
+    private static void TeileNotieren(string titel) =>
+        Teilschritte(titel, [("Bauen", ErsteTeile?.Bauen), ("erstes Bild", ErsteTeile?.Bild)]);
 
     /// <summary>Weisung P4-12 B6: eine reine Rechnung (ohne Bild) messen, ueber der Grenze bis zu 3 Mal.</summary>
     private static async Task<Messreihe> RechnungMessenAsync(Func<double> rechnung, double grenze = Abbruch) =>
@@ -369,6 +392,9 @@ public static partial class AutoMessung
             {
                 funde += Ergebnis(titel, Messwiederholung.Einmal(ms, Abbruch));
             }
+            // Weisung P12-369 Punkt 4: Teilschritte (Laden im Hintergrund, erstes Bauen), nur Bericht
+            Teilschritte("Karteikarten bis erste Karte", kartenSeite.Teilzeiten.Select(t => (t.Name, (double?)t.Ms)));
+            Teilschritte("Pruefungstrainer bis Vorbereitung", trainerSeite.Teilzeiten.Select(t => (t.Name, (double?)t.Ms)));
         }
 
         Zeitplan("W3MesspunkteAsync");
@@ -1748,6 +1774,10 @@ public static partial class AutoMessung
                 var zurueckReiter = davor;
                 await Messpunkt($"Abschlussprojekt Reiter \"{name}\" ({runde}, bis zum Bild)", () => seite.Probe(reiter),
                     runde == "erstes Bauen" ? null : () => seite.Probe(zurueckReiter));
+                if (runde == "erstes Bauen")
+                {
+                    TeileNotieren($"Abschlussprojekt Reiter \"{name}\" (erstes Bauen)");   // Weisung P12-369 Punkt 4
+                }
                 davor = reiter;
             }
         }

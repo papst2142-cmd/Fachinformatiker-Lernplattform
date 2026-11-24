@@ -188,6 +188,7 @@ public static partial class AutoMessung
                 tafel.ProbeGeschaeft(Kleidung.Laden);
                 seite.TafelZeigen();
             }, tafel.AllesSchliessen, grenze: Geraetegrenze));
+        TeileNotieren("Spiel: Kaufhaus Sortiment");     // Weisung P12-369 Punkt 4: nur Bericht
         tafel.AllesSchliessen();
         await ansicht.BildFertigAsync();
         return funde;
