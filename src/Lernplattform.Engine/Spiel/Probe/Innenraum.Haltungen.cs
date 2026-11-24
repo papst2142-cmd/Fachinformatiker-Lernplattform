@@ -20,7 +20,13 @@ public sealed partial class Innenraum
     {
         // gemessen (alle Kleider, mit Muetze und Spitzhut): geduckt bis 0,85 hoch und 0,29 nach vorn (Handtasche), kriechend 0,477 nach hinten
         Koerperhaltung.Ducken => [(0.19f, 0f, 0.87f, -0.215f, 0.30f)],
-        Koerperhaltung.Kriechen => [(0.19f, 0f, 0.87f, -0.485f, 0.22f)],
+        Koerperhaltung.Kriechen when Figur.KriechenAltFuerTests => [(0.19f, 0f, 0.87f, -0.485f, 0.22f)],
+        // Welle A 1.7.0 (Sammelliste 447): flach auf dem Bauch (Figur.Robben, Figur.RobbenStill), gemessen ueber alle Bilder und alle
+        // Kleider: Kopf mit Spitzhut bis 0,503 hoch und 0,187 zur Seite (nur ab 0,267 hinter der Stelle), Arme bis 0,450 zur Seite,
+        // Beine bis 0,361, Fuesse bis 0,924 nach hinten; vorn 0,169. Die Figur selbst liegt ganz ueber dem Boden (KriechenBodenTests);
+        // weite Kleidung (Kapuze, Kleid, Jacke, Mantel) sinkt unter Brust und Bauch bis 0,035 in den Boden (unsichtbar), darum ab -0,04
+        Koerperhaltung.Kriechen => [(0.21f, -0.04f, 0.52f, -0.28f, 0.18f), (0.46f, -0.04f, 0.21f, -0.32f, 0.18f), (0.37f, -0.04f, 0.20f, -0.81f, -0.32f),
+            (0.18f, -0.04f, 0.20f, -0.935f, -0.81f)],
         _ => [(0.19f, 0f, 1.08f, -0.215f, 0.22f)],
     };
 
@@ -81,19 +87,24 @@ public sealed partial class Innenraum
     {
         var f = new Vector2(MathF.Sin(blick), MathF.Cos(blick));
         var q = new Vector2(f.Y, -f.X);
-        var (hinten, vorn, halb) = KoerperGrundflaeche(haltung);
         const float spiel = 0.02f;
-        float h = FigurHoehe, v = (vorn * h) + spiel, r = (hinten * h) + spiel, s = (halb * h) + spiel;
-        Vector2[] ecken = [ort + (f * v) + (q * s), ort + (f * v) - (q * s), ort - (f * r) - (q * s), ort - (f * r) + (q * s)];
-        if (ecken.Any(e => e.X < 0 || e.Y < 0 || e.X > Breite || e.Y > Tiefe))
-        {
-            return false;
-        }
-        if (UeberWand(ort, f, (hinten, vorn, halb), h, ort))
-        {
-            return false;
-        }
+        var h = FigurHoehe;
         var quader = KoerperQuader(haltung);
+        // je Quader seine Grundflaeche (bis A 1.6.0 hatte jede Haltung genau einen Quader, dort ist das dieselbe Pruefung wie mit
+        // KoerperGrundflaeche); seit A 1.7.0 liegt die Figur beim Kriechen flach, nur die Arme vorn reichen weit zur Seite
+        foreach (var (halb, _, _, z1, z2) in quader)
+        {
+            float v = (z2 * h) + spiel, r = (-z1 * h) + spiel, s = (halb * h) + spiel;
+            Vector2[] ecken = [ort + (f * v) + (q * s), ort + (f * v) - (q * s), ort - (f * r) - (q * s), ort - (f * r) + (q * s)];
+            if (ecken.Any(e => e.X < 0 || e.Y < 0 || e.X > Breite || e.Y > Tiefe))
+            {
+                return false;
+            }
+            if (UeberWand(ort, f, (-z1, z2, halb), h, ort))
+            {
+                return false;
+            }
+        }
         foreach (var (lo, hi) in Hindernisse())
         {
             if (QuaderBeruehrt(new Vector3(ort.X, 0, ort.Y), blick, quader, h, lo, hi))

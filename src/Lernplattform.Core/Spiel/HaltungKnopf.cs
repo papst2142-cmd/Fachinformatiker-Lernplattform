@@ -47,7 +47,17 @@ public static class HaltungKnopf
     /// Den Platz der Knoepfe haelt der rechte Stick frei (<see cref="Sperre"/>). Kein Platz (sehr flaches Bild, Haltung in der
     /// linken Haelfte): null. Bis A 0.99.0 (Gegenprobe <see cref="AltFuerTests"/>): ueber der Zone des rechten Sticks.
     /// </summary>
-    public static ((double X, double Y) Springen, (double X, double Y) Haltung)? Lage(Sticks.Bereich b)
+    public static Lagen? Lage(Sticks.Bereich b)
+    {
+        if (!Zwei.Value && !Alt.Value && !Ecke.Value)
+        {
+            return LageBogen(b);
+        }
+        return LageZwei(b) is { } l ? new Lagen(l.Springen, l.Haltung, null) : null;
+    }
+
+    /// <summary>Lage der zwei Knoepfe bis A 1.6.0 (Gegenproben <see cref="ZweiKnoepfeFuerTests"/>, <see cref="EckeFuerTests"/>, <see cref="AltFuerTests"/>).</summary>
+    private static ((double X, double Y) Springen, (double X, double Y) Haltung)? LageZwei(Sticks.Bereich b)
     {
         var (g, k) = Groesse(b.Breite, b.Hoehe);
         if (Alt.Value)
@@ -104,13 +114,136 @@ public static class HaltungKnopf
         {
             return default;
         }
-        var (g, k) = Groesse(b.Breite, b.Hoehe);
-        var x1 = Math.Min(l.Springen.X - (g / 2), l.Haltung.X - (k / 2)) - Rand;
-        var y1 = Math.Min(l.Springen.Y - (g / 2), l.Haltung.Y - (k / 2)) - Rand;
-        var x2 = Math.Max(l.Springen.X + (g / 2), l.Haltung.X + (k / 2)) + Rand;
-        var y2 = Math.Max(l.Springen.Y + (g / 2), l.Haltung.Y + (k / 2)) + Rand;
+        var (g, k) = Groessen(b.Breite, b.Hoehe);
+        var kreise = new List<((double X, double Y) M, double D)> { (l.Springen, g), (l.Knien, k) };
+        if (l.Liegen is { } liegen)
+        {
+            kreise.Add((liegen, k));
+        }
+        var x1 = kreise.Min(c => c.M.X - (c.D / 2)) - Rand;
+        var y1 = kreise.Min(c => c.M.Y - (c.D / 2)) - Rand;
+        var x2 = kreise.Max(c => c.M.X + (c.D / 2)) + Rand;
+        var y2 = kreise.Max(c => c.M.Y + (c.D / 2)) + Rand;
         return (x1, y1, x2, y2);
     }
+
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447, Weisung P12-367, Nico 1a: Anordnung B): Mittelpunkte der drei Knoepfe am rechten Daumen.
+    /// Springen (gross) unten rechts in der Ecke (<see cref="Rand"/> zu beiden Raendern, Daumenruhe), Hinknien und Hinlegen (klein)
+    /// im Bogen darueber (Winkel <see cref="KnienWinkel"/> und <see cref="LiegenWinkel"/> um die Mitte von Springen, Abstand
+    /// <see cref="Rand"/> zwischen den Kreisen). Reicht Hinknien bis an die Leiste (schmales Bild oder aufgeklappte Leiste), stehen alle
+    /// drei ueber der Leiste. Den Platz haelt der rechte Stick frei (<see cref="Sperre"/>). Kein Platz (Hinknien in der linken Haelfte
+    /// oder ein Knopf unter der Kopfzeile): null.
+    /// </summary>
+    private static Lagen? LageBogen(Sticks.Bereich b)
+    {
+        var (g, k) = Groessen(b.Breite, b.Hoehe);
+        var sp = (X: b.Breite - Rand - (g / 2), Y: b.Hoehe - Rand - (g / 2));
+        var r = (g / 2) + Rand + (k / 2);
+        (double X, double Y) Bogen((double X, double Y) m, double grad) =>
+            (m.X + (r * Math.Cos(grad * Math.PI / 180)), m.Y - (r * Math.Sin(grad * Math.PI / 180)));
+        var knien = Bogen(sp, KnienWinkel);
+        var leisteDa = b.LeisteBis <= b.LeisteVon || knien.X - (k / 2) < b.LeisteBis + Rand;
+        if (leisteDa && b.Unten > 0)
+        {
+            sp.Y = b.Hoehe - b.Unten - Rand - (g / 2);
+            knien = Bogen(sp, KnienWinkel);
+        }
+        var liegen = Bogen(sp, LiegenWinkel);
+        if (Math.Min(sp.Y - (g / 2), Math.Min(knien.Y, liegen.Y) - (k / 2)) < b.Oben + 4 || knien.X - (k / 2) < b.Breite / 2)
+        {
+            return null;
+        }
+        return new Lagen(sp, knien, liegen);
+    }
+
+    /// <summary>Welle A 1.7.0: Winkel (Grad, 0 = rechts, gegen den Uhrzeiger) von Hinknien um die Mitte von Springen.</summary>
+    public const double KnienWinkel = 165;
+
+    /// <summary>Welle A 1.7.0: Winkel von Hinlegen um die Mitte von Springen (fast senkrecht darueber).</summary>
+    public const double LiegenWinkel = 100;
+
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447, Entwurf P12-231): Durchmesser (Punkte) von Springen und den zwei kleinen Knoepfen Hinknien
+    /// und Hinlegen: Handy 64/48, Tablet (kuerzere Seite ab 600) 76/56. Bis A 1.6.0 <see cref="Groesse"/> (bleibt fuer die Knoepfe
+    /// am linken Daumen, <see cref="HandlungKnopf.Groesse"/>).
+    /// </summary>
+    public static (double Springen, double Klein) Groessen(double breite, double hoehe) =>
+        Zwei.Value || Alt.Value || Ecke.Value ? Groesse(breite, hoehe) : Math.Min(breite, hoehe) >= 600 ? (76, 56) : (64, 48);
+
+    /// <summary>Welle A 1.7.0: Lage der Knoepfe am rechten Daumen (Hinlegen null = zwei Knoepfe wie bis A 1.6.0, Knien = „Haltung“).</summary>
+    public readonly record struct Lagen((double X, double Y) Springen, (double X, double Y) Knien, (double X, double Y)? Liegen);
+
+    /// <summary>Welle A 1.7.0: die drei Knoepfe am rechten Daumen (am PC die drei Symbole).</summary>
+    public enum Knopf
+    {
+        Springen,
+        Knien,
+        Liegen,
+    }
+
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447, Nico 2a): Aufgabe (<see cref="Tastenbelegung.Springen"/>, <see cref="Tastenbelegung.Ducken"/>
+    /// oder <see cref="Tastenbelegung.Kriechen"/>) eines Knopfs; null = nichts tun. Hinknien: tippen = hinknien (kniend: aufstehen,
+    /// liegend: hinknien), gedrueckt halten oder nach unten wischen (<paramref name="lang"/>) = hinlegen (liegend: bleibt). Hinlegen:
+    /// tippen = hinlegen (liegend: aufstehen), lang wie tippen ausser liegend (bleibt).
+    /// </summary>
+    public static string? Aufgabe(Knopf knopf, Koerperhaltung jetzt, bool lang) => knopf switch
+    {
+        Knopf.Springen => lang ? null : Tastenbelegung.Springen,
+        Knopf.Knien when lang => jetzt == Koerperhaltung.Kriechen ? null : Tastenbelegung.Kriechen,
+        Knopf.Knien => Tastenbelegung.Ducken,
+        _ when lang => jetzt == Koerperhaltung.Kriechen ? null : Tastenbelegung.Kriechen,
+        _ => Tastenbelegung.Kriechen,
+    };
+
+    /// <summary>
+    /// Welle A 1.7.0 (Konzept Punkt 4): das Symbol zeigt die Haltung, in die man als Naechstes wechselt; die aktuelle Haltung
+    /// leuchtet. Hinknien zeigt kniend „Aufstehen“, Hinlegen liegend „Aufstehen“.
+    /// </summary>
+    public static (bool Aufstehen, bool Leuchtet) Zustand(Knopf knopf, Koerperhaltung jetzt) => knopf switch
+    {
+        Knopf.Knien => (jetzt == Koerperhaltung.Ducken, jetzt == Koerperhaltung.Ducken),
+        Knopf.Liegen => (jetzt == Koerperhaltung.Kriechen, jetzt == Koerperhaltung.Kriechen),
+        _ => (false, false),
+    };
+
+    /// <summary>Welle A 1.7.0 (Nico 2a): so weit (Punkte) nach unten gewischt gilt auf Hinknien als „hinlegen“ (mehr nach unten als zur Seite).</summary>
+    public const double WischAb = 24;
+
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447, Nico 4a): am PC drei kleine Symbole unten rechts mit ihrer Taste darunter (von rechts:
+    /// Springen, Hinknien, Hinlegen), Durchmesser 52/44, unten Platz fuer die Taste (<see cref="TasteHoehe"/>); reicht Hinlegen bis
+    /// an die Leiste, stehen sie ueber ihr. null = kein Platz.
+    /// </summary>
+    public static Lagen? LageTasten(Sticks.Bereich b)
+    {
+        var (g, k) = GroessenTasten;
+        var sp = (X: b.Breite - Rand - (g / 2), Y: b.Hoehe - Rand - TasteHoehe - (g / 2));
+        (double X, double Y) Klein(int nr) => (sp.X - (g / 2) - (nr * AbstandTasten) - (((2 * nr) - 1) * k / 2), sp.Y + ((g - k) / 2));
+        var liegen = Klein(2);
+        if (b.Unten > 0 && (b.LeisteBis <= b.LeisteVon || liegen.X - (k / 2) < b.LeisteBis + Rand))
+        {
+            sp.Y = b.Hoehe - b.Unten - Rand - TasteHoehe - (g / 2);
+            liegen = Klein(2);
+        }
+        var knien = Klein(1);
+        return sp.Y - (g / 2) < b.Oben + 4 || liegen.X - (k / 2) < b.Breite / 2 ? null : new Lagen(sp, knien, liegen);
+    }
+
+    /// <summary>Welle A 1.7.0: Durchmesser (Punkte) der Symbole am PC (Springen, Hinknien und Hinlegen).</summary>
+    public static readonly (double Springen, double Klein) GroessenTasten = (52, 44);
+
+    /// <summary>Welle A 1.7.0: Hoehe (Punkte) des Platzes fuer die Taste unter einem Symbol am PC.</summary>
+    public const double TasteHoehe = 22;
+
+    /// <summary>Welle A 1.7.0: Abstand (Punkte) zwischen den Symbolen am PC.</summary>
+    public const double AbstandTasten = 18;
+
+    private static readonly AsyncLocal<bool> Zwei = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): zwei Knoepfe (Springen, Haltung) ueber dem rechten Stick wie A 1.2.0 bis A 1.6.0.</summary>
+    public static bool ZweiKnoepfeFuerTests { get => Zwei.Value; set => Zwei.Value = value; }
 
     private static readonly AsyncLocal<bool> Alt = new();
 

@@ -80,8 +80,8 @@
    "lizenz": "CC0 1.0"
   }
  },
- "sha256": "c215656aaaa74a83e4ec9511f9d4fa314e371ec7d2975e8535d145af7985b54b",
- "bytes": 10730363,
+ "sha256": "1153ea7b9d384673419de19a19b536dba822ae3fb800736cccbfdfd9be71bdeb",
+ "bytes": 11481221,
  "modelle": [
   {
    "name": "building-e",
@@ -2818,6 +2818,159 @@
     0.4552,
     3.636,
     1.3564
+   ]
+  },
+  {
+   "name": "figur-robben00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -0.9868,
+    0.0007,
+    -3.4873
+   ],
+   "max": [
+    1.5614,
+    1.45,
+    0.5314
+   ]
+  },
+  {
+   "name": "figur-robben01",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.2325,
+    0.0007,
+    -3.4794
+   ],
+   "max": [
+    1.64,
+    1.45,
+    0.442
+   ]
+  },
+  {
+   "name": "figur-robben02",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.6199,
+    0.0007,
+    -3.4096
+   ],
+   "max": [
+    1.6179,
+    1.45,
+    0.442
+   ]
+  },
+  {
+   "name": "figur-robben03",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.642,
+    0.0007,
+    -3.4796
+   ],
+   "max": [
+    1.2222,
+    1.4507,
+    0.442
+   ]
+  },
+  {
+   "name": "figur-robben04",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.5609,
+    0.0007,
+    -3.4877
+   ],
+   "max": [
+    0.9872,
+    1.45,
+    0.5314
+   ]
+  },
+  {
+   "name": "figur-robben05",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.6395,
+    0.0007,
+    -3.4796
+   ],
+   "max": [
+    1.2329,
+    1.45,
+    0.442
+   ]
+  },
+  {
+   "name": "figur-robben06",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.6174,
+    0.0007,
+    -3.4096
+   ],
+   "max": [
+    1.6203,
+    1.45,
+    0.442
+   ]
+  },
+  {
+   "name": "figur-robben07",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.2217,
+    0.0007,
+    -3.4794
+   ],
+   "max": [
+    1.6425,
+    1.4507,
+    0.442
+   ]
+  },
+  {
+   "name": "figur-robben-still00",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "atlas": "Skins/humanMaleA.png",
+   "dreiecke": 1604,
+   "min": [
+    -1.6199,
+    0.0007,
+    -3.4096
+   ],
+   "max": [
+    1.6203,
+    1.45,
+    0.442
    ]
   }
  ]

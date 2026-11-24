@@ -40,18 +40,44 @@ public class SpielHaltungenTests
         var kleider = AlleKleider();
         Assert.True(kleider.Count > 20, "Kleidung fehlt");
         var funde = new List<string>();
-        foreach (var (haltung, modell) in new[] { (Koerperhaltung.Ducken, Figur.Ducken), (Koerperhaltung.Kriechen, Figur.Kriechen), (Koerperhaltung.Stehen, Figur.Springen) })
+        // seit A 1.7.0 Kriechen = flach auf dem Bauch robben (jedes Bild der Bewegung und das stille Bild); das alte Kriechen mit
+        // seinem Quader unter der Gegenprobe KriechenAltFuerTests
+        var faelle = new List<(Koerperhaltung Haltung, string Modell, int Bild, bool Alt)>
         {
-            var quader = Innenraum.KoerperQuader(haltung);
-            foreach (var k in kleider)
+            (Koerperhaltung.Ducken, Figur.Ducken, 0, false), (Koerperhaltung.Stehen, Figur.Springen, 0, false),
+            (Koerperhaltung.Kriechen, Figur.RobbenStill, 0, false), (Koerperhaltung.Kriechen, Figur.Kriechen, 0, true),
+        };
+        faelle.AddRange(Enumerable.Range(0, Figur.RobbenBilder).Select(b => (Koerperhaltung.Kriechen, Figur.Robben, b, false)));
+        foreach (var (haltung, modell, bild, alt) in faelle)
+        {
+            Figur.KriechenAltFuerTests = alt;
+            try
             {
-                var weit = Ecken(Figur.Netz(g, null, 1f, k, modell, 0)).Max(p => Ausserhalb(p, quader));
-                if (weit > 0.001f)
+                var quader = Innenraum.KoerperQuader(haltung);
+                foreach (var k in kleider)
                 {
-                    var e = Ecken(Figur.Netz(g, null, 1f, k, modell, 0)).MaxBy(p => Ausserhalb(p, quader));
-                    funde.Add($"{modell} {k?[0].Form ?? "ohne"}: {weit:0.000} bei {e}");
+                    var weit = Ecken(Figur.Netz(g, null, 1f, k, modell, bild)).Max(p => Ausserhalb(p, quader));
+                    if (weit > 0.001f)
+                    {
+                        var e = Ecken(Figur.Netz(g, null, 1f, k, modell, bild)).MaxBy(p => Ausserhalb(p, quader));
+                        funde.Add($"{modell} {bild} {k?[0].Form ?? "ohne"}: {weit:0.000} bei {e}");
+                    }
                 }
             }
+            finally
+            {
+                Figur.KriechenAltFuerTests = false;
+            }
+        }
+        // Gegenprobe A 1.7.0: im alten Kriechen-Quader hat die flach liegende Figur keinen Platz
+        Figur.KriechenAltFuerTests = true;
+        try
+        {
+            Assert.True(Ecken(Figur.Netz(g, null, 1f, null, Figur.RobbenStill, 0)).Max(p => Ausserhalb(p, Innenraum.KoerperQuader(Koerperhaltung.Kriechen))) > 0.05f);
+        }
+        finally
+        {
+            Figur.KriechenAltFuerTests = false;
         }
         Assert.True(funde.Count == 0, string.Join("\n", funde));
         // Gegenprobe: Rock, Mantel, Tasche und Muetze in Stehhoehe (Stand vor A 0.93.0) ragen geduckt aus dem Quader
@@ -80,10 +106,25 @@ public class SpielHaltungenTests
         }
         Assert.Equal(Figur.Springen, Figur.HaltungBild(Koerperhaltung.Stehen, true));
         Assert.Equal(Figur.Ducken, Figur.HaltungBild(Koerperhaltung.Ducken, false));
-        Assert.Equal(Figur.Kriechen, Figur.HaltungBild(Koerperhaltung.Kriechen, false));
+        Assert.Equal(Figur.RobbenStill, Figur.HaltungBild(Koerperhaltung.Kriechen, false));
+        Assert.Equal(Figur.Robben, Figur.HaltungBild(Koerperhaltung.Kriechen, false, true));
+        Assert.Equal(Figur.Ducken, Figur.HaltungBild(Koerperhaltung.Ducken, false, true));
+        for (var b = 1; b < Figur.RobbenBilder; b++)
+        {
+            Assert.Equal(steht.Dreiecke, g.Modell(Figur.BildName(Figur.Robben, b))!.Dreiecke);
+        }
+        Figur.KriechenAltFuerTests = true;
+        try
+        {
+            Assert.Equal(Figur.Kriechen, Figur.HaltungBild(Koerperhaltung.Kriechen, false, true));
+        }
+        finally
+        {
+            Figur.KriechenAltFuerTests = false;
+        }
         Assert.Null(Figur.HaltungBild(Koerperhaltung.Stehen, false));
         Assert.Equal(Figur.SitzenZurueck2, Figur.SitzBild(SitzArt.Zurueck));
-        Assert.True(Figur.KopfSenkung(g, Figur.Kriechen) > 0.15f && Figur.KopfSenkung(g, Figur.Ducken) > 0.15f);
+        Assert.True(Figur.KopfSenkung(g, Figur.Kriechen) > 0.15f && Figur.KopfSenkung(g, Figur.Ducken) > 0.15f && Figur.KopfSenkung(g, Figur.RobbenStill) > 0.15f);
     }
 
     /// <summary>
@@ -190,8 +231,14 @@ public class SpielHaltungenTests
         void Pruefen(string wo, float? blick)
         {
             var vorher = blick ?? s.FigurRichtung;
+            var richtungVorher = s.FigurRichtung;
             var (x, z) = (s.FigurX, s.FigurZ);
             var ok = s.Kriechen(blick);
+            // seit A 1.7.0 (flach liegen braucht mehr Platz) kann Kriechen mit Blick abgelehnt werden: dann bleibt die Figur, wie sie stand
+            if (!ok)
+            {
+                vorher = richtungVorher;
+            }
             pruefungen++;
             if (ok)
             {
@@ -291,7 +338,11 @@ public class SpielHaltungenTests
         {
             if (!figuren.TryGetValue((h, kleid), out var d))
             {
-                d = SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], h == Koerperhaltung.Ducken ? Figur.Ducken : Figur.Kriechen, 0), Matrix4x4.Identity);
+                // Kriechen seit A 1.7.0: das stille Bild und jedes Bild der Bewegung Robben zusammen
+                d = h == Koerperhaltung.Ducken
+                    ? SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.Ducken, 0), Matrix4x4.Identity)
+                    : SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.RobbenStill, 0), Matrix4x4.Identity)
+                        .Concat(Enumerable.Range(0, Figur.RobbenBilder).SelectMany(b => SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.Robben, b), Matrix4x4.Identity))).ToList();
                 figuren[(h, kleid)] = d;
             }
             return d;
@@ -470,7 +521,8 @@ public class SpielHaltungenTests
         Assert.Equal(Koerperhaltung.Kriechen, s.Koerper);
         SpielHaltungBedienungTests.Ankommen(s);
         Assert.Equal(Koerperhaltung.Kriechen, s.Koerper);
-        Assert.Equal(Figur.Kriechen, s.HaltungModell);
+        // seit A 1.7.0: nach der Ankunft liegt die Figur still auf dem Bauch
+        Assert.Equal(Figur.RobbenStill, s.HaltungModell);
         Assert.True(Vector2.Distance(new Vector2(s.FigurX, s.FigurZ), stelle + new Vector2(1.2f, 0)) < 0.05f, $"{s.FigurX}/{s.FigurZ}");
         // im Gehen ducken geht jetzt auch (vorher: „erst ankommen“)
         Assert.True(s.Kriechen());

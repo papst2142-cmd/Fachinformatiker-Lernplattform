@@ -165,6 +165,8 @@ public class SpielGrafikTests
             .Append(Figur.BildName(Figur.SitzenFrei, 0))
             // seit A 0.93.0 (Weisung P12-303) die Haltungen: springen, ducken, kriechen, zurueckgelehnt sitzen
             .Concat(Figur.NeueHaltungen.Select(n => Figur.BildName(n, 0)))
+            // seit A 1.7.0 (Weisung P12-367) jedes Bild der Bewegung Robben (Kriechen flach auf dem Bauch)
+            .Concat(Enumerable.Range(1, Figur.RobbenBilder - 1).Select(i => Figur.BildName(Figur.Robben, i)))
             // seit A 0.61.0 (Weisung P12-171) der Linienbus
             .Append(Buslinie.Modell)
             // seit A 0.62.0 (Weisung P12-174) die gesparten Autos (die alten bleiben in der Datei, Namen der Strecken)

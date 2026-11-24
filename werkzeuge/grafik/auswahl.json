@@ -883,6 +883,24 @@
    "arme": 84,
    "bewegung": "sitzen_lang_zurueck",
    "sitz": 1.063
+  },
+  {
+   "name": "figur-robben",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 8,
+   "arme": 84,
+   "bewegung": "robben"
+  },
+  {
+   "name": "figur-robben-still",
+   "paket": "characters",
+   "datei": "Model/characterMedium.fbx",
+   "haut": "Skins/humanMaleA.png",
+   "bilder": 1,
+   "arme": 84,
+   "bewegung": "robben_still"
   }
  ]
 }

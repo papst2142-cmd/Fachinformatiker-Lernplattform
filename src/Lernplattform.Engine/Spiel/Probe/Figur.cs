@@ -181,22 +181,53 @@ public static class Figur
     /// Welle A 0.93.0 (Weisung P12-303: „Wahl nur ueber eine Tabelle wie Figur.SitzBild“): Bild der Figur je Haltung im Stehen
     /// (null = stehend oder gehend wie bisher). Springen geht vor (auch im Gehen).
     /// </summary>
-    public static string? HaltungBild(Koerperhaltung haltung, bool springt) => springt ? Springen : haltung switch
+    public static string? HaltungBild(Koerperhaltung haltung, bool springt) => HaltungBild(haltung, springt, geht: false);
+
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447, Weisung P12-367): wie <see cref="HaltungBild(Koerperhaltung, bool)"/>; kriechend liegt die
+    /// Figur flach auf dem Bauch: im Gehen (<paramref name="geht"/>) die Bewegung <see cref="Robben"/> (Bild nach dem Weg,
+    /// <see cref="RobbenBildNachWeg"/>), im Stand <see cref="RobbenStill"/>. Bis A 1.6.0 (Gegenprobe <see cref="KriechenAltFuerTests"/>)
+    /// auf Haenden und Knien (<see cref="Kriechen"/>, ein Bild).
+    /// </summary>
+    public static string? HaltungBild(Koerperhaltung haltung, bool springt, bool geht) => springt ? Springen : haltung switch
     {
         Koerperhaltung.Ducken => Ducken,
-        Koerperhaltung.Kriechen => Kriechen,
+        Koerperhaltung.Kriechen when KriechenAlt.Value => Kriechen,
+        Koerperhaltung.Kriechen => geht ? Robben : RobbenStill,
         _ => null,
     };
 
+    /// <summary>
+    /// Welle A 1.7.0 (Sammelliste 447, Abnahmebilder Meldung P12-233): flach auf dem Bauch robben, <see cref="RobbenBilder"/> Bilder
+    /// einer ganzen Bewegung (rechter Arm mit linkem Bein vor, dann umgekehrt; die greifende Hand hebt sich kurz). Der Rumpf liegt
+    /// auf dem Boden (Test <c>KriechenBodenTests</c>), der Kopf ueber der Stelle wie im Stehen, der Koerper dahinter.
+    /// </summary>
+    public const string Robben = "figur-robben";
+
+    /// <summary>Welle A 1.7.0: flach auf dem Bauch im Stand (ein Bild, beide Haende vorn auf dem Boden).</summary>
+    public const string RobbenStill = "figur-robben-still";
+
+    /// <summary>Welle A 1.7.0: Bilder der Bewegung <see cref="Robben"/> (eine ganze Bewegung auf den Weg eines Doppelschritts).</summary>
+    public const int RobbenBilder = 8;
+
+    /// <summary>Bild der Bewegung <see cref="Robben"/> nach dem Weg <paramref name="weg"/> bei Doppelschritt <paramref name="zyklus"/>.</summary>
+    public static int RobbenBildNachWeg(double weg, double zyklus) =>
+        (int)((((weg / zyklus) % 1.0) + 1.0) % 1.0 * RobbenBilder) % RobbenBilder;
+
+    private static readonly AsyncLocal<bool> KriechenAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): kriechen auf Haenden und Knien wie bis A 1.6.0 (ein Bild, Quader wie bisher).</summary>
+    public static bool KriechenAltFuerTests { get => KriechenAlt.Value; set => KriechenAlt.Value = value; }
+
     /// <summary>Welle A 0.93.0: die neuen Haltungen, deren Teile am Koerper (Rock, Mantel, Kragen, Tasche) dem Koerper folgen (<see cref="Folgen"/>).</summary>
-    public static readonly IReadOnlySet<string> NeueHaltungen = new HashSet<string>(StringComparer.Ordinal) { Springen, Ducken, Kriechen, SitzenZurueck, SitzenZurueck2, SitzenLang, SitzenLangZurueck };
+    public static readonly IReadOnlySet<string> NeueHaltungen = new HashSet<string>(StringComparer.Ordinal) { Springen, Ducken, Kriechen, SitzenZurueck, SitzenZurueck2, SitzenLang, SitzenLangZurueck, Robben, RobbenStill };
 
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GrafikModell, Dictionary<string, float>> SenkungVorrat = new();
 
     /// <summary>
     /// Welle A 0.93.0 (Ich-Sicht: „das Auge sinkt mit“): so weit (Anteil der Figurhoehe) liegt der Kopf im ersten Bild der
-    /// Bewegung <paramref name="bewegung"/> tiefer als im Stehen (Unterkante des Kopf-Kastens, <see cref="Kopf(GrafikModell, GrafikModell)"/>);
-    /// 0 ohne Grafik oder ohne Bild.
+    /// Bewegung <paramref name="bewegung"/> tiefer als im Stehen (Unterkante des Kopf-Kastens, <see cref="Kopf(GrafikModell, GrafikModell)"/>;
+    /// beim Robben die Mitte des Kastens); 0 ohne Grafik oder ohne Bild.
     /// </summary>
     public static float KopfSenkung(GrafikBibliothek? grafik, string? bewegung)
     {
@@ -209,7 +240,14 @@ public static class Figur
         {
             if (!vorrat.TryGetValue(bewegung, out var wert))
             {
-                wert = Kopf(gm, gm) is { } steht && Kopf(gm, fm) is { } bild ? (steht.Min.Y - bild.Min.Y) / (gm.Max.Y - gm.Min.Y) : 0f;
+                // Welle A 1.7.0 (Sammelliste 447): beim Robben ist der Kopf nach vorn geneigt (Kinn fast am Boden, Gesicht schraeg
+                // nach vorn unten); das Auge liegt dann im oberen Teil des Kopf-Kastens, ein Achtel der Kopfhoehe ueber der Mitte (im
+                // Stehen ein Achtel darunter). Mit der Unterkante saesse es in Kinnhoehe dicht ueber dem Hals (IchSichtFigurTests)
+                wert = Kopf(gm, gm) is { } steht && Kopf(gm, fm) is { } bild
+                    ? (bewegung is Robben or RobbenStill
+                        ? ((steht.Min.Y + steht.Max.Y) / 2f) - ((steht.Max.Y - steht.Min.Y) / 8f) - ((bild.Min.Y + bild.Max.Y) / 2f) - ((bild.Max.Y - bild.Min.Y) / 8f)
+                        : steht.Min.Y - bild.Min.Y) / (gm.Max.Y - gm.Min.Y)
+                    : 0f;
                 vorrat[bewegung] = wert;
             }
             return wert;
@@ -350,6 +388,16 @@ public static class Figur
                 // Helligkeit wie das Haar am Hinterkopf (die Vorlage ist hier heller, umgefaerbt waere das fast weiss)
                 bereich = Bereich.Haare;
                 r = g = b = NackenGrau;
+            }
+            // Welle A 1.7.0 (Weisung P12-367): die Unterseite der Fuesse traegt in der Vorlage Hautfarbe; im Stehen nie zu sehen, beim
+            // Robben (und Liegen) zeigen die Sohlen nach oben. Dort jetzt eine Schuhsohle (dunkelgrau bzw. dunkler als die Schuhe)
+            if (!SohleAltFuerTests && anteil < SohleBis && SohleUnten(gm, d))
+            {
+                var k = (schuhe is not null ? Probe.Netz.Farbe(schuhe.Farbe) * 0.55f : SohleFarbe) * 255f;
+                farben[d * 3] = (byte)k.X;
+                farben[(d * 3) + 1] = (byte)k.Y;
+                farben[(d * 3) + 2] = (byte)k.Z;
+                continue;
             }
             if (!KinnAltFuerTests && Kinn(r, g, b, bereich, anteil, seitlich, vorn))
             {
@@ -1006,6 +1054,26 @@ public static class Figur
 
     /// <summary>Weisung P12-210: Gegenprobe, Kinn und Hals wie A 0.68.0 vor der Nachbesserung (dunkler Unterkiefer).</summary>
     internal static bool KinnAltFuerTests { get => KinnAlt.Value; set => KinnAlt.Value = value; }
+
+    /// <summary>Welle A 1.7.0: bis zu dieser Hoehe (Anteil der Figur) zaehlt ein nach unten zeigendes Dreieck als Schuhsohle.</summary>
+    public const float SohleBis = 0.02f;
+
+    /// <summary>Welle A 1.7.0: Farbe der Schuhsohle ohne getragene Schuhe (dunkelgrau, 0..1).</summary>
+    public static readonly Vector3 SohleFarbe = new(0.30f, 0.30f, 0.32f);
+
+    /// <summary>Zeigt das Dreieck <paramref name="d"/> der stehenden Figur nach unten (Normale y unter -0,5)?</summary>
+    public static bool SohleUnten(GrafikModell gm, int d)
+    {
+        var e = gm.Ecken;
+        var a = new Vector3(e[d * 9], e[(d * 9) + 1], e[(d * 9) + 2]);
+        var n = Vector3.Cross(new Vector3(e[(d * 9) + 3], e[(d * 9) + 4], e[(d * 9) + 5]) - a, new Vector3(e[(d * 9) + 6], e[(d * 9) + 7], e[(d * 9) + 8]) - a);
+        return n.LengthSquared() > 0 && Vector3.Normalize(n).Y < -0.5f;
+    }
+
+    private static readonly AsyncLocal<bool> SohleAlt = new();
+
+    /// <summary>Gegenprobe (nur Tests, AsyncLocal): Sohlen in Hautfarbe wie bis A 1.6.0.</summary>
+    public static bool SohleAltFuerTests { get => SohleAlt.Value; set => SohleAlt.Value = value; }
 
     private static readonly System.Threading.AsyncLocal<bool> KinnAlt = new();
 

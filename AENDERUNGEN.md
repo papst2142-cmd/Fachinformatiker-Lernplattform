@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 1.7.0
+Kriechen sieht jetzt echt aus, und die Knöpfe für die Haltungen sind übersichtlicher.
+
+- Beim Kriechen liegt deine Figur jetzt flach auf dem Bauch und robbt vorwärts: Ein Arm greift nach vorn, das Knie der anderen Seite zieht seitlich nach, dann wechseln die Seiten. Steht sie still, liegt sie ruhig auf dem Bauch, den Kopf leicht angehoben. Vorher kroch sie auf Händen und Knien. Weil die liegende Figur länger ist, braucht Kriechen drinnen jetzt etwas mehr freien Platz; wo er fehlt, sagt dir das Spiel wie bisher, dass hier kein Platz ist.
+- Am Handy und Tablet sitzt rechts unten in der Ecke jetzt der große Knopf „Springen“. Darüber stehen im Bogen zwei kleinere Knöpfe: „Hinknien“ und „Hinlegen“. Jeder zeigt als kleine Figur, was er tut. Tippst du „Hinknien“, geht deine Figur in die Hocke; tippst du „Hinlegen“, legt sie sich hin. Hältst du „Hinknien“ gedrückt oder wischst du darauf nach unten, legt sie sich ebenfalls hin. Bist du in einer Haltung, zeigt der Knopf eine stehende Figur und leuchtet in deiner Programmfarbe: Ein Tipp darauf lässt dich wieder aufstehen. Der rechte Stick zum Umsehen beginnt jetzt neben den Knöpfen.
+- Am PC stehen unten rechts drei kleine runde Symbole für Springen, Hinknien und Hinlegen, darunter jeweils die Taste (Leertaste, C und X oder deine eigene Belegung). Du kannst sie auch mit der Maus anklicken. Die Haltung, in der du gerade bist, leuchtet in deiner Programmfarbe.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.6.0
 Die Steuerung im Spiel ist jetzt stimmiger.
 
