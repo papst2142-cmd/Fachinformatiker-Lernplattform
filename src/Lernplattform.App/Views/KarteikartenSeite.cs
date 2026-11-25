@@ -111,17 +111,24 @@ public sealed class KarteikartenSeite : UserControl
                     return ergebnis;
                 };
             }
-            double begonnen = 0;
+            double begonnen = 0, uebersetzen = 0, aufbau = 0;
             var karten = await Task.Run(() =>
             {
                 begonnen = _uhr.Elapsed.TotalMilliseconds;
-                return new Karteikarten(inhalte, Lesen, Zustand.Schreiber, Reihenfolge);
+                // Weisung P12-380 W3 (Sammelliste 454): Dauer des Aufbaus und der Uebersetzung (JIT) auf diesem Faden getrennt (nur Bericht)
+                var jit = System.Runtime.JitInfo.GetCompilationTime(currentThread: true);
+                var k = new Karteikarten(inhalte, Lesen, Zustand.Schreiber, Reihenfolge);
+                uebersetzen = (System.Runtime.JitInfo.GetCompilationTime(currentThread: true) - jit).TotalMilliseconds;
+                aufbau = _uhr.Elapsed.TotalMilliseconds - begonnen;
+                return k;
             });
             erster = false;
             Teilzeiten.Add(("Hintergrund begonnen", begonnen));
             Teilzeiten.Add(("Lernstand gelesen", _uhr.Elapsed.TotalMilliseconds));
             Teilzeiten.Add(("davon Datenbank (Dauer)", datenbank));
             Teilzeiten.Add(("davon Reihenfolge (Dauer)", reihenfolge));
+            Teilzeiten.Add(("Aufbau im Hintergrund (Dauer)", aufbau));
+            Teilzeiten.Add(("davon Uebersetzen (Dauer)", uebersetzen));
             Teilzeiten.Add(("Speicherbereinigung bis hier (Dauer)", (GC.GetTotalPauseDuration() - _gcBeginn).TotalMilliseconds));
             await Dispatcher.UIThread.InvokeAsync(() =>
             {

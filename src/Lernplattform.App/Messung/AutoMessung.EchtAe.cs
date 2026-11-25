@@ -116,7 +116,7 @@ public static partial class AutoMessung
                 if (!await TippenAsync(ansicht, e.ProbeReiterPillen, Beschriftungen.Einsetzen(EchtTexte.AufgabeKurz, 2, satz.Aufgaben[1].Punkte), art)
                     || e.ProbeStand.Reiter != "2")
                 {
-                    Fund(name + ": Reiter \"Aufgabe 2\" antippen wechselt nicht (Reiter " + e.ProbeStand.Reiter + ")");
+                    Fund(name + ": Reiter \"Aufgabe 2\" antippen wechselt nicht (Reiter " + e.ProbeStand.Reiter + ")" + TrefferZuletzt);
                 }
                 // Breites Fenster (zwei Spalten) und Aufgabe 2 mit Anlagen: die Anlagen stehen schon daneben, der Umschalter ist
                 // dann gewollt verborgen (EchtFormatTeil, wie in EchtWelle2 geprueft); sonst muss Antippen die Anlagen zeigen.
@@ -131,7 +131,7 @@ public static partial class AutoMessung
                 else if (!await TippenAsync(ansicht, e.ProbeUmschalter, EchtFormatTeil.UmschalterText(satz, satz.Aufgaben[1]), art)
                     || !e.ProbeStand.Anlagen)
                 {
-                    Fund(name + ": Umschalter \"Anlagen\" antippen zeigt die Anlagen nicht");
+                    Fund(name + ": Umschalter \"Anlagen\" antippen zeigt die Anlagen nicht" + TrefferZuletzt);
                 }
                 k.Probe(start + 2);
                 await ansicht.BildFertigAsync();
