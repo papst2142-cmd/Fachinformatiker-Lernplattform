@@ -170,6 +170,28 @@ public static partial class StadtbauMessung
         {
             Fund("Raum ändern: gezogene Wand nicht „geändert“ oder rot (" + string.Join(" | ", a.SpielRaumRot.Select(x => x.Text)) + ")");
         }
+        // Weisung P12-383 Fund 1: der Schalter bleibt farbig an (nicht grau), der Satz darunter sagt warum; Ausschalten aendert nichts
+        if (a.SpielRaumSchalter is not { IsEnabled: true, IsChecked: true } an2 || a.SpielRaumBleibtAnHinweis is not { IsEffectivelyVisible: true })
+        {
+            Fund("Raum ändern: Schalter nach der Änderung grau oder ohne Satz „bleibt an“");
+        }
+        else
+        {
+            an2.IsChecked = false;
+            await BildAsync(a);
+            if (!p.SpielRaumInBearbeitung(Wohnung) || !p.GeaenderteSpielRaeume.Contains(Wohnung) || a.SpielRaumSchalter is not { IsChecked: true })
+            {
+                Fund("Raum ändern: „Ändern“ aus bei geändertem Raum hat den Raum verlassen oder den Schalter nicht wieder angezeigt");
+            }
+        }
+        // Weisung P12-383 Fund 2: die Startmatratze (eigenes Moebel) bleibt im Ändern-Modus sichtbar, mit Schild, nicht im Karton
+        var eigene = a.SpielRaumFlaeche.EigeneMoebel();
+        var eigenSchilder = a.SpielRaumFlaeche.SchilderJetzt().Where(t => t.Art == GrundrissFlaeche.SchildArt.Eigen).ToList();
+        if (eigene.Count != 1 || eigene[0].Karton || eigenSchilder.Count != 1 || !eigenSchilder[0].Schild.Frei)
+        {
+            Fund("Raum ändern: eigenes Möbel (Matratze) fehlt im Ändern-Modus, steht im Karton oder ohne freies Schild ("
+                + string.Join(" | ", eigene.Select(e => e.Name + (e.Karton ? " Karton" : ""))) + ")");
+        }
         await AlleGroessenAsync(a, f, "Raum ändern");
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
         // Gegenprobe: Diele zu schmal = rot, Export gesperrt

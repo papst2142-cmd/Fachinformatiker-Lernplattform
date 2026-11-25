@@ -111,6 +111,38 @@ public sealed partial class Projekt
         return vorrat.Innen;
     }
 
+    /// <summary>Ein Moebel der Spielerin/des Spielers im Grundriss (Platz im Spiel; Karton = passt nach dem Umbau nicht mehr).</summary>
+    public sealed record EigenesMoebel(string Name, double X, double Y, double W, double H, bool Karton);
+
+    private (string Schluessel, string Text, List<EigenesMoebel> Liste)? _eigeneMoebel;
+
+    /// <summary>
+    /// Weisung P12-383 Fund 2: Moebel der Spielerin/des Spielers in einer Wohnung (heute die Startmatratze). Sie gehoeren zum
+    /// Spielstand, nicht zum Raum, darum bearbeitet „Ändern“ sie nicht (Grundlage ohne Zustand eines Spielstands). Damit sie
+    /// nicht einfach verschwinden, zeigt das Werkzeug sie im Ändern-Modus mit ihrem Platz im Spiel; <see cref="EigenesMoebel.Karton"/>
+    /// sagt, ob das Spiel sie nach dem Umbau in den Karton stellt (gleiche Pruefung wie <see cref="Wohnung.Umgebaut"/>).
+    /// Leer, wenn der Raum nicht in Bearbeitung oder keine Wohnung ist.
+    /// </summary>
+    public List<EigenesMoebel> SpielRaumEigeneMoebel(string schluessel)
+    {
+        if (!SpielRaumInBearbeitung(schluessel) || SpielRaeume.Finden(schluessel, Daten.Inhalt, Innenraeume()) is not { Ansicht: "zuhause" } raum)
+        {
+            return [];
+        }
+        var text = PythonJson.Standard(_grundrisse[schluessel]);
+        if (_eigeneMoebel is { } v && v.Schluessel == schluessel && v.Text == text)
+        {
+            return v.Liste;
+        }
+        var stand = SpielRaeume.Stand(raum, Daten.Inhalt);
+        var karton = Wohnung.Umgebaut(SpielRaeume.Stand(raum, SpielInhaltMitRaeumen())).Select(k => k.Stueck).ToHashSet();
+        var liste = Wohnung.AufgestellteMoebel(stand).Select(m => new EigenesMoebel(
+            Wohnung.MoebelStueck(m.Moebel, Daten.Inhalt)?["name"] as string ?? m.Stueck, m.X, m.Y, Py.F(m.W), Py.F(m.H),
+            karton.Contains(m.Stueck))).ToList();
+        _eigeneMoebel = (schluessel, text, liste);
+        return liste;
+    }
+
     /// <summary>Name eines Raums des Spiels fuer die Anzeige.</summary>
     public string SpielRaumName(string schluessel) =>
         SpielRaeume.Finden(schluessel, Daten.Inhalt, Innenraeume())?.Name ?? schluessel;

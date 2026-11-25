@@ -41,6 +41,46 @@ public class SpielRaeumeAendernTests
 
     private static Projekt Neu(string name) => Projekt.Neu(name, D, Daten.NeueAblage(), "moebelhaus");
 
+    /// <summary>
+    /// Weisung P12-383 Fund 2: die Startmatratze gehoert zum Spielstand, nicht zum Raum. Im Ändern-Modus bleibt sie mit ihrem
+    /// Platz im Spiel sichtbar, auch wenn eine Wand weit weg gezogen wird (nicht im Karton); passt ihr Platz nicht mehr (Wohnraum
+    /// verkleinert), steht sie im Karton wie im Spiel. Gegenprobe: ohne „Ändern“ keine Marke (dann zeigt der Grundriss des
+    /// Spiels die Matratze selbst).
+    /// </summary>
+    [Fact]
+    public void EigeneMoebel_ImAendernModus_Sichtbar_KartonWieImSpiel()
+    {
+        var p = Neu("Eigene Moebel");
+        Assert.Empty(p.SpielRaumEigeneMoebel(Apartment));
+        Assert.True(p.SpielRaumBearbeiten(Apartment));
+        var e = Assert.Single(p.SpielRaumEigeneMoebel(Apartment));
+        Assert.Contains("Matratze", e.Name, StringComparison.Ordinal);
+        Assert.False(e.Karton);
+        Assert.Equal((0.4, 0.4), (e.X, e.Y));
+
+        // Wand weit weg (Wohnraum/Kueche wie im Werkzeug-Bild): Matratze bleibt an ihrem Platz, nicht im Karton
+        p.Aendern(Apartment, "Wand ziehen", WerkzeugGleichSpielTests.WandZiehen);
+        Assert.Equal([Apartment], p.GeaenderteSpielRaeume);
+        e = Assert.Single(p.SpielRaumEigeneMoebel(Apartment));
+        Assert.False(e.Karton);
+
+        // Wohnraum faengt rechts von der Matratze an: ihr Platz passt nicht mehr, also Karton (gleiche Regel wie das Spiel)
+        p.Aendern(Apartment, "Wand ziehen", g =>
+        {
+            var wohn = RaumMit(g, "wohnraum");
+            Py.Setzen(wohn, "x", 3.0);
+            Py.Setzen(wohn, "w", Py.F(wohn["w"]) - 3.0);
+        });
+        e = Assert.Single(p.SpielRaumEigeneMoebel(Apartment));
+        Assert.True(e.Karton);
+
+        Assert.True(p.SpielRaumZuruecksetzen(Apartment, "Zurück"));
+        Assert.False(Assert.Single(p.SpielRaumEigeneMoebel(Apartment)).Karton);
+        Assert.True(p.SpielRaumBeenden(Apartment));
+        Assert.Empty(p.SpielRaumEigeneMoebel(Apartment));
+        Assert.Empty(p.SpielRaumEigeneMoebel(Bitweiche));
+    }
+
     /// <summary>Rote Funde eines Raums des Spiels ueber denselben Weg wie die Liste im Werkzeug und die Export-Sperre.</summary>
     private static List<string> Rot(Projekt p, string schluessel) =>
         [.. InnenFunde.Rechnen(InnenFunde.Vorbereiten(p, [schluessel]))[0].Funde.Where(f => f.Rot).Select(f => f.Text)];

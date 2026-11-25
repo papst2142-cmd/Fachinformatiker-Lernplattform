@@ -36,6 +36,9 @@ public sealed partial class Hauptansicht
     /// <summary>Knopf „Zurück auf den Stand des Spiels“ (Start-Test; null = Raum unveraendert).</summary>
     internal Button? SpielRaumZurueckKnopf { get; private set; }
 
+    /// <summary>Satz „bleibt an“ unter dem Schalter (Start-Test; null = Raum unveraendert).</summary>
+    internal Control? SpielRaumBleibtAnHinweis { get; private set; }
+
     /// <summary>Rote Funde des offenen Raums nach der letzten Pruefung (Start-Test).</summary>
     internal IReadOnlyList<StadtbauFund> SpielRaumRot { get; private set; } = [];
 
@@ -54,6 +57,7 @@ public sealed partial class Hauptansicht
     {
         _spielRaumAendern.Children.Clear();
         SpielRaumZurueckKnopf = null;
+        SpielRaumBleibtAnHinweis = null;
         SpielRaumMarkenZeigen();
         if (_projekt is null || _spielRaumOffen is not { } schluessel)
         {
@@ -64,7 +68,8 @@ public sealed partial class Hauptansicht
         var schalter = new ToggleSwitch
         {
             Content = Schrift.Text(Texte.SpielRaumAendernSchalter + (an ? " (an)" : " (aus)"), "Klein"),
-            IsChecked = an, IsEnabled = darf && !(an && _projekt.GeaenderteSpielRaeume.Contains(schluessel)),
+            // Weisung P12-383 Fund 1: nie grau, solange der Raum geaendert ist (er bleibt an, der Satz darunter sagt warum)
+            IsChecked = an, IsEnabled = darf,
             OnContent = null, OffContent = null,
         }.Vorlese(Texte.SpielRaumAendernSchalter).Mit(Texte.SpielRaumAendernTipp);
         schalter.IsCheckedChanged += (_, _) => SpielRaumSchalten(schalter.IsChecked == true);
@@ -80,7 +85,16 @@ public sealed partial class Hauptansicht
             SpielRaumFundeZeigen(null);
             return;
         }
+        if (_projekt.GeaenderteSpielRaeume.Contains(schluessel))
+        {
+            SpielRaumBleibtAnHinweis = Hinweis(Texte.SpielRaumAendernBleibtAn);
+            _spielRaumAendern.Children.Add(SpielRaumBleibtAnHinweis);
+        }
         _spielRaumAendern.Children.Add(Hinweis(Texte.SpielRaumAendernErklaerung));
+        if (_projekt.SpielRaumEigeneMoebel(schluessel).Count > 0)
+        {
+            _spielRaumAendern.Children.Add(Hinweis(Texte.SpielRaumEigeneMoebelHinweis));
+        }
         var modi = new WrapPanel();
         foreach (var (text, tipp) in new[] { (Texte.SpielRaumWandZiehen, Texte.SpielRaumWandZiehenTipp), (Texte.SpielRaumTuerSetzen, Texte.SpielRaumTuerSetzenTipp), (Texte.SpielRaumGroesseKnopf, Texte.SpielRaumGroesseTipp) })
         {
@@ -131,9 +145,16 @@ public sealed partial class Hauptansicht
         {
             Melden(Texte.SpielRaumAendernNurStadt1);
         }
-        else if (!an && !_projekt.GeaenderteSpielRaeume.Contains(schluessel))
+        else if (!an && _projekt.GeaenderteSpielRaeume.Contains(schluessel))
         {
-            // aus: nur, solange nichts geaendert ist (sonst erst „Zurück auf den Stand des Spiels“)
+            // Weisung P12-383 Fund 1: geaendert bleibt an (die Karte baut den Schalter unten wieder an); erst „Zurück auf den
+            // Stand des Spiels“, dann aus
+            Melden(Texte.SpielRaumAendernBleibtAn);
+            Dispatcher.UIThread.Post(SpielRaumAendernZeigen);
+            return;
+        }
+        else if (!an)
+        {
             _projekt.SpielRaumBeenden(schluessel);
         }
         SpielRaumFlaeche.Waehlen(null);

@@ -35,6 +35,16 @@ public static partial class Texte
     public const string SpielRaumZurueckTipp = "Alle Änderungen an diesem Raum zurücknehmen (ein Schritt, „Rückgängig“ holt sie wieder).";
     public const string SpielRaumGeaendert = "geändert";
     public const string SpielRaumUnveraendert = "Unverändert: der Raum ist genau wie im Spiel.";
+
+    /// <summary>Weisung P12-383 Fund 1: der Schalter bleibt an, solange der Raum geaendert ist.</summary>
+    public const string SpielRaumAendernBleibtAn = "„Ändern“ bleibt an, solange der Raum geändert ist. Ausschalten geht erst nach „Zurück auf den Stand des Spiels“.";
+
+    /// <summary>Weisung P12-383 Fund 2: Beschriftung eines eigenen Moebels (Spielstand) im Ändern-Modus.</summary>
+    public static string SpielRaumEigenesMoebel(string name, bool karton) =>
+        karton ? name + ": kommt in den Karton" : name + " (eigenes Möbel, Platz im Spiel)";
+
+    public const string SpielRaumEigeneMoebelHinweis = "Gestrichelt: deine eigenen Möbel aus dem Spiel. Sie gehören nicht zum Raum; "
+        + "passt ihr Platz nach dem Umbau nicht mehr, stehen sie im Spiel im Karton (orange).";
     public const string SpielRaumFundlisteKeine = "Fundliste: nichts rot";
     public const string SpielRaumFundlistePrueft = "Fundliste: wird geprüft …";
     public const string SpielRaumFundlisteErklaerung = "Das Spiel bräuchte diese Stellen frei. Tippe einen Fund an: der Grundriss zeigt die Stelle mit rotem Ring.";

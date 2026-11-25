@@ -260,6 +260,15 @@ public sealed class GrundrissFlaeche : Control
             StueckZeichnen(ctx, schrift, d, rand, 0, 0, 1);
         }
 
+        // Weisung P12-383 Fund 2: eigene Moebel aus dem Spielstand (Startmatratze) gestrichelt an ihrem Platz im Spiel, orange,
+        // wenn das Spiel sie nach dem Umbau in den Karton stellt
+        foreach (var e in EigeneMoebel())
+        {
+            var farbe = Color.Parse(e.Karton ? "#E07A3F" : "#5A5A5A");
+            var r = Bild(e.X, e.Y, e.W, e.H);
+            ctx.DrawRectangle(new SolidColorBrush(farbe, 0.18), new Pen(new SolidColorBrush(farbe), 2) { DashStyle = new DashStyle([4, 3], 0) }, r);
+        }
+
         // Personen
         if (_projekt is not null && _ort is not null)
         {
@@ -355,7 +364,11 @@ public sealed class GrundrissFlaeche : Control
     public const double StueckGroesse = 10;
 
     /// <summary>Art eines Schilds (Start-Test).</summary>
-    public enum SchildArt { Person, Stueck }
+    public enum SchildArt { Person, Stueck, Eigen }
+
+    /// <summary>Eigene Moebel des Spielstands im Ändern-Modus eines Raums des Spiels (Weisung P12-383 Fund 2).</summary>
+    public List<Projekt.EigenesMoebel> EigeneMoebel() =>
+        _projekt is not null && _ort is not null && SpielRaeume.Ist(_ort) ? _projekt.SpielRaumEigeneMoebel(_ort) : [];
 
     /// <summary>
     /// Welle S 0.64.0 (Weisung P12-380 Punkt 415, P12-381 Antwort 5a und Zusatz): alle Schilder dieses Bilds. Vorrang haben die
@@ -414,6 +427,18 @@ public sealed class GrundrissFlaeche : Control
                 var ft = Text(text, StueckGroesse, schrift);
                 schilder.Add(new Schilder.Schild(text, Kasten(r), ft.Width + 6, ft.Height + 2, true));
                 arten.Add((SchildArt.Stueck, r));
+            }
+        }
+        foreach (var e in EigeneMoebel())
+        {
+            var r = Bild(e.X, e.Y, e.W, e.H);
+            if (Sichtbar(r))
+            {
+                // immer auf einem Schild neben dem Stueck (der Text ist laenger als das Stueck), auch bei kleinem Zoom
+                var text = Texte.SpielRaumEigenesMoebel(e.Name, e.Karton);
+                var ft = Text(text, StueckGroesse, schrift);
+                schilder.Add(new Schilder.Schild(text, Kasten(r), ft.Width + 6, ft.Height + 2, false));
+                arten.Add((SchildArt.Eigen, r));
             }
         }
         var gesetzt = Schilder.Setzen(schilder, sperren, Kasten(sichtRect));
@@ -488,7 +513,7 @@ public sealed class GrundrissFlaeche : Control
                 }
                 continue;
             }
-            if (art == SchildArt.Stueck)
+            if (art is SchildArt.Stueck or SchildArt.Eigen)
             {
                 // Linie vom Schild zum Stueck, damit klar ist, wozu die Beschriftung gehoert
                 var ziel = new Point(Math.Clamp(r.Center.X, anker.Left, anker.Right), Math.Clamp(r.Center.Y, anker.Top, anker.Bottom));
