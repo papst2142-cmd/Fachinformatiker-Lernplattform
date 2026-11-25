@@ -402,6 +402,7 @@ public sealed partial class SpielSeite : Grid
             }
             OeffnenMs ??= Stopwatch.GetElapsedTime(_angehaengt).TotalMilliseconds;
             SchilderSetzen();
+            UmbauBlaseSetzen();
             StadtteilSchildTakt();
         };
         // Sammelliste 162: neue Groesse (Fenster schmaler, waehrend eine andere Seite zu sehen war) sofort
@@ -1321,6 +1322,8 @@ public sealed partial class SpielSeite : Grid
         _zeile.Text = SpielProbeTexte.Tafelzeile(spiel.Zeile, AntippenGilt);
         Teil("Kopf und Zeile");
         HinweisfeldZeigen(spiel);
+        // Welle A 1.10.0 (Nico 3c, Hinweis 1a): einmal nach einem Umbau der Wohnung
+        UmbauHinweisZeigen(spiel);
         Teil("Hinweisfeld");
         _betreten.IsVisible = spiel.KannBetreten;
         // Phase 13 Welle 5: hinaus geht es nur im Erdgeschoss

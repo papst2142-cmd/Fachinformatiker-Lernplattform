@@ -65,8 +65,61 @@ public static partial class Wohnung
 
     private static long PyMod(long a, long b) => (checked((a % b) + b)) % b;
 
-    /// <summary>home_layout: {"moebel": {stueck: [x, y, dreh]}, "boeden": {raum: [art, farbe]}}, nur Moebel, die man besitzt.</summary>
+    /// <summary>
+    /// home_layout: {"moebel": {stueck: [x, y, dreh]}, "boeden": {raum: [art, farbe]}}, nur Moebel, die man besitzt.
+    /// Welle A 1.10.0 (Weisung P12-381, Nico 3c): ein gespeicherter Platz, der im Grundriss nicht mehr passt (Wohnung im
+    /// Werkzeug umgebaut: Stelle belegt, in der Wand, Raum weg), zaehlt als im Karton (<see cref="Umgebaut"/>); der Spielstand
+    /// selbst bleibt unveraendert. Gepruft wird in der Reihenfolge der Stuecke mit derselben Regel wie beim Aufstellen
+    /// (<see cref="PlatzProblem"/>), jedes gegen die schon passenden davor.
+    /// </summary>
     public static PyObjekt Einrichtung(Spielstand stand)
+    {
+        var gespeichert = EinrichtungGespeichert(stand);
+        var moebel = Objekt(gespeichert["moebel"]);
+        if (moebel.Count == 0 || UmbauAltFuerTests.Value)
+        {
+            return gespeichert;
+        }
+        var passend = new PyObjekt();
+        var probe = new PyObjekt { { "moebel", passend }, { "boeden", gespeichert["boeden"] } };
+        foreach (var (k, v) in moebel.OrderBy(p => p.Key, StringComparer.Ordinal))
+        {
+            var platz = Liste(v);
+            if (platz.Count == 3 && PlatzProblem(stand, k, stand.Moebel.Get(k), platz[0], platz[1], platz[2], probe).Length > 0)
+            {
+                continue;
+            }
+            passend.Add(k, v);
+        }
+        if (passend.Count == moebel.Count)
+        {
+            return gespeichert;
+        }
+        // Reihenfolge der Datei behalten (nur die unpassenden fallen weg)
+        var ergebnis = new PyObjekt();
+        foreach (var (k, v) in moebel.Where(p => Py.Hat(passend, p.Key)))
+        {
+            ergebnis.Add(k, v);
+        }
+        return new PyObjekt { { "moebel", ergebnis }, { "boeden", gespeichert["boeden"] } };
+    }
+
+    /// <summary>Nur Gegenprobe: Einrichtung wie bis A 1.9.0 (jeder gespeicherte Platz gilt, auch wenn er nicht mehr passt).</summary>
+    public static readonly AsyncLocal<bool> UmbauAltFuerTests = new();
+
+    /// <summary>
+    /// Welle A 1.10.0 (3c): Stuecke mit gespeichertem Platz, der nach einem Umbau der Wohnung nicht mehr passt (sie zaehlen als
+    /// im Karton), als (Stueck, Moebel-Kennung), nach Stueck sortiert. Leer = nichts umgebaut oder alles passt.
+    /// </summary>
+    public static List<(string Stueck, object? Moebel)> Umgebaut(Spielstand stand)
+    {
+        var gespeichert = Objekt(EinrichtungGespeichert(stand)["moebel"]);
+        var jetzt = Objekt(Einrichtung(stand)["moebel"]);
+        return [.. gespeichert.Where(p => !Py.Hat(jetzt, p.Key)).OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => (p.Key, stand.Moebel.Get(p.Key)))];
+    }
+
+    /// <summary>Die Einrichtung, wie sie im Spielstand steht (home_layout ohne Pruefung der Plaetze).</summary>
+    private static PyObjekt EinrichtungGespeichert(Spielstand stand)
     {
         var bleibe = Bleibe(stand.Wohnung, stand.Inhalt)!;
         var daten = stand.Einrichtungen.Get(stand.Wohnung) as PyObjekt
