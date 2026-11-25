@@ -216,6 +216,22 @@ public sealed class KnopfAnordnungTests
     }
 
     [Fact]
+    public void A10_Hinweis_verdeckt_nie_den_Text_Platz_fuer_den_Stick()
+    {
+        // Lage wie im Nahbild Handy quer 832 x 384 (P12-242 Bild 5): Hinweis 426 x 27 mittig, Text des rechten Sticks bei (533, 168)
+        IReadOnlyList<(double X, double Y, double W, double H)> texte = [(533, 168, 60, 30)];
+        static bool Deckt((double X, double Y, double W, double H) t, double y) => t.X < 203 + 426 && 203 < t.X + t.W && t.Y < y + 27 && y < t.Y + t.H;
+        // Gegenprobe: an der Wunschhoehe verdeckt er den Text
+        Assert.True(Deckt(texte[0], 148));
+        var y = KnopfAnordnung.HinweisOben(148, 80, 380, 203, 426, 27, texte);
+        Assert.False(Deckt(texte[0], y));
+        Assert.Equal(140, y);   // naechste freie Hoehe (darueber 8 Punkte, darunter erst 200)
+        // ohne Ueberdeckung bleibt die Wunschhoehe; ohne freie Hoehe auch
+        Assert.Equal(100, KnopfAnordnung.HinweisOben(100, 80, 380, 203, 426, 27, texte));
+        Assert.Equal(148, KnopfAnordnung.HinweisOben(148, 150, 190, 203, 426, 27, texte));
+    }
+
+    [Fact]
     public void A9_Raster_rastet_auf_8_ein_Hilfslinien_und_Schalter_gemerkt()
     {
         var p = KnopfAnordnung.Einrasten(new Platz(101.9, 59.5, 80));

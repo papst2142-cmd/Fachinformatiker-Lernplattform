@@ -4,6 +4,8 @@ using Avalonia.Automation.Peers;
 using Avalonia.Automation.Provider;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
 using Lernplattform.Core.Spiel;
 using Lernplattform.Core.Spiel.Probe;
@@ -91,6 +93,51 @@ public static partial class AutoMessung
         }
         bool Trifft(DaumenKnopf knopf) => seite.DaumenRechteck(knopf) is { } r && seite.Flaeche.TranslatePoint(default, seite) is { } f0
             && seite.InputHitTest(r.Center + f0) as Visual is { } v && (ReferenceEquals(v, knopf) || knopf.IsVisualAncestorOf(v));
+        // A10: Bild der Ebene des Bearbeiten-Modus (ohne Spiel darunter); auf dem Ring (Radius Bild/2 + 5) rundum die Farbe Rot
+        void RingObenPruefen(string name, Knopf k)
+        {
+            var (ebene, _) = seite.AnordnenEbeneFuerTests;
+            var st = seite.AnordnenStand!.Value;
+            if (ebene is null || seite.Flaeche.TranslatePoint(default, ebene) is not { } e0 || ebene.Bounds.Width < 1)
+            {
+                Pruefe(name, false, "keine Ebene");
+                return;
+            }
+            var groesse = new PixelSize((int)Math.Ceiling(ebene.Bounds.Width), (int)Math.Ceiling(ebene.Bounds.Height));
+            using var bild = new RenderTargetBitmap(groesse, new Vector(96, 96));
+            bild.Render(ebene);
+            var pixel = Pixel(bild);
+            var rot = Application.Current?.TryFindResource("Pinsel.red", out var rr) == true && rr is ISolidColorBrush rb ? rb.Color : Colors.Red;
+            var p = st.Lagen[k];
+            var radius = (KnopfAnordnung.Durchmesser(k, seite.Flaeche.GrundBereich, p.Prozent) / 2) + 5;
+            var falsch = new List<string>();
+            for (var grad = 0; grad < 360; grad += 10)
+            {
+                var rad = grad * Math.PI / 180;
+                var x = (int)Math.Floor(e0.X + p.X + (radius * Math.Cos(rad)));
+                var y = (int)Math.Floor(e0.Y + p.Y + (radius * Math.Sin(rad)));
+                if (x < 0 || y < 0 || x >= groesse.Width || y >= groesse.Height)
+                {
+                    continue;
+                }
+                var ist = pixel[(y * groesse.Width) + x];
+                var ab = Math.Max(Math.Abs(ist.R - rot.R), Math.Max(Math.Abs(ist.G - rot.G), Math.Abs(ist.B - rot.B)));
+                if (ab > 40)
+                {
+                    falsch.Add(string.Create(inv, $"{grad} Grad {ist}"));
+                }
+            }
+            Pruefe(name, st.Fehler != KnopfAnordnung.Fehler.Keiner && st.Gewaehlt == k && seite.AnordnenOben == k && falsch.Count == 0,
+                string.Create(inv, $"Fehler {st.Fehler}, obenauf {seite.AnordnenOben}, nicht rot an {falsch.Count} von 36 Stellen: {string.Join(", ", falsch.Take(5))}"));
+        }
+        void HinweisFreiPruefen(string name)
+        {
+            var (_, texte) = seite.AnordnenEbeneFuerTests;
+            var hb = seite.AnordnenTeile.Hinweis?.Bounds;
+            var ueber = texte.Where(t => hb is { } r && t.Deflate(4).Intersects(r)).ToList();
+            Pruefe(name, hb is not null && texte.Count > 0 && ueber.Count == 0,
+                string.Create(inv, $"Hinweis {hb}, Texte „Platz fuer den Stick“ {texte.Count}, verdeckt {ueber.Count}"));
+        }
         void Ziehen(Platz von, Platz nach)
         {
             seite.AnordnenDruecken(91, new Point(von.X, von.Y));
@@ -176,10 +223,20 @@ public static partial class AutoMessung
                 var hb = hinweis?.Bounds;
                 Pruefe(punkt + " A3 Hinweis im Bild", hb is { } hr && hr.X >= 0 && hr.Right <= seite.Bounds.Width + 0.5 && hr.Width > 0,
                     string.Create(inv, $"Hinweis {hb?.X:0.#} bis {hb?.Right:0.#}, Bild {seite.Bounds.Width:0.#}"));
+                // A10 (Weisung P12-378): der gezogene Knopf liegt obenauf, sein roter Ring ist rundum zu sehen (Bild der Ebene)
+                RingObenPruefen(punkt + " A10 Ich 50 % obenauf rot", Knopf.Ich);
+                HinweisFreiPruefen(punkt + " A10 Hinweis frei (Ich)");
                 seite.AnordnenLoslassen(91);
                 var ichNach = seite.AnordnenStand!.Value.Lagen[Knopf.Ich];
                 Pruefe(punkt + " A3 ungueltig rot und zurueck", rot == KnopfAnordnung.Fehler.Ueberlappt && satz.StartsWith(SpielProbeTexte.AnordnenUeberlappt, StringComparison.Ordinal)
                     && ichNach == ichVor, string.Create(inv, $"Fehler {rot}, Satz \"{satz}\", vorher ({ichVor.X:0.#}/{ichVor.Y:0.#}), nachher ({ichNach.X:0.#}/{ichNach.Y:0.#})"));
+                // A10 auch bei 100 %: Hinknien auf Springen ziehen (der kleinere Ring liegt auf dem groesseren Knopf; vorher darunter)
+                var knienVor = seite.AnordnenStand!.Value.Lagen[Knopf.Knien];
+                Ziehen(knienVor, seite.AnordnenStand!.Value.Lagen[Knopf.Springen]);
+                await ansicht.BildFertigAsync();
+                RingObenPruefen(punkt + " A10 Hinknien 100 % obenauf rot", Knopf.Knien);
+                HinweisFreiPruefen(punkt + " A10 Hinweis frei (Hinknien)");
+                seite.AnordnenLoslassen(91);
                 // A7: Screenreader waehlt den Knopf, ein Pfeil verschiebt um einen Rasterschritt
                 Tippen(knoepfe[Knopf.Telefon]);
                 var handyVor = seite.AnordnenStand!.Value.Lagen[Knopf.Telefon];

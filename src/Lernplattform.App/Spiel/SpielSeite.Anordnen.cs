@@ -34,6 +34,8 @@ public sealed partial class SpielSeite
 
     private Grid? _anordnenEbene;
     private AnordnenBild? _anordnenBild;
+    private AnordnenBild? _anordnenRingOben;
+    private List<Rect> _anordnenStickTexte = [];
     private Canvas? _anordnenFlaeche;
     private readonly Dictionary<Knopf, DaumenKnopf> _anordnenKnoepfe = [];
     private Border? _anordnenLeiste;
@@ -489,10 +491,13 @@ public sealed partial class SpielSeite
             return;
         }
         _anordnenBild = new AnordnenBild { IsHitTestVisible = false };
+        // Weisung P12-378 (A10): der Ring des gewaehlten oder gezogenen Knopfs liegt ueber allem (auch ueber Leiste und Hinweis)
+        _anordnenRingOben = new AnordnenBild { IsHitTestVisible = false, NurRing = true };
         _anordnenFlaeche = new Canvas();
         var ebene = new Grid { Background = Brushes.Transparent, IsVisible = false, ClipToBounds = true };
         ebene.Children.Add(_anordnenBild);
         ebene.Children.Add(_anordnenFlaeche);
+        ebene.Children.Add(_anordnenRingOben);
         var symbole = new Dictionary<Knopf, DaumenSymbol>
         {
             [Knopf.Springen] = DaumenSymbol.Springen,
@@ -705,7 +710,8 @@ public sealed partial class SpielSeite
             [Knopf.Ich] = SpielProbeTexte.IchSichtKnopf,
             [Knopf.Telefon] = SpielProbeTexte.KnopfTelefon,
         };
-        // Knoepfe
+        // Knoepfe; der gewaehlte (gezogene, rote) liegt obenauf, ueber allen anderen Knoepfen, Leiste und Hinweis (A10)
+        var oben = AnordnenOben;
         foreach (var (k, knopf) in _anordnenKnoepfe)
         {
             if (!s.Lagen.TryGetValue(k, out var p))
@@ -714,6 +720,11 @@ public sealed partial class SpielSeite
                 continue;
             }
             knopf.IsVisible = true;
+            var z = k == oben ? 20 : 0;
+            if (knopf.ZIndex != z)
+            {
+                knopf.ZIndex = z;
+            }
             var d = KnopfAnordnung.Durchmesser(k, b, p.Prozent);
             var scheibe = k is Knopf.Springen or Knopf.Knien or Knopf.Liegen;
             knopf.Setzen(d, knopf.Symbol, false, string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.AnordnenVerschieben, namen[k]),
@@ -773,12 +784,6 @@ public sealed partial class SpielSeite
         }
         _anordnenHinweis.Measure(new Size(hinweisMax, double.PositiveInfinity));
         var hs = _anordnenHinweis.DesiredSize;
-        var hy = Math.Max(sicher.O + 8 + leisteHoehe + 8, (Bounds.Height * (s.Fehler != KnopfAnordnung.Fehler.Keiner ? 0.42 : 0.36)) - (hs.Height / 2));
-        var hx = (Bounds.Width - hs.Width) / 2;
-        Canvas.SetLeft(_anordnenHinweis, hx);
-        Canvas.SetTop(_anordnenHinweis, hy);
-        _anordnenHinweis.Arrange(new Rect(hx, hy, hs.Width, hs.Height));
-        // Bild darunter: Abdunkeln, Raster, gesperrte Flaechen, Platz fuer die Sticks, Ringe, Hilfslinien
         var sticks = new List<(double X, double Y, double R)>();
         foreach (var seite in new[] { Sticks.Seite.Links, Sticks.Seite.Rechts })
         {
@@ -787,12 +792,30 @@ public sealed partial class SpielSeite
                 sticks.Add(m);
             }
         }
+        // der Hinweis verdeckt nie den Text „Platz fuer den Stick“ (Weisung P12-378): naechste freie Hoehe zur Wunschhoehe
+        _anordnenStickTexte = [.. sticks.Select(m => AnordnenBild.StickText(f0, m.X, m.Y).Inflate(4))];
+        var hyOben = sicher.O + 8 + leisteHoehe + 8;
+        var hyWunsch = Math.Max(hyOben, (Bounds.Height * (s.Fehler != KnopfAnordnung.Fehler.Keiner ? 0.42 : 0.36)) - (hs.Height / 2));
+        var hx = (Bounds.Width - hs.Width) / 2;
+        var hy = KnopfAnordnung.HinweisOben(hyWunsch, hyOben, Bounds.Height - sicher.U - 4, hx, hs.Width, hs.Height,
+            [.. _anordnenStickTexte.Select(t => (t.X, t.Y, t.Width, t.Height))]);
+        Canvas.SetLeft(_anordnenHinweis, hx);
+        Canvas.SetTop(_anordnenHinweis, hy);
+        _anordnenHinweis.Arrange(new Rect(hx, hy, hs.Width, hs.Height));
+        // Bild darunter: Abdunkeln, Raster, gesperrte Flaechen, Platz fuer die Sticks, Ringe, Hilfslinien
         var (hx0, hy0) = s.Finger is not null && s.Gewaehlt is { } hk && KnopfAnordnung.RasterAn ? KnopfAnordnung.Hilfslinien(s.Lagen, hk) : (null, null);
+        var ringe = s.Lagen.Select(e => (e.Key, Ring: (e.Value.X, e.Value.Y, KnopfAnordnung.Durchmesser(e.Key, b, e.Value.Prozent),
+            e.Key == s.Rot ? AnordnenBild.Ring.Rot : e.Key == s.Gewaehlt ? AnordnenBild.Ring.Gewaehlt : AnordnenBild.Ring.Normal))).ToList();
         _anordnenBild.Setzen(new AnordnenBild.Stand(f0, b, KnopfAnordnung.RasterAn,
-            [.. s.Lagen.Select(e => (e.Value.X, e.Value.Y, KnopfAnordnung.Durchmesser(e.Key, b, e.Value.Prozent),
-                e.Key == s.Rot ? AnordnenBild.Ring.Rot : e.Key == s.Gewaehlt ? AnordnenBild.Ring.Gewaehlt : AnordnenBild.Ring.Normal))],
-            sticks, hx0, hy0));
+            [.. ringe.Where(e => e.Key != oben).Select(e => e.Ring)], sticks, hx0, hy0));
+        _anordnenRingOben!.Setzen(new AnordnenBild.Stand(f0, b, false, [.. ringe.Where(e => e.Key == oben).Select(e => e.Ring)], [], null, null));
     }
+
+    /// <summary>Knopf, der obenauf liegt (A10): der rote, sonst der gewaehlte (auch beim Ziehen); null = keiner.</summary>
+    internal Knopf? AnordnenOben => _anordnen is { } s ? s.Rot ?? s.Gewaehlt : null;
+
+    /// <summary>Start-Test: Ebene des Bearbeiten-Modus (fuer ein Bild ohne das Spiel darunter) und die Flaechen der Texte „Platz fuer den Stick“.</summary>
+    internal (Control? Ebene, IReadOnlyList<Rect> StickTexte) AnordnenEbeneFuerTests => (_anordnenEbene, _anordnenStickTexte);
 
     private static string FehlerText(KnopfAnordnung.Fehler f) => f switch
     {
@@ -813,6 +836,19 @@ public sealed partial class SpielSeite
 
         private Stand? _stand;
 
+        /// <summary>Nur die Ringe zeichnen (ohne Abdunkeln, Raster und Flaechen): Ring des Knopfs obenauf.</summary>
+        public bool NurRing { get; init; }
+
+        /// <summary>Flaeche des Texts „Platz fuer den Stick“ um die Mitte (x, y) der Flaeche (Seitenkoordinaten).</summary>
+        public static Rect StickText(Point f0, double x, double y)
+        {
+            var text = StickFormat();
+            return new Rect(f0.X + x - (text.Width / 2), f0.Y + y - (text.Height / 2), text.Width, text.Height);
+        }
+
+        private static FormattedText StickFormat() => new(SpielProbeTexte.PlatzFuerStick, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+            Typeface.Default, 11, new SolidColorBrush(Color.FromArgb(220, 255, 255, 255))) { TextAlignment = TextAlignment.Center };
+
         public void Setzen(Stand stand)
         {
             _stand = stand;
@@ -828,7 +864,10 @@ public sealed partial class SpielSeite
             }
             var w = Bounds.Width;
             var h = Bounds.Height;
-            dc.FillRectangle(new SolidColorBrush(Color.FromArgb(95, 0, 0, 0)), new Rect(0, 0, w, h));
+            if (!NurRing)
+            {
+                dc.FillRectangle(new SolidColorBrush(Color.FromArgb(95, 0, 0, 0)), new Rect(0, 0, w, h));
+            }
             using (dc.PushTransform(Matrix.CreateTranslation(s.F0.X, s.F0.Y)))
             {
                 var b = s.B;
@@ -844,9 +883,12 @@ public sealed partial class SpielSeite
                         }
                     }
                 }
-                Schraffur(dc, new Rect(0, 0, b.Breite, b.Oben + KnopfAnordnung.RandBild));
                 var leiste = KnopfAnordnung.Leiste(b);
-                if (leiste.X2 > leiste.X1)
+                if (!NurRing)
+                {
+                    Schraffur(dc, new Rect(0, 0, b.Breite, b.Oben + KnopfAnordnung.RandBild));
+                }
+                if (!NurRing && leiste.X2 > leiste.X1)
                 {
                     Schraffur(dc, new Rect(leiste.X1, leiste.Y1, leiste.X2 - leiste.X1, leiste.Y2 - leiste.Y1));
                 }
@@ -855,8 +897,7 @@ public sealed partial class SpielSeite
                 foreach (var (x, y, r) in s.Sticks)
                 {
                     dc.DrawEllipse(null, gestrichelt, new Point(x, y), r, r);
-                    var text = new FormattedText(SpielProbeTexte.PlatzFuerStick, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-                        Typeface.Default, 11, new SolidColorBrush(Color.FromArgb(220, 255, 255, 255))) { TextAlignment = TextAlignment.Center };
+                    var text = StickFormat();
                     dc.DrawText(text, new Point(x - (text.Width / 2) + (text.WidthIncludingTrailingWhitespace / 2), y - (text.Height / 2)));
                 }
                 var linie = new Pen(new SolidColorBrush(Color.FromRgb(120, 230, 245)), 3, new DashStyle([2.5, 2.5], 0));
@@ -878,7 +919,9 @@ public sealed partial class SpielSeite
                     switch (ring)
                     {
                         case Ring.Rot:
+                            // gleiche Breite und Deckkraft wie der Ring „gewaehlt“ (A10), aussen derselbe weisse Ring
                             dc.DrawEllipse(null, new Pen(new SolidColorBrush(rot), 4), m, r + 5, r + 5);
+                            dc.DrawEllipse(null, new Pen(new SolidColorBrush(Color.FromArgb(230, 255, 255, 255)), 2), m, r + 9, r + 9);
                             break;
                         case Ring.Gewaehlt:
                             dc.DrawEllipse(null, new Pen(new SolidColorBrush(akzent), 4), m, r + 5, r + 5);

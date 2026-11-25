@@ -265,6 +265,30 @@ public static class KnopfAnordnung
         return false;
     }
 
+    /// <summary>
+    /// Obere Kante des Hinweises im Bearbeiten-Modus (Weisung P12-378): die Wunschhoehe, ausser der Hinweis (x, Breite, Hoehe)
+    /// verdeckt dort einen der <paramref name="texte"/> („Platz fuer den Stick“, je x, y, Breite, Hoehe); dann die naechste freie
+    /// Hoehe (Schritt 4) zwischen <paramref name="oben"/> und <paramref name="unten"/> (Unterkante). Gibt es keine, bleibt die Wunschhoehe.
+    /// </summary>
+    public static double HinweisOben(double wunsch, double oben, double unten, double x, double breite, double hoehe,
+        IReadOnlyList<(double X, double Y, double W, double H)> texte)
+    {
+        bool Frei(double y) => !texte.Any(t => t.X < x + breite && x < t.X + t.W && t.Y < y + hoehe && y < t.Y + t.H);
+        if (Frei(wunsch))
+        {
+            return wunsch;
+        }
+        double? beste = null;
+        for (var y = oben; y + hoehe <= unten; y += 4)
+        {
+            if (Frei(y) && (beste is not { } b || Math.Abs(y - wunsch) < Math.Abs(b - wunsch)))
+            {
+                beste = y;
+            }
+        }
+        return beste ?? wunsch;
+    }
+
     // ---------------------------------------------------------------- Raster und Hilfslinien
 
     /// <summary>Auf das Raster einrasten (Mitte auf ein Vielfaches von <see cref="Raster"/>).</summary>
