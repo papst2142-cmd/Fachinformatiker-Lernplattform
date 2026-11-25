@@ -1,25 +1,21 @@
-Am Handy und Tablet ordnest du die runden Knöpfe im Spiel jetzt selbst an und stellst für jeden die Größe ein.
+Das Spiel kann jetzt Räume übernehmen, die im Stadtbau-Werkzeug umgebaut wurden, und es verliert dabei keines deiner Möbel.
 
-- Unter Optionen › Steuerung gibt es den Knopf „Knöpfe anordnen“. Er öffnet das Spiel angehalten im Bearbeiten-Modus: Die Figur bleibt stehen, die Sticks und das Antippen ruhen, oben steht eine Leiste mit „Standard“, „Abbrechen“ und „Fertig“.
-- Du verschiebst die sechs runden Knöpfe mit dem Finger: Springen, Hinknien, Hinlegen, die Handlung, die Ich-Sicht und das Spiel-Handy. Das X oben rechts und die Sticks bleiben, wo sie sind.
-- Tippst du einen Knopf an, ist er gewählt (farbiger Ring). Oben stellst du mit dem Regler seine Größe von 50 bis 150 Prozent ein; die Mitte ist 100 Prozent, so groß wie bisher. Auch ein kleiner Knopf bleibt sicher zu treffen: Die Fläche zum Tippen ist immer mindestens so groß wie der kleinste Knopf bisher.
-- Der Schalter „Raster“ oben ist an: Dann rastet ein Knopf in kleinen Schritten ein, und eine Linie zeigt, wenn er auf gleicher Höhe oder Linie mit einem anderen steht. Schaltest du ihn aus, ziehst du ganz frei. Das Programm merkt sich den Schalter.
-- Ein Knopf kann nie auf einem anderen liegen, nie unter der Kopfzeile, der Leiste oder einer Kamera-Aussparung und nie so, dass für einen Stick kein Platz mehr bleibt. An so einer Stelle wird er rot, ein Satz sagt warum, und beim Loslassen springt er an die letzte passende Stelle zurück. Mit dem Screenreader wählst du einen Knopf und verschiebst ihn mit den Pfeilen oben.
-- „Fertig“ speichert, „Abbrechen“ lässt alles, wie es war, „Standard“ bringt nach einer Rückfrage alle Knöpfe zurück an ihren Platz und auf 100 Prozent. Hochformat und Querformat haben je eine eigene Anordnung.
-- Passt deine Anordnung auf einem Bildschirm einmal nicht, zum Beispiel weil die Leiste unten aufgeklappt ist, rückt ein Knopf nur dort ein Stück zur Seite. Geht es gar nicht, gilt der Standard, und das Spiel sagt dir das einmal.
-- Ohne eigene Anordnung sieht das Spiel genau aus wie bisher. Am PC ändert sich nichts. Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+- Die Räume des Spiels (deine Wohnung, das Büro, die Serverfarm, die Zweigstelle und die Räume der Kunden) lassen sich ab jetzt im Stadtbau-Werkzeug umbauen. Kommt so ein Umbau mit einer neuen Stadt ins Spiel, baut das Spiel den Raum genau so, wie er im Werkzeug zu sehen war. Heute ist noch kein Raum umgebaut: Alles sieht aus wie bisher.
+- Passt nach einem Umbau ein Möbelstück deiner Wohnung nicht mehr an seinen Platz, verschwindet es nicht: Es steht dann im Karton. Beim ersten Betreten nach dem Umbau sagt dir das Spiel einmal, welche Möbel betroffen sind. Tippe „Aufstellen“ und stell sie neu auf. Verkaufst du ein Möbelstück aus dem Karton, bekommst du denselben Betrag wie bisher.
+- Die automatische Prüfung beim Start tippt Knöpfe erst an, wenn sie wirklich an der Stelle sitzen, und meldet einen hängenden Bildaufbau sofort mit Angaben. Das betrifft nur die Prüfung, nicht dich.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.9.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.10.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.9.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.9.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.9.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.9.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.10.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.10.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.10.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.10.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

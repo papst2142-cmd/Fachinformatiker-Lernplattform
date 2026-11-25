@@ -3,6 +3,17 @@
 Das Stadtbau-Werkzeug ist ein eigenes Programm neben der Lernplattform (Windows-PC und Android-Tablet). Damit werden
 Häuser und Innenräume der Spielstadt gebaut; die fertige Datei wird geprüft und in die Lernplattform eingebaut.
 
+## S 0.64.0
+
+Die Räume des Spiels lassen sich jetzt ändern: Möbel, Wände, Türen und die Größe des ganzen Hauses.
+
+- Unter „Räume des Spiels ansehen“ hat jeder Raum rechts die Karte „Raum ändern“. Ist der Schalter „Ändern“ aus, siehst du den Raum genau wie im Spiel. Schaltest du ihn ein, bearbeitest du ihn wie einen eigenen Innenraum: Möbel verschieben, mit „Wand ziehen“ die Wände eines Raums oder des Flurs verschieben, mit „Tür setzen“ eine Tür verschieben oder breiter machen und mit „Raumgröße“ das ganze Haus breiter oder tiefer machen.
+- Ein geänderter Raum trägt die Marke „geändert“, auch in der Liste links. „Zurück auf den Stand des Spiels“ nimmt alle Änderungen an einem Raum in einem Schritt zurück; „Rückgängig“ holt sie wieder.
+- Darunter steht die Fundliste des Raums. Rot wird es, wenn die Tür nach draußen fehlt oder zugestellt ist, wenn ein Schreibtisch, der PC zu Hause, der Kleiderschrank oder der Platz einer Person nicht mehr erreichbar ist, wenn ein Flur schmaler als 1,80 m, eine Diele schmaler als 1,32 m oder eine Tür schmaler als 0,90 m ist oder wenn ein Raum aus dem Haus ragt. Tippst du einen Fund an, zeigt der Grundriss die Stelle mit einem roten Ring. Solange ein Fund rot ist, ist der Export gesperrt.
+- In die Datei für das Spiel kommen nur die Räume, die du geändert hast. Ohne Änderung bleiben Projekt und Export-Datei genau wie bisher. Räume des Spiels ändern geht nur in einem Projekt auf der heutigen Stadt, nicht in einer neuen Stadt oder einer Paket-Stadt.
+- Im Grundriss stehen die Namen der Räume und die Beschriftungen der Möbel jetzt ganz auf kleinen Schildern und überdecken sich nicht mehr.
+- Ältere Projekte und Export-Dateien öffnet das Werkzeug wie bisher. Eine Datei aus einer neueren Fassung lehnt es mit einer klaren Meldung ab.
+
 ## S 0.63.0
 
 Die Innenräume in der 3D-Ansicht haben jetzt Türen, genau wie im Spiel.
