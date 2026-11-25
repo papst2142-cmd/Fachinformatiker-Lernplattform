@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 1.10.0
+Das Spiel kann jetzt Räume übernehmen, die im Stadtbau-Werkzeug umgebaut wurden, und es verliert dabei keines deiner Möbel.
+
+- Die Räume des Spiels (deine Wohnung, das Büro, die Serverfarm, die Zweigstelle und die Räume der Kunden) lassen sich ab jetzt im Stadtbau-Werkzeug umbauen. Kommt so ein Umbau mit einer neuen Stadt ins Spiel, baut das Spiel den Raum genau so, wie er im Werkzeug zu sehen war. Heute ist noch kein Raum umgebaut: Alles sieht aus wie bisher.
+- Passt nach einem Umbau ein Möbelstück deiner Wohnung nicht mehr an seinen Platz, verschwindet es nicht: Es steht dann im Karton. Beim ersten Betreten nach dem Umbau sagt dir das Spiel einmal, welche Möbel betroffen sind. Tippe „Aufstellen“ und stell sie neu auf. Verkaufst du ein Möbelstück aus dem Karton, bekommst du denselben Betrag wie bisher.
+- Die automatische Prüfung beim Start tippt Knöpfe erst an, wenn sie wirklich an der Stelle sitzen, und meldet einen hängenden Bildaufbau sofort mit Angaben. Das betrifft nur die Prüfung, nicht dich.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.9.0
 Am Handy und Tablet ordnest du die runden Knöpfe im Spiel jetzt selbst an und stellst für jeden die Größe ein.
 

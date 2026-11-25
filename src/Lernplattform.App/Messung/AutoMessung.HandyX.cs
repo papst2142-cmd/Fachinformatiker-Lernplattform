@@ -80,7 +80,7 @@ public static partial class AutoMessung
                     await Task.WhenAny(offen, Task.Delay(3000));
                     await ansicht.BildFertigAsync();
                     var zu = Dialog.Offen is null && offen.IsCompleted && !seite.HandyOffen;
-                    Pruefe($"{reiter} {art} schliesst", zu, zu ? "Handy zu" : "Handy OFFEN");
+                    Pruefe($"{reiter} {art} schliesst", zu, zu ? "Handy zu" : "Handy OFFEN" + (art is "Maus" or "Finger" ? TrefferZuletzt : ""));
                     Dialog.AlleSchliessen();
                     await ansicht.BildFertigAsync();
                 }

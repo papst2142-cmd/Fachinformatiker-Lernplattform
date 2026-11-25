@@ -150,8 +150,18 @@ public sealed partial class Hauptansicht
         }
         _spielRaumWahlFuellt = false;
         SpielRaumFlaeche.Zeigen(_projekt, schluessel);
+        SpielRaumMasseZeigen(schluessel);
+        // Welle S 0.64.0 (Weisung P12-381): Karte „Raum ändern“ und Fundliste
+        SpielRaumAendernZeigen();
+        SpielRaum3DAktualisieren();
+        Melden(Texte.SpielRaumGeoeffnet(_projekt.SpielRaumName(schluessel), _projekt.SpielRaumInBearbeitung(schluessel)));
+    }
+
+    /// <summary>Masse des Raums wie im Spiel (nach jeder Aenderung neu).</summary>
+    private void SpielRaumMasseZeigen(string schluessel)
+    {
         _spielRaumMasse.Children.Clear();
-        if (_projekt.SpielRaum(schluessel) is { } innen)
+        if (_projekt?.SpielRaum(schluessel) is { } innen)
         {
             foreach (var zeile in SpielRaeume.Masse(innen.Gebaeude))
             {
@@ -164,8 +174,6 @@ public sealed partial class Hauptansicht
         {
             _spielRaumMasse.Children.Add(Hinweis(Texte.SpielRaumFehlt));
         }
-        SpielRaum3DAktualisieren();
-        Melden(Texte.SpielRaumGeoeffnet(_projekt.SpielRaumName(schluessel)));
     }
 
     private Control SpielRaeumeBauen()
@@ -236,10 +244,11 @@ public sealed partial class Hauptansicht
             Spacing = 12,
             Children =
             {
-                Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.SpielRaumNurAnsehen, "Mittel", FontWeight.Bold), Hinweis(Texte.SpielRaeumeErklaerung) } }),
                 Schrift.Karte(new StackPanel { Spacing = 6, Children = { Schrift.Text(Texte.SpielRaumMasse, "Mittel", FontWeight.Bold), _spielRaumMasse } }),
             },
         };
+        // Welle S 0.64.0: Karten „Raum ändern“ und Fundliste oben
+        rechts.Children.InsertRange(0, SpielRaumAendernKarten());
         var rechtsRollen = new ScrollViewer { Content = new Border { Child = rechts, Padding = new Thickness(0, 0, Dialog.RandFuerLeiste, 0) }, Margin = new Thickness(0, 12, 12, 12) };
 
         var g = new Grid { ColumnDefinitions = new ColumnDefinitions("260,*,340") };

@@ -793,6 +793,12 @@ public sealed partial class Hauptansicht : UserControl
         {
             AussenPruefenStarten();
         }
+        if (ZeigtSpielRaeume)
+        {
+            // Welle S 0.64.0: Aenderung an einem Raum des Spiels (die Ansicht bleibt, der Ort der Stadt auch)
+            SpielRaumProjektGeaendert();
+            return;
+        }
         if (_projekt is not null && _projekt.Ort != _ort && _projekt.Ort.Length > 0 && _innen)
         {
             // Rueckgaengig in einem anderen Ort: dorthin wechseln
@@ -2933,7 +2939,14 @@ public sealed partial class Hauptansicht : UserControl
     {
         Flaeche.Waehlen(null);
         Karte.Waehlen(null);
-        if (_projekt!.LetzterSchrittDraussen && _innen)
+        SpielRaumFlaeche.Waehlen(null);
+        if (_projekt!.LetzterSchrittSpielRaum is { } spielRaum && (!ZeigtSpielRaeume || _spielRaumOffen != spielRaum))
+        {
+            // Welle S 0.64.0: Schritt an einem Raum des Spiels zeigt diesen Raum
+            SpielRaeumeZeigen(spielRaum);
+            return;
+        }
+        if (_projekt.LetzterSchrittDraussen && _innen)
         {
             ReiterZeigen(innen: false);
         }

@@ -1,0 +1,15 @@
+{
+ "format": "fisbau",
+ "formatversion": 6,
+ "werkzeug": "Fachinformatiker Stadtbau S 0.63.0",
+ "name": "Lindenau",
+ "stadt": "neu_lindenau",
+ "basis": null,
+ "leer": {"breite": 32.0, "hoehe": 24.0, "frei": true},
+ "ort": "",
+ "nachricht": "",
+ "grundrisse": {},
+ "aussen": {"stadtdaten/paket": [{"kennung": "lindenau", "name": "Lindenau am See"}]},
+ "verlauf": [],
+ "zeiger": 0
+}

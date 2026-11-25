@@ -637,7 +637,8 @@ public sealed partial class Innenraum
     /// </summary>
     public static PyObjekt MitZusatz(PyObjekt gebaeude, PyObjekt? zusatz)
     {
-        if (zusatz is null)
+        // Welle A 1.10.0: ein im Werkzeug geaenderter Raum des Spiels traegt seine Zusaetze schon (nie doppelt einmischen)
+        if (zusatz is null || ZusaetzeEingebaut(gebaeude))
         {
             return gebaeude;
         }

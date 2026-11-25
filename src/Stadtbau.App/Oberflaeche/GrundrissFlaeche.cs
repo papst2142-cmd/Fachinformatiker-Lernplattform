@@ -88,7 +88,8 @@ public sealed class GrundrissFlaeche : Control
     /// Nur ansehen: Projekt nur zum Lesen oder ein Raum des Spiels (Welle S 0.60.0, <see cref="SpielRaeume"/>); dann waehlt ein
     /// Tipp nur, nichts wird verschoben, gesetzt, gedreht, kopiert oder geloescht.
     /// </summary>
-    public bool Gesperrt => _projekt is null || _projekt.NurLesen || SpielRaeume.Ist(_ort);
+    /// <remarks>Seit S 0.64.0 (Weisung P12-381): ein Raum des Spiels nur, solange „Ändern“ aus ist.</remarks>
+    public bool Gesperrt => _projekt is null || _projekt.NurLesen || (SpielRaeume.Ist(_ort) && !_projekt.SpielRaumInBearbeitung(_ort!));
 
     private PyObjekt? Gebaeude => _projekt is not null && _ort is not null ? _projekt.Grundriss(_ort) : null;
 
@@ -153,6 +154,13 @@ public sealed class GrundrissFlaeche : Control
         _zoom = Math.Max(_zoom, 40);
         var hoehe = Math.Max(48, Bounds.Height - UntenFrei);
         _versatz = new Point((Bounds.Width / 2) - (x * _zoom), (hoehe / 2) - (y * _zoom));
+        InvalidateVisual();
+    }
+
+    /// <summary>Ansicht um <paramref name="um"/> Bildpunkte schieben (wie die Geste „Ansicht schieben“; Start-Test 415 B2).</summary>
+    public void AnsichtSchieben(Vector um)
+    {
+        _versatz += um;
         InvalidateVisual();
     }
 
@@ -252,6 +260,15 @@ public sealed class GrundrissFlaeche : Control
             StueckZeichnen(ctx, schrift, d, rand, 0, 0, 1);
         }
 
+        // Weisung P12-383 Fund 2: eigene Moebel aus dem Spielstand (Startmatratze) gestrichelt an ihrem Platz im Spiel, orange,
+        // wenn das Spiel sie nach dem Umbau in den Karton stellt
+        foreach (var e in EigeneMoebel())
+        {
+            var farbe = Color.Parse(e.Karton ? "#E07A3F" : "#5A5A5A");
+            var r = Bild(e.X, e.Y, e.W, e.H);
+            ctx.DrawRectangle(new SolidColorBrush(farbe, 0.18), new Pen(new SolidColorBrush(farbe), 2) { DashStyle = new DashStyle([4, 3], 0) }, r);
+        }
+
         // Personen
         if (_projekt is not null && _ort is not null)
         {
@@ -261,7 +278,6 @@ public sealed class GrundrissFlaeche : Control
                 {
                     var m = Bild(Py.F(pl[0]), Py.F(pl[1]), 0, 0).TopLeft;
                     ctx.DrawEllipse(new SolidColorBrush(Color.Parse("#E07A3F")), new Pen(Brushes.White, 2), m, 0.28 * _zoom, 0.28 * _zoom);
-                    Schreiben(ctx, schrift, Get(p, "name") as string ?? "", m + new Point(0.32 * _zoom, -8), 11, Brushes.Black, 0.7);
                 }
             }
         }
@@ -284,6 +300,9 @@ public sealed class GrundrissFlaeche : Control
         {
             NamenSchild(ctx, schrift, name, Bearbeitung.NamenLage(g, bereich));
         }
+
+        // Welle S 0.64.0 (415, Zusatz P12-381): Namen der Personen und Beschriftungen der Stuecke ganz und ohne Ueberdeckung
+        SchilderZeichnen(ctx, schrift);
 
         // Ausgewaehltes Stueck (beim Ziehen an der neuen Stelle)
         if (Auswahl is { } a && Gueltig(g, a))
@@ -336,10 +355,173 @@ public sealed class GrundrissFlaeche : Control
                 var seite = Math.Min(r.Width, r.Height);
                 ctx.DrawImage(bild.Bild, bild.Quelle, new Rect(r.Center.X - (seite / 2), r.Center.Y - (seite / 2), seite, seite));
             }
-            if (r.Width > 46 && r.Height > 14)
+        }
+    }
+
+    /// <summary>Groesse der Namen der Personen und der Beschriftungen der Stuecke in Bildpunkten.</summary>
+    public const double PersonenGroesse = 11;
+
+    public const double StueckGroesse = 10;
+
+    /// <summary>Art eines Schilds (Start-Test).</summary>
+    public enum SchildArt { Person, Stueck, Eigen }
+
+    /// <summary>Eigene Moebel des Spielstands im Ändern-Modus eines Raums des Spiels (Weisung P12-383 Fund 2).</summary>
+    public List<Projekt.EigenesMoebel> EigeneMoebel() =>
+        _projekt is not null && _ort is not null && SpielRaeume.Ist(_ort) ? _projekt.SpielRaumEigeneMoebel(_ort) : [];
+
+    /// <summary>
+    /// Welle S 0.64.0 (Weisung P12-380 Punkt 415, P12-381 Antwort 5a und Zusatz): alle Schilder dieses Bilds. Vorrang haben die
+    /// Personen (Schild mit orangem Rand neben dem Punkt), dann die Beschriftungen der Stuecke (im Stueck, wenn sie ganz
+    /// hineinpasst, sonst auf einem Schild daneben). Gesperrt sind die Raumnamen und die Punkte der Personen. Ein Stueck
+    /// bekommt wie bisher nur ab 46 x 14 Bildpunkten eine Beschriftung; das gerade gezogene Stueck keine.
+    /// </summary>
+    public List<(SchildArt Art, Schilder.Gesetzt Schild, Rect Anker)> SchilderJetzt()
+    {
+        var ergebnis = new List<(SchildArt, Schilder.Gesetzt, Rect)>();
+        if (Gebaeude is not { } g)
+        {
+            return ergebnis;
+        }
+        var schrift = new Typeface(FontFamily.Default);
+        var sichtRect = SchilderSicht;
+        var verdeckt = Verdeckt();
+        bool Sichtbar(Rect r) => r.Intersects(sichtRect) && !verdeckt.Any(v => v.Contains(r));
+        var sperren = Bearbeitung.Bereiche(g).Where(b => b.Name.Length > 0)
+            .Select(b => Kasten(NamenRechteck(b.Name, Bearbeitung.NamenLage(g, b.Bereich)))).ToList();
+        sperren.AddRange(verdeckt.Select(Kasten));
+        var schilder = new List<Schilder.Schild>();
+        var arten = new List<(SchildArt, Rect)>();
+        if (_projekt is not null && _ort is not null)
+        {
+            var r0 = 0.28 * _zoom;
+            foreach (var p in _projekt.Personen(_ort))
             {
-                Schreiben(ctx, schrift, Bearbeitung.TeilName(typ), r.TopLeft + new Point(3, 1), 10, Brushes.White, 1, r.Width - 6);
+                if (Get(p, "platz") is List<object?> pl && pl.Count >= 2)
+                {
+                    var m = Bild(Py.F(pl[0]), Py.F(pl[1]), 0, 0).TopLeft;
+                    var punkt = new Rect(m.X - r0 - 2, m.Y - r0 - 2, (2 * r0) + 4, (2 * r0) + 4);
+                    sperren.Add(Kasten(punkt));
+                    if (!Sichtbar(punkt))
+                    {
+                        continue;   // nach Zoom oder Verschieben nicht zu sehen: kein Schild am Rand
+                    }
+                    var name = Get(p, "name") as string ?? "";
+                    var ft = Text(name, PersonenGroesse, schrift);
+                    schilder.Add(new Schilder.Schild(name, Kasten(punkt), ft.Width + 6, ft.Height + 2, false));
+                    arten.Add((SchildArt.Person, punkt));
+                }
             }
+        }
+        foreach (var (stelle, d) in Bearbeitung.Alle(g))
+        {
+            var typ = Py.Str(d["typ"]);
+            if ((ZiehtStueck && stelle == Auswahl) || Katalog.Aktiv?.Eintrag(typ) is { Art: KatalogArt.Effekt })
+            {
+                continue;
+            }
+            var r = Bild(Py.F(d["x"]), Py.F(d["y"]), Py.F(d["w"]), Py.F(d["h"]));
+            if (r.Width > 46 && r.Height > 14 && Sichtbar(r))
+            {
+                var text = Bearbeitung.TeilName(typ);
+                var ft = Text(text, StueckGroesse, schrift);
+                schilder.Add(new Schilder.Schild(text, Kasten(r), ft.Width + 6, ft.Height + 2, true));
+                arten.Add((SchildArt.Stueck, r));
+            }
+        }
+        foreach (var e in EigeneMoebel())
+        {
+            var r = Bild(e.X, e.Y, e.W, e.H);
+            if (Sichtbar(r))
+            {
+                // immer auf einem Schild neben dem Stueck (der Text ist laenger als das Stueck), auch bei kleinem Zoom
+                var text = Texte.SpielRaumEigenesMoebel(e.Name, e.Karton);
+                var ft = Text(text, StueckGroesse, schrift);
+                schilder.Add(new Schilder.Schild(text, Kasten(r), ft.Width + 6, ft.Height + 2, false));
+                arten.Add((SchildArt.Eigen, r));
+            }
+        }
+        var gesetzt = Schilder.Setzen(schilder, sperren, Kasten(sichtRect));
+        for (var i = 0; i < gesetzt.Count; i++)
+        {
+            ergebnis.Add((arten[i].Item1, gesetzt[i], arten[i].Item2));
+        }
+        return ergebnis;
+    }
+
+    /// <summary>Sichtbarer Bereich der Schilder (Start-Test): die ganze Flaeche; was eine Karte darueber verdeckt, steht in
+    /// <see cref="Verdeckt"/> und ist gesperrt.</summary>
+    public Rect SchilderSicht => new(2, 2, Math.Max(1, Bounds.Width - 4), Math.Max(1, Bounds.Height - 4));
+
+    /// <summary>Was andere sichtbare Teile ueber der Flaeche verdecken (z. B. die Kamera-Karte unten rechts), in Bildpunkten
+    /// der Flaeche.</summary>
+    public List<Rect> Verdeckt()
+    {
+        var ergebnis = new List<Rect>();
+        Control kind = this;
+        // bis zu drei Ebenen hinauf: was in einem Panel nach dem eigenen Zweig kommt, liegt darueber (Kamera-Karte)
+        for (var ebene = 0; ebene < 3 && kind.Parent is Control eltern; ebene++, kind = eltern)
+        {
+            if (eltern is not Panel panel)
+            {
+                continue;
+            }
+            var nachher = false;
+            foreach (var c in panel.Children)
+            {
+                if (ReferenceEquals(c, kind))
+                {
+                    nachher = true;
+                    continue;
+                }
+                if (nachher && c.IsVisible && c.Bounds.Width > 0 && c.TranslatePoint(default, this) is { } oben)
+                {
+                    ergebnis.Add(new Rect(oben, c.Bounds.Size));
+                }
+            }
+        }
+        return ergebnis;
+    }
+
+    private static Schilder.Kasten Kasten(Rect r) => new(r.X, r.Y, r.Width, r.Height);
+
+    private static FormattedText Text(string text, double groesse, Typeface schrift) =>
+        new(text, CultureInfo.GetCultureInfo("de-DE"), FlowDirection.LeftToRight, schrift, groesse, Brushes.Black);
+
+    private void SchilderZeichnen(DrawingContext ctx, Typeface schrift)
+    {
+        var orange = new SolidColorBrush(Color.Parse("#E07A3F"));
+        var karte = new SolidColorBrush(Color.Parse(FarbenAnwenden.Aktuell.Farben["card"]), 0.92);
+        foreach (var (art, s, anker) in SchilderJetzt())
+        {
+            var r = new Rect(s.Lage.X, s.Lage.Y, s.Lage.Breite, s.Lage.Hoehe);
+            if (art == SchildArt.Stueck && s.ImAnker && !Schilder.AltFuerTests.Value)
+            {
+                Schreiben(ctx, schrift, s.Text, r.TopLeft + new Point(3, 1), StueckGroesse, Brushes.White, 1);
+                continue;
+            }
+            if (Schilder.AltFuerTests.Value)
+            {
+                // Gegenprobe: Zeichnung wie vor S 0.64.0
+                if (art == SchildArt.Stueck)
+                {
+                    Schreiben(ctx, schrift, s.Text, r.TopLeft, StueckGroesse, Brushes.White, 1, r.Width);
+                }
+                else
+                {
+                    Schreiben(ctx, schrift, s.Text, r.TopLeft, PersonenGroesse, Brushes.Black, 0.7);
+                }
+                continue;
+            }
+            if (art is SchildArt.Stueck or SchildArt.Eigen)
+            {
+                // Linie vom Schild zum Stueck, damit klar ist, wozu die Beschriftung gehoert
+                var ziel = new Point(Math.Clamp(r.Center.X, anker.Left, anker.Right), Math.Clamp(r.Center.Y, anker.Top, anker.Bottom));
+                var start = new Point(Math.Clamp(ziel.X, r.Left, r.Right), Math.Clamp(ziel.Y, r.Top, r.Bottom));
+                ctx.DrawLine(new Pen(Farbe("border"), 1), start, ziel);
+            }
+            ctx.DrawRectangle(karte, new Pen(art == SchildArt.Person ? orange : Farbe("border"), 1), r, 4, 4);
+            Schreiben(ctx, schrift, s.Text, r.TopLeft + new Point(3, 1), art == SchildArt.Person ? PersonenGroesse : StueckGroesse, Farbe("text"), 1);
         }
     }
 

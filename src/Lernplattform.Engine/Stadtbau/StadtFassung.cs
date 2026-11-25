@@ -32,14 +32,16 @@ public sealed class StadtFassung
     /// jede andere bleibt bitgleich bei 1, damit ein aelteres Programm sie weiter liest. 3 seit Welle Nachladen (A 0.82.0 /
     /// S 0.54.0, Weisung P12-280): nur eine Karte groesser als 64 oder mit Stadtteil-Namen (<see cref="Stadtteile"/>). 4 seit
     /// Inhaltspakete W3 (A 0.89.0 / S 0.57.0, Weisung P12-297): nur eine Paket-Stadt (Abschnitt <see cref="StadtPaket.Abschnitt"/>).
+    /// 5 seit Welle A 1.10.0 / S 0.64.0 (Weisungen P12-380 bis P12-382): nur eine Stadt mit geaenderten Raeumen des Spiels
+    /// (Abschnitt <see cref="SpielRaumErsatz.Abschnitt"/>); jede andere Datei bleibt bitgleich.
     /// </summary>
-    public const long FormatVersion = 4;
+    public const long FormatVersion = 5;
 
     /// <summary>
-    /// Formatnummer, die eine Datei bekommt: 4 bei einer Paket-Stadt, sonst 3 bei einer Karte groesser als 64 oder mit
+    /// Formatnummer, die eine Datei bekommt: 5 mit geaenderten Raeumen des Spiels, sonst 4 bei einer Paket-Stadt, sonst 3 bei einer Karte groesser als 64 oder mit
     /// Stadtteil-Namen, sonst 2 mit Arbeitsort, sonst 1 (bitgleich wie vorher).
     /// </summary>
-    public static long FormatFuer(PyObjekt? stadtdaten, PyObjekt? karte) => StadtPaket.Hat(stadtdaten) ? 4 :
+    public static long FormatFuer(PyObjekt? stadtdaten, PyObjekt? karte) => SpielRaumErsatz.Hat(stadtdaten) ? 5 : StadtPaket.Hat(stadtdaten) ? 4 :
         Stadtteile.GrosseKarte(karte) || Stadtteile.HatNamen(stadtdaten) ? 3 : Questebene.HatArbeitsort(stadtdaten) ? 2 : 1;
 
     /// <summary>Dateiendung der Fassungen und Exporte.</summary>

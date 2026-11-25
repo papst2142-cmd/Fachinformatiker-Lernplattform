@@ -73,6 +73,8 @@ public static partial class StadtbauMessung
                 Fund("Räume des Spiels: ein Tipp in der Liste öffnet die Bitweiche nicht");
             }
         }
+        await SchilderAsync(a, f, liste.Select(r => (r.Schluessel, r.Name)).ToList());
+        await RaumAendernAsync(a, f);
         a.SpielRaumOeffnen(liste[0].Schluessel);
         await AlleGroessenAsync(a, f, "Räume des Spiels 2D");
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
@@ -128,6 +130,199 @@ public static partial class StadtbauMessung
         }
         a.ReiterZeigen(innen: false);
         await BildAsync(a);
+    }
+
+    /// <summary>
+    /// Welle S 0.64.0 (Weisung P12-381, Nico 2c, Bilder 03/04/07): „Raum ändern“ an der Wohnung. Schalter „Ändern“ an: der
+    /// Grundriss ist frei (kein Schritt, nichts geaendert); eine gezogene Wand ist „geändert“ (Marke links, Knopf „Zurück auf den
+    /// Stand des Spiels“, Fundliste ohne Rot); eine zu schmale Diele ist rot und sperrt den Export (Gegenprobe); „Zurück“
+    /// nimmt alles zurueck. Layout je Groesse mit offener Karte.
+    /// </summary>
+    private static async Task RaumAendernAsync(Hauptansicht a, Window? f)
+    {
+        var p = a.Projekt!;
+        const string Wohnung = "spiel:zuhause:apartment";
+        a.SpielRaumOeffnen(Wohnung);
+        await BildAsync(a);
+        var schritte = p.SchritteZurueck;
+        if (a.SpielRaumSchalter is not { } schalter || !schalter.IsEffectivelyVisible || !schalter.IsEnabled)
+        {
+            Fund("Raum ändern: Schalter „" + Texte.SpielRaumAendernSchalter + "“ fehlt oder ist gesperrt");
+            return;
+        }
+        schalter.IsChecked = true;
+        await BildAsync(a);
+        if (a.SpielRaumFlaeche.Gesperrt || p.SchritteZurueck != schritte || p.GeaenderteSpielRaeume.Count > 0)
+        {
+            Fund("Raum ändern: nach „Ändern“ ist der Grundriss gesperrt oder schon geändert");
+        }
+        p.Aendern(Wohnung, Texte.SpielRaumWandZiehen, g =>
+        {
+            var raeume = ((List<object?>)g["raeume"]!).OfType<Lernplattform.Core.Daten.PyObjekt>().ToList();
+            var wohn = raeume.First(r => (string)r["id"]! == "wohnraum");
+            var kueche = raeume.First(r => (string)r["id"]! == "kueche");
+            Bearbeitung.Raum(g, "wohnraum", Lernplattform.Core.Spiel.Py.F(wohn["x"]), Lernplattform.Core.Spiel.Py.F(wohn["y"]), Lernplattform.Core.Spiel.Py.F(wohn["w"]) - 0.5, Lernplattform.Core.Spiel.Py.F(wohn["h"]));
+            Bearbeitung.Raum(g, "kueche", Lernplattform.Core.Spiel.Py.F(kueche["x"]) - 0.5, Lernplattform.Core.Spiel.Py.F(kueche["y"]), Lernplattform.Core.Spiel.Py.F(kueche["w"]) + 0.5, Lernplattform.Core.Spiel.Py.F(kueche["h"]));
+        });
+        await a.SpielRaumGeprueft;
+        await BildAsync(a);
+        if (!p.GeaenderteSpielRaeume.Contains(Wohnung) || a.SpielRaumZurueckKnopf is null || a.SpielRaumRot.Count > 0)
+        {
+            Fund("Raum ändern: gezogene Wand nicht „geändert“ oder rot (" + string.Join(" | ", a.SpielRaumRot.Select(x => x.Text)) + ")");
+        }
+        // Weisung P12-383 Fund 1: der Schalter bleibt farbig an (nicht grau), der Satz darunter sagt warum; Ausschalten aendert nichts
+        if (a.SpielRaumSchalter is not { IsEnabled: true, IsChecked: true } an2 || a.SpielRaumBleibtAnHinweis is not { IsEffectivelyVisible: true })
+        {
+            Fund("Raum ändern: Schalter nach der Änderung grau oder ohne Satz „bleibt an“");
+        }
+        else
+        {
+            an2.IsChecked = false;
+            await BildAsync(a);
+            if (!p.SpielRaumInBearbeitung(Wohnung) || !p.GeaenderteSpielRaeume.Contains(Wohnung) || a.SpielRaumSchalter is not { IsChecked: true })
+            {
+                Fund("Raum ändern: „Ändern“ aus bei geändertem Raum hat den Raum verlassen oder den Schalter nicht wieder angezeigt");
+            }
+        }
+        // Weisung P12-383 Fund 2: die Startmatratze (eigenes Moebel) bleibt im Ändern-Modus sichtbar, mit Schild, nicht im Karton
+        var eigene = a.SpielRaumFlaeche.EigeneMoebel();
+        var eigenSchilder = a.SpielRaumFlaeche.SchilderJetzt().Where(t => t.Art == GrundrissFlaeche.SchildArt.Eigen).ToList();
+        if (eigene.Count != 1 || eigene[0].Karton || eigenSchilder.Count != 1 || !eigenSchilder[0].Schild.Frei)
+        {
+            Fund("Raum ändern: eigenes Möbel (Matratze) fehlt im Ändern-Modus, steht im Karton oder ohne freies Schild ("
+                + string.Join(" | ", eigene.Select(e => e.Name + (e.Karton ? " Karton" : ""))) + ")");
+        }
+        await AlleGroessenAsync(a, f, "Raum ändern");
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+        // Gegenprobe: Diele zu schmal = rot, Export gesperrt
+        p.Aendern(Wohnung, Texte.SpielRaumWandZiehen, g =>
+        {
+            var flur = (Lernplattform.Core.Daten.PyObjekt)g["flur"]!;
+            SpielRaumBearbeitung.Flur(g, Lernplattform.Core.Spiel.Py.F(flur["y"]), 1.5);
+        });
+        await a.SpielRaumGeprueft;
+        await BildAsync(a);
+        var gesperrt = false;
+        try
+        {
+            p.Exportieren(DateTimeOffset.Now);
+        }
+        catch (Lernplattform.Core.Stadtbau.StadtbauFehler)
+        {
+            gesperrt = true;
+        }
+        if (!a.SpielRaumRot.Any(x => x.Text.StartsWith("Diele nur", StringComparison.Ordinal)) || !gesperrt)
+        {
+            Fund("Raum ändern: zu schmale Diele nicht rot oder Export nicht gesperrt");
+        }
+        a.SpielRaumZurueckKnopf?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await BildAsync(a);
+        if (p.GeaenderteSpielRaeume.Count > 0)
+        {
+            Fund("Raum ändern: „" + Texte.SpielRaumZurueck + "“ nimmt die Änderung nicht zurück");
+        }
+        if (a.SpielRaumSchalter is { } aus)
+        {
+            aus.IsChecked = false;
+            await BildAsync(a);
+        }
+        if (!a.SpielRaumFlaeche.Gesperrt)
+        {
+            Fund("Raum ändern: nach „Ändern“ aus ist der Grundriss nicht wieder gesperrt");
+        }
+    }
+
+    /// <summary>
+    /// Welle S 0.64.0 (Weisung P12-380 Punkt 415 B1/B2, P12-381 Zusatz): in allen Raeumen des Spiels, PC und Tablet, bei
+    /// „Ganzen Raum zeigen“ steht jeder Name einer Person und jede Beschriftung eines Stuecks ganz im sichtbaren Bereich
+    /// (nie gekuerzt) und kein Schild ueberdeckt ein anderes, einen Raumnamen oder einen Punkt einer Person. Dazu nach
+    /// Vergroessern und Verschieben (B2). Gegenprobe: mit der alten Zeichnung sind Serverfarm (Tablet) und Bitweiche rot.
+    /// </summary>
+    private static async Task SchilderAsync(Hauptansicht a, Window? f, List<(string Schluessel, string Name)> raeume)
+    {
+        var flaeche = a.SpielRaumFlaeche;
+        int Pruefen(string wo)
+        {
+            var schilder = flaeche.SchilderJetzt();
+            var funde = 0;
+            for (var i = 0; i < schilder.Count; i++)
+            {
+                var (art, s, _) = schilder[i];
+                if (!s.Frei)
+                {
+                    funde++;
+                    if (!Schilder.AltFuerTests.Value)
+                    {
+                        Fund("Schilder " + wo + ": " + art + " „" + s.Text + "“ abgeschnitten oder überdeckt");
+                    }
+                }
+                for (var j = i + 1; j < schilder.Count; j++)
+                {
+                    if (s.Lage.Ueberdeckung(schilder[j].Schild.Lage) > 0)
+                    {
+                        funde++;
+                        if (!Schilder.AltFuerTests.Value)
+                        {
+                            Fund("Schilder " + wo + ": „" + s.Text + "“ und „" + schilder[j].Schild.Text + "“ überdecken sich");
+                        }
+                    }
+                }
+            }
+            return funde;
+        }
+        int personen = 0, stuecke = 0, raeumeGeprueft = 0;
+        foreach (var (name, b, h) in Groessen)
+        {
+            await GroesseAsync(a, f, b, h);
+            foreach (var (schluessel, raum) in raeume)
+            {
+                a.SpielRaumOeffnen(schluessel);
+                flaeche.Einpassen();
+                await BildAsync(a);
+                var alle = flaeche.SchilderJetzt();
+                personen += alle.Count(t => t.Art == GrundrissFlaeche.SchildArt.Person);
+                stuecke += alle.Count(t => t.Art == GrundrissFlaeche.SchildArt.Stueck);
+                raeumeGeprueft++;
+                Pruefen(raum + " " + name);
+            }
+        }
+        Messwerte.Notiere(string.Create(Inv, $"Schilder im Grundriss (415): {raeumeGeprueft} Räume x Größe, {personen} Namen und {stuecke} Beschriftungen geprüft (ganz sichtbar, ohne Überdeckung)"));
+
+        // B2: nach Vergroessern und Verschieben (Maus wie Finger nutzen dieselben Schritte der Flaeche)
+        await GroesseAsync(a, f, Groessen[1].B, Groessen[1].H);
+        a.SpielRaumOeffnen("spiel:buero:bitweiche");
+        flaeche.Einpassen();
+        flaeche.Vergroessern();
+        flaeche.Vergroessern();
+        await BildAsync(a);
+        Pruefen("Bitweiche Tablet vergrößert");
+        flaeche.AnsichtSchieben(new Avalonia.Vector(120, -80));
+        await BildAsync(a);
+        Pruefen("Bitweiche Tablet verschoben");
+
+        // Gegenprobe: alte Zeichnung (gleich am Punkt bzw. im Stueck gekuerzt) muss in diesen Raeumen Funde haben
+        Schilder.AltFuerTests.Value = true;
+        try
+        {
+            var gegen = new List<string>();
+            foreach (var (schluessel, wo) in new[] { ("spiel:serverfarm", "Serverfarm"), ("spiel:buero:bitweiche", "Bitweiche") })
+            {
+                a.SpielRaumOeffnen(schluessel);
+                flaeche.Einpassen();
+                await BildAsync(a);
+                gegen.Add(wo + " " + Pruefen(wo + " alt").ToString(Inv));
+            }
+            Messwerte.Notiere("Schilder Gegenprobe Tablet mit alter Zeichnung: " + string.Join(", ", gegen) + " Funde");
+            if (gegen.Any(g => g.EndsWith(" 0", StringComparison.Ordinal)))
+            {
+                Fund("Schilder: Gegenprobe mit alter Zeichnung ohne Fund (" + string.Join(", ", gegen) + "), die Probe taugt nicht");
+            }
+        }
+        finally
+        {
+            Schilder.AltFuerTests.Value = false;
+        }
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
     }
 
     private static bool PythonGleich(object? a, object? b) =>

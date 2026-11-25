@@ -41,11 +41,15 @@ public static partial class AutoMessung
     {
         async Task<double?> Einmal()
         {
+            var jit = System.Runtime.JitInfo.GetCompilationTime(currentThread: true);
+            var gc = GC.GetTotalPauseDuration();
             var uhr = Stopwatch.StartNew();
             schritt();
             var bauen = uhr.Elapsed.TotalMilliseconds;
+            var uebersetzen = (System.Runtime.JitInfo.GetCompilationTime(currentThread: true) - jit).TotalMilliseconds;
+            var bereinigen = (GC.GetTotalPauseDuration() - gc).TotalMilliseconds;
             await ansicht.BildFertigAsync();
-            ErsteTeile ??= (bauen, uhr.Elapsed.TotalMilliseconds);
+            ErsteTeile ??= (bauen, uhr.Elapsed.TotalMilliseconds, uebersetzen, bereinigen);
             return uhr.Elapsed.TotalMilliseconds;
         }
         ErsteTeile = null;
@@ -59,8 +63,9 @@ public static partial class AutoMessung
     }
 
     /// <summary>Weisung P12-369 Punkt 4: Teilschritte der ersten Messung von <see cref="BildMessenAsync"/>
-    /// (Schritt selbst = Bauen, danach bis zum fertigen Bild).</summary>
-    private static (double Bauen, double Bild)? ErsteTeile;
+    /// (Schritt selbst = Bauen, danach bis zum fertigen Bild).
+    /// Weisung P12-380 W4/W8: dazu die Anteile Uebersetzen (JIT auf dem Oberflaechen-Faden) und Speicherbereinigung im Bauen.</summary>
+    private static (double Bauen, double Bild, double Uebersetzen, double Bereinigen)? ErsteTeile;
 
     /// <summary>
     /// Weisung P12-369 Punkt 4 (Nico 4a): Teilschritte eines Wackel-Messpunkts nur notieren (Zeitpunkte ab Beginn
@@ -107,7 +112,8 @@ public static partial class AutoMessung
 
     /// <summary>Teilschritte der ersten Messung des letzten <see cref="BildMessenAsync"/> (Bauen, erstes Bild).</summary>
     private static void TeileNotieren(string titel) =>
-        Teilschritte(titel, [("Bauen", ErsteTeile?.Bauen), ("erstes Bild", ErsteTeile?.Bild)]);
+        Teilschritte(titel, [("Bauen", ErsteTeile?.Bauen), ("erstes Bild", ErsteTeile?.Bild),
+            ("davon Uebersetzen (Dauer)", ErsteTeile?.Uebersetzen), ("davon Speicherbereinigung (Dauer)", ErsteTeile?.Bereinigen)]);
 
     /// <summary>Weisung P4-12 B6: eine reine Rechnung (ohne Bild) messen, ueber der Grenze bis zu 3 Mal.</summary>
     private static async Task<Messreihe> RechnungMessenAsync(Func<double> rechnung, double grenze = Abbruch) =>
@@ -304,6 +310,8 @@ public static partial class AutoMessung
             funde += await TafelZurueckAsync(ansicht);         // Welle A 0.81.0: Zurueck in der Spiel-Tafel fest oben (Nico 5a)
             Zeitplan("Einrichten382Async");
             funde += await Einrichten382Async(ansicht);        // Welle A 0.90.0: „Übernehmen“ im Einrichtungsmenue (Sammelliste 382)
+            Zeitplan("Umbau3cAsync");
+            funde += await Umbau3cAsync(ansicht);              // Welle A 1.10.0: Karton und Hinweis nach Umbau der Wohnung (Nico 3c, 1a)
             Zeitplan("LeisteUebersichtAsync");
             funde += await LeisteUebersichtAsync(ansicht);     // Welle A 0.81.0: Uebersicht im Handy, Leiste schlank (Sammelliste 350)
             Zeitplan("PaketStaedteAsync");
@@ -332,6 +340,8 @@ public static partial class AutoMessung
             Zeitplan("LayoutGleichAsync");
             funde += await LayoutGleichAsync(ansicht, inhalte);   // Sammelliste 364: Layout-Warten prueft dasselbe wie Bild-Warten
         }
+        Zeitplan("KeinBildProbeAsync");
+        funde += await KeinBildProbeAsync(ansicht);   // Weisung P12-380 W6: die Wache gegen stille Haenger wirkt
         Zeitplan("LayoutAsync");
         funde += await LayoutAsync(ansicht, inhalte);
         if (MitLernen)
@@ -343,6 +353,7 @@ public static partial class AutoMessung
         funde += await P11W3MesspunkteAsync(ansicht);         // Phase 11 W3: Messpunkte fuer "Problem melden"
         Zeitplan("Ende");
         funde += AbschlussAuswerten(reihenRot);
+        funde += MainView.KeinBildZahl;   // Weisung P12-380 W6: jedes Bild, das nicht kam, ist ein Fund (FEHLER-Zeile steht schon)
         Messwerte.Notiere(funde == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({funde} Funde)"));
         return funde;
     }
@@ -492,6 +503,35 @@ public static partial class AutoMessung
                 await ReihenwertAsync(ansicht, "Wechsel Schriftstufe", () => Schrift.Anwenden(Zustand.SchriftFaktor(stufe)), () => Schrift.Anwenden(Zustand.SchriftFaktor(davor)), reihenRot);
             }
         }
+    }
+
+    /// <summary>
+    /// Weisung P12-380 W6 (Sammelliste 459): Probe der Kein-Bild-Wache aus <see cref="MainView.BildFertigAsync"/>. Ein
+    /// Warten, das nie fertig wird, muss nach der kurzen Probezeit genau einmal gemeldet werden und enden; ein Warten, das
+    /// vorher fertig wird, darf nie gemeldet werden (Gegenprobe). Zaehlt nicht in <see cref="MainView.KeinBildZahl"/>.
+    /// </summary>
+    private static async Task<int> KeinBildProbeAsync(MainView ansicht)
+    {
+        if (TopLevel.GetTopLevel(ansicht) is not { } top)
+        {
+            Messwerte.Notiere("Kein-Bild-Wache: ohne Fenster nicht geprueft");
+            return 0;
+        }
+        var zeit = TimeSpan.FromMilliseconds(200);
+        var nieFertig = new TaskCompletionSource();
+        var meldungen = new List<string>();
+        MainView.KeinBildWache(top, nieFertig, zeit, meldungen.Add);
+        var ende = await Task.WhenAny(nieFertig.Task, Task.Delay(TimeSpan.FromSeconds(10)));
+        var gleichFertig = new TaskCompletionSource();
+        var gegen = new List<string>();
+        MainView.KeinBildWache(top, gleichFertig, zeit, gegen.Add);
+        gleichFertig.SetResult();
+        await Task.Delay(zeit * 3);
+        var ok = ende == nieFertig.Task && meldungen.Count == 1 && meldungen[0].StartsWith("Fenster sichtbar", StringComparison.Ordinal) && gegen.Count == 0;
+        Messwerte.Notiere(ok
+            ? "Kein-Bild-Wache: ohne Bild nach 0,2 s gemeldet und beendet (" + meldungen[0] + "), Gegenprobe mit Bild still"
+            : "  FEHLER: Kein-Bild-Wache wirkt nicht: beendet " + (ende == nieFertig.Task) + ", Meldungen " + meldungen.Count + ", Gegenprobe " + gegen.Count);
+        return ok ? 0 : 1;
     }
 
     /// <summary>

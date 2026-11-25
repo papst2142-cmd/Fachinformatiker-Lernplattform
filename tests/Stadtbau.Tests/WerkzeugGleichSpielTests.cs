@@ -333,25 +333,124 @@ public class WerkzeugGleichSpielTests
     }
 
     /// <summary>
-    /// Welle S 0.60.0 (Weisung P12-337 Punkt 3): Raeume des Spiels nur ansehen. Jede Aenderung lehnt das Projekt ab, und
-    /// das Ansehen aendert nichts an der Stadt-Datei (Export gleich wie vorher, keiner der Schluessel steht darin).
+    /// Welle S 0.60.0 (Weisung P12-337 Punkt 3) mit S 0.64.0 (Weisung P12-381, Nico 2c): Raeume des Spiels ansehen und zum
+    /// Aendern oeffnen aendert nichts an der Stadt-Datei und am Projekt (bitgleich, keiner der Schluessel steht darin, Projekt
+    /// bleibt Format 3). In einer leeren Stadt lehnt das Projekt jede Aenderung ab (das Spiel nimmt die Raeume nur aus Stadt 1).
     /// </summary>
     [Fact]
-    public void SpielRaeume_NurAnsehen_ExportUnveraendert()
+    public void SpielRaeume_OhneAenderung_ExportUnveraendert_LeereStadtNurAnsehen()
     {
         var p = Projekt.Neu("Spiel-Raeume ansehen", D, Daten.NeueAblage(), "moebelhaus");
         var vorher = p.Stand("2026-11-21T12:00:00+01:00").Schreiben();
+        var projektVorher = p.Schreiben();
         foreach (var r in p.SpielRaeumeListe())
         {
             Assert.NotNull(p.SpielRaum(r.Schluessel));
             Assert.NotNull(p.Grundriss(r.Schluessel));
             Assert.False(p.GibtInnenort(r.Schluessel));
-            Assert.Throws<InvalidOperationException>(() => p.Aendern(r.Schluessel, "Boden", g => Bearbeitung.Boden(g, "flur", "teppich")));
+            Assert.True(p.SpielRaumBearbeiten(r.Schluessel));
         }
         Assert.Equal(0, p.SchritteZurueck);
+        Assert.Empty(p.GeaenderteSpielRaeume);
         Assert.DoesNotContain(p.Innenorte, o => SpielRaeume.Ist(o));
         var nachher = p.Stand("2026-11-21T12:00:00+01:00").Schreiben();
         Assert.Equal(vorher, nachher);
+        Assert.Equal(projektVorher, p.Schreiben());
         Assert.DoesNotContain("spiel:", System.Text.Encoding.UTF8.GetString(nachher), StringComparison.Ordinal);
+        Assert.Contains("\"formatversion\": 3,", System.Text.Encoding.UTF8.GetString(p.Schreiben()), StringComparison.Ordinal);
+
+        var leer = Projekt.Neu("Leere Stadt", D, Daten.NeueAblage(), leer: (32, 24));
+        foreach (var r in leer.SpielRaeumeListe())
+        {
+            Assert.False(leer.SpielRaumBearbeiten(r.Schluessel));
+            Assert.Throws<InvalidOperationException>(() => leer.Aendern(r.Schluessel, "Boden", g => Bearbeitung.Boden(g, "flur", "teppich")));
+        }
+        Assert.Equal(0, leer.SchritteZurueck);
+    }
+
+    /// <summary>Wohnung „apartment“: Wand zwischen Wohnraum und Kueche um 0,5 nach links (Wohnraum kleiner, Kueche groesser).</summary>
+    internal static void WandZiehen(PyObjekt g)
+    {
+        var raeume = ((List<object?>)g["raeume"]!).OfType<PyObjekt>().ToList();
+        var wohn = raeume.First(r => Py.Str(r["id"]) == "wohnraum");
+        var kueche = raeume.First(r => Py.Str(r["id"]) == "kueche");
+        Py.Setzen(wohn, "w", Py.F(wohn["w"]) - 0.5);
+        Py.Setzen(kueche, "x", Py.F(kueche["x"]) - 0.5);
+        Py.Setzen(kueche, "w", Py.F(kueche["w"]) + 0.5);
+    }
+
+    /// <summary>
+    /// Welle S 0.64.0 / A 1.10.0 (Weisung P12-381, Abnahme A3 „Werkzeug = Spiel 1:1“): geaenderte Raeume (Wohnung: Wand
+    /// gezogen; Bitweiche und Serverfarm: Tuer verschoben) exportieren, im Spiel einsetzen wie <c>SpielStart</c> (Ersatz an der
+    /// Quelle) und bauen: Waende, Tueren, Moebel und Personen im Spiel gleich dem Werkzeug in 2D und 3D. Gegenprobe: das Spiel
+    /// ohne den Teil „spielraeume“ weicht ab. Nur die geaenderten Raeume stehen in der Datei.
+    /// </summary>
+    [Fact]
+    public void SpielRaeume_Geaendert_ExportIneSpiel_WerkzeugGleichSpiel_MitGegenprobe()
+    {
+        var (spielInhalt, spielInnen) = Spiel.Value;
+        var p = Projekt.Neu("Spiel-Raeume aendern", D, Daten.NeueAblage(), "moebelhaus");
+        p.Aendern("spiel:zuhause:apartment", "Wand ziehen", WandZiehen);
+        foreach (var s in new[] { "spiel:buero:bitweiche", "spiel:serverfarm" })
+        {
+            p.Aendern(s, "Tür setzen", g =>
+            {
+                // die erste Tuer zur Mitte der Raumwand hin um 0,5 verschieben (sie bleibt auf der Wand zum Flur)
+                var r = ((List<object?>)g["raeume"]!).OfType<PyObjekt>().First(r => r["tuer"] is PyObjekt t && t.Count > 0
+                    && Py.F(t["von"]) >= Py.F(r["x"]) && Py.F(t["bis"]) <= Py.F(r["x"]) + Py.F(r["w"]));
+                var t = (PyObjekt)r["tuer"]!;
+                var schritt = (Py.F(t["von"]) + Py.F(t["bis"])) / 2 < Py.F(r["x"]) + (Py.F(r["w"]) / 2) ? 0.5 : -0.5;
+                Py.Setzen(t, "von", Py.F(t["von"]) + schritt);
+                Py.Setzen(t, "bis", Py.F(t["bis"]) + schritt);
+            });
+        }
+        var geaendert = new[] { "spiel:zuhause:apartment", "spiel:buero:bitweiche", "spiel:serverfarm" };
+        Assert.Equal(geaendert, p.GeaenderteSpielRaeume);
+        var datei = p.Exportieren(new DateTimeOffset(2026, 11, 25, 17, 0, 0, TimeSpan.FromHours(1)));
+        var f = StadtFassung.Lesen(datei);
+        Assert.Contains("\"formatversion\": 5,", System.Text.Encoding.UTF8.GetString(datei), StringComparison.Ordinal);
+        var stuecke = SpielRaumErsatz.Lesen(f.Stadtdaten);
+        Assert.Equal(geaendert.Select(Projekt.SpielRaumKennung), stuecke.Select(s => s.Raum));
+        Assert.Empty(StadtbauPruefung.Inhalt(f, D.Inhalt));
+        Assert.Empty(SpielRaumErsatz.Unpassend(stuecke, spielInhalt, spielInnen));
+
+        // Spiel: Ersatz wie SpielStart (Inhalt an der Quelle, Serverfarm in den Innenraeumen der Fassung)
+        var inhalt = SpielRaumErsatz.Inhalt(spielInhalt, stuecke);
+        var innen = SpielRaumErsatz.Innenraeume(spielInnen, stuecke);
+        var funde = new List<string>();
+        foreach (var r in p.SpielRaeumeListe())
+        {
+            var spiel = ImSpiel(r, inhalt, innen);
+            funde.AddRange(Abweichungen(r.Schluessel + " 3D", p.SpielRaum(r.Schluessel), spiel));
+            if (geaendert.Contains(r.Schluessel))
+            {
+                Assert.True(Abweichungen(r.Schluessel + " Gegenprobe", ImSpiel(r, spielInhalt, spielInnen), spiel).Count > 0, r.Schluessel + ": Gegenprobe ohne Abweichung");
+            }
+        }
+        Assert.Empty(funde);
+        var innen3D = Innen3D.Bauen(Innen3D.Vorbereiten(p, "spiel:zuhause:apartment"), null);
+        Assert.Empty(Abweichungen("apartment Innen3D", innen3D.Innen, ImSpiel(p.SpielRaeumeListe()[0], inhalt, innen)));
+    }
+
+    /// <summary>Den Raum bauen, wie das Spiel ihn beim Betreten baut (eigener Weg ueber den Spielstand, nicht ueber das Werkzeug).</summary>
+    private static Innenraum? ImSpiel(SpielRaeume.Raum r, PyObjekt inhalt, PyObjekt innen)
+    {
+        var stand = StadtbauSpiel.Probestand(inhalt).Stand;
+        switch (r.Ansicht)
+        {
+            case "zuhause":
+                stand.Wohnung = r.Wohnung;
+                break;
+            case "buero" when r.Schluessel.EndsWith(":bitweiche", StringComparison.Ordinal):
+                stand.Firma = null;
+                break;
+            case "buero":
+                stand.Firma = new PyObjekt { { "stufe", long.Parse(r.Schluessel[^1..], System.Globalization.CultureInfo.InvariantCulture) }, { "name", "Probe" }, { "tag", 1L } };
+                break;
+            case "filiale":
+                stand.Zweigstelle = new PyObjekt { { "stufe", long.Parse(r.Schluessel[^1..], System.Globalization.CultureInfo.InvariantCulture) }, { "tag", 1L } };
+                break;
+        }
+        return Innenraum.Bauen(r.Ansicht, stand, innen, D.Grafik, D.Geschaefte.Daten);
     }
 }

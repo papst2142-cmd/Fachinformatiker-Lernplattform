@@ -75,12 +75,12 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             if (!await TippenAsync(ansicht, e.ProbeReiterPillen, "3 (24)", art) || e.ProbeStand.Reiter != "3")
             {
-                Fund(name + ": Reiter \"Aufgabe 3\" antippen wechselt nicht (Reiter " + e.ProbeStand.Reiter + ")");
+                Fund(name + ": Reiter \"Aufgabe 3\" antippen wechselt nicht (Reiter " + e.ProbeStand.Reiter + ")" + TrefferZuletzt);
             }
             if (!await TippenAsync(ansicht, e.ProbeUmschalter, EchtFormatTeil.UmschalterText(e.ProbeSatz!, e.ProbeSatz!.Aufgaben[2]), art)
                 || !e.ProbeStand.Anlagen)
             {
-                Fund(name + ": Umschalter \"Anlagen\" antippen zeigt die Anlagen nicht");
+                Fund(name + ": Umschalter \"Anlagen\" antippen zeigt die Anlagen nicht" + TrefferZuletzt);
             }
             k.Probe(ab + 7);
             await ansicht.BildFertigAsync();
@@ -318,8 +318,44 @@ public static partial class AutoMessung
         return ziel is not null && await TippenAsync(ansicht, ziel, art);
     }
 
+    /// <summary>
+    /// Sammelliste 433/458/460/461 (Weisung P12-380, W1/W2): so viele Bilder wartet die Probe hoechstens, bis die Treffer-Pruefung
+    /// von Avalonia (dieselbe, die ein Knopf beim Loslassen nutzt: <c>GetVisualsAt</c>) den Knopf an seiner Stelle findet.
+    /// </summary>
+    internal const int TrefferBilderHoechstens = 10;
+
+    /// <summary>Letzte Treffer-Pruefung vor dem Tippen (nur Bericht und Fund): Bilder bis zum Treffer, getroffenes Element.</summary>
+    internal static string TrefferZuletzt { get; private set; } = "";
+
+    /// <summary>
+    /// W1/W2 (Weisung P12-380): Avalonia 12 prueft den Treffer gegen die beim Zeichnen gemerkten Grenzen. Die Probe tippte gleich
+    /// nach dem ersten Bild der neuen Ansicht; standen die Grenzen noch vom Bild davor, ging der Klick ins Leere (1. Lauf rot).
+    /// Jetzt wartet sie, bis der Knopf an der Stelle wirklich getroffen wird (hoechstens <see cref="TrefferBilderHoechstens"/>
+    /// Bilder, das Tippen selbst geschieht genau einmal). Wird er nie getroffen, tippt sie nicht und meldet, was dort liegt.
+    /// </summary>
+    internal static async Task<bool> TreffbarAsync(MainView ansicht, Control ziel, Point lokal)
+    {
+        for (var bild = 0; bild <= TrefferBilderHoechstens; bild++)
+        {
+            var oben = ziel.GetVisualsAt(lokal).FirstOrDefault();
+            if (oben is not null && (ReferenceEquals(oben, ziel) || ziel.IsVisualAncestorOf(oben)))
+            {
+                TrefferZuletzt = bild == 0 ? "" : " (Treffer nach " + bild + " Bildern)";
+                return true;
+            }
+            if (bild == TrefferBilderHoechstens)
+            {
+                TrefferZuletzt = " (Stelle trifft nicht den Knopf, sondern " + (oben?.GetType().Name ?? "nichts") + ")";
+                return false;
+            }
+            await ansicht.BildFertigAsync();
+        }
+        return false;
+    }
+
     private static async Task<bool> TippenAsync(MainView ansicht, Control ziel, PointerType art)
     {
+        TrefferZuletzt = "";
         ziel.BringIntoView();
         await ansicht.BildFertigAsync();
         if (TopLevel.GetTopLevel(ziel) is not { } wurzel)
@@ -327,6 +363,10 @@ public static partial class AutoMessung
             return false;
         }
         var mitte = new Point(ziel.Bounds.Width / 2, ziel.Bounds.Height / 2);
+        if (!await TreffbarAsync(ansicht, ziel, mitte))
+        {
+            return false;
+        }
         var punkt = ziel.TranslatePoint(mitte, wurzel) ?? mitte;
         var zeiger = new Pointer(Pointer.GetNextFreeId(), art, true);
         var druck = new PointerPointProperties(RawInputModifiers.LeftMouseButton, PointerUpdateKind.LeftButtonPressed);
