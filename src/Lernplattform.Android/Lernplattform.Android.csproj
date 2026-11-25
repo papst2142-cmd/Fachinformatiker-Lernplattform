@@ -33,7 +33,7 @@
     <!-- A 0.87.0: Probe-Paket fuer die Karte "Inhaltspakete" (Testquelle nur in der Probe-APK) -->
     <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\pakete\probe_testkarte_1.fipaket" LogicalName="probe_testkarte_1.fipaket" />
     <!-- A 1.5.0 (Weisung P12-358, Nico 4b): die drei echten Fachrichtungs-Pakete, damit Nico am Handy ohne Netz testen kann -->
-    <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\pakete_echt\lernen_ae_1.fipaket" LogicalName="lernen_ae_1.fipaket" />
+    <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\pakete_echt\lernen_ae_2.fipaket" LogicalName="lernen_ae_2.fipaket" />
     <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\pakete_echt\lernen_dpa_1.fipaket" LogicalName="lernen_dpa_1.fipaket" />
     <EmbeddedResource Include="..\..\tests\Lernplattform.Tests\Testdaten\pakete_echt\lernen_dv_1.fipaket" LogicalName="lernen_dv_1.fipaket" />
   </ItemGroup>

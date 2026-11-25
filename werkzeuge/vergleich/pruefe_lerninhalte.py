@@ -29,6 +29,9 @@ Inhalt:
             Strukturblatt Abschnitt 7) mit eigenen Grundregeln und Paarpruefung; je Satz dazu aufbau und die
             Punkte je Gebiet; Saetze, die lernen/ausschluss.json ausschliesst (Stelle und Kennung), stehen in
             "ausgeschlossen" und fehlen in den sichten (sie bleiben fuer offene Laeufe geladen)
+            Seit Sollwert-Aenderung Nr. 24 (A 1.8.0, Weisung P12-372): Format 4 mit neuer Fassung eines Satzes
+            ("fassung": n, dieselbe Kennung hinten angehaengt, ersetzt die vorige an ihrer Stelle); je Satz mit
+            Fassung ueber 1 dazu "fassung"
 
 Aufruf (Python 3.12, nur Standardbibliothek):
   python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py <repo> <ziel.json>
@@ -425,13 +428,22 @@ def echt_selbst(t):
 def pruefungssaetze(repo):
     pfad = os.path.join(repo, "inhalte_csharp", "lernen", "pruefungssaetze.json")
     daten = lesen(pfad)
-    fehler, saetze, gesehen, gueltig = [], {}, set(), {}
+    fehler, saetze, fassungen, gueltig = [], {}, {}, {}
     for s in daten["saetze"]:
         kennung = s.get("kennung", "")
-        if kennung in gesehen or not echt_grundregeln(s):
+        # A 1.8.0 (Weisung P12-372): "fassung" ab Format 4, ganze Zahl ab 1; eine Kennung doppelt nur mit hoeherer Fassung.
+        # Die hoehere Fassung tritt an die Stelle der vorigen; faellt sie, bleibt die vorige (und sie steht bei den Fehlern).
+        fassung = s.get("fassung", 1)
+        if "fassung" in s and (daten["format"] < 4 or type(fassung) is not int or fassung < 1):
             fehler.append(kennung)
             continue
-        gesehen.add(kennung)
+        if kennung in fassungen and fassung <= fassungen[kennung]:
+            fehler.append(kennung)
+            continue
+        fassungen[kennung] = fassung
+        if not echt_grundregeln(s):
+            fehler.append(kennung)
+            continue
         gueltig[kennung] = s
     # Satzpaare: Partner gueltig und Paar, gleiche Firma, genau ein englischer Text je Paar (bis nichts mehr faellt)
     weiter = True
@@ -465,6 +477,8 @@ def pruefungssaetze(repo):
             "punkte_selbst": selbst,
             "punkte_programm": 100 - selbst,
         }
+        if s.get("fassung", 1) > 1:
+            saetze[kennung]["fassung"] = s["fassung"]
         if "aufbau" in s:
             saetze[kennung]["aufbau"] = s["aufbau"]
             saetze[kennung]["gebiete"] = {g: sum(t["punkte"] for t in alle_teile if t.get("gebiet") == g)

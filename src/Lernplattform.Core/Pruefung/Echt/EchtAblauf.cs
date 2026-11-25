@@ -144,7 +144,7 @@ public sealed class EchtAblauf(Func<EchtBestand> bestand, EchtAblage ablage, Fun
     {
         var sekunden = (long)Math.Floor(jetzt.ToUnixTimeMilliseconds() / 1000.0);
         var ort = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UnixEpoch.AddSeconds(sekunden), zone);
-        return new JsonObject
+        var zustand = new JsonObject
         {
             ["art"] = art,
             ["satz"] = satz.Kennung,
@@ -156,6 +156,64 @@ public sealed class EchtAblauf(Func<EchtBestand> bestand, EchtAblage ablage, Fun
             ["haken"] = new JsonObject(),
             ["zeitfrage"] = null,
         };
+        // A 1.8.0 (Weisung P12-372): Fassung des Satzes beim Start (ohne Feld = 1, so bleiben alte Zustaende gleich)
+        if (satz.Fassung > 1)
+        {
+            zustand[FassungSchluessel] = satz.Fassung;
+        }
+        return zustand;
+    }
+
+    public const string FassungSchluessel = "fassung";
+
+    /// <summary>Beiseite gelegte Antworten und Haekchen geaenderter Teilaufgaben, je alter Fassung (nie geloescht).</summary>
+    public const string AlteFassungen = "alte_fassungen";
+
+    /// <summary>
+    /// A 1.8.0 (Weisung P12-372, E1): ein offener Lauf einer aelteren Fassung geht mit der neuen weiter. Antworten und
+    /// Haekchen der Teilaufgaben, die die neue Fassung geaendert hat oder die es in ihr nicht mehr gibt, kommen unter "alte_fassungen"/    /// Haekchen der Teilaufgaben, die die neue Fassung geaendert hat, kommen unter "alte_fassungen"/&lt;alte Fassung&gt;lt;alte Fassung    /// Haekchen der Teilaufgaben, die die neue Fassung geaendert hat, kommen unter "alte_fassungen"/&lt;alte Fassung&gt;gt;
+    /// (gespeichert, nicht mehr gezeigt, nichts still verworfen); alle anderen bleiben. true: der Zustand wurde angeglichen.
+    /// </summary>
+    public static bool Angleichen(JsonObject zustand, EchtSatz satz)
+    {
+        var stand = Json.Zahl(zustand[FassungSchluessel]) is { } f ? (int)f : 1;
+        if (stand >= satz.Fassung)
+        {
+            return false;
+        }
+        var antworten = zustand["antworten"] as JsonObject;
+        var haken = zustand["haken"] as JsonObject;
+        var archiv = zustand[AlteFassungen] as JsonObject ?? [];
+        zustand[AlteFassungen] = archiv;
+        var name = stand.ToString(CultureInfo.InvariantCulture);
+        var beiseite = archiv[name] as JsonObject ?? new JsonObject { ["antworten"] = new JsonObject(), ["haken"] = new JsonObject() };
+        archiv[name] = beiseite;
+        var alteAntworten = beiseite["antworten"] as JsonObject ?? [];
+        beiseite["antworten"] = alteAntworten;
+        var alteHaken = beiseite["haken"] as JsonObject ?? [];
+        beiseite["haken"] = alteHaken;
+        // geaenderte oder neue Teile der neuen Fassung und Teile, die es in ihr nicht mehr gibt (z. B. c geteilt in ca und cb)
+        var alle = satz.Aufgaben.SelectMany((a, n) => a.Teile.Select(t => EchtBewertung.Schluessel(n + 1, t.Nr))).ToHashSet(StringComparer.Ordinal);
+        var weg = (antworten?.Select(p => p.Key.Split('/')[0]) ?? []).Concat(haken?.Select(p => p.Key) ?? [])
+            .Where(k => k.Contains('.', StringComparison.Ordinal) && !alle.Contains(k)).Distinct(StringComparer.Ordinal).ToList();
+        var schluesselListe = satz.Aufgaben.SelectMany((a, n) => a.Teile.Where(t => t.Fassung > stand).Select(t => EchtBewertung.Schluessel(n + 1, t.Nr)))
+            .Concat(weg).ToList();
+        foreach (var schluessel in schluesselListe)
+        {
+            foreach (var feld in antworten?.Select(p => p.Key).Where(k => k.StartsWith(schluessel + "/", StringComparison.Ordinal)).ToList() ?? [])
+            {
+                var wert = antworten![feld];
+                antworten.Remove(feld);
+                alteAntworten[feld] = wert;
+            }
+            if (haken?[schluessel] is { } h)
+            {
+                haken.Remove(schluessel);
+                alteHaken[schluessel] = h;
+            }
+        }
+        zustand[FassungSchluessel] = satz.Fassung;
+        return true;
     }
 
     /// <summary>Gespeicherte Pruefung fortsetzen; abgelaufen: abgeben. Fehlt ihr Satz (Inhalte geaendert), bleibt sie stehen.</summary>
@@ -175,12 +233,19 @@ public sealed class EchtAblauf(Func<EchtBestand> bestand, EchtAblage ablage, Fun
         }
         // A 0.94.0 (Weisung P12-304): ein ersetzter Satz (ausschluss.json) bleibt im Bestand; der offene Lauf geht mit Hinweis weiter
         var ersetzt = Bestand.IstAusgeschlossen(Satz.Kennung);
+        // A 1.8.0 (Weisung P12-372): neue Fassung des Satzes, Antworten der geaenderten Teile beiseite (gespeichert), mit Hinweis
+        var neuGefasst = Angleichen(Zustand, Satz);
+        if (neuGefasst)
+        {
+            Speichern();
+        }
+        var hinweis = ersetzt ? EchtTexte.SatzErsetzt : neuGefasst ? EchtTexte.TeilNeuGefasst : null;
         if (ImLauf)
         {
             return Rest <= 0 ? Abgeben(auto: true)
-                : ersetzt ? new(EchtAnsicht.Lauf, KartenTexte.HinweisTitel, EchtTexte.SatzErsetzt) : new(EchtAnsicht.Lauf);
+                : hinweis is not null ? new(EchtAnsicht.Lauf, KartenTexte.HinweisTitel, hinweis) : new(EchtAnsicht.Lauf);
         }
-        return ersetzt ? new(EchtAnsicht.Bewertung, KartenTexte.HinweisTitel, EchtTexte.SatzErsetzt) : new(EchtAnsicht.Bewertung);
+        return hinweis is not null ? new(EchtAnsicht.Bewertung, KartenTexte.HinweisTitel, hinweis) : new(EchtAnsicht.Bewertung);
     }
 
     /// <summary>Start (nach "Ja"): eine laufende Pruefung wird gezeigt und nie ueberschrieben.</summary>

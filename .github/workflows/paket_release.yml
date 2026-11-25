@@ -14,7 +14,7 @@
 # contents: write; keine Geheimnisse.
 # Welle A 1.5.0 (Weisung P12-358, Sammelliste 386): die Fachrichtungs-Pakete lernen_ae, lernen_dpa, lernen_dv haben keinen
 # Ordner unter pakete/; sie werden mit paket_release.py lernen-bauen aus inhalte_csharp/lernen/ geschnitten und muessen
-# Byte fuer Byte gleich der echten Testdatei des Commits sein (Stand und braucht_app: paket_bauen.LERNEN_TESTDATEI).
+# Byte fuer Byte gleich der echten Testdatei des Commits sein (Stand und braucht_app: paket_bauen.LERNEN_TESTDATEIEN).
 # Reihenfolge nach dem Merge von A 1.5.0: zuerst diese drei Pakete veroeffentlichen, danach erst vA1.5.0 (release.yml
 # prueft das und wird sonst rot).
 name: Paket-Release

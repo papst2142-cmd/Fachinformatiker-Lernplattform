@@ -61,6 +61,13 @@ public sealed record EchtTeil(string Nr, string Operator, IReadOnlyList<string> 
     /// </summary>
     public string? Gebiet { get; init; }
 
+    /// <summary>
+    /// A 1.8.0 (Weisung P12-372): Fassung des Satzes, in der diese Teilaufgabe zuletzt geaendert wurde (1 = seit der ersten
+    /// unveraendert). Ein offener Lauf einer aelteren Fassung legt die Antworten genau dieser Teile beiseite
+    /// (<see cref="EchtAblauf"/>), die der uebrigen bleiben.
+    /// </summary>
+    public int Fassung { get; init; } = 1;
+
     /// <summary>Punkte, die man selbst mit Haekchen vergibt (der Rest bewertet das Programm).</summary>
     public int SelbstPunkte => Antwort.Form switch
     {
@@ -90,6 +97,12 @@ public sealed record EchtSatz(string Kennung, string Fachrichtung, string Bereic
     public string? Aufbau { get; init; }
 
     public bool Paar => Aufbau == EchtSaetze.AufbauPaar;
+
+    /// <summary>
+    /// A 1.8.0 (Weisung P12-372): Fassung des Satzes (ohne Feld 1). Eine hoehere Fassung derselben Kennung steht weiter hinten
+    /// in der Datei und ersetzt beim Laden die alte (die alte bleibt Byte fuer Byte in der Datei).
+    /// </summary>
+    public int Fassung { get; init; } = 1;
 }
 
 /// <summary>Ein Satz, den die Ladepruefung abgewiesen hat, mit dem Grund (nie still weglassen).</summary>
@@ -138,9 +151,10 @@ public static class EchtSaetze
     public const string Datei = "pruefungssaetze.json";
     /// <summary>
     /// Hoechstes bekanntes Format: 1 = Welle 1 (A 0.76.0), 2 = gezeichnete Anlagen und Zeichenaufgaben (A 0.77.0),
-    /// 3 = AE-Satzpaare mit Feld "aufbau" und Feld "gebiet" je Teil (A 0.94.0, Weisung P12-304).
+    /// 3 = AE-Satzpaare mit Feld "aufbau" und Feld "gebiet" je Teil (A 0.94.0, Weisung P12-304), 4 = Klassen- und
+    /// Use-Case-Diagramm im Baukasten und neue Fassung eines Satzes mit Feld "fassung" (A 1.8.0, Weisungen P12-371/372).
     /// </summary>
-    public const int Format = 3;
+    public const int Format = 4;
 
     /// <summary>Aufbau eines Satzes im AE-Satzpaar (Strukturblatt Abschnitt 7).</summary>
     public const string AufbauPaar = "paar";
@@ -256,7 +270,9 @@ public static class EchtSaetze
         }
         var saetze = new List<EchtSatz>();
         var fehler = new List<EchtFehler>();
-        var kennungen = new HashSet<string>(StringComparer.Ordinal);
+        // A 1.8.0 (Weisung P12-372): hoechste Fassung je Kennung bisher; eine Kennung doppelt nur mit hoeherer Fassung
+        var fassungen = new Dictionary<string, int>(StringComparer.Ordinal);
+        var roh = new Dictionary<string, JsonObject>(StringComparer.Ordinal);
         for (var i = 0; i < liste.Count; i++)
         {
             var knoten = liste[i] as JsonObject;
@@ -267,11 +283,36 @@ public static class EchtSaetze
                 {
                     throw new EchtLadefehler("Eintrag ist kein Objekt");
                 }
-                if (!kennungen.Add(kennung))
+                var fassung = 1;
+                if (knoten["fassung"] is not null)
                 {
-                    throw new EchtLadefehler("Kennung doppelt");
+                    if (format < 4)
+                    {
+                        throw new EchtLadefehler("\"fassung\" erst ab Format 4");
+                    }
+                    fassung = Ganz(knoten["fassung"]) is { } f && f >= 1 ? f
+                        : throw new EchtLadefehler("\"fassung\" muss eine ganze Zahl ab 1 sein");
                 }
-                saetze.Add(Satz(kennung, knoten, format.Value));
+                if (fassungen.TryGetValue(kennung, out var bisher) && fassung <= bisher)
+                {
+                    throw new EchtLadefehler(fassung > 1
+                        ? string.Create(CultureInfo.InvariantCulture, $"Fassung {fassung} ist nicht höher als die vorige Fassung {bisher}")
+                        : "Kennung doppelt");
+                }
+                fassungen[kennung] = fassung;
+                var satz = Satz(kennung, knoten, format.Value) with { Fassung = fassung };
+                // die neue Fassung tritt an die Stelle der alten (Reihenfolge der Saetze bleibt); die alte bleibt in der Datei
+                var alt = saetze.FindIndex(x => x.Kennung == kennung);
+                if (alt >= 0)
+                {
+                    saetze[alt] = TeileMitFassung(satz, saetze[alt], knoten, roh[kennung]);
+                    roh[kennung] = knoten;
+                }
+                else
+                {
+                    saetze.Add(satz);
+                    roh[kennung] = knoten;
+                }
             }
             catch (EchtLadefehler f)
             {
@@ -285,6 +326,32 @@ public static class EchtSaetze
         }
         PaarePruefen(saetze, fehler);
         return new(saetze, fehler);
+    }
+
+    /// <summary>
+    /// A 1.8.0 (Weisung P12-372): Fassung je Teilaufgabe einer neuen Fassung. Ein Teil, dessen JSON gleich dem Teil mit
+    /// derselben Aufgabe und Nummer der vorigen Fassung ist, behaelt dessen Fassung; jeder andere (geaendert oder neu) bekommt
+    /// die neue.
+    /// </summary>
+    private static EchtSatz TeileMitFassung(EchtSatz neu, EchtSatz vorher, JsonObject neuRoh, JsonObject vorherRoh)
+    {
+        static Dictionary<(int, string), string> Teile(JsonObject satz) =>
+            (satz["aufgaben"] as JsonArray ?? []).Select((a, n) => (a, n))
+                .SelectMany(x => ((x.a as JsonObject)?["teile"] as JsonArray ?? []).OfType<JsonObject>()
+                    .Select(t => (Schluessel: (x.n, Text(t["nr"]) ?? ""), Json: t.ToJsonString())))
+                .GroupBy(t => t.Schluessel).ToDictionary(g => g.Key, g => g.First().Json);
+        var alt = Teile(vorherRoh);
+        var jetzt = Teile(neuRoh);
+        var aufgaben = neu.Aufgaben.Select((a, n) => a with
+        {
+            Teile = a.Teile.Select(t =>
+            {
+                var gleich = alt.TryGetValue((n, t.Nr), out var j) && jetzt.TryGetValue((n, t.Nr), out var k) && j == k;
+                var frueher = gleich && n < vorher.Aufgaben.Count ? vorher.Aufgaben[n].Teile.FirstOrDefault(v => v.Nr == t.Nr) : null;
+                return t with { Fassung = frueher?.Fassung ?? neu.Fassung };
+            }).ToList(),
+        }).ToList();
+        return neu with { Aufgaben = aufgaben };
     }
 
     /// <summary>Kennung des Partners im Satzpaar (ae_b1_06 &lt;-&gt; ae_b2_06).</summary>
@@ -738,6 +805,10 @@ public static class EchtSaetze
                 {
                     throw new EchtLadefehler(wo + ": Diagramm muss \"uml\" oder \"er\" sein");
                 }
+                if (EchtZeichnung.ArtenFormat4.Contains(art) && format < 4)
+                {
+                    throw new EchtLadefehler(wo + ": Diagramm \"" + art + "\" erst ab Format 4");
+                }
                 var muster = EchtZeichnung.Diagramm(a["muster"], art, vollstaendig: true, wo + " Musterbild");
                 var vorgabe = a["vorgabe"] is null ? null : EchtZeichnung.Diagramm(a["vorgabe"], art, vollstaendig: false, wo + " Vorgabe");
                 if (vorgabe?.Elemente.FirstOrDefault(v => !muster.Elemente.Contains(v)) is { } fremd)
@@ -747,6 +818,19 @@ public static class EchtSaetze
                 if (vorgabe?.Verbindungen.FirstOrDefault(v => !muster.Verbindungen.Any(m => (m.Von == v.Von && m.Nach == v.Nach) || (m.Von == v.Nach && m.Nach == v.Von))) is { } linie)
                 {
                     throw new EchtLadefehler(wo + ": Verbindung " + linie.Von + "–" + linie.Nach + " der Vorgabe fehlt im Musterbild");
+                }
+                // A 1.8.0: Beziehungen der Vorgabe mit gleicher Art, Richtung und (wo angegeben) Multiplizitaet; Use-Case mit Grenze
+                if (EchtZeichnung.ArtenFormat4.Contains(art) && vorgabe?.Verbindungen.FirstOrDefault(v => !muster.Verbindungen.Any(m =>
+                    m.Typ == v.Typ && ((m.Von == v.Von && m.Nach == v.Nach && (v.MultVon.Length == 0 || v.MultVon == m.MultVon)
+                        && (v.MultNach.Length == 0 || v.MultNach == m.MultNach))
+                        || (!EchtZeichnung.Gerichtet(v.Typ) && m.Von == v.Nach && m.Nach == v.Von && (v.MultVon.Length == 0 || v.MultVon == m.MultNach)
+                        && (v.MultNach.Length == 0 || v.MultNach == m.MultVon))))) is { } anders)
+                {
+                    throw new EchtLadefehler(wo + ": Beziehung " + anders.Von + "–" + anders.Nach + " der Vorgabe steht nicht gleich im Musterbild");
+                }
+                if (art == EchtZeichnung.UseCase && (vorgabe is null || vorgabe.Grenze != muster.Grenze))
+                {
+                    throw new EchtLadefehler(wo + ": ein Use-Case-Diagramm braucht eine Vorgabe mit derselben Systemgrenze wie das Musterbild");
                 }
                 return new EchtAntwort(form) { Diagramm = art, Vorgabe = vorgabe, Muster = muster };
             default:

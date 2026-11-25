@@ -1,21 +1,24 @@
-Kriechen sieht jetzt echt aus, und die Knöpfe für die Haltungen sind übersichtlicher.
+In der Prüfung im echten Format zeichnest du jetzt auch UML-Klassendiagramme und Use-Case-Diagramme selbst im Baukasten.
 
-- Beim Kriechen liegt deine Figur jetzt flach auf dem Bauch und robbt vorwärts: Ein Arm greift nach vorn, das Knie der anderen Seite zieht seitlich nach, dann wechseln die Seiten. Steht sie still, liegt sie ruhig auf dem Bauch, den Kopf leicht angehoben. Vorher kroch sie auf Händen und Knien. Weil die liegende Figur länger ist, braucht Kriechen drinnen jetzt etwas mehr freien Platz; wo er fehlt, sagt dir das Spiel wie bisher, dass hier kein Platz ist.
-- Am Handy und Tablet sitzt rechts unten in der Ecke jetzt der große Knopf „Springen“. Darüber stehen im Bogen zwei kleinere Knöpfe: „Hinknien“ und „Hinlegen“. Jeder zeigt als kleine Figur, was er tut. Tippst du „Hinknien“, geht deine Figur in die Hocke; tippst du „Hinlegen“, legt sie sich hin. Hältst du „Hinknien“ gedrückt oder wischst du darauf nach unten, legt sie sich ebenfalls hin. Bist du in einer Haltung, zeigt der Knopf eine stehende Figur und leuchtet in deiner Programmfarbe: Ein Tipp darauf lässt dich wieder aufstehen. Der rechte Stick zum Umsehen beginnt jetzt neben den Knöpfen.
-- Am PC stehen unten rechts drei kleine runde Symbole für Springen, Hinknien und Hinlegen, darunter jeweils die Taste (Leertaste, C und X oder deine eigene Belegung). Du kannst sie auch mit der Maus anklicken. Die Haltung, in der du gerade bist, leuchtet in deiner Programmfarbe.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+- Im Klassendiagramm setzt du Klassen, gibst jeder einen Namen und fügst mit „Attribut hinzufügen“ und „Methode hinzufügen“ Zeilen an. Klassen verbindest du mit „Verbinden …“: Assoziation, Vererbung, Aggregation oder Komposition. An Assoziation, Aggregation und Komposition wählst du an beiden Enden die Multiplizität (1, 0..1, *, 0..* oder 1..*). Bei Vererbung, Aggregation und Komposition zeigt die Spitze bzw. Raute in die richtige Richtung; mit „Richtung umkehren“ drehst du sie.
+- Im Use-Case-Diagramm ist die Systemgrenze vorgegeben. Akteure stehen außerhalb, Anwendungsfälle innerhalb. Du verbindest sie mit Assoziation, «include», «extend» oder Generalisierung; die Pfeile zeigen in die richtige Richtung.
+- Nach dem Abgeben vergleicht das Programm deine Zeichnung mit dem Musterbild und zeigt grün, was passt, und rot, was fehlt oder anders ist. Die Punkte vergibst du wie bisher selbst mit den Häkchen. Der Kopf der Bewertung nennt bei einem AE-Satz den AE-Bereich.
+- Fünf Prüfungssätze der Fachrichtung Anwendungsentwicklung (AE) haben eine neue Fassung: Drei Teilaufgaben mit Klassendiagramm und zwei mit Use-Case-Diagramm werden jetzt im Baukasten gezeichnet statt auf Papier. Alle anderen Teilaufgaben und alle Themen der Sätze bleiben.
+- Hast du AE gewählt, braucht die App dafür den neuen Stand des AE-Pakets. Sie zeigt nach dem Update wie beim ersten Mal die Karte „Für AE fehlt das Fachrichtungs-Paket“ mit dem Knopf „Laden“.
+- Hast du einen dieser fünf Sätze gerade angefangen, läuft er mit der neuen Fassung weiter. Deine Antworten zu den geänderten Teilaufgaben bleiben gespeichert, werden aber nicht mehr gezeigt; das Programm sagt dir das einmal. Alle anderen Antworten bleiben, wie sie waren.
+- Dein Lernstand, die übrigen Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.7.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.8.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.7.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.7.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.7.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.7.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.8.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.8.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.8.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.8.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

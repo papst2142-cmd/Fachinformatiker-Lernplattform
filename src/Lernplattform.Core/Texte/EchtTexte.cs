@@ -28,6 +28,11 @@ public static class EchtTexte
     public const string SatzErsetzt = "Dieser Prüfungssatz wurde durch neue Sätze ersetzt. Du kannst die gespeicherte Prüfung "
         + "noch zu Ende bearbeiten und abschließen, dein Stand bleibt erhalten. Danach wird der Satz nicht mehr angeboten.";
 
+    /// <summary>A 1.8.0 (Weisung P12-372): gespeicherte Pruefung eines Satzes, von dem es eine neue Fassung gibt.</summary>
+    public const string TeilNeuGefasst = "Zu diesem Prüfungssatz gibt es eine neue Fassung: einzelne Teilaufgaben werden jetzt "
+        + "im Baukasten gezeichnet. Deine Antworten zu diesen Teilaufgaben bleiben gespeichert, werden aber nicht mehr gezeigt; "
+        + "alle anderen Antworten bleiben wie sie waren.";
+
     public const string Ausgangssituation = "Ausgangssituation";
     public const string AufgabeKurz = "%d (%d)";
     public const string Zeitfrage = "Zeitfrage";
@@ -67,6 +72,46 @@ public static class EchtTexte
     // -- Welle 2 (A 0.77.0): gezeichnete Anlagen und Zeichenaufgaben --------------------------------
     public const string UmlName = "UML-Aktivitätsdiagramm";
     public const string ErName = "ER-Modell in Chen-Notation";
+    // A 1.8.0 (Weisung P12-371): Klassen- und Use-Case-Diagramm
+    public const string KlasseName = "UML-Klassendiagramm";
+    public const string UseCaseName = "UML-Use-Case-Diagramm";
+    public const string Methoden = "Methoden";
+    public const string Vorgegeben = "(vorgegeben)";
+    public const string NameFeld = "Name";
+    public const string Attribut = "Attribut";
+    public const string Methode = "Methode";
+    public const string AttributNr = "Attribut %d";
+    public const string MethodeNr = "Methode %d";
+    public const string AttributNeu = "Attribut hinzufügen";
+    public const string MethodeNeu = "Methode hinzufügen";
+    public const string Entfernen = "Entfernen";
+    public const string ZeileEntfernen = "%s entfernen";
+    public const string VerbindenLeiste = "Verbinden …";
+    public const string ArtDerBeziehung = "Art der Beziehung";
+    public const string ArtZu = "Art der Beziehung zu %s";
+    public const string Umkehren = "Richtung umkehren (zu %s)";
+    public const string MultAn = "Multiplizität an %s";
+    public const string KompositionGanzes = "Bei einer Komposition hat das Ganze die Multiplizität 1 oder 0..1.";
+    public const string RichtungKlasse = "Arten: Assoziation, Vererbung, Aggregation, Komposition. Vererbung zeigt vom gewählten Baustein zur Oberklasse, "
+        + "Aggregation und Komposition vom Teil zum Ganzen; „Richtung umkehren“ dreht den Pfeil.";
+    public const string RichtungUseCase = "Arten: Assoziation (Akteur–Fall), «include», «extend», Generalisierung. «include» zeigt vom gewählten Fall "
+        + "zum eingebundenen Fall, «extend» vom erweiternden Fall zum Basisfall, Generalisierung zum Allgemeinen.";
+    public const string Keine = "keine";
+    public const string GrenzeZeile = "Systemgrenze „%s“ (vorgegeben): Spalte %d bis %d, Zeile %d bis %d; Anwendungsfälle stehen darin, Akteure außerhalb.";
+    public const string AssoziationMit = "Assoziation mit %s";
+    public const string ErbtVon = "erbt von %s (Vererbung)";
+    public const string OberklasseVon = "Oberklasse von %s (Vererbung)";
+    public const string TeilVonAggregation = "Teil von %s (Aggregation)";
+    public const string GanzesAggregation = "Ganzes zu %s (Aggregation)";
+    public const string TeilVonKomposition = "Teil von %s (Komposition)";
+    public const string GanzesKomposition = "Ganzes zu %s (Komposition)";
+    public const string BindetEin = "«include» bindet %s ein";
+    public const string EingebundenVon = "wird von %s eingebunden («include»)";
+    public const string Erweitert = "«extend» erweitert %s";
+    public const string ErweitertDurch = "wird durch %s erweitert («extend»)";
+    public const string Spezialisiert = "spezialisiert %s (Generalisierung)";
+    public const string Verallgemeinert = "verallgemeinert %s (Generalisierung)";
+    public const string MultHierDort = "(Multiplizität hier %s, dort %s)";
     public const string VerbundenMit = "verbunden mit";
     public const string WeiterZu = "weiter zu";
     public const string Attribute = "Attribute";
@@ -128,6 +173,11 @@ public static class EchtTexte
     public const string SchonVerbunden = "Die beiden Bausteine sind schon verbunden.";
     public const string NichtStartEnde = "Ein Pfeil führt nie in den Start und nie aus dem Ende.";
     public const string ErNichtErlaubt = "Erlaubt sind Attribut zu Entität oder Beziehung und Beziehung zu Entität.";
+    public const string ArtNichtErlaubt = "Diese Art der Beziehung gibt es in diesem Diagramm nicht.";
+    public const string KeinKreis = "Vererbung und Generalisierung dürfen keinen Kreis bilden.";
+    public const string NurAkteurFall = "Eine Assoziation verbindet einen Akteur mit einem Anwendungsfall.";
+    public const string NurFallFall = "«include» und «extend» verbinden nur Anwendungsfälle.";
+    public const string NurGleiche = "Eine Generalisierung verbindet nur gleiche Bausteine (Akteur mit Akteur, Anwendungsfall mit Anwendungsfall).";
     public const string AttributBelegt = "Ein Attribut hängt an genau einer Entität oder Beziehung.";
     public const string ZeichnungUnlesbar = "Deine gespeicherte Zeichnung ließ sich nicht lesen. Der Baukasten beginnt wieder mit der Vorgabe.";
     public const string ImBaukasten = "Im Baukasten gezeichnet";
@@ -142,6 +192,22 @@ public static class EchtTexte
     public const string ZaehlRegelnOk = "Regeln des Diagramms eingehalten";
     public const string ZaehlRegel = "Regel verletzt: %s";
     public const string ZaehlWeitere = "und %d weitere Regelverstöße";
+    // A 1.8.0: Zaehlung mit Namen (Klasse, Use-Case)
+    public const string ZaehlVon = "%s: %d von %d";
+    public const string ZaehlNamenOk = "(Namen stimmen)";
+    public const string ZaehlFehlt = "fehlt: %s";
+    public const string ZaehlZuViel = "nicht im Musterbild: %s";
+    public const string ZaehlAttributeMethoden = "Attribute: %d von %d, Methoden: %d von %d";
+    public const string ZaehlBeziehungFehlt = "Fehlt: %s";
+    public const string ZaehlBeziehungZuViel = "Nicht im Musterbild: %s";
+    public const string ZaehlArtFalsch = "%s: %s, erwartet %s";
+    public const string ZaehlRichtungFalsch = "%s %s: Richtung falsch, erwartet %s";
+    public const string ZaehlMultFalsch = "%s: Multiplizität %s – %s, erwartet %s – %s";
+    public const string ZaehlMitMult = "mit %s und %s";
+    public const string OhneName = "(ohne Namen)";
+    public const string Klassen = "Klassen";
+    public const string Akteure = "Akteure";
+    public const string Anwendungsfaelle = "Anwendungsfälle";
     public const string ZaehlOhneText = "Ohne Text: %s";
 
     public const string ErgebnisAufgaben = "Nach Aufgaben";

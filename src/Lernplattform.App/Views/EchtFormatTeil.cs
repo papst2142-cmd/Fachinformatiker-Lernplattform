@@ -1059,6 +1059,9 @@ public sealed class EchtFormatTeil
         // A 0.86.0 (Weisung P12-292): erster Satz der Fachrichtung DV je Bereich (Lauf, Anlagen, Bewertung)
         "pruefung/echt-dv-b1-lauf-aufgabe1", "pruefung/echt-dv-b1-anlagen1", "pruefung/echt-dv-b1-bewertung-aufgabe1",
         "pruefung/echt-dv-b2-lauf-aufgabe1", "pruefung/echt-dv-b2-anlagen1", "pruefung/echt-dv-b2-bewertung-aufgabe1",
+        // A 1.8.0 (Weisung P12-371): Klassen- und Use-Case-Baukasten in AE-Saetzen (Lauf mit gewaehltem Baustein, Bewertung)
+        "pruefung/echt-ae-baukasten-klasse", "pruefung/echt-ae-baukasten-usecase", "pruefung/echt-ae-bewertung-klasse",
+        "pruefung/echt-ae-bewertung-usecase",
     ];
 
     /// <summary>Erste Nummer der Ansichten der Welle 2 in <see cref="ProbeNamen"/>.</summary>
@@ -1077,15 +1080,21 @@ public sealed class EchtFormatTeil
     internal const int DvAb = 32;
 
     /// <summary>
+    /// Erste Nummer der Ansichten der Welle W1 (A 1.8.0) in <see cref="ProbeNamen"/>: Klasse im Lauf (ae_b1_07 Aufgabe 2),
+    /// Use-Case im Lauf (ae_b1_06 Aufgabe 4), dann beide bewertet.
+    /// </summary>
+    internal const int W1Ab = 38;
+
+    /// <summary>
     /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung SI), 754 s gelaufen,
     /// Antworten teils richtig, teils falsch, teils leer.
     /// </summary>
-    internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1, string? fachrichtung = null)
+    internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1, string? fachrichtung = null, string? kennung = null)
     {
         _probeBestand = null;
-        // A 0.94.0: ersetzte Saetze (ausschluss.json) zeigt die Probe nicht mehr
+        // A 0.94.0: ersetzte Saetze (ausschluss.json) zeigt die Probe nicht mehr; A 1.8.0: fester Satz ueber die Kennung
         var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == bereich && (fachrichtung is null || s.Fachrichtung == fachrichtung)
-            && !Zustand.EchtBestand.IstAusgeschlossen(s.Kennung));
+            && !Zustand.EchtBestand.IstAusgeschlossen(s.Kennung) && (kennung is null || s.Kennung == kennung));
         var art = bereich == EchtSaetze.Ap1 ? EchtArten.Praefix + EchtSaetze.Ap1 : EchtArten.Art(Fachrichtung.Nach(satz.Fachrichtung), bereich);
         var zustand = EchtAblauf.Neu(satz, art, DateTimeOffset.Now.AddSeconds(-754), TimeZoneInfo.Local);
         var antworten = (JsonObject)zustand["antworten"]!;
@@ -1218,6 +1227,9 @@ public sealed class EchtFormatTeil
             case BaukastenAb + 1:
                 UmlBaukastenZeigen();
                 break;
+            case >= W1Ab:
+                W1Zeigen(art - W1Ab);
+                break;
             case >= AeAb:
                 // A 0.84.0: erster AE-Satz des Bereichs (0-2 Bereich 1, 3-5 Bereich 2), Aufgabe 1 im Lauf, mit Anlagen, bewertet;
                 // A 0.85.0: ab DpaAb dasselbe fuer DPA, A 0.86.0: ab DvAb fuer DV
@@ -1309,6 +1321,83 @@ public sealed class EchtFormatTeil
     /// 1:n und n:m, Schluessel Patientennummer; es fehlen Qualifikation, Datum, Startzeit, geplante Uhrzeit, Name, Adresse
     /// (die Zaehlung zeigt dann Gruenes und Rotes).
     /// </summary>
+    /// <summary>
+    /// Nur Start ohne Bedienung (A 1.8.0, Weisung P12-371): <paramref name="nr"/> 0 = Klassendiagramm im Lauf (ae_b1_07 Aufgabe 2,
+    /// eigene Klasse "Erinnerung" gewaehlt), 1 = Use-Case im Lauf (ae_b1_06 Aufgabe 4, "Abokunde" gewaehlt), 2 und 3 = dieselben
+    /// Zeichnungen bewertet (Zaehlung gruen und rot). Die Zeichnung ist teils richtig, teils falsch (siehe <see cref="ProbeKlasse"/>).
+    /// </summary>
+    private void W1Zeigen(int nr)
+    {
+        var klasse = nr % 2 == 0;
+        var (kennung, aufgabe) = klasse ? ("ae_b1_07", 2) : ("ae_b1_06", 4);
+        var probe = ProbeZustand(bewertet: nr >= 2, EchtSaetze.B1, "ae", kennung);
+        var satz = _a.Bestand.Satz(Json.Text(probe["satz"]))!;
+        var teil = satz.Aufgaben[aufgabe - 1].Teile.First(t => t.Antwort.Diagramm == (klasse ? EchtZeichnung.Klasse : EchtZeichnung.UseCase));
+        var bau = klasse ? ProbeKlasse(teil) : ProbeUseCase(teil);
+        ((JsonObject)probe["antworten"]!)[EchtBewertung.Feld(aufgabe, teil.Nr, EchtBaukasten.Feld)] = bau.Json();
+        _a.ProbeSetzen(probe);
+        (_reiter, _anlagen) = (aufgabe.ToString(CultureInfo.InvariantCulture), false);
+        if (nr >= 2)
+        {
+            BewertungZeigen();
+            return;
+        }
+        LaufZeigen();
+        var b = _baukaesten.Values.FirstOrDefault();
+        b?.ProbeWaehlen(b.ProbeBau.Diagramm.Elemente.FirstOrDefault(e => e.Text == (klasse ? "Erinnerung" : "Abokunde"))?.Id);
+    }
+
+    /// <summary>
+    /// A 1.8.0: Probezeichnung zu ae_b1_07 2c auf der Vorgabe (Termin, Tier): Termin–Tier richtig (0..* zu 1), Klasse
+    /// "Erinnerung" mit zwei von drei Attributen und der Methode, ihre Beziehung zum Termin mit falscher Multiplizitaet (1 statt 0..*).
+    /// </summary>
+    internal static EchtBaukasten ProbeKlasse(EchtTeil teil)
+    {
+        var bau = EchtBaukasten.Neu(EchtZeichnung.Klasse, teil.Antwort.Vorgabe);
+        bau.Verbinden("termin", "tier", "assoziation");
+        bau.MultSetzen("termin", "tier", amVon: true, "0..*");
+        bau.MultSetzen("termin", "tier", amVon: false, "1");
+        var er = bau.Setzen("klasse", "termin")!;
+        bau.Verschieben(er, 0, 2);
+        bau.Beschriften(er, "Erinnerung");
+        foreach (var (zeile, methode) in new[] { ("- kanal: String", false), ("- zeitpunkt: int", false), ("+ senden(): boolean", true) })
+        {
+            var n = bau.ZeileHinzufuegen(er, methode)!.Value;
+            bau.ZeileSetzen(er, methode, n, zeile);
+        }
+        bau.Verbinden(er, "termin", "assoziation");
+        bau.MultSetzen(er, "termin", amVon: true, "1");
+        bau.MultSetzen(er, "termin", amVon: false, "1");
+        return bau;
+    }
+
+    /// <summary>
+    /// A 1.8.0: Probezeichnung zu ae_b1_06 4a auf der Vorgabe (Grenze, Kunde, "Rad ausleihen"): «include» zu "Anmelden" richtig,
+    /// «extend» in falscher Richtung (Rueckgabe zu Schaden), Abokunde mit Generalisierung richtig; Kundendienst fehlt.
+    /// </summary>
+    internal static EchtBaukasten ProbeUseCase(EchtTeil teil)
+    {
+        var bau = EchtBaukasten.Neu(EchtZeichnung.UseCase, teil.Antwort.Vorgabe);
+        string Fall(string typ, string text, int x, int y)
+        {
+            var id = bau.Setzen(typ)!;
+            bau.Verschieben(id, x, y);
+            bau.Beschriften(id, text);
+            return id;
+        }
+        var anmelden = Fall("anwendungsfall", "Anmelden", 4, 0);
+        var rueckgabe = Fall("anwendungsfall", "Rad zurückgeben", 2, 2);
+        var schaden = Fall("anwendungsfall", "Schaden melden", 4, 2);
+        var abo = Fall("akteur", "Abokunde", 0, 4);
+        var verwalten = Fall("anwendungsfall", "Abo verwalten", 2, 4);
+        bau.Verbinden("ausleihen", anmelden, "include");
+        bau.Verbinden("kunde", rueckgabe, "assoziation");
+        bau.Verbinden(rueckgabe, schaden, "extend");
+        bau.Verbinden(abo, "kunde", "generalisierung");
+        bau.Verbinden(abo, verwalten, "assoziation");
+        return bau;
+    }
+
     internal static EchtBaukasten ProbeEr(EchtTeil teil)
     {
         var bau = EchtBaukasten.Neu(EchtZeichnung.Er, teil.Antwort.Vorgabe);

@@ -5,7 +5,8 @@ namespace Lernplattform.Tests;
 
 /// <summary>
 /// A 0.94.0 (Weisung P12-304): gemeinsame Hilfen fuer die Tests der eingebauten Pruefungssaetze. Die Datei traegt seit
-/// A 0.94.0 Format 3 (AE-Satzpaare); vor den neuen Saetzen ist sie sonst bytegleich mit dem Stand A 0.93.0.
+/// A 0.94.0 Format 3 (AE-Satzpaare), seit A 1.8.0 Format 4 (neue Fassungen, Klassen- und Use-Case-Diagramm, Weisung P12-372);
+/// vor den neuen Saetzen ist sie sonst bytegleich mit dem Stand davor.
 /// </summary>
 internal static class EchtTestDatei
 {
@@ -13,19 +14,23 @@ internal static class EchtTestDatei
 
     public static readonly string Datei = Path.Combine(Ordner, EchtSaetze.Datei);
 
-    private static readonly byte[] Kopf3 = "{\n \"format\": 3,"u8.ToArray();
+    private static readonly byte[] Kopf4 = "{\n \"format\": 4,"u8.ToArray();
 
     /// <summary>
-    /// Kopie der Datei mit der Formatzahl 2 statt 3 (Stelle 13, sonst nichts geaendert): damit pruefen die Tests der Wellen
-    /// bis A 0.93.0 weiter, dass ihr Teil der Datei bytegleich geblieben ist. Rot, wenn der Kopf nicht genau Format 3 ist.
+    /// Kopie der Datei mit einer kleineren Formatzahl statt 4 (Stelle 13, sonst nichts geaendert): damit pruefen die Tests der
+    /// Wellen davor weiter, dass ihr Teil der Datei bytegleich geblieben ist. Rot, wenn der Kopf nicht genau Format 4 ist.
     /// </summary>
-    public static byte[] AlsFormat2(byte[] roh)
+    public static byte[] AlsFormat(byte[] roh, int format)
     {
-        Assert.True(roh.AsSpan().StartsWith(Kopf3), "Kopf der Datei ist nicht genau Format 3");
+        Assert.True(roh.AsSpan().StartsWith(Kopf4), "Kopf der Datei ist nicht genau Format 4");
+        Assert.InRange(format, 1, 3);
         var kopie = (byte[])roh.Clone();
-        kopie[Kopf3.Length - 2] = (byte)'2';
+        kopie[Kopf4.Length - 2] = (byte)('0' + format);
         return kopie;
     }
+
+    /// <summary>Wie <see cref="AlsFormat"/> mit Format 2 (Anfangs-Pruefsummen der Wellen bis A 0.93.0).</summary>
+    public static byte[] AlsFormat2(byte[] roh) => AlsFormat(roh, 2);
 
     /// <summary>Kennungen, die lernen/ausschluss.json der App ausschliesst (wie im Programm).</summary>
     public static IReadOnlyList<string> Ausgeschlossen() =>

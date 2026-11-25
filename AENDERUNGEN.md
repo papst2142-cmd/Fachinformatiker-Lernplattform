@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 1.8.0
+In der Prüfung im echten Format zeichnest du jetzt auch UML-Klassendiagramme und Use-Case-Diagramme selbst im Baukasten.
+
+- Im Klassendiagramm setzt du Klassen, gibst jeder einen Namen und fügst mit „Attribut hinzufügen“ und „Methode hinzufügen“ Zeilen an. Klassen verbindest du mit „Verbinden …“: Assoziation, Vererbung, Aggregation oder Komposition. An Assoziation, Aggregation und Komposition wählst du an beiden Enden die Multiplizität (1, 0..1, *, 0..* oder 1..*). Bei Vererbung, Aggregation und Komposition zeigt die Spitze bzw. Raute in die richtige Richtung; mit „Richtung umkehren“ drehst du sie.
+- Im Use-Case-Diagramm ist die Systemgrenze vorgegeben. Akteure stehen außerhalb, Anwendungsfälle innerhalb. Du verbindest sie mit Assoziation, «include», «extend» oder Generalisierung; die Pfeile zeigen in die richtige Richtung.
+- Nach dem Abgeben vergleicht das Programm deine Zeichnung mit dem Musterbild und zeigt grün, was passt, und rot, was fehlt oder anders ist. Die Punkte vergibst du wie bisher selbst mit den Häkchen. Der Kopf der Bewertung nennt bei einem AE-Satz den AE-Bereich.
+- Fünf Prüfungssätze der Fachrichtung Anwendungsentwicklung (AE) haben eine neue Fassung: Drei Teilaufgaben mit Klassendiagramm und zwei mit Use-Case-Diagramm werden jetzt im Baukasten gezeichnet statt auf Papier. Alle anderen Teilaufgaben und alle Themen der Sätze bleiben.
+- Hast du AE gewählt, braucht die App dafür den neuen Stand des AE-Pakets. Sie zeigt nach dem Update wie beim ersten Mal die Karte „Für AE fehlt das Fachrichtungs-Paket“ mit dem Knopf „Laden“.
+- Hast du einen dieser fünf Sätze gerade angefangen, läuft er mit der neuen Fassung weiter. Deine Antworten zu den geänderten Teilaufgaben bleiben gespeichert, werden aber nicht mehr gezeigt; das Programm sagt dir das einmal. Alle anderen Antworten bleiben, wie sie waren.
+- Dein Lernstand, die übrigen Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.7.0
 Kriechen sieht jetzt echt aus, und die Knöpfe für die Haltungen sind übersichtlicher.
 

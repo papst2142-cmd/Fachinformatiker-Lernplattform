@@ -32,10 +32,12 @@ public sealed class EchtBaukasten
     private readonly HashSet<string> _fest;
     private readonly Dictionary<string, EchtVerbindung> _festeVerbindungen;
     private readonly IReadOnlyList<EchtElement> _vorgabeElemente;
+    private readonly EchtGrenze? _grenze;
 
     private EchtBaukasten(string art, EchtDiagramm? vorgabe)
     {
         Art = art;
+        _grenze = vorgabe?.Grenze;
         _vorgabeElemente = vorgabe?.Elemente ?? [];
         _elemente = [.. _vorgabeElemente];
         _verbindungen = [.. vorgabe?.Verbindungen ?? []];
@@ -43,14 +45,20 @@ public sealed class EchtBaukasten
         _festeVerbindungen = _verbindungen.ToDictionary(v => Paar(v.Von, v.Nach), StringComparer.Ordinal);
     }
 
-    /// <summary>"uml" oder "er".</summary>
+    /// <summary>"uml" oder "er", ab A 1.8.0 auch "klasse" und "usecase".</summary>
     public string Art { get; }
+
+    /// <summary>Klassen- oder Use-Case-Diagramm (A 1.8.0, Beziehungen mit Art)?</summary>
+    public bool MitBeziehungen => EchtZeichnung.Beziehungen.ContainsKey(Art);
+
+    /// <summary>Systemgrenze (Use-Case, aus der Vorgabe), sonst null.</summary>
+    public EchtGrenze? Grenze => _grenze;
 
     /// <summary>Konnte die gespeicherte Zeichnung nicht gelesen werden (der Baukasten beginnt dann mit der Vorgabe)?</summary>
     public bool Unlesbar { get; private set; }
 
     /// <summary>Die Zeichnung wie sie jetzt ist (zum Zeichnen und fuer die Textfassung).</summary>
-    public EchtDiagramm Diagramm => new(Art, [.. _elemente], [.. _verbindungen]);
+    public EchtDiagramm Diagramm => new(Art, [.. _elemente], [.. _verbindungen], _grenze);
 
     /// <summary>Hat man etwas Eigenes gesetzt, beschriftet, verbunden oder verschoben?</summary>
     public bool Eigenes => Json().Length > 0;
@@ -96,7 +104,13 @@ public sealed class EchtBaukasten
             var x = Ganz(e["x"], EchtZeichnung.RasterBreite);
             var y = Ganz(e["y"], EchtZeichnung.RasterHoehe);
             var schluessel = e["schluessel"] is JsonValue s && s.TryGetValue<bool>(out var ja) && ja && typ == "attribut";
-            neu.Add(new EchtElement(id, typ, Kurz(Text(e["text"]) ?? ""), x, y, schluessel));
+            var attribute = typ == "klasse" ? ZeilenLesen(e["attribute"]) : "";
+            var methoden = typ == "klasse" ? ZeilenLesen(e["methoden"]) : "";
+            if (!Passt(typ, x, y))
+            {
+                throw new EchtLadefehler("Grenze");
+            }
+            neu.Add(new EchtElement(id, typ, Kurz(Text(e["text"]) ?? ""), x, y, schluessel, attribute, methoden));
         }
         if (neu.Select(e => e.Id).Distinct(StringComparer.Ordinal).Count() != neu.Count || neu.Select(e => (e.X, e.Y)).Distinct().Count() != neu.Count)
         {
@@ -118,19 +132,24 @@ public sealed class EchtBaukasten
             var v = knoten as JsonObject ?? throw new EchtLadefehler("Verbindung");
             var von = Text(v["von"]) ?? "";
             var nach = Text(v["nach"]) ?? "";
-            if (Verbinden(von, nach) is not null)
+            var typ = Text(v["typ"]) ?? "";
+            if ((MitBeziehungen ? VerbindenOhneFest(von, nach, typ) : Verbinden(von, nach)) is not null)
             {
                 throw new EchtLadefehler("Verbindung");
             }
             var text = Kurz(Text(v["text"]) ?? "");
             var kard = Text(v["kard"]) ?? "";
-            if ((text.Length > 0 && !Bedingung(von, nach, text)) || (kard.Length > 0 && !Kardinalitaet(von, nach, kard)))
+            var multVon = Text(v["mult_von"]) ?? "";
+            var multNach = Text(v["mult_nach"]) ?? "";
+            if ((text.Length > 0 && !Bedingung(von, nach, text)) || (kard.Length > 0 && !Kardinalitaet(von, nach, kard))
+                || (multVon.Length > 0 && !MultSetzen(von, nach, amVon: true, multVon)) || (multNach.Length > 0 && !MultSetzen(von, nach, amVon: false, multNach)))
             {
                 throw new EchtLadefehler("Verbindung");
             }
         }
         if (_festeVerbindungen.Values.Any(f => Gleich(f) is not { } jetzt || (f.Text.Length > 0 && jetzt.Text != f.Text)
-            || (f.Kard.Length > 0 && jetzt.Kard != f.Kard)))
+            || (f.Kard.Length > 0 && jetzt.Kard != f.Kard) || jetzt.Typ != f.Typ
+            || (f.MultVon.Length > 0 && Mult(jetzt, f.Von) != f.MultVon) || (f.MultNach.Length > 0 && Mult(jetzt, f.Nach) != f.MultNach)))
         {
             throw new EchtLadefehler("Vorgabe");
         }
@@ -157,6 +176,14 @@ public sealed class EchtBaukasten
             {
                 o["schluessel"] = true;
             }
+            if (e.Attribute.Length > 0)
+            {
+                o["attribute"] = new JsonArray([.. e.AttributZeilen.Select(z => (JsonNode)JsonValue.Create(z))]);
+            }
+            if (e.Methoden.Length > 0)
+            {
+                o["methoden"] = new JsonArray([.. e.MethodenZeilen.Select(z => (JsonNode)JsonValue.Create(z))]);
+            }
             elemente.Add(o);
         }
         var verbindungen = new JsonArray();
@@ -170,6 +197,18 @@ public sealed class EchtBaukasten
             if (v.Kard.Length > 0)
             {
                 o["kard"] = v.Kard;
+            }
+            if (v.Typ.Length > 0)
+            {
+                o["typ"] = v.Typ;
+            }
+            if (v.MultVon.Length > 0)
+            {
+                o["mult_von"] = v.MultVon;
+            }
+            if (v.MultNach.Length > 0)
+            {
+                o["mult_nach"] = v.MultNach;
             }
             verbindungen.Add(o);
         }
@@ -187,7 +226,11 @@ public sealed class EchtBaukasten
         && (kard ? f.Kard : f.Text).Length > 0;
 
     private EchtVerbindung? Gleich(EchtVerbindung f) => _verbindungen.FirstOrDefault(v => v.Von == f.Von && v.Nach == f.Nach)
-        ?? (Art == EchtZeichnung.Er ? _verbindungen.FirstOrDefault(v => v.Von == f.Nach && v.Nach == f.Von) : null);
+        ?? (Art == EchtZeichnung.Er || (MitBeziehungen && !EchtZeichnung.Gerichtet(f.Typ))
+            ? _verbindungen.FirstOrDefault(v => v.Von == f.Nach && v.Nach == f.Von) : null);
+
+    /// <summary>Multiplizitaet einer Verbindung am Ende des Bausteins <paramref name="id"/>.</summary>
+    private static string Mult(EchtVerbindung v, string id) => v.Von == id ? v.MultVon : v.MultNach;
 
     public EchtElement? Element(string? id) => _elemente.FirstOrDefault(e => e.Id == id);
 
@@ -196,8 +239,30 @@ public sealed class EchtBaukasten
     /// <summary>Verbindungen eines Bausteins (in beide Richtungen).</summary>
     public IReadOnlyList<EchtVerbindung> VerbindungenVon(string id) => _verbindungen.Where(v => v.Von == id || v.Nach == id).ToList();
 
-    /// <summary>Hat der Baustein einen Text (Aktion, Entitaet, Beziehung, Attribut)?</summary>
-    public static bool MitText(string typ) => typ is "aktion" or "entitaet" or "beziehung" or "attribut";
+    /// <summary>Hat der Baustein einen Text (Aktion, Entitaet, Beziehung, Attribut; ab A 1.8.0 Klasse, Akteur, Anwendungsfall)?</summary>
+    public static bool MitText(string typ) => typ is "aktion" or "entitaet" or "beziehung" or "attribut" or "klasse" or "akteur" or "anwendungsfall";
+
+    /// <summary>Use-Case: Akteure nur ausserhalb, Anwendungsfaelle nur innerhalb der Systemgrenze; sonst passt jedes Feld.</summary>
+    public bool Passt(string typ, int x, int y) => _grenze is not { } g || typ switch
+    {
+        "akteur" => !g.Enthaelt(x, y),
+        "anwendungsfall" => g.Enthaelt(x, y),
+        _ => true,
+    };
+
+    /// <summary>Darf man an dieser Verbindung Multiplizitaeten waehlen (Klassendiagramm ohne Vererbung)?</summary>
+    public bool MultMoeglich(EchtVerbindung v) => EchtZeichnung.MitMultiplizitaet(Art, v.Typ);
+
+    /// <summary>Ist die Art (und Richtung) dieser Verbindung fest (Vorgabe)?</summary>
+    public bool ArtFest(EchtVerbindung v) => IstFesteVerbindung(v);
+
+    /// <summary>Multiplizitaet am Ende <paramref name="amVon"/> fest (in der Vorgabe schon gesetzt)?</summary>
+    public bool MultFest(EchtVerbindung v, bool amVon) => _festeVerbindungen.TryGetValue(Paar(v.Von, v.Nach), out var f)
+        && Mult(f, amVon ? v.Von : v.Nach).Length > 0;
+
+    /// <summary>Beziehungsarten, die zwischen den beiden Bausteinen moeglich sind (Klasse, Use-Case), in fester Reihenfolge.</summary>
+    public IReadOnlyList<string> ArtenZwischen(string von, string nach) => !MitBeziehungen || Element(von) is not { } a || Element(nach) is not { } b ? []
+        : EchtZeichnung.Beziehungen[Art].Where(t => Erlaubt(a, b, t) is null).ToList();
 
     /// <summary>Darf man an diese Verbindung eine Bedingung schreiben (UML, Pfeil aus einer Verzweigung)?</summary>
     public bool BedingungMoeglich(EchtVerbindung v) => Art == EchtZeichnung.Uml && Element(v.Von)?.Typ == "verzweigung";
@@ -207,7 +272,7 @@ public sealed class EchtBaukasten
         && new[] { Element(v.Von)?.Typ, Element(v.Nach)?.Typ }.Order(StringComparer.Ordinal).SequenceEqual(["beziehung", "entitaet"]);
 
     /// <summary>Die naechste freie Stelle: unter <paramref name="nahBei"/> (dann daneben), sonst die erste freie Zeile fuer Zeile.</summary>
-    public (int X, int Y)? Frei(string? nahBei)
+    public (int X, int Y)? Frei(string? nahBei, string? typ = null)
     {
         if (Element(nahBei) is { } e)
         {
@@ -216,7 +281,7 @@ public sealed class EchtBaukasten
                 foreach (var dx in new[] { 0, 1, -1, 2, -2 })
                 {
                     var x = e.X + dx;
-                    if (x >= 0 && x < EchtZeichnung.RasterBreite && An(x, y) is null)
+                    if (x >= 0 && x < EchtZeichnung.RasterBreite && An(x, y) is null && (typ is null || Passt(typ, x, y)))
                     {
                         return (x, y);
                     }
@@ -227,7 +292,7 @@ public sealed class EchtBaukasten
         {
             for (var x = 0; x < EchtZeichnung.RasterBreite; x++)
             {
-                if (An(x, y) is null)
+                if (An(x, y) is null && (typ is null || Passt(typ, x, y)))
                 {
                     return (x, y);
                 }
@@ -241,7 +306,7 @@ public sealed class EchtBaukasten
     /// <summary>Neuen Baustein an die naechste freie Stelle setzen; Kennung oder null (Raster voll, falsche Art).</summary>
     public string? Setzen(string typ, string? nahBei = null)
     {
-        if (!EchtZeichnung.Bausteine[Art].Contains(typ) || Frei(nahBei) is not { } stelle)
+        if (!EchtZeichnung.Bausteine[Art].Contains(typ) || Frei(nahBei, typ) is not { } stelle)
         {
             return null;
         }
@@ -259,7 +324,7 @@ public sealed class EchtBaukasten
     public bool Verschieben(string id, int x, int y)
     {
         if (IstFest(id) || Element(id) is not { } e || x < 0 || y < 0 || x >= EchtZeichnung.RasterBreite || y >= EchtZeichnung.RasterHoehe
-            || An(x, y) is not null)
+            || An(x, y) is not null || !Passt(e.Typ, x, y))
         {
             return false;
         }
@@ -307,6 +372,12 @@ public sealed class EchtBaukasten
     /// </summary>
     public string? Verbinden(string von, string nach)
     {
+        if (MitBeziehungen)
+        {
+            // A 1.8.0: erste erlaubte Art (Klasse: Assoziation; Use-Case: Akteur–Fall Assoziation, Fall–Fall «include», Akteur–Akteur Generalisierung)
+            var typ = ArtenZwischen(von, nach).FirstOrDefault() ?? EchtZeichnung.Beziehungen[Art][0];
+            return VerbindenOhneFest(von, nach, typ);
+        }
         if (Element(von) is not { } a || Element(nach) is not { } b)
         {
             return EchtTexte.NichtsGewaehlt;
@@ -341,6 +412,238 @@ public sealed class EchtBaukasten
         }
         _verbindungen.Add(new EchtVerbindung(von, nach, "", ""));
         return null;
+    }
+
+    /// <summary>
+    /// A 1.8.0 Klasse und Use-Case: Beziehung der Art <paramref name="typ"/> von <paramref name="von"/> nach
+    /// <paramref name="nach"/> (gerichtete Arten zeigen nach <paramref name="nach"/>). null = verbunden, sonst der Grund.
+    /// </summary>
+    public string? Verbinden(string von, string nach, string typ) => MitBeziehungen ? VerbindenOhneFest(von, nach, typ) : Verbinden(von, nach);
+
+    private string? VerbindenOhneFest(string von, string nach, string typ)
+    {
+        if (!MitBeziehungen)
+        {
+            return EchtTexte.ArtNichtErlaubt;
+        }
+        if (Element(von) is not { } a || Element(nach) is not { } b)
+        {
+            return EchtTexte.NichtsGewaehlt;
+        }
+        if (von == nach)
+        {
+            return EchtTexte.NichtMitSich;
+        }
+        if (_verbindungen.Any(v => Paar(v.Von, v.Nach) == Paar(von, nach)))
+        {
+            return EchtTexte.SchonVerbunden;
+        }
+        if (Erlaubt(a, b, typ) is { } grund)
+        {
+            return grund;
+        }
+        var neu = new EchtVerbindung(von, nach, "", "", typ);
+        if (Kreis(neu, null))
+        {
+            return EchtTexte.KeinKreis;
+        }
+        _verbindungen.Add(neu);
+        return null;
+    }
+
+    /// <summary>Grund, warum diese Art zwischen den Bausteinen nicht geht (Regeln wie die Ladepruefung), sonst null.</summary>
+    private string? Erlaubt(EchtElement a, EchtElement b, string typ)
+    {
+        if (!EchtZeichnung.Beziehungen[Art].Contains(typ))
+        {
+            return EchtTexte.ArtNichtErlaubt;
+        }
+        if (Art == EchtZeichnung.Klasse)
+        {
+            return null;
+        }
+        return typ switch
+        {
+            "assoziation" => a.Typ != b.Typ ? null : EchtTexte.NurAkteurFall,
+            "include" or "extend" => a.Typ == "anwendungsfall" && b.Typ == "anwendungsfall" ? null : EchtTexte.NurFallFall,
+            _ => a.Typ == b.Typ ? null : EchtTexte.NurGleiche,
+        };
+    }
+
+    /// <summary>Entstuende mit <paramref name="neu"/> (statt <paramref name="statt"/>) ein Kreis aus Vererbung bzw. Generalisierung?</summary>
+    private bool Kreis(EchtVerbindung neu, EchtVerbindung? statt)
+    {
+        if (neu.Typ is not ("vererbung" or "generalisierung"))
+        {
+            return false;
+        }
+        // Kreis, wenn man vom Ziel der neuen Beziehung ueber Beziehungen derselben Art wieder zu ihrem Anfang kommt
+        var kanten = _verbindungen.Where(v => v != statt && v.Typ == neu.Typ).ToLookup(v => v.Von, v => v.Nach, StringComparer.Ordinal);
+        var offen = new Stack<string>();
+        offen.Push(neu.Nach);
+        var gesehen = new HashSet<string>(StringComparer.Ordinal);
+        while (offen.Count > 0)
+        {
+            var id = offen.Pop();
+            if (id == neu.Von)
+            {
+                return true;
+            }
+            if (gesehen.Add(id))
+            {
+                foreach (var w in kanten[id])
+                {
+                    offen.Push(w);
+                }
+            }
+        }
+        return false;
+    }
+
+    private EchtVerbindung? Zwischen(string a, string b) => _verbindungen.FirstOrDefault(v => Paar(v.Von, v.Nach) == Paar(a, b));
+
+    /// <summary>Art einer eigenen Beziehung aendern (Klasse, Use-Case); Multiplizitaeten, die zur neuen Art nicht passen, fallen weg.</summary>
+    public string? ArtSetzen(string von, string nach, string typ)
+    {
+        if (Zwischen(von, nach) is not { } v || IstFesteVerbindung(v))
+        {
+            return EchtTexte.NichtsGewaehlt;
+        }
+        if (v.Typ == typ)
+        {
+            return null;
+        }
+        if (Erlaubt(Element(v.Von)!, Element(v.Nach)!, typ) is { } grund)
+        {
+            return grund;
+        }
+        var neu = v with
+        {
+            Typ = typ,
+            MultVon = EchtZeichnung.MitMultiplizitaet(Art, typ) ? v.MultVon : "",
+            MultNach = !EchtZeichnung.MitMultiplizitaet(Art, typ) || (typ == "komposition" && v.MultNach is not ("" or "1" or "0..1")) ? "" : v.MultNach,
+        };
+        if (Kreis(neu, v))
+        {
+            return EchtTexte.KeinKreis;
+        }
+        _verbindungen[_verbindungen.IndexOf(v)] = neu;
+        return null;
+    }
+
+    /// <summary>Richtung einer eigenen gerichteten Beziehung umdrehen (Multiplizitaeten wandern mit ihrem Ende).</summary>
+    public string? Umkehren(string von, string nach)
+    {
+        if (Zwischen(von, nach) is not { } v || IstFesteVerbindung(v) || !EchtZeichnung.Gerichtet(v.Typ))
+        {
+            return EchtTexte.NichtsGewaehlt;
+        }
+        var neu = v with { Von = v.Nach, Nach = v.Von, MultVon = v.MultNach, MultNach = v.MultVon };
+        if (neu.Typ == "komposition" && neu.MultNach is not ("" or "1" or "0..1"))
+        {
+            neu = neu with { MultNach = "" };
+        }
+        if (Kreis(neu, v))
+        {
+            return EchtTexte.KeinKreis;
+        }
+        _verbindungen[_verbindungen.IndexOf(v)] = neu;
+        return null;
+    }
+
+    /// <summary>
+    /// Multiplizitaet (1, 0..1, *, 0..*, 1..* oder leer) am Ende <paramref name="amVon"/> (true = am Baustein
+    /// <paramref name="von"/>) der Beziehung zwischen <paramref name="von"/> und <paramref name="nach"/> (Reihenfolge wie gespeichert).
+    /// </summary>
+    public bool MultSetzen(string von, string nach, bool amVon, string wert)
+    {
+        if (Zwischen(von, nach) is not { } v || !MultMoeglich(v) || (wert.Length > 0 && !EchtZeichnung.Multiplizitaeten.Contains(wert)))
+        {
+            return false;
+        }
+        var ende = amVon ? von : nach;
+        var amVonGespeichert = v.Von == ende;
+        if (MultFest(v, amVonGespeichert))
+        {
+            return false;
+        }
+        if (v.Typ == "komposition" && !amVonGespeichert && wert is not ("" or "1" or "0..1"))
+        {
+            return false;
+        }
+        _verbindungen[_verbindungen.IndexOf(v)] = amVonGespeichert ? v with { MultVon = wert } : v with { MultNach = wert };
+        return true;
+    }
+
+    /// <summary>Neue leere Attribut- oder Methodenzeile einer eigenen Klasse; Nummer der Zeile oder null (voll).</summary>
+    public int? ZeileHinzufuegen(string id, bool methode)
+    {
+        if (IstFest(id) || Element(id) is not { Typ: "klasse" } e)
+        {
+            return null;
+        }
+        var zeilen = (methode ? e.MethodenZeilen : e.AttributZeilen).ToList();
+        if (zeilen.Count >= EchtZeichnung.ZeilenMax)
+        {
+            return null;
+        }
+        zeilen.Add("");
+        Ersetzen(e, methode ? e with { Methoden = Verbunden(zeilen) } : e with { Attribute = Verbunden(zeilen) });
+        return zeilen.Count - 1;
+    }
+
+    /// <summary>Text einer Attribut- oder Methodenzeile (hoechstens <see cref="TextLaenge"/> Zeichen, einzeilig).</summary>
+    public bool ZeileSetzen(string id, bool methode, int nummer, string text)
+    {
+        if (IstFest(id) || Element(id) is not { Typ: "klasse" } e)
+        {
+            return false;
+        }
+        var zeilen = (methode ? e.MethodenZeilen : e.AttributZeilen).ToList();
+        if (nummer < 0 || nummer >= zeilen.Count)
+        {
+            return false;
+        }
+        zeilen[nummer] = Kurz(text);
+        Ersetzen(e, methode ? e with { Methoden = Verbunden(zeilen) } : e with { Attribute = Verbunden(zeilen) });
+        return true;
+    }
+
+    /// <summary>Attribut- oder Methodenzeile einer eigenen Klasse entfernen.</summary>
+    public bool ZeileEntfernen(string id, bool methode, int nummer)
+    {
+        if (IstFest(id) || Element(id) is not { Typ: "klasse" } e)
+        {
+            return false;
+        }
+        var zeilen = (methode ? e.MethodenZeilen : e.AttributZeilen).ToList();
+        if (nummer < 0 || nummer >= zeilen.Count)
+        {
+            return false;
+        }
+        zeilen.RemoveAt(nummer);
+        Ersetzen(e, methode ? e with { Methoden = Verbunden(zeilen) } : e with { Attribute = Verbunden(zeilen) });
+        return true;
+    }
+
+    /// <summary>
+    /// Zeilen als gespeicherter Text. Eine einzelne leere Zeile wird als " " gemerkt (sonst hiesse leer "keine Zeile");
+    /// <see cref="Kurz"/> und die Zaehlung behandeln sie wie leer.
+    /// </summary>
+    private static string Verbunden(List<string> zeilen) => zeilen.Count == 1 && zeilen[0].Length == 0 ? " " : string.Join('\n', zeilen);
+
+    /// <summary>Gespeicherte Zeilen lesen (wie der Baukasten sie schreibt; jede Zeile gekuerzt, hoechstens 8).</summary>
+    private static string ZeilenLesen(JsonNode? knoten)
+    {
+        if (knoten is null)
+        {
+            return "";
+        }
+        if (knoten is not JsonArray liste || liste.Count > EchtZeichnung.ZeilenMax)
+        {
+            throw new EchtLadefehler("Zeilen");
+        }
+        return Verbunden(liste.Select(z => Kurz(Text(z) ?? throw new EchtLadefehler("Zeilen"))).ToList());
     }
 
     /// <summary>Eigene Verbindung entfernen (die der Vorgabe bleiben).</summary>
@@ -399,6 +702,11 @@ public sealed class EchtBaukasten
         var zeilen = new List<(string, string)>();
         foreach (var e in d.Elemente.OrderBy(e => e.Y).ThenBy(e => e.X))
         {
+            if (MitBeziehungen)
+            {
+                zeilen.Add((e.Id, EchtZeichnung.Beschreibung(d, e, ", " + StelleText(e)) + "."));
+                continue;
+            }
             var satz = EchtZeichnung.Bezeichnung(d, e) + (e.Schluessel ? " " + EchtTexte.SchluesselZusatz : "") + ", " + StelleText(e);
             var teile = new List<string>();
             if (Art == EchtZeichnung.Uml)
@@ -440,6 +748,10 @@ public sealed class EchtBaukasten
     /// </summary>
     public static IReadOnlyList<EchtZaehlung> Zaehlen(EchtDiagramm eigen, EchtDiagramm muster)
     {
+        if (EchtZeichnung.Beziehungen.ContainsKey(muster.Art))
+        {
+            return ZaehlenMitNamen(eigen, muster);
+        }
         var zeilen = new List<EchtZaehlung>();
         foreach (var typ in EchtZeichnung.Bausteine[muster.Art])
         {
@@ -487,6 +799,150 @@ public sealed class EchtBaukasten
         }
         return zeilen;
     }
+
+    /// <summary>
+    /// A 1.8.0 Klasse und Use-Case (Plan P12-232 Abschnitt 3, Nicos Antwort 3a): Anzahl je Baustein mit Namen (tolerant:
+    /// <see cref="EchtZeichnung.NameVergleich"/>), bei Klassen die Zahl der Attribute und Methoden, dann jede Beziehung des
+    /// Musterbilds mit Art, Richtung und Multiplizitaet, zuletzt Beziehungen, die das Musterbild nicht hat, ohne Text und die
+    /// Regeln. Jede Abweichung ist eine rote Zeile in Klartext; die Punkte setzt man selbst (Haekchen).
+    /// </summary>
+    private static List<EchtZaehlung> ZaehlenMitNamen(EchtDiagramm eigen, EchtDiagramm muster)
+    {
+        var zeilen = new List<EchtZaehlung>();
+        // eigener Baustein -> Baustein des Musterbilds (gleiche Art, gleicher Name), jeder hoechstens einmal
+        var zuordnung = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var m in muster.Elemente)
+        {
+            if (eigen.Elemente.FirstOrDefault(e => e.Typ == m.Typ && !zuordnung.ContainsKey(e.Id) && e.Text.Trim().Length > 0
+                && EchtZeichnung.NameVergleich(e.Text) == EchtZeichnung.NameVergleich(m.Text)) is { } passend)
+            {
+                zuordnung[passend.Id] = m.Id;
+            }
+        }
+        foreach (var typ in EchtZeichnung.Bausteine[muster.Art])
+        {
+            var ich = eigen.Elemente.Where(e => e.Typ == typ).ToList();
+            var soll = muster.Elemente.Where(e => e.Typ == typ).ToList();
+            if (ich.Count == 0 && soll.Count == 0)
+            {
+                continue;
+            }
+            var fehlt = soll.Where(m => !zuordnung.ContainsValue(m.Id)).Select(m => m.Text).ToList();
+            var zuViel = ich.Where(e => !zuordnung.ContainsKey(e.Id)).Select(e => e.Text.Trim().Length > 0 ? e.Text : EchtTexte.OhneName).ToList();
+            var text = Beschriftungen.Einsetzen(EchtTexte.ZaehlVon, Mehrzahl(typ), ich.Count, soll.Count);
+            if (fehlt.Count == 0 && zuViel.Count == 0)
+            {
+                zeilen.Add(new(text + " " + EchtTexte.ZaehlNamenOk, true));
+                continue;
+            }
+            if (fehlt.Count > 0)
+            {
+                text += "; " + Beschriftungen.Einsetzen(EchtTexte.ZaehlFehlt, string.Join(", ", fehlt));
+            }
+            if (zuViel.Count > 0)
+            {
+                text += "; " + Beschriftungen.Einsetzen(EchtTexte.ZaehlZuViel, string.Join(", ", zuViel));
+            }
+            zeilen.Add(new(text, false));
+        }
+        if (muster.Art == EchtZeichnung.Klasse)
+        {
+            static int Zahl(EchtDiagramm d, bool methode) =>
+                d.Elemente.Sum(e => (methode ? e.MethodenZeilen : e.AttributZeilen).Count(z => z.Trim().Length > 0));
+            var (a, sa, m, sm) = (Zahl(eigen, false), Zahl(muster, false), Zahl(eigen, true), Zahl(muster, true));
+            zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlAttributeMethoden, a, sa, m, sm), a == sa && m == sm));
+        }
+        string MName(string id) => muster.Element(id).Text;
+        var gefunden = new HashSet<EchtVerbindung>();
+        foreach (var m in muster.Verbindungen)
+        {
+            var beschrieben = Beschreiben(m, MName);
+            var von = zuordnung.FirstOrDefault(z => z.Value == m.Von).Key;
+            var nach = zuordnung.FirstOrDefault(z => z.Value == m.Nach).Key;
+            var ich = von is null || nach is null ? null
+                : eigen.Verbindungen.FirstOrDefault(v => Paar(v.Von, v.Nach) == Paar(von, nach));
+            if (ich is null)
+            {
+                zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlBeziehungFehlt, beschrieben), false));
+                continue;
+            }
+            gefunden.Add(ich);
+            var paar = MName(m.Von) + " – " + MName(m.Nach);
+            if (ich.Typ != m.Typ)
+            {
+                zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlArtFalsch, paar, EchtZeichnung.Beziehung(ich.Typ),
+                    EchtZeichnung.Beziehung(m.Typ)), false));
+                continue;
+            }
+            var gleicheRichtung = ich.Von == von;
+            if (EchtZeichnung.Gerichtet(m.Typ) && !gleicheRichtung)
+            {
+                zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlRichtungFalsch, EchtZeichnung.Beziehung(m.Typ),
+                    MName(m.Nach) + " → " + MName(m.Von), MName(m.Von) + " → " + MName(m.Nach)), false));
+                continue;
+            }
+            if (EchtZeichnung.MitMultiplizitaet(muster.Art, m.Typ))
+            {
+                var (amVon, amNach) = gleicheRichtung ? (ich.MultVon, ich.MultNach) : (ich.MultNach, ich.MultVon);
+                if (amVon != m.MultVon || amNach != m.MultNach)
+                {
+                    zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlMultFalsch, paar, Leer(amVon), Leer(amNach), Leer(m.MultVon),
+                        Leer(m.MultNach)), false));
+                    continue;
+                }
+            }
+            zeilen.Add(new(beschrieben, true));
+        }
+        string EName(string id) => eigen.Element(id).Text is { Length: > 0 } t ? t : EchtTexte.OhneName;
+        foreach (var v in eigen.Verbindungen.Where(v => !gefunden.Contains(v)))
+        {
+            zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlBeziehungZuViel, Beschreiben(v, EName)), false));
+        }
+        var ohneText = eigen.Elemente.Where(e => e.Text.Trim().Length == 0).ToList();
+        if (ohneText.Count > 0)
+        {
+            zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlOhneText,
+                string.Join(", ", ohneText.Select(e => EchtZeichnung.Bezeichnung(eigen, e) + " (" + StelleText(e) + ")"))), false));
+        }
+        var verstoesse = EchtZeichnung.Verstoesse(eigen, vollstaendig: true, e => EchtZeichnung.Bezeichnung(eigen, e)).Distinct().ToList();
+        if (verstoesse.Count == 0)
+        {
+            zeilen.Add(new(EchtTexte.ZaehlRegelnOk, true));
+        }
+        foreach (var v in verstoesse.Take(4))
+        {
+            zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlRegel, v), false));
+        }
+        if (verstoesse.Count > 4)
+        {
+            zeilen.Add(new(Beschriftungen.Einsetzen(EchtTexte.ZaehlWeitere, verstoesse.Count - 4), false));
+        }
+        return zeilen;
+    }
+
+    /// <summary>"Assoziation Kunde – Ausleihe mit 1 und 0..*", "Vererbung E-Bike → Fahrrad", "«include» Medium ausleihen → Ausweis prüfen".</summary>
+    private static string Beschreiben(EchtVerbindung v, Func<string, string> name)
+    {
+        var art = EchtZeichnung.Beziehung(v.Typ);
+        if (EchtZeichnung.Gerichtet(v.Typ))
+        {
+            var text = art + " " + name(v.Von) + " → " + name(v.Nach);
+            return v.MultVon.Length > 0 || v.MultNach.Length > 0
+                ? text + " " + Beschriftungen.Einsetzen(EchtTexte.ZaehlMitMult, Leer(v.MultVon), Leer(v.MultNach)) : text;
+        }
+        var linie = art + " " + name(v.Von) + " – " + name(v.Nach);
+        return v.MultVon.Length > 0 || v.MultNach.Length > 0
+            ? linie + " " + Beschriftungen.Einsetzen(EchtTexte.ZaehlMitMult, Leer(v.MultVon), Leer(v.MultNach)) : linie;
+    }
+
+    private static string Leer(string mult) => mult.Length > 0 ? mult : EchtTexte.OhneKardinalitaet;
+
+    private static string Mehrzahl(string typ) => typ switch
+    {
+        "klasse" => EchtTexte.Klassen,
+        "akteur" => EchtTexte.Akteure,
+        _ => EchtTexte.Anwendungsfaelle,
+    };
 
     /// <summary>Beziehungen nach Art der Kardinalitaeten ("1:n", "m:n", "1:1"; ohne Angabe "?").</summary>
     private static Dictionary<string, int> Arten(EchtDiagramm d)
