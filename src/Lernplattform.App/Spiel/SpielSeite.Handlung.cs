@@ -201,9 +201,9 @@ public sealed partial class SpielSeite
             AuswahlZeigen(true);
         };
         // der linke Stick setzt nicht auf Handlung und Ich-Sicht auf (nur Handy und Tablet)
-        Flaeche.KnopfSperreLinks = b => DaumenKnoepfeAn && (_ichRund?.IsVisible ?? false) ? HandlungKnopf.Sperre(b) : default;
+        Flaeche.KnopfSperreLinks = b => DaumenKnoepfeAn && EigeneLagen is null && (_ichRund?.IsVisible ?? false) ? HandlungKnopf.Sperre(b) : default;
         // kein Stick setzt auf dem Handy-Symbol auf
-        Flaeche.KnopfSperreTelefon = b => DaumenKnoepfeAn && (_handyRund?.IsVisible ?? false) ? HandlungKnopf.TelefonSperre(b) : default;
+        Flaeche.KnopfSperreTelefon = b => DaumenKnoepfeAn && EigeneLagen is null && (_handyRund?.IsVisible ?? false) ? HandlungKnopf.TelefonSperre(b) : default;
     }
 
     private static string AkzentHex()
@@ -409,15 +409,25 @@ public sealed partial class SpielSeite
             return;
         }
         var bereich = Flaeche.StickBereich;
-        var lage = DaumenKnoepfeAn ? HandlungKnopf.Lage(bereich) : null;
+        // Welle A 1.9.0 (Sammelliste 450): eigene Anordnung (Lage und Groesse je Knopf); null = Standard wie A 1.8.0
+        var eigene = DaumenKnoepfeAn ? EigeneLagen : null;
+        ((double X, double Y) Handlung, (double X, double Y) Ich)? lage = null;
+        if (eigene is not null)
+        {
+            lage = (Mitte(eigene[KnopfAnordnung.Knopf.Handlung]), Mitte(eigene[KnopfAnordnung.Knopf.Ich]));
+        }
+        else if (DaumenKnoepfeAn && HandlungKnopf.Lage(bereich) is { } standard)
+        {
+            lage = (standard.Handlung, standard.Ich);
+        }
         var f0 = Flaeche.TranslatePoint(default, this);
-        var an = HandlungModus && Ebene.IsVisible && !HandyOffen && !(Tafel?.IsVisible ?? false) && f0 is not null
+        var an = HandlungModus && Ebene.IsVisible && _anordnen is null && !HandyOffen && !(Tafel?.IsVisible ?? false) && f0 is not null
             && (!DaumenKnoepfeAn || lage is not null);
         var haupt = an ? Spiel?.Haupthandlung : null;
         _handlungRund.IsVisible = an && DaumenKnoepfeAn && haupt is not null;
         _handlungName.IsVisible = _handlungRund.IsVisible;
         _ichRund.IsVisible = an;
-        var handyLage = DaumenKnoepfeAn ? HandlungKnopf.Telefon(bereich) : null;
+        var handyLage = eigene is not null ? Mitte(eigene[KnopfAnordnung.Knopf.Telefon]) : DaumenKnoepfeAn ? HandlungKnopf.Telefon(bereich) : null;
         var handyAn = an && Spiel is not null && (!DaumenKnoepfeAn || handyLage is not null);
         if (_handyRund is not null && _handyZahlRand is not null)
         {
@@ -434,7 +444,16 @@ public sealed partial class SpielSeite
             return;
         }
         var (g, k) = HandlungKnopf.Groesse(bereich.Breite, bereich.Hoehe);
-        _ichRund.Setzen(k, DaumenSymbol.Auge, Flaeche.IchAn, Flaeche.IchAn ? SpielProbeTexte.IchSichtBeenden : SpielProbeTexte.IchSichtKnopf);
+        // Welle A 1.9.0: Groesse je Knopf (Ich-Sicht und Handy heute gleich gross, eigene Groesse je Knopf)
+        var kHandy = k;
+        if (DaumenKnoepfeAn && eigene is not null)
+        {
+            g = KnopfAnordnung.Durchmesser(KnopfAnordnung.Knopf.Handlung, bereich, eigene[KnopfAnordnung.Knopf.Handlung].Prozent);
+            k = KnopfAnordnung.Durchmesser(KnopfAnordnung.Knopf.Ich, bereich, eigene[KnopfAnordnung.Knopf.Ich].Prozent);
+            kHandy = KnopfAnordnung.Durchmesser(KnopfAnordnung.Knopf.Telefon, bereich, eigene[KnopfAnordnung.Knopf.Telefon].Prozent);
+        }
+        double? Treffer(double d) => DaumenKnoepfeAn && eigene is not null ? KnopfAnordnung.Treffer(d) : null;
+        _ichRund.Setzen(k, DaumenSymbol.Auge, Flaeche.IchAn, Flaeche.IchAn ? SpielProbeTexte.IchSichtBeenden : SpielProbeTexte.IchSichtKnopf, treffer: Treffer(k));
         double obenKante;
         if (DaumenKnoepfeAn && lage is { } l)
         {
@@ -451,13 +470,17 @@ public sealed partial class SpielSeite
                     HandlungArt.Tuer => DaumenSymbol.Tuer,
                     HandlungArt.Bus => DaumenSymbol.Bus,
                     _ => DaumenSymbol.Hand,
-                }, false, h.Name);
+                }, false, h.Name, treffer: Treffer(g));
                 Legen(_handlungRund, l.Handlung, g);
                 _handlungNameText.Text = h.Name;
                 _handlungName.Measure(Size.Infinity);
                 var ds = _handlungName.DesiredSize;
                 // ueber dem Knopf; ist dort unter der Kopfzeile kein Platz (Handy quer), rechts neben dem Auge (Weisung P12-363)
-                if (HandlungKnopf.Name(bereich, ds.Width, ds.Height) is { } nl)
+                var nameLage = eigene is not null
+                    ? HandlungKnopf.NameFrei(bereich, ds.Width, ds.Height, (l.Handlung, g), (l.Ich, k), KnopfAnordnung.Alle
+                        .Select(kn => (Mitte(eigene[kn]), KnopfAnordnung.Durchmesser(kn, bereich, eigene[kn].Prozent))).ToList())
+                    : HandlungKnopf.Name(bereich, ds.Width, ds.Height);
+                if (nameLage is { } nl)
                 {
                     var links = p0.X + nl.Ecke.X;
                     var oben = p0.Y + nl.Ecke.Y;
@@ -497,9 +520,9 @@ public sealed partial class SpielSeite
                 return;
             }
             var zahl = Questlog.ZahlOffen(spiel);
-            _handyRund.Setzen(k, DaumenSymbol.Telefon, false,
-                SpielProbeTexte.KnopfTelefon + ", " + string.Format(CultureInfo.InvariantCulture, VorleseTexte.Auftraege, zahl));
-            Legen(_handyRund, m, k);
+            _handyRund.Setzen(kHandy, DaumenSymbol.Telefon, false,
+                SpielProbeTexte.KnopfTelefon + ", " + string.Format(CultureInfo.InvariantCulture, VorleseTexte.Auftraege, zahl), treffer: Treffer(kHandy));
+            Legen(_handyRund, m, kHandy);
             var text = zahl.ToString(CultureInfo.InvariantCulture);
             if (_handyZahl.Text != text)
             {
@@ -511,16 +534,18 @@ public sealed partial class SpielSeite
                 // Zahl oben rechts am Symbol (halb darueber), nie ueber den Rand der Seite
                 _handyZahlRand.Measure(Size.Infinity);
                 var ds = _handyZahlRand.DesiredSize;
-                var links = Math.Min(p0.X + m.X + (k * 0.2), Bounds.Width - ds.Width - 2);
-                var oben = Math.Max(p0.Y + m.Y - (k / 2) - (ds.Height * 0.35), 2);
+                var links = Math.Min(p0.X + m.X + (kHandy * 0.2), Bounds.Width - ds.Width - 2);
+                var oben = Math.Max(p0.Y + m.Y - (kHandy / 2) - (ds.Height * 0.35), 2);
                 Canvas.SetLeft(_handyZahlRand, links);
                 Canvas.SetTop(_handyZahlRand, oben);
                 _handyZahlRand.Arrange(new Rect(links, oben, ds.Width, ds.Height));
             }
         }
 
-        void Legen(DaumenKnopf knopf, (double X, double Y) m, double d)
+        void Legen(DaumenKnopf knopf, (double X, double Y) m, double d0)
         {
+            // Welle A 1.9.0: die Flaeche zum Tippen (bei eigener Groesse unter 40 Punkten groesser als der Knopf)
+            var d = Math.Max(d0, knopf.Width);
             Canvas.SetLeft(knopf, p0.X + m.X - (d / 2));
             Canvas.SetTop(knopf, p0.Y + m.Y - (d / 2));
             // sofort an die neue Stelle (Sammelliste 162)

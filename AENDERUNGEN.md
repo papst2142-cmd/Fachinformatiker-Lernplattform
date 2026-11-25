@@ -1,5 +1,17 @@
 # Änderungen
 
+## A 1.9.0
+Am Handy und Tablet ordnest du die runden Knöpfe im Spiel jetzt selbst an und stellst für jeden die Größe ein.
+
+- Unter Optionen › Steuerung gibt es den Knopf „Knöpfe anordnen“. Er öffnet das Spiel angehalten im Bearbeiten-Modus: Die Figur bleibt stehen, die Sticks und das Antippen ruhen, oben steht eine Leiste mit „Standard“, „Abbrechen“ und „Fertig“.
+- Du verschiebst die sechs runden Knöpfe mit dem Finger: Springen, Hinknien, Hinlegen, die Handlung, die Ich-Sicht und das Spiel-Handy. Das X oben rechts und die Sticks bleiben, wo sie sind.
+- Tippst du einen Knopf an, ist er gewählt (farbiger Ring). Oben stellst du mit dem Regler seine Größe von 50 bis 150 Prozent ein; die Mitte ist 100 Prozent, so groß wie bisher. Auch ein kleiner Knopf bleibt sicher zu treffen: Die Fläche zum Tippen ist immer mindestens so groß wie der kleinste Knopf bisher.
+- Der Schalter „Raster“ oben ist an: Dann rastet ein Knopf in kleinen Schritten ein, und eine Linie zeigt, wenn er auf gleicher Höhe oder Linie mit einem anderen steht. Schaltest du ihn aus, ziehst du ganz frei. Das Programm merkt sich den Schalter.
+- Ein Knopf kann nie auf einem anderen liegen, nie unter der Kopfzeile, der Leiste oder einer Kamera-Aussparung und nie so, dass für einen Stick kein Platz mehr bleibt. An so einer Stelle wird er rot, ein Satz sagt warum, und beim Loslassen springt er an die letzte passende Stelle zurück. Mit dem Screenreader wählst du einen Knopf und verschiebst ihn mit den Pfeilen oben.
+- „Fertig“ speichert, „Abbrechen“ lässt alles, wie es war, „Standard“ bringt nach einer Rückfrage alle Knöpfe zurück an ihren Platz und auf 100 Prozent. Hochformat und Querformat haben je eine eigene Anordnung.
+- Passt deine Anordnung auf einem Bildschirm einmal nicht, zum Beispiel weil die Leiste unten aufgeklappt ist, rückt ein Knopf nur dort ein Stück zur Seite. Geht es gar nicht, gilt der Standard, und das Spiel sagt dir das einmal.
+- Ohne eigene Anordnung sieht das Spiel genau aus wie bisher. Am PC ändert sich nichts. Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.8.0
 In der Prüfung im echten Format zeichnest du jetzt auch UML-Klassendiagramme und Use-Case-Diagramme selbst im Baukasten.
 

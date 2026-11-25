@@ -60,8 +60,9 @@ public sealed partial class OptionenSeite : UserControl, IAufklappbar
     private Action? _tageszielNeu;
     private DiagnoseTeil? _diagnose;
 
-    public OptionenSeite(Func<Control>? sicherung = null, Action? rundgang = null, Action? hilfe = null)
+    public OptionenSeite(Func<Control>? sicherung = null, Action? rundgang = null, Action? hilfe = null, Action? knoepfeAnordnen = null)
     {
+        _knoepfeAnordnen = knoepfeAnordnen;
         _sicherung = sicherung;
         _rundgang = rundgang;
         _hilfe = hilfe;

@@ -64,10 +64,52 @@ public sealed class Sticks
         /// </summary>
         public (double X1, double Y1, double X2, double Y2) SperreTelefon { get; init; }
 
-        public bool Gesperrt(double x, double y) => In(Sperre, x, y) || In(SperreLinks, x, y) || In(SperreTelefon, x, y);
+        /// <summary>
+        /// Welle A 1.9.0 (Sammelliste 450, Weisung P12-377): Flaechen einzelner Knoepfe einer eigenen Anordnung (je Knopf ein Rechteck
+        /// mit Rand); dort setzt kein Daumen einen Stick, und ein Stick ragt nie hinein. Leer = keine (Standard-Anordnung mit den drei
+        /// Sperren oben).
+        /// </summary>
+        public Sperrflaechen Flaechen { get; init; }
+
+        public bool Gesperrt(double x, double y) =>
+            In(Sperre, x, y) || In(SperreLinks, x, y) || In(SperreTelefon, x, y) || Flaechen.Alle.Any(q => In(q, x, y));
 
         private static bool In((double X1, double Y1, double X2, double Y2) q, double x, double y) =>
             q.X2 > q.X1 && x >= q.X1 && x <= q.X2 && y >= q.Y1 && y <= q.Y2;
+    }
+
+    /// <summary>
+    /// Welle A 1.9.0 (Sammelliste 450): Liste von Rechtecken (x1, y1, x2, y2), wertgleich verglichen (zwei Bereiche mit denselben
+    /// Flaechen sind gleich, auch wenn die Listen verschiedene Objekte sind).
+    /// </summary>
+    public readonly struct Sperrflaechen : IEquatable<Sperrflaechen>
+    {
+        private readonly (double X1, double Y1, double X2, double Y2)[]? _alle;
+
+        public Sperrflaechen(IEnumerable<(double X1, double Y1, double X2, double Y2)> alle) =>
+            _alle = alle.Where(q => q.X2 > q.X1 && q.Y2 > q.Y1).ToArray();
+
+        public IReadOnlyList<(double X1, double Y1, double X2, double Y2)> Alle => _alle ?? [];
+
+        public bool Leer => _alle is null || _alle.Length == 0;
+
+        public bool Equals(Sperrflaechen andere) => Alle.SequenceEqual(andere.Alle);
+
+        public override bool Equals(object? obj) => obj is Sperrflaechen s && Equals(s);
+
+        public override int GetHashCode()
+        {
+            var h = new HashCode();
+            foreach (var q in Alle)
+            {
+                h.Add(q);
+            }
+            return h.ToHashCode();
+        }
+
+        public static bool operator ==(Sperrflaechen a, Sperrflaechen b) => a.Equals(b);
+
+        public static bool operator !=(Sperrflaechen a, Sperrflaechen b) => !a.Equals(b);
     }
 
     /// <summary>
@@ -246,7 +288,55 @@ public sealed class Sticks
                 my = Math.Max(oben, Math.Min(my, q.Y1 - r));
             }
         }
+        // Welle A 1.9.0 (Sammelliste 450): eigene Anordnung der Knoepfe: der Stick rueckt an die naechste Stelle seiner Haelfte, an
+        // der er keinen Knopf beruehrt (Raster 2 Punkte, kleinster Weg)
+        if (!Alt.Value && !b.Flaechen.Leer && b.Flaechen.Alle.Any(q => KreisInRechteck(mx, my, r, q)))
+        {
+            (mx, my) = NaechsteFreie(mx, my, r, seite, b, links, rechts, oben, b.Hoehe - b.Unten - r) ?? (mx, my);
+        }
         return (mx, my, r);
+    }
+
+    /// <summary>
+    /// Welle A 1.9.0: naechste Mitte (Raster 2 Punkte) in der Haelfte, an der ein Stick mit Radius <paramref name="r"/> keine der
+    /// <see cref="Bereich.Flaechen"/> beruehrt; neben der Leiste darf er wie oben bis an den unteren Rand. null = keine.
+    /// </summary>
+    public static (double X, double Y)? NaechsteFreie(double x, double y, double r, Seite seite, Bereich b, double links, double rechts, double oben, double unten)
+    {
+        (double X, double Y)? beste = null;
+        var besterWeg = double.MaxValue;
+        foreach (var cx in Schritte(links, rechts))
+        {
+            var u = unten;
+            if (b.LeisteBis > b.LeisteVon && (seite == Seite.Links ? cx + r <= b.LeisteVon - EckRand : cx - r >= b.LeisteBis + EckRand))
+            {
+                u = Math.Max(u, b.Hoehe - EckRand - r);
+            }
+            foreach (var cy in Schritte(oben, u))
+            {
+                var weg = ((cx - x) * (cx - x)) + ((cy - y) * (cy - y));
+                if (weg < besterWeg && !b.Flaechen.Alle.Any(q => KreisInRechteck(cx, cy, r, q)))
+                {
+                    besterWeg = weg;
+                    beste = (cx, cy);
+                }
+            }
+        }
+        return beste;
+    }
+
+    /// <summary>Werte von <paramref name="von"/> bis <paramref name="bis"/> im Abstand 2, das Ende immer dabei (die Ecke liegt oft nicht auf dem Raster).</summary>
+    private static IEnumerable<double> Schritte(double von, double bis)
+    {
+        var w = von;
+        for (; w <= bis + 1e-9; w += 2)
+        {
+            yield return w;
+        }
+        if (bis >= von && w - 2 < bis - 1e-9)
+        {
+            yield return bis;
+        }
     }
 
     /// <summary>Beruehrt der Kreis (Mitte, Radius) das Rechteck?</summary>

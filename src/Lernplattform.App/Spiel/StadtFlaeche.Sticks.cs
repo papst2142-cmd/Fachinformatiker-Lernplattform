@@ -36,14 +36,22 @@ public sealed partial class StadtFlaeche
     {
         get
         {
-            var b = new Sticks.Bereich(Bounds.Width, Bounds.Height, Frei.Oben, Frei.Unten, LeisteX.Von, LeisteX.Bis);
+            var b = GrundBereich;
             b = KnopfSperre is { } sperre ? b with { Sperre = sperre(b) } : b;
+            // Welle A 1.9.0 (Sammelliste 450): eigene Anordnung der Knoepfe, je Knopf eine Flaeche
+            b = KnopfFlaechen is { } flaechen ? b with { Flaechen = flaechen(b) } : b;
             // Welle A 1.6.0 (Sammelliste 444): Knopf der Handlung und Ich-Sicht ueber dem linken Stick
             b = KnopfSperreLinks is { } links ? b with { SperreLinks = links(b) } : b;
             // Welle A 1.6.0 (Weisung P12-361): Handy-Symbol neben einem Stick
             return KnopfSperreTelefon is { } handy ? b with { SperreTelefon = handy(b) } : b;
         }
     }
+
+    /// <summary>Welle A 1.9.0 (Sammelliste 450): freier Bereich ohne die Flaechen der Knoepfe.</summary>
+    public Sticks.Bereich GrundBereich => new(Bounds.Width, Bounds.Height, Frei.Oben, Frei.Unten, LeisteX.Von, LeisteX.Bis);
+
+    /// <summary>Welle A 1.9.0 (Sammelliste 450): Flaechen der Knoepfe einer eigenen Anordnung, die beide Sticks frei halten (setzt die Seite).</summary>
+    public Func<Sticks.Bereich, Sticks.Sperrflaechen>? KnopfFlaechen { get; set; }
 
     /// <summary>Welle A 1.6.0 (Weisung P12-361): Flaeche des Handy-Symbols, die beide Sticks frei halten (setzt die Seite).</summary>
     public Func<Sticks.Bereich, (double X1, double Y1, double X2, double Y2)>? KnopfSperreTelefon { get; set; }

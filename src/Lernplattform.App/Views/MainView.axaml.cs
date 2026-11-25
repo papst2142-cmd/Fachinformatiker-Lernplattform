@@ -334,6 +334,32 @@ public partial class MainView : UserControl
     }
 
     /// <summary>Rundgang starten (Optionen, Hilfe, Start); nach dem Speichern zeigen Optionen und Dashboard die neuen Werte.</summary>
+    /// <summary>
+    /// Welle A 1.9.0 (Sammelliste 450, Nico 1a): Optionen > Steuerung > „Knöpfe anordnen“ oeffnet das angehaltene Spiel im
+    /// Bearbeiten-Modus; „Fertig“ und „Abbrechen“ fuehren zurueck zu den Optionen.
+    /// </summary>
+    public async Task KnoepfeAnordnenAsync()
+    {
+        await ZeigeAsync(Seiten.Spiel);
+        if (!_seiten.TryGetValue(Seiten.Spiel, out var seite) || seite is not Lernplattform.Spiel.SpielSeite spiel)
+        {
+            return;
+        }
+        try
+        {
+            await spiel.Geladen;
+        }
+        catch (Exception)
+        {
+            // Laden fehlgeschlagen: die Spielseite zeigt den Fehler wie beim gewoehnlichen Betreten
+            return;
+        }
+        if (AktuelleSeite == Seiten.Spiel)
+        {
+            spiel.AnordnenStarten(() => _ = ZeigeAsync(Seiten.Optionen));
+        }
+    }
+
     public async Task RundgangAsync()
     {
         if (await RundgangEbene.Starten())
@@ -672,7 +698,7 @@ public partial class MainView : UserControl
             seite = id switch
             {
                 Seiten.Dashboard => new DashboardSeite(() => _ = WiederholenAsync()),
-                Seiten.Optionen => new OptionenSeite(BaueSicherung, () => _ = RundgangAsync(), () => _ = ZeigeAsync(Seiten.Hilfe)),
+                Seiten.Optionen => new OptionenSeite(BaueSicherung, () => _ = RundgangAsync(), () => _ = ZeigeAsync(Seiten.Hilfe), () => _ = KnoepfeAnordnenAsync()),
                 // Phase 4, W4: Hilfe
                 Seiten.Hilfe => new HilfeSeite(() => _ = RundgangAsync()),
                 Seiten.Lernen => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte),

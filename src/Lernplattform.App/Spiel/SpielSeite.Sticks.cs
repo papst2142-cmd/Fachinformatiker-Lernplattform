@@ -46,8 +46,10 @@ public sealed partial class SpielSeite
         }
         Children.Add(_stickEbene);
         // Welle A 1.0.0 (Sammelliste 405): die runden Knoepfe stehen unten rechts in der Ecke; dort setzt kein Stick auf
-        Flaeche.KnopfSperre = b => DaumenKnoepfeAn && (_springenRund?.IsVisible ?? false) ? HaltungKnopf.Sperre(b) : default;
-        Flaeche.SticksGesperrt = () => HandyOffen || (Tafel?.IsVisible ?? false) || _ersatz.IsVisible || !Ebene.IsVisible;
+        Flaeche.KnopfSperre = b => DaumenKnoepfeAn && EigeneLagen is null && (_springenRund?.IsVisible ?? false) ? HaltungKnopf.Sperre(b) : default;
+        // Welle A 1.9.0 (Sammelliste 450): eigene Anordnung: jeder Knopf haelt seine Flaeche frei; im Bearbeiten-Modus keine Sticks
+        Flaeche.KnopfFlaechen = b => DaumenKnoepfeAn && EigeneLagen is { } eigene ? KnopfAnordnung.Sperren(eigene, b) : default;
+        Flaeche.SticksGesperrt = () => HandyOffen || (Tafel?.IsVisible ?? false) || _ersatz.IsVisible || !Ebene.IsVisible || _anordnen is not null;
         Flaeche.SticksGeaendert += () =>
         {
             if (Dispatcher.UIThread.CheckAccess())

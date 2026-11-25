@@ -101,8 +101,12 @@ public sealed partial class SpielSeite
     }
 
     /// <summary>Lage, Sichtbarkeit, Symbol und Leuchten der runden Knoepfe (nach jeder Aenderung des Spiels und der Groesse).</summary>
+    /// <summary>Welle A 1.9.0: Zahl der Aufrufe von DaumenSetzen (der Start-Test prueft, dass das Layout zur Ruhe kommt).</summary>
+    internal long DaumenSetzenZahl { get; private set; }
+
     private void DaumenSetzen()
     {
+        DaumenSetzenZahl++;
         HandlungKnoepfeLegen();
         if (_springenRund is null || _haltungRund is null || _liegenRund is null)
         {
@@ -112,8 +116,12 @@ public sealed partial class SpielSeite
         // Symbole unten rechts mit ihrer Taste (Nico 4a)
         var handy = DaumenKnoepfeAn;
         var bereich = Flaeche.StickBereich;
-        var lage = handy ? HaltungKnopf.Lage(bereich) : HaltungKnopf.LageTasten(bereich);
-        var an = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true } && Ebene.IsVisible
+        // Welle A 1.9.0 (Sammelliste 450): eigene Anordnung (Lage und Groesse je Knopf); null = Standard wie A 1.8.0
+        var eigene = handy ? EigeneLagen : null;
+        var lage = eigene is not null
+            ? new HaltungKnopf.Lagen(Mitte(eigene[KnopfAnordnung.Knopf.Springen]), Mitte(eigene[KnopfAnordnung.Knopf.Knien]), Mitte(eigene[KnopfAnordnung.Knopf.Liegen]))
+            : handy ? HaltungKnopf.Lage(bereich) : HaltungKnopf.LageTasten(bereich);
+        var an = Flaeche.GlBereit && !_ersatz.IsVisible && Spiel is { KoerperMoeglich: true } && Ebene.IsVisible && _anordnen is null
             && !HandyOffen && !(Tafel?.IsVisible ?? false) && lage is not null && Flaeche.TranslatePoint(default, this) is not null;
         var drei = lage is { Liegen: not null };
         _springenRund.IsVisible = an;
@@ -150,16 +158,32 @@ public sealed partial class SpielSeite
             // Konzept Punkt 4 und 5: weisse Figuren auf halb durchsichtigen dunklen Scheiben; das Symbol zeigt die naechste Haltung,
             // die aktuelle leuchtet in der Grundfarbe des Programms
             knoepfe.Add((HaltungKnopf.Knopf.Liegen, _liegenRund, l.Liegen!.Value, k));
-            _springenRund.Setzen(g, DaumenSymbol.Springen, false, SpielProbeTexte.KnopfSpringen, scheibe: true);
+            if (eigene is null)
+            {
+                _springenRund.Setzen(g, DaumenSymbol.Springen, false, SpielProbeTexte.KnopfSpringen, scheibe: true);
+            }
             var (knienAuf, knienLeuchtet) = HaltungKnopf.Zustand(HaltungKnopf.Knopf.Knien, koerper);
-            _haltungRund.Setzen(k, knienAuf ? DaumenSymbol.Aufstehen : DaumenSymbol.Knien, knienLeuchtet,
-                knienAuf ? SpielProbeTexte.KnopfAufstehen : SpielProbeTexte.KnopfHinknien, scheibe: true);
+            if (eigene is not null)
+            {
+                // nur EIN Setzen je Durchgang: zwei verschiedene Breiten nacheinander machten das Layout jedes Mal
+                // ungueltig, LayoutUpdated rief DaumenSetzen ohne Ende wieder auf
+                knoepfe[0] = (HaltungKnopf.Knopf.Springen, _springenRund, l.Springen, Groesse(KnopfAnordnung.Knopf.Springen));
+                knoepfe[1] = (HaltungKnopf.Knopf.Knien, _haltungRund, l.Knien, Groesse(KnopfAnordnung.Knopf.Knien));
+                knoepfe[2] = (HaltungKnopf.Knopf.Liegen, _liegenRund, l.Liegen!.Value, Groesse(KnopfAnordnung.Knopf.Liegen));
+                _springenRund.Setzen(knoepfe[0].D, DaumenSymbol.Springen, false, SpielProbeTexte.KnopfSpringen, scheibe: true, treffer: KnopfAnordnung.Treffer(knoepfe[0].D));
+            }
+            _haltungRund.Setzen(knoepfe[1].D, knienAuf ? DaumenSymbol.Aufstehen : DaumenSymbol.Knien, knienLeuchtet,
+                knienAuf ? SpielProbeTexte.KnopfAufstehen : SpielProbeTexte.KnopfHinknien, scheibe: true, treffer: Treffer(knoepfe[1].D));
             var (liegenAuf, liegenLeuchtet) = HaltungKnopf.Zustand(HaltungKnopf.Knopf.Liegen, koerper);
-            _liegenRund.Setzen(k, liegenAuf ? DaumenSymbol.Aufstehen : DaumenSymbol.Liegen, liegenLeuchtet,
-                liegenAuf ? SpielProbeTexte.KnopfAufstehen : SpielProbeTexte.KnopfHinlegen, scheibe: true);
+            _liegenRund.Setzen(knoepfe[2].D, liegenAuf ? DaumenSymbol.Aufstehen : DaumenSymbol.Liegen, liegenLeuchtet,
+                liegenAuf ? SpielProbeTexte.KnopfAufstehen : SpielProbeTexte.KnopfHinlegen, scheibe: true, treffer: Treffer(knoepfe[2].D));
         }
-        foreach (var (art, knopf, (x, y), d) in knoepfe)
+        double Groesse(KnopfAnordnung.Knopf kn) => KnopfAnordnung.Durchmesser(kn, bereich, eigene![kn].Prozent);
+        double Treffer(double d) => eigene is null ? d : KnopfAnordnung.Treffer(d);
+        foreach (var (art, knopf, (x, y), d0) in knoepfe)
         {
+            // Welle A 1.9.0: die Flaeche zum Tippen (bei eigener Groesse unter 40 Punkten groesser als der Knopf)
+            var d = knopf.Width;
             Canvas.SetLeft(knopf, f0.X + x - (d / 2));
             Canvas.SetTop(knopf, f0.Y + y - (d / 2));
             // sofort an die neue Stelle (Sammelliste 162)
@@ -241,6 +265,7 @@ public sealed class DaumenKnopf : Klickflaeche
     private string? _akzentHex;
     private bool? _scheibe;
     private Viewbox? _rahmen;
+    private readonly Grid _raster = new();
     private Point? _start;
 
     /// <summary>
@@ -255,6 +280,9 @@ public sealed class DaumenKnopf : Klickflaeche
     /// <summary>Lang gedrueckt (ausgeloest, sobald die Zeit um ist; das Loslassen danach tippt nicht mehr).</summary>
     public event Action? Lang;
 
+    /// <summary>Welle A 1.9.0: Durchmesser des sichtbaren Knopfs (die Flaeche zum Tippen ist <c>Width</c>, mindestens so gross).</summary>
+    public double Sichtbar { get; private set; }
+
     /// <summary>Start-Test: das Symbol, das der Knopf gerade zeigt.</summary>
     public DaumenSymbol Symbol { get; private set; }
 
@@ -268,7 +296,7 @@ public sealed class DaumenKnopf : Klickflaeche
     {
         Background = Brushes.Transparent;
         IsVisible = false;
-        var raster = new Grid();
+        var raster = _raster;
         raster.Children.Add(_fuellung);
         raster.Children.Add(_rand);
         _rahmen = new Viewbox { Child = _symbol, Margin = new Thickness(6) };
@@ -290,9 +318,20 @@ public sealed class DaumenKnopf : Klickflaeche
     /// Scheibe mit hellem Rand (Abnahmebild P12-231 Ordner 06), das Symbol nimmt zwei Drittel des Kreises ein; leuchtend wie bisher
     /// in der Grundfarbe mit Symbol schwarz oder weiss (<see cref="Symbolfarbe.Auf"/>).
     /// </remarks>
-    public void Setzen(double durchmesser, DaumenSymbol symbol, bool leuchtet, string name, bool scheibe = false)
+    /// <remarks>
+    /// <paramref name="treffer"/> (Welle A 1.9.0, Sammelliste 450, Nico 1a P12-241): Durchmesser der Flaeche zum Tippen; ist er
+    /// groesser als der Knopf (eigene Groesse unter 40 Punkten), bleibt die Flaeche so gross und der Knopf steht in ihrer Mitte.
+    /// </remarks>
+    public void Setzen(double durchmesser, DaumenSymbol symbol, bool leuchtet, string name, bool scheibe = false, double? treffer = null)
     {
-        Width = Height = durchmesser;
+        var t = Math.Max(durchmesser, treffer ?? durchmesser);
+        Width = Height = t;
+        var innen = (t - durchmesser) / 2;
+        if (Math.Abs(_raster.Margin.Left - innen) > 1e-9)
+        {
+            _raster.Margin = new Thickness(innen);
+        }
+        Sichtbar = durchmesser;
         if (_rahmen is { } rahmen)
         {
             var rand = scheibe ? durchmesser * 0.17 : 6;
@@ -301,7 +340,7 @@ public sealed class DaumenKnopf : Klickflaeche
                 rahmen.Margin = new Thickness(rand);
             }
         }
-        CornerRadius = new CornerRadius(durchmesser / 2);
+        CornerRadius = new CornerRadius(t / 2);
         Avalonia.Automation.AutomationProperties.SetName(this, name);
         var app = Application.Current;
         var akzent = app?.TryFindResource("Pinsel.accent", out var a) == true && a is ISolidColorBrush ab ? ab.Color : Colors.DeepSkyBlue;
@@ -340,7 +379,7 @@ public sealed class DaumenKnopf : Klickflaeche
             _rand.Opacity = leuchtet ? 1 : scheibe ? 0.59 : 0.55;
             _rand.StrokeThickness = scheibe ? Math.Max(1, durchmesser * 0.03) : 1.5;
             Zeichnen(symbol, symbolFarbe);
-            var textFarbe = app?.TryFindResource("Pinsel.text", out var t) == true && t is ISolidColorBrush tb ? tb.Color : Colors.White;
+            var textFarbe = app?.TryFindResource("Pinsel.text", out var tf) == true && tf is ISolidColorBrush tb ? tb.Color : Colors.White;
             Farben = (symbolFarbe ?? $"#{textFarbe.R:X2}{textFarbe.G:X2}{textFarbe.B:X2}", leuchtet ? akzentHex : null);
         }
     }

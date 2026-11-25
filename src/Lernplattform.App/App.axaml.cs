@@ -41,6 +41,8 @@ public partial class App : Application
         Core.Spiel.Umsehbedienung.Uebernehmen(Programm.Zustand.Werte);
         Core.Spiel.Blickfeldbedienung.Uebernehmen(Programm.Zustand.Werte);
         Core.Spiel.Empfindlichkeit.AlleUebernehmen(Programm.Zustand.Werte);
+        // Welle A 1.9.0 (Sammelliste 450): eigene Anordnung der runden Knoepfe und Raster-Schalter
+        Core.Spiel.KnopfAnordnung.Uebernehmen(Programm.Zustand.Werte);
         Spiel.TonDienst.Regler(Core.Spiel.Ton.TonEinstellungen.Lesen(Programm.Zustand.Werte));
         Spiel.TonDienst.Lieder = new Core.Spiel.Ton.EigeneLieder(Core.Daten.Ablage.Datenordner());
         Spiel.Vollbild.DauerhaftSetzen(Core.Spiel.Ton.VollbildWahl.Lesen(Programm.Zustand.Werte));
