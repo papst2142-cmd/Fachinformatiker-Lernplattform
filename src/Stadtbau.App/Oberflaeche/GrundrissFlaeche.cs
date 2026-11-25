@@ -88,7 +88,8 @@ public sealed class GrundrissFlaeche : Control
     /// Nur ansehen: Projekt nur zum Lesen oder ein Raum des Spiels (Welle S 0.60.0, <see cref="SpielRaeume"/>); dann waehlt ein
     /// Tipp nur, nichts wird verschoben, gesetzt, gedreht, kopiert oder geloescht.
     /// </summary>
-    public bool Gesperrt => _projekt is null || _projekt.NurLesen || SpielRaeume.Ist(_ort);
+    /// <remarks>Seit S 0.64.0 (Weisung P12-381): ein Raum des Spiels nur, solange „Ändern“ aus ist.</remarks>
+    public bool Gesperrt => _projekt is null || _projekt.NurLesen || (SpielRaeume.Ist(_ort) && !_projekt.SpielRaumInBearbeitung(_ort!));
 
     private PyObjekt? Gebaeude => _projekt is not null && _ort is not null ? _projekt.Grundriss(_ort) : null;
 

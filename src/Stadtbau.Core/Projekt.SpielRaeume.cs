@@ -50,6 +50,16 @@ public sealed partial class Projekt
         return true;
     }
 
+    /// <summary>Schalter „Ändern“ aus: nur fuer einen unveraenderten Raum (danach zeigt das Werkzeug wieder den Raum wie im Spiel).</summary>
+    public bool SpielRaumBeenden(string schluessel)
+    {
+        if (!SpielRaumInBearbeitung(schluessel) || GeaenderteSpielRaeume.Contains(schluessel))
+        {
+            return false;
+        }
+        return _grundrisse.Remove(schluessel);
+    }
+
     /// <summary>Raeume des Spiels, deren Grundriss sich gegenueber dem Spiel geaendert hat (Reihenfolge der Liste).</summary>
     public IReadOnlyList<string> GeaenderteSpielRaeume =>
         !SpielRaeumeAenderbar ? []

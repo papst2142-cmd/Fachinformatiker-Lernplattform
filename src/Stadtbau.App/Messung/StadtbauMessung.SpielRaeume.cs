@@ -74,6 +74,7 @@ public static partial class StadtbauMessung
             }
         }
         await SchilderAsync(a, f, liste.Select(r => (r.Schluessel, r.Name)).ToList());
+        await RaumAendernAsync(a, f);
         a.SpielRaumOeffnen(liste[0].Schluessel);
         await AlleGroessenAsync(a, f, "Räume des Spiels 2D");
         await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
@@ -129,6 +130,84 @@ public static partial class StadtbauMessung
         }
         a.ReiterZeigen(innen: false);
         await BildAsync(a);
+    }
+
+    /// <summary>
+    /// Welle S 0.64.0 (Weisung P12-381, Nico 2c, Bilder 03/04/07): „Raum ändern“ an der Wohnung. Schalter „Ändern“ an: der
+    /// Grundriss ist frei (kein Schritt, nichts geaendert); eine gezogene Wand ist „geändert“ (Marke links, Knopf „Zurück auf den
+    /// Stand des Spiels“, Fundliste ohne Rot); eine zu schmale Diele ist rot und sperrt den Export (Gegenprobe); „Zurück“
+    /// nimmt alles zurueck. Layout je Groesse mit offener Karte.
+    /// </summary>
+    private static async Task RaumAendernAsync(Hauptansicht a, Window? f)
+    {
+        var p = a.Projekt!;
+        const string Wohnung = "spiel:zuhause:apartment";
+        a.SpielRaumOeffnen(Wohnung);
+        await BildAsync(a);
+        var schritte = p.SchritteZurueck;
+        if (a.SpielRaumSchalter is not { } schalter || !schalter.IsEffectivelyVisible || !schalter.IsEnabled)
+        {
+            Fund("Raum ändern: Schalter „" + Texte.SpielRaumAendernSchalter + "“ fehlt oder ist gesperrt");
+            return;
+        }
+        schalter.IsChecked = true;
+        await BildAsync(a);
+        if (a.SpielRaumFlaeche.Gesperrt || p.SchritteZurueck != schritte || p.GeaenderteSpielRaeume.Count > 0)
+        {
+            Fund("Raum ändern: nach „Ändern“ ist der Grundriss gesperrt oder schon geändert");
+        }
+        p.Aendern(Wohnung, Texte.SpielRaumWandZiehen, g =>
+        {
+            var raeume = ((List<object?>)g["raeume"]!).OfType<Lernplattform.Core.Daten.PyObjekt>().ToList();
+            var wohn = raeume.First(r => (string)r["id"]! == "wohnraum");
+            var kueche = raeume.First(r => (string)r["id"]! == "kueche");
+            Bearbeitung.Raum(g, "wohnraum", Lernplattform.Core.Spiel.Py.F(wohn["x"]), Lernplattform.Core.Spiel.Py.F(wohn["y"]), Lernplattform.Core.Spiel.Py.F(wohn["w"]) - 0.5, Lernplattform.Core.Spiel.Py.F(wohn["h"]));
+            Bearbeitung.Raum(g, "kueche", Lernplattform.Core.Spiel.Py.F(kueche["x"]) - 0.5, Lernplattform.Core.Spiel.Py.F(kueche["y"]), Lernplattform.Core.Spiel.Py.F(kueche["w"]) + 0.5, Lernplattform.Core.Spiel.Py.F(kueche["h"]));
+        });
+        await a.SpielRaumGeprueft;
+        await BildAsync(a);
+        if (!p.GeaenderteSpielRaeume.Contains(Wohnung) || a.SpielRaumZurueckKnopf is null || a.SpielRaumRot.Count > 0)
+        {
+            Fund("Raum ändern: gezogene Wand nicht „geändert“ oder rot (" + string.Join(" | ", a.SpielRaumRot.Select(x => x.Text)) + ")");
+        }
+        await AlleGroessenAsync(a, f, "Raum ändern");
+        await GroesseAsync(a, f, Groessen[0].B, Groessen[0].H);
+        // Gegenprobe: Diele zu schmal = rot, Export gesperrt
+        p.Aendern(Wohnung, Texte.SpielRaumWandZiehen, g =>
+        {
+            var flur = (Lernplattform.Core.Daten.PyObjekt)g["flur"]!;
+            SpielRaumBearbeitung.Flur(g, Lernplattform.Core.Spiel.Py.F(flur["y"]), 1.5);
+        });
+        await a.SpielRaumGeprueft;
+        await BildAsync(a);
+        var gesperrt = false;
+        try
+        {
+            p.Exportieren(DateTimeOffset.Now);
+        }
+        catch (Lernplattform.Core.Stadtbau.StadtbauFehler)
+        {
+            gesperrt = true;
+        }
+        if (!a.SpielRaumRot.Any(x => x.Text.StartsWith("Diele nur", StringComparison.Ordinal)) || !gesperrt)
+        {
+            Fund("Raum ändern: zu schmale Diele nicht rot oder Export nicht gesperrt");
+        }
+        a.SpielRaumZurueckKnopf?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await BildAsync(a);
+        if (p.GeaenderteSpielRaeume.Count > 0)
+        {
+            Fund("Raum ändern: „" + Texte.SpielRaumZurueck + "“ nimmt die Änderung nicht zurück");
+        }
+        if (a.SpielRaumSchalter is { } aus)
+        {
+            aus.IsChecked = false;
+            await BildAsync(a);
+        }
+        if (!a.SpielRaumFlaeche.Gesperrt)
+        {
+            Fund("Raum ändern: nach „Ändern“ aus ist der Grundriss nicht wieder gesperrt");
+        }
     }
 
     /// <summary>
