@@ -65,4 +65,38 @@ public class EchtAnlagenAnzeigeTests
             EchtAnlagenAnzeige.ZahlAltFuerTests = false;
         }
     }
+
+    /// <summary>
+    /// A 1.11.0 (Sammelliste 456): volle Breite genau fuer Aufgaben mit einer Zeichenaufgabe (Baukasten), feste Stichprobe
+    /// (Klasse ae_b1_07 Aufgabe 2, Use-Case ae_b1_06 Aufgabe 4, ER si_b1_01 Aufgabe 3) und Gesamtzahl im Bestand.
+    /// </summary>
+    [Fact]
+    public void VolleBreite_GenauAufgabenMitBaukasten()
+    {
+        var bestand = Bestand;
+        bool[] Breit(string kennung) => [.. bestand.Satz(kennung)!.Aufgaben.Select(EchtAnlagenAnzeige.VolleBreite)];
+        Assert.Equal([false, false, true, true], Breit("ae_b1_06"));
+        Assert.Equal([false, true, true, false], Breit("ae_b1_07"));
+        Assert.Equal([false, false, true, false], Breit("si_b1_01"));
+        Assert.Equal([false, false, false, false], Breit("alle_ap1_01"));
+        var alle = bestand.Saetze.SelectMany(s => s.Aufgaben).ToList();
+        Assert.All(alle, a => Assert.Equal(a.Teile.Any(t => t.Antwort.Form == EchtSaetze.FormZeichnen), EchtAnlagenAnzeige.VolleBreite(a)));
+        Assert.Equal(31, alle.Count(EchtAnlagenAnzeige.VolleBreite));
+    }
+
+    /// <summary>Gegenprobe 456: mit der bisherigen Rechnung steht keine Aufgabe in voller Breite, der Test oben waere rot.</summary>
+    [Fact]
+    public void Gegenprobe_VolleBreiteAlt_KeineAufgabe()
+    {
+        var bestand = Bestand;
+        EchtAnlagenAnzeige.VolleBreiteAltFuerTests = true;
+        try
+        {
+            Assert.DoesNotContain(bestand.Saetze.SelectMany(s => s.Aufgaben), EchtAnlagenAnzeige.VolleBreite);
+        }
+        finally
+        {
+            EchtAnlagenAnzeige.VolleBreiteAltFuerTests = false;
+        }
+    }
 }

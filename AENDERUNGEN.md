@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 1.11.0
+In der Prüfung im echten Format hat der Baukasten am breiten Bildschirm jetzt die ganze Breite zum Zeichnen.
+
+- Am PC und an breiten Bildschirmen steht eine Aufgabe, in der du im Baukasten zeichnest, jetzt über die ganze Breite. Ihre Anlagen stehen darunter. So passt das Use-Case-Diagramm ganz auf den Bildschirm, und du musst nicht mehr seitlich wischen; das Klassendiagramm passt ebenfalls ganz.
+- Oben bleibt der Umschalter „Aufgabe / Anlagen“: „Aufgabe“ zeigt die volle Breite mit den Anlagen darunter, „Anlagen“ zeigt die Aufgabe wie bisher mit den Anlagen daneben. So hast du beim Schreiben die Anlagen mit einem Tipp neben dir.
+- Aufgaben ohne Baukasten, die Bewertung sowie Tablet im Hochformat und Handy sehen genau aus wie bisher.
+- Dein Lernstand, die Lerninhalte, die Prüfungssätze und deine Spielstände bleiben genau gleich.
+
 ## A 1.10.0
 Das Spiel kann jetzt Räume übernehmen, die im Stadtbau-Werkzeug umgebaut wurden, und es verliert dabei keines deiner Möbel.
 
