@@ -258,7 +258,110 @@ def matrix_listen(ci):
     listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
     if len(listen) != 4:
         return None
-    return [sorted("tests (%s%s)" % (e["os"], ", " + e["teil"] if e["teil"] else "") for e in json.loads(l)) for l in listen]
+    namen = [sorted(tests_name(e) for e in json.loads(l)) for l in listen]
+    # Weisung P12-369 (Nico 2a): die kurzen Mac-Testjobs stehen im Job tests-mac-kurz (nur Stufe voll)
+    namen[0] = sorted(namen[0] + [tests_name(e) for e in mac_kurz_liste(text)])
+    return namen
+
+
+def tests_name(e):
+    return "tests (%s%s)" % (e["os"], ", " + e["teil"] if e["teil"] else "")
+
+
+MAC_KURZ = "tests-mac-kurz"
+
+
+def job_block(text, kennung):
+    """Text des Jobs mit dieser Kennung in ci.yml (None, wenn es ihn nicht gibt)."""
+    for k, block in zip(*[iter(re.split(r"^  ([a-z][a-z0-9_-]*):\n", text.split("\njobs:\n", 1)[1], flags=re.M)[1:])] * 2):
+        if k == kennung:
+            return block
+    return None
+
+
+def mac_kurz_liste(text):
+    """Weisung P12-369: Eintraege der Matrix des Jobs tests-mac-kurz ([] ohne den Job)."""
+    import json
+    block = job_block(text, MAC_KURZ)
+    zeile = re.search(r"include: \$\{\{ fromJSON\('(\[\{.*?\}\])'\) \}\}", block or "")
+    return json.loads(zeile.group(1)) if zeile else []
+
+
+def mac_ordnung(ci=".github/workflows/ci.yml", text=None, still=False):
+    """Weisung P12-369 (Nico 2a): tests-mac-kurz hat nur Mac-Eintraege, laeuft nur in der Stufe voll und nutzt die
+    Schritte und die Umgebung des Jobs tests (Anker); pakete wartet mit needs auf ihn und startet auch bei Rot
+    (!cancelled()); der Hinweis-Job wartet auch auf ihn; Unit-Tests des Werkzeugs laufen genau in den Jobs mit
+    werkzeugtests (ubuntu und windows Einzeltests, macos-15 Spiel und Metal, Intel Lernteil)."""
+    if text is None:
+        if not os.path.exists(ci):
+            return 0
+        with open(ci, encoding="utf-8") as f:
+            text = f.read()
+    funde = []
+    kurz = mac_kurz_liste(text)
+    block = job_block(text, MAC_KURZ) or ""
+    if not kurz or any(not e["os"].startswith("macos") for e in kurz):
+        funde.append("tests-mac-kurz ohne Eintraege oder mit Nicht-Mac-Eintrag: %s" % [e["os"] for e in kurz])
+    bedingung = re.search(r"^    if: (.+)$", block, re.M)
+    if not bedingung or "inputs.stufe == 'voll'" not in bedingung.group(1) or "'ohne-mac'" in bedingung.group(1) \
+            or "'werkzeug'" in bedingung.group(1):
+        funde.append("tests-mac-kurz laeuft nicht nur in der Stufe voll")
+    if "    env: *test_env\n" not in block or "    steps: *test_schritte\n" not in block \
+            or "    env: &test_env\n" not in (job_block(text, "tests") or "") \
+            or "    steps: &test_schritte\n" not in (job_block(text, "tests") or ""):
+        funde.append("tests-mac-kurz nutzt nicht die Schritte und die Umgebung des Jobs tests")
+    pakete = job_block(text, "pakete") or ""
+    if "    needs: " + MAC_KURZ + "\n" not in pakete or not re.search(r'^    if: "!cancelled\(\) && ', pakete, re.M):
+        funde.append("pakete wartet nicht (auch bei Rot) auf tests-mac-kurz")
+    hinweis = re.search(r"^    needs: \[(.*)\]$", job_block(text, "urteil") or "", re.M)
+    if not hinweis or MAC_KURZ not in [n.strip() for n in hinweis.group(1).split(",")]:
+        funde.append("Hinweis-Job urteil wartet nicht auf tests-mac-kurz")
+    import json
+    zeile = re.search(r"include: \$\{\{ fromJSON\((.*\"teil\".*)\) \}\}", text)
+    listen = re.findall(r"'(\[\{.*?\}\])'", zeile.group(1)) if zeile else []
+    voll = (json.loads(listen[0]) if listen else []) + kurz
+    werkzeug = sorted(tests_name(e) for e in voll if e.get("werkzeugtests"))
+    soll = ["tests (macos-15, Spiel und Metal)", "tests (macos-15-intel, Lernteil)", "tests (ubuntu-latest, Einzeltests)",
+            "tests (windows-latest, Einzeltests)"]
+    if werkzeug != soll:
+        funde.append("Unit-Tests des Werkzeugs in %s statt %s" % (werkzeug, soll))
+    if "        if: matrix.werkzeugtests\n" not in (job_block(text, "tests") or ""):
+        funde.append("Schritt Tests Stadtbau-Werkzeug haengt nicht an werkzeugtests")
+    if not still:
+        for z in funde:
+            print("FEHLER: Selbsttest Mac-Ordnung: " + z)
+        if not funde:
+            print("Selbsttest Mac-Ordnung: tests-mac-kurz %d Mac-Jobs, pakete wartet darauf, Werkzeug-Tests in %d Jobs"
+                  % (len(kurz), len(werkzeug)))
+    return 1 if funde else 0
+
+
+def mac_ordnung_gegenprobe(ci=".github/workflows/ci.yml"):
+    """Gegenproben: ubuntu in tests-mac-kurz, pakete ohne needs, pakete ohne !cancelled(), Werkzeug-Tests im langen
+    Mac-Job, tests-mac-kurz ohne Anker = rot."""
+    if not os.path.exists(ci):
+        return 0
+    with open(ci, encoding="utf-8") as f:
+        text = f.read()
+    gegen = [
+        ("ubuntu in tests-mac-kurz", text.replace("fromJSON('[{\"os\":\"macos-15\",\"teil\":\"Spiel und Metal\"",
+                                                 "fromJSON('[{\"os\":\"ubuntu-latest\",\"teil\":\"X\",\"kurz\":\"x\"},{\"os\":\"macos-15\",\"teil\":\"Spiel und Metal\"", 1)),
+        ("pakete ohne needs", text.replace("    needs: " + MAC_KURZ + "\n", "", 1)),
+        ("pakete ohne !cancelled()", text.replace('    if: "!cancelled() && (github.event.action != \'labeled\' || github.event.label.name == \'voll\' || github.event.label.name == \'werkzeug\' || github.event.label.name == \'ohne-mac\') && (((github.event_name == \'workflow_dispatch\' && inputs.stufe == \'voll\')',
+                                                   '    if: "(github.event.action != \'labeled\' || github.event.label.name == \'voll\' || github.event.label.name == \'werkzeug\' || github.event.label.name == \'ohne-mac\') && (((github.event_name == \'workflow_dispatch\' && inputs.stufe == \'voll\')', 1)),
+        ("Werkzeug-Tests im langen Mac-Job", text.replace("\"teil\":\"Einzeltests und Lernteil\",\"kurz\":\"einzel-lernen\",\"einzel\":true,\"lernen\":true}",
+                                                           "\"teil\":\"Einzeltests und Lernteil\",\"kurz\":\"einzel-lernen\",\"einzel\":true,\"lernen\":true,\"werkzeugtests\":true}", 1)),
+        ("tests-mac-kurz ohne Anker", text.replace("    steps: *test_schritte\n", "    steps:\n      - run: true\n", 1)),
+        ("Hinweis-Job ohne tests-mac-kurz", text.replace("needs: [tests, tests-mac-kurz, ", "needs: [tests, ", 1)),
+    ]
+    rot = 0
+    for name, geaendert in gegen:
+        if geaendert == text or mac_ordnung(text=geaendert, still=True) != 1:
+            print("FEHLER: Selbsttest Mac-Ordnung: Gegenprobe '%s' nicht rot" % name)
+            rot = 1
+    if not rot:
+        print("Selbsttest Mac-Ordnung: %d Gegenproben rot" % len(gegen))
+    return rot
 
 
 def soll_liste(release, name="soll"):
@@ -429,7 +532,12 @@ def job_bloecke(text):
     rumpf = text.split("\njobs:\n", 1)[1]
     teile = re.split(r"^  ([a-z][a-z0-9_-]*):\n", rumpf, flags=re.M)[1:]
     bloecke = []
+    # Weisung P12-369: ein Job mit "steps: *test_schritte" hat die Schritte des Jobs mit dem Anker (YAML-Alias)
+    anker = dict((m.group(1), b) for b in teile[1::2] for m in re.finditer(r"^    steps: &([a-z_]+)\n", b, re.M))
     for kennung, block in zip(teile[0::2], teile[1::2]):
+        alias = re.search(r"^    steps: \*([a-z_]+)\n", block, re.M)
+        if alias and alias.group(1) in anker:
+            block = block + anker[alias.group(1)]
         name = re.search(r"^    name: (.+)$", block, re.M)
         bloecke.append((name.group(1).strip() if name else kennung, block))
     return bloecke
@@ -467,8 +575,9 @@ def ohne_mac_stufe(ci=".github/workflows/ci.yml", release=".github/workflows/rel
     if len(pak) != 2 or pak[1] != [n for n in pak[0] if "osx" not in n] or len(pak[0]) != 4:
         funde.append("pakete-Matrix voll/ohne-mac falsch: %s" % pak)
     erwartet = urteil_github.erwartete_jobs("ohne-mac", soll_liste, release)
-    if len(erwartet) != 11:
-        funde.append("Stufe ohne-mac hat %d statt 11 Jobs: %s" % (len(erwartet), erwartet))
+    # Weisung P12-369 (Nico 1a): ubuntu in zwei Jobs, darum 12 (vorher 11)
+    if len(erwartet) != 12:
+        funde.append("Stufe ohne-mac hat %d statt 12 Jobs: %s" % (len(erwartet), erwartet))
     for name, block in job_bloecke(text):
         if name != urteil_github.HILFSJOB and "ohne_mac.py pruefen" not in block:
             funde.append("Job %s ohne Waechter ohne_mac.py" % name)
@@ -488,8 +597,8 @@ def ohne_mac_gegenprobe(ci=".github/workflows/ci.yml"):
         text = f.read()
     rot = 0
     gegen = [
-        ("Mac-Job in ohne-mac", text.replace("&& '[{\"os\":\"ubuntu-latest\",\"teil\":\"\",\"kurz\":\"alle\",\"einzel\":true,\"lernen\":true,\"spiel\":true},{\"os\":\"windows-latest\"",
-                                              "&& '[{\"os\":\"macos-15\",\"teil\":\"X\",\"kurz\":\"x\"},{\"os\":\"ubuntu-latest\",\"teil\":\"\",\"kurz\":\"alle\",\"einzel\":true,\"lernen\":true,\"spiel\":true},{\"os\":\"windows-latest\"", 2)),
+        ("Mac-Job in ohne-mac", text.replace("&& '[{\"os\":\"ubuntu-latest\",\"teil\":\"Einzeltests\",",
+                                              "&& '[{\"os\":\"macos-15\",\"teil\":\"X\",\"kurz\":\"x\"},{\"os\":\"ubuntu-latest\",\"teil\":\"Einzeltests\",", 2)),
         ("osx in pakete ohne-mac", text.replace("|| '[{\"os\":\"windows-latest\",\"rid\":\"win-x64\"}", "|| '[{\"os\":\"macos-15\",\"rid\":\"osx-arm64\"},{\"os\":\"windows-latest\",\"rid\":\"win-x64\"}", 1)),
         ("Job ohne Waechter", text.replace("python -I werkzeuge/ci/ohne_mac.py pruefen", "true", 1)),
     ]
@@ -754,6 +863,9 @@ def selbsttest():
     # Welle CI schneller 2 (Weisung P12-131): Stufe ohne-mac, Hinweis-Job urteil, Urteil GitHub oder echt (je mit Gegenproben)
     rot |= ohne_mac_stufe()
     rot |= ohne_mac_gegenprobe()
+    # Weisung P12-369 (Nico 2a): Mac-Ordnung (tests-mac-kurz, pakete wartet, Werkzeug-Tests im kuerzeren Job)
+    rot |= mac_ordnung()
+    rot |= mac_ordnung_gegenprobe()
     rot |= hilfsjob_zaehlt_nicht(".github/workflows/release.yml")
     rot |= hilfsjob_zaehlt_nicht(".github/workflows/stadtbau_release.yml")
     rot |= hilfsjob_gegenprobe()
@@ -761,7 +873,8 @@ def selbsttest():
     # Weisung P12-324 (Nico 1a 2a 3a 4c): Zeitlimits aus werkzeuge/ci/zeitlimits.json gleich ci.yml, Vorschlagsregel und
     # Reserve-Tabelle (je mit Gegenproben); beide aendern kein Urteil
     # Welle „Ablauf stabil“ C (P12-338/P12-340): tor_gleich.py beweist vor dem Merge „ein Lauf reicht“ (Baum gleich, 18/18)
-    for name in ("zeitlimits", "reserve", "tor_gleich"):
+    # Weisung P12-369 (Nico 5a): Testdauer-Waechter (langsamste Tests, lokale Regel) mit Gegenproben
+    for name in ("zeitlimits", "reserve", "tor_gleich", "testdauer"):
         spec = importlib.util.spec_from_file_location(name, os.path.join("werkzeuge", "ci", name + ".py"))
         modul = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(modul)

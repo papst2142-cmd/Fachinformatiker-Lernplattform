@@ -205,7 +205,8 @@ def erwartete_jobs(stufe, soll_liste, release=".github/workflows/release.yml",
         return [n for n in voll if "macos" not in n and "osx" not in n]
     if stufe == "werkzeug":
         return soll_liste(werkzeug_release, "soll_werkzeug") or []
-    return ["sollwerte (Pruefsummen)", "tests (ubuntu-latest)"]
+    # Weisung P12-369 (Nico 1a): ubuntu auch in der Stufe schnell in zwei Jobs
+    return ["sollwerte (Pruefsummen)", "tests (ubuntu-latest, Einzeltests)", "tests (ubuntu-latest, Lernteil und Spiel)"]
 
 
 def gh(pfad):

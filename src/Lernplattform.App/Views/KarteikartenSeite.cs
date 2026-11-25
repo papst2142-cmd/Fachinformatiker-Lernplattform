@@ -45,6 +45,9 @@ public sealed class KarteikartenSeite : UserControl
 
     private readonly System.Diagnostics.Stopwatch _uhr = System.Diagnostics.Stopwatch.StartNew();
 
+    /// <summary>Sammelliste 451: Pausen der Speicherbereinigung seit dem Bauen der Seite (nur fuer die Teilschritte).</summary>
+    private readonly TimeSpan _gcBeginn = GC.GetTotalPauseDuration();
+
     public KarteikartenSeite()
     {
         _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
@@ -69,22 +72,63 @@ public sealed class KarteikartenSeite : UserControl
     /// <summary>Zeit vom Bauen der Seite bis die erste Karte steht (Messwert).</summary>
     public double? InhaltMs { get; private set; }
 
+    /// <summary>Weisung P12-369 Punkt 4: Zeitpunkte ab dem Bauen der Seite (Laden, erstes Bauen), nur fuer den Bericht.</summary>
+    public List<(string Name, double Ms)> Teilzeiten { get; } = [];
+
     private async Task LadenAsync()
     {
         try
         {
             var inhalte = await Zustand.Inhalte;
+            Teilzeiten.Add(("Inhalte da", _uhr.Elapsed.TotalMilliseconds));
             if (inhalte is null)
             {
                 return;
             }
             var gewicht = await Zustand.Gewicht;
-            var karten = await Task.Run(() => new Karteikarten(inhalte, Zustand.BuchLesen, Zustand.Schreiber,
-                () => Zustand.NeuReihenfolge(gewicht, Quellen.Karte)));
+            Teilzeiten.Add(("Gewichte da", _uhr.Elapsed.TotalMilliseconds));
+            // Sammelliste 451: Dauer des Lesens aus der Datenbank und der Reihenfolge beim ersten Aufbau getrennt (nur Bericht)
+            double datenbank = 0, reihenfolge = 0;
+            var erster = true;
+            StatusBuch Lesen()
+            {
+                var beginn = System.Diagnostics.Stopwatch.GetTimestamp();
+                var buch = Zustand.BuchLesen();
+                if (erster)
+                {
+                    datenbank += System.Diagnostics.Stopwatch.GetElapsedTime(beginn).TotalMilliseconds;
+                }
+                return buch;
+            }
+            Func<List<string>, List<string>>? Reihenfolge()
+            {
+                var neu = Zustand.NeuReihenfolge(gewicht, Quellen.Karte);
+                return neu is null || !erster ? neu : schluessel =>
+                {
+                    var beginn = System.Diagnostics.Stopwatch.GetTimestamp();
+                    var ergebnis = neu(schluessel);
+                    reihenfolge += System.Diagnostics.Stopwatch.GetElapsedTime(beginn).TotalMilliseconds;
+                    return ergebnis;
+                };
+            }
+            double begonnen = 0;
+            var karten = await Task.Run(() =>
+            {
+                begonnen = _uhr.Elapsed.TotalMilliseconds;
+                return new Karteikarten(inhalte, Lesen, Zustand.Schreiber, Reihenfolge);
+            });
+            erster = false;
+            Teilzeiten.Add(("Hintergrund begonnen", begonnen));
+            Teilzeiten.Add(("Lernstand gelesen", _uhr.Elapsed.TotalMilliseconds));
+            Teilzeiten.Add(("davon Datenbank (Dauer)", datenbank));
+            Teilzeiten.Add(("davon Reihenfolge (Dauer)", reihenfolge));
+            Teilzeiten.Add(("Speicherbereinigung bis hier (Dauer)", (GC.GetTotalPauseDuration() - _gcBeginn).TotalMilliseconds));
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                Teilzeiten.Add(("Oberflaeche frei", _uhr.Elapsed.TotalMilliseconds));
                 _k = karten;
                 Aufbauen(inhalte);
+                Teilzeiten.Add(("Seite aufgebaut", _uhr.Elapsed.TotalMilliseconds));
                 karten.NachSpeichern += () => Nachher();
                 karten.NachSpeichern += AbgleichDienst.NachDemLernen;     // L10: bald abgleichen (schedule)
                 foreach (var schritt in _wartend)

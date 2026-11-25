@@ -43,9 +43,12 @@ public static partial class AutoMessung
         {
             var uhr = Stopwatch.StartNew();
             schritt();
+            var bauen = uhr.Elapsed.TotalMilliseconds;
             await ansicht.BildFertigAsync();
+            ErsteTeile ??= (bauen, uhr.Elapsed.TotalMilliseconds);
             return uhr.Elapsed.TotalMilliseconds;
         }
+        ErsteTeile = null;
         var erste = await Einmal();
         if (zurueck is null && !wiederholbar)
         {
@@ -54,6 +57,57 @@ public static partial class AutoMessung
         return await Messwiederholung.MessenAsync(erste, grenze, Einmal,
             zurueck is null ? null : async () => { zurueck(); await ansicht.BildFertigAsync(); }, Task.Delay);
     }
+
+    /// <summary>Weisung P12-369 Punkt 4: Teilschritte der ersten Messung von <see cref="BildMessenAsync"/>
+    /// (Schritt selbst = Bauen, danach bis zum fertigen Bild).</summary>
+    private static (double Bauen, double Bild)? ErsteTeile;
+
+    /// <summary>
+    /// Weisung P12-369 Punkt 4 (Nico 4a): Teilschritte eines Wackel-Messpunkts nur notieren (Zeitpunkte ab Beginn
+    /// der Messung). Aendert kein Urteil, misst nichts doppelt, waermt nichts vor; die Zeile beginnt mit
+    /// "Teilschritte [" und wird von keiner Auswertung als Messpunkt gelesen.
+    /// </summary>
+    internal static void Teilschritte(string titel, IEnumerable<(string Name, double? Ms)> teile)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        Messwerte.Notiere("  Teilschritte [" + titel + "] "
+            + string.Join(", ", teile.Select(t => t.Name + " " + (t.Ms is { } ms ? ms.ToString("F0", inv) : "?") + " ms")));
+    }
+
+    /// <summary>
+    /// Sammelliste 452: naechstes Bild des Spiels abwarten (ohne GL nichts) und den Zeitpunkt sowie die Dauer des Zeichnens
+    /// in diesem Bild zurueckgeben (nur fuer die Teilschritte).
+    /// </summary>
+    private static async Task<(double? Spielbild, double? Zeichnen)> SpielbildAsync(Lernplattform.Spiel.SpielSeite seite, bool gl, Stopwatch uhr)
+    {
+        if (!gl)
+        {
+            return (null, null);
+        }
+        await seite.Flaeche.NaechstesBildAsync();
+        return (uhr.Elapsed.TotalMilliseconds, seite.Flaeche.LetzteZeichenzeitMs);
+    }
+
+    /// <summary>
+    /// Sammelliste 452: Teilschritte eines Gangs der Figur (Weg, Ankunft, Spielbild, Zeichnen als Dauer, fertiges Bild), dazu
+    /// die Dauer der Tafel-Teile waehrend der Ankunft (Summe je Teil) und der Rest der Ankunft ohne Tafel.
+    /// </summary>
+    private static void GangTeile(string titel, double weg, double an, double? spielbild, double? zeichnen, double fertig, double speicher,
+        Dictionary<string, double>? tafel = null)
+    {
+        List<(string, double?)> teile = [("Weg gerechnet", weg), ("angekommen", an), ("Spielbild da", spielbild), ("Zeichnen (Dauer)", zeichnen),
+            ("Bild fertig", fertig), ("Speicherbereinigung (Dauer)", speicher)];
+        if (tafel is not null)
+        {
+            teile.Add(("Ankunft ohne Tafel (Dauer)", an - weg - tafel.Values.Sum()));
+            teile.AddRange(tafel.Select(t => ("Tafel " + t.Key + " (Dauer)", (double?)t.Value)));
+        }
+        Teilschritte(titel, teile);
+    }
+
+    /// <summary>Teilschritte der ersten Messung des letzten <see cref="BildMessenAsync"/> (Bauen, erstes Bild).</summary>
+    private static void TeileNotieren(string titel) =>
+        Teilschritte(titel, [("Bauen", ErsteTeile?.Bauen), ("erstes Bild", ErsteTeile?.Bild)]);
 
     /// <summary>Weisung P4-12 B6: eine reine Rechnung (ohne Bild) messen, ueber der Grenze bis zu 3 Mal.</summary>
     private static async Task<Messreihe> RechnungMessenAsync(Func<double> rechnung, double grenze = Abbruch) =>
@@ -369,6 +423,9 @@ public static partial class AutoMessung
             {
                 funde += Ergebnis(titel, Messwiederholung.Einmal(ms, Abbruch));
             }
+            // Weisung P12-369 Punkt 4: Teilschritte (Laden im Hintergrund, erstes Bauen), nur Bericht
+            Teilschritte("Karteikarten bis erste Karte", kartenSeite.Teilzeiten.Select(t => (t.Name, (double?)t.Ms)));
+            Teilschritte("Pruefungstrainer bis Vorbereitung", trainerSeite.Teilzeiten.Select(t => (t.Name, (double?)t.Ms)));
         }
 
         Zeitplan("W3MesspunkteAsync");
@@ -1748,6 +1805,10 @@ public static partial class AutoMessung
                 var zurueckReiter = davor;
                 await Messpunkt($"Abschlussprojekt Reiter \"{name}\" ({runde}, bis zum Bild)", () => seite.Probe(reiter),
                     runde == "erstes Bauen" ? null : () => seite.Probe(zurueckReiter));
+                if (runde == "erstes Bauen")
+                {
+                    TeileNotieren($"Abschlussprojekt Reiter \"{name}\" (erstes Bauen)");   // Weisung P12-369 Punkt 4
+                }
                 davor = reiter;
             }
         }

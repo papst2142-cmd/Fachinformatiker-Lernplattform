@@ -350,6 +350,48 @@ public class SucheTests
         Assert.Equal(Inhalte.Karteikarten.Count + Inhalte.Quizfragen.Count + Inhalte.Ap2Szenarien.Count + Inhalte.Ap1Szenarien.Count, text.Anzahl);
     }
 
+    /// <summary>
+    /// Sammelliste 451 (Weisung P12-370): der Vorrat fertiger Eintraege aendert nichts an der Suche. Je Fachrichtung sind alle
+    /// Eintraege (Treffer und kleingeschriebene Texte, in derselben Reihenfolge) gleich dem Aufbau ohne Vorrat; nach einem
+    /// Wechsel werden die gemeinsamen Eintraege uebernommen (dieselben Objekte), neu gebaut werden nur die der neuen
+    /// Fachrichtung. Gegenprobe: ohne Vorrat ist kein Eintrag uebernommen.
+    /// </summary>
+    [Fact]
+    public void Vorrat_GleichOhne_GemeinsameUebernommen()
+    {
+        var lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
+        byte[]? Lesen(string name) => Path.Combine(lernen, name + ".json") is var pfad && File.Exists(pfad) ? File.ReadAllBytes(pfad) : null;
+        var alle = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), Lesen, null);
+        Suchtext? vorige = null;
+        Suchtext? vorigeOhne = null;
+        foreach (var fr in new[] { "si", "ae", "dpa", "dv" })
+        {
+            var sicht = alle.Fuer(fr);
+            var mit = new Suchtext(sicht);
+            var ohne = new Suchtext(sicht, PythonKlein.Klein);
+            Assert.Equal(ohne.Anzahl, mit.Anzahl);
+            for (var i = 0; i < mit.Anzahl; i++)
+            {
+                Assert.Equal(ohne.Eintraege[i].Treffer, mit.Eintraege[i].Treffer);
+                Assert.Equal(ohne.Eintraege[i].Texte, mit.Eintraege[i].Texte);
+            }
+            if (vorige is not null && vorigeOhne is not null)
+            {
+                var alt = vorige.Eintraege.Select(e => e.Texte).ToHashSet(ReferenceEqualityComparer.Instance);
+                var uebernommen = mit.Eintraege.Count(e => alt.Contains(e.Texte));
+                var gemeinsam = sicht.Karteikarten.Concat(sicht.Quizfragen).Concat(sicht.Ap2Szenarien).Concat(sicht.Ap1Szenarien)
+                    .Count(e => e.Fachrichtung == "si");
+                Assert.True(gemeinsam > 1000, fr + ": " + gemeinsam);
+                Assert.True(uebernommen >= gemeinsam, $"{fr}: {uebernommen} von {gemeinsam} uebernommen");
+                Assert.True(uebernommen < mit.Anzahl, fr);
+                var altOhne = vorigeOhne.Eintraege.Select(e => e.Texte).ToHashSet(ReferenceEqualityComparer.Instance);
+                Assert.Equal(0, ohne.Eintraege.Count(e => altOhne.Contains(e.Texte)));
+            }
+            vorige = mit;
+            vorigeOhne = ohne;
+        }
+    }
+
     /// <summary>Messpunkt Plan 11: Suche "Subnetz" bis zu den Treffern (Grenze 400 ms, hier nur Rechenzeit).</summary>
     [Fact]
     public void SucheSubnetzUnterGrenze()

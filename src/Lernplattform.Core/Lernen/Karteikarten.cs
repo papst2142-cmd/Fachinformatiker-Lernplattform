@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
@@ -92,7 +93,7 @@ public sealed class Karteikarten
         {
             _nachFrage.TryAdd(karte.Frage ?? "", karte);
         }
-        Buch = buchLesen();
+        // Sammelliste 451 (Weisung P12-370): FilterAnwenden liest den Lernstand ohnehin; vorher las ihn der Aufbau doppelt
         FilterAnwenden();
     }
 
@@ -170,6 +171,7 @@ public sealed class Karteikarten
     }
 
     /// <summary>apply_filter: Fachbereich, Thema und Status anwenden; ohne Status-Filter unbearbeitete zuerst.</summary>
+    [MemberNotNull(nameof(Buch))]
     public void FilterAnwenden()
     {
         Flush();

@@ -17,6 +17,10 @@
     <ProjectReference Include="..\Lernplattform.Grundlagen\Lernplattform.Grundlagen.csproj" />
     <ProjectReference Include="..\Lernplattform.Engine\Lernplattform.Engine.csproj" />
   </ItemGroup>
+  <!-- Weisung P12-369: fertige Rahmenplan-Zuordnung (RahmenplanVorab.cs), neu schreiben nur ueber RahmenplanVorabTests -->
+  <ItemGroup>
+    <EmbeddedResource Include="Lernen/rahmenplan_vorab.json" LogicalName="Lernplattform.Core.Lernen.rahmenplan_vorab.json" Condition="Exists('Lernen/rahmenplan_vorab.json')" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lernplattform.Tests" />
     <InternalsVisibleTo Include="Stadtbau.Tests" />

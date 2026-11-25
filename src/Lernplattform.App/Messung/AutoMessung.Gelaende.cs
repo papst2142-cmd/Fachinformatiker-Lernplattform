@@ -90,13 +90,24 @@ public static partial class AutoMessung
                 StadtFlaeche.FigurHoehe(spiel).ToString("0.###", inv));
 
             // 1. Figur auf den Huegel (wiederholbar: hinauf, dann wieder an den Fuss)
+            var nr = 0;
             async Task<double?> Hinauf()
             {
+                var gc = GC.GetTotalPauseDuration();
                 var u = Stopwatch.StartNew();
                 spiel.GeheZu(hx, hz);
+                var weg = u.Elapsed.TotalMilliseconds;
+                seite.BeschriftenTeile = [];
                 spiel.SofortAnkommen();
-                await Bild();
-                return u.Elapsed.TotalMilliseconds;
+                var an = u.Elapsed.TotalMilliseconds;
+                var tafel = seite.BeschriftenTeile;
+                seite.BeschriftenTeile = null;
+                var (spielbild, zeichnen) = await SpielbildAsync(seite, gl, u);
+                await ansicht.BildFertigAsync();
+                var ms = u.Elapsed.TotalMilliseconds;
+                // Sammelliste 452: Teilschritte jeder Messung, nur Bericht (aendert kein Urteil)
+                GangTeile("Spiel: Figur auf Huegel, Messung " + ++nr, weg, an, spielbild, zeichnen, ms, (GC.GetTotalPauseDuration() - gc).TotalMilliseconds, tafel);
+                return ms;
             }
             async Task Hinab()
             {

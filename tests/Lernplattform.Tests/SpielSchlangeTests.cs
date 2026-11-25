@@ -279,17 +279,29 @@ public class SpielSchlangeTests
         var schlange = new Spielschlange();
         var sperre = new EigeneSperre();
         using var tor = new ManualResetEventSlim(true);
-        schlange.VorZeile = Warten(tor);
+        // Sammelliste 453: das Tor muss vom Test geoeffnet werden, nie erst nach den 2 Minuten des Schreibers
+        var abgelaufen = 0;
+        schlange.VorZeile = _ =>
+        {
+            if (!tor.Wait(TimeSpan.FromMinutes(2)))
+            {
+                Interlocked.Increment(ref abgelaufen);
+            }
+            return true;
+        };
         var schreiber = Schreiber(lernstand);
         var alt = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "PC", "lalt000000000001", sperre.Versuchen, schlange));
         alt.Profil("Alt", new PyObjekt());
         schlange.Leeren();
+        // Neu vor dem Schritt von Alt anlegen: der Neuaufbau liest die Ereignisse und leert dabei die Schlange;
+        // erst Profil soll auf die fremden offenen Zeilen treffen (sonst wartete schon der Neuaufbau auf das Tor)
+        var neu = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "PC", "lneu000000000002", sperre.Versuchen, schlange));
         tor.Reset();
         try
         {
             Gehen(alt, 1);
             Assert.True(sperre.Belegt);
-            var neu = new Spielablauf(Inhalt, new SpielDatenbank(schreiber, "PC", "lneu000000000002", sperre.Versuchen, schlange));
+            Assert.True(schlange.Anzahl > 0);
             var oeffnen = Task.Run(async () =>
             {
                 await Task.Delay(150);
@@ -299,6 +311,7 @@ public class SpielSchlangeTests
             await oeffnen;
             schlange.Leeren();
             Assert.False(sperre.Belegt);
+            Assert.Equal(0, abgelaufen);
             Assert.Equal(alt.Stand.Verlauf.Count + neu.Stand.Verlauf.Count, Ereigniszeilen(lernstand).Count);
         }
         finally

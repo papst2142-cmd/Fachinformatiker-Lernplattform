@@ -5,12 +5,12 @@ Vor dem Squash-Merge eines PRs beweist dieses Werkzeug, dass main danach KEINEN 
      Git-Baum (tree-sha) wie der Kopf selbst. Das gilt genau dann, wenn origin/main schon in den Zweig gemergt ist und
      danach auf main nichts Neues kam. Sonst: „voller Lauf nach Merge von origin/main noetig“.
   2. Lauf gruen: auf dem Kopf liegt ein gruener voller Dispatch-Lauf mit genau den Jobs der Liste `soll` aus
-     release.yml (18, Hinweis-Job zaehlt nicht). Stufe werkzeug (6) und ohne-mac (10) reichen fuer release.yml nicht.
+     release.yml (19, Hinweis-Job zaehlt nicht; bis Weisung P12-369 18). Stufe werkzeug (7) und ohne-mac (12) reichen fuer release.yml nicht.
 Ist beides gruen, nimmt release.yml diesen Lauf ueber `werkzeuge/release/lauf_waehlen.py` (gleicher Tree, Sammelliste 365).
 Sammelliste 440 (Weisung P12-355, Frage 1 a): ein reiner Werkzeug-Stand (der Squash aendert gegen main nur Dateien, die
 `werkzeuge/stadtbau/nur_werkzeug.py` dem Werkzeug zuordnet) braucht keinen vollen Lauf: dort reicht auch ein gruener
-Lauf der Stufe werkzeug mit genau den Jobs der Liste `soll_werkzeug` aus stadtbau_release.yml (6), denn
-stadtbau_release.yml nimmt ihn (lauf_waehlen.py). Jeder andere Stand braucht weiter 18/18; ohne-mac (10) reicht nie.
+Lauf der Stufe werkzeug mit genau den Jobs der Liste `soll_werkzeug` aus stadtbau_release.yml (7), denn
+stadtbau_release.yml nimmt ihn (lauf_waehlen.py). Jeder andere Stand braucht weiter 19/19; ohne-mac (12) reicht nie.
 Lehre S 0.60.0 (P12-340): ein Commit nach dem Tor-Lauf (auch nur Doku) aendert den Baum, dann ist Punkt 1 rot.
 
   tor_gleich.py pruefen <kopf> [<main-ref>]   prueft 1 und 2 (GitHub ueber die oeffentliche API, GITHUB_TOKEN wenn gesetzt)
@@ -54,7 +54,7 @@ def soll_liste(release=".github/workflows/release.yml"):
 
 
 def soll_werkzeug_liste(release=".github/workflows/stadtbau_release.yml"):
-    """Liste soll_werkzeug (Stufe werkzeug, 6 Jobs) aus stadtbau_release.yml, sortiert; None, wenn sie fehlt."""
+    """Liste soll_werkzeug (Stufe werkzeug, 7 Jobs) aus stadtbau_release.yml, sortiert; None, wenn sie fehlt."""
     with open(release, encoding="utf-8") as f:
         block = re.search(r"(?<![A-Za-z_])soll_werkzeug='(.*?)'", f.read(), re.S)
     return sorted(z.strip() for z in block.group(1).splitlines() if z.strip()) if block else None
@@ -108,8 +108,8 @@ def reiner_werkzeug_stand(kopf, main, cwd=None):
     if not dateien:
         return False, "Werkzeug-Stand: nein (keine geaenderte Datei gegen %s)" % main
     if rot:
-        return False, "Werkzeug-Stand: nein (%d von %d Dateien gehoeren nicht nur zum Werkzeug, z. B. %s): nur voller Lauf 18/18" % (len(rot), len(dateien), rot[0])
-    return True, "Werkzeug-Stand: ja (%d Dateien gegen %s, alle nur Werkzeug laut nur_werkzeug.py): voll 18/18 oder werkzeug 6/6" % (len(dateien), main)
+        return False, "Werkzeug-Stand: nein (%d von %d Dateien gehoeren nicht nur zum Werkzeug, z. B. %s): nur voller Lauf 19/19" % (len(rot), len(dateien), rot[0])
+    return True, "Werkzeug-Stand: ja (%d Dateien gegen %s, alle nur Werkzeug laut nur_werkzeug.py): voll 19/19 oder werkzeug 7/7" % (len(dateien), main)
 
 
 def api(pfad):
@@ -278,12 +278,13 @@ def selbsttest():
     faelle += faelle_w
     if os.path.exists(".github/workflows/release.yml"):
         liste = soll_liste()
-        if not liste or len(liste) != 18:
-            melde("Liste soll in release.yml nicht 18 Jobs (%s)" % (len(liste) if liste else "keine"))
+        # Weisung P12-369: ubuntu in zwei Jobs, voll 19 (vorher 18), werkzeug 7 (vorher 6)
+        if not liste or len(liste) != 19:
+            melde("Liste soll in release.yml nicht 19 Jobs (%s)" % (len(liste) if liste else "keine"))
     if os.path.exists(".github/workflows/stadtbau_release.yml"):
         wliste = soll_werkzeug_liste()
-        if not wliste or len(wliste) != 6 or not set(wliste) < set(soll_liste() or []):
-            melde("Liste soll_werkzeug in stadtbau_release.yml nicht 6 Jobs aus der vollen Liste (%s)" % (len(wliste) if wliste else "keine"))
+        if not wliste or len(wliste) != 7 or not set(wliste) < set(soll_liste() or []):
+            melde("Liste soll_werkzeug in stadtbau_release.yml nicht 7 Jobs aus der vollen Liste (%s)" % (len(wliste) if wliste else "keine"))
     print("Selbsttest tor_gleich (ein Lauf statt zwei): %d Lauf-Faelle, 5 Baum-Faelle, 4 Werkzeug-Faelle, %s" % (len(faelle), "rot" if rot else "gruen"))
     return rot
 

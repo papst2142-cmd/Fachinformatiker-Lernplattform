@@ -2,8 +2,8 @@
 # Nur Leserechte; kein Release, kein Tag, keine Zugangsdaten.
 #
 # Zwei Stufen (Weisung P4-12, Nico 22.10.2026):
-# - schnell: sollwerte und tests (ubuntu-latest) mit Start-Test und Python-Pruefungen.
-#   Laeuft bei jedem Push auf einen Pull Request und auf main.
+# - schnell: sollwerte und tests (ubuntu-latest, Einzeltests | Lernteil und Spiel) mit Start-Test und Python-Pruefungen
+#   (Weisung P12-369, Nico 1a: ubuntu in zwei Jobs wie Windows). Laeuft bei jedem Push auf einen Pull Request und auf main.
 # - voll: dazu tests (windows-latest x4, macos-15 x2, macos-15-intel x3), pakete x4 und android (16 Jobs;
 #   bis A 0.38.0 10 Teile, Welle CI schneller Weisung P11-38: lange Jobs in parallele Teile).
 #   Phase 11 FW10 (Weisung P11-18): macos-15-intel und pakete (osx-x64) fuer Intel-Macs. Laeuft nur
@@ -17,6 +17,7 @@
 #   aendern: sollwerte, tests (ubuntu-latest) mit Start-Test-Teil stadtbau, tests (windows-latest, Einzeltests),
 #   pakete (stadtbau win-x64) und android nur mit Werkzeug-APK und Werkzeug-Release-Pruefung; keine Mac-Jobs, keine
 #   Pakete der Lernplattform. Ueber workflow_dispatch (stufe: werkzeug) oder das Label "werkzeug" (ohne "voll").
+#   Seit Weisung P12-369 sind es 7 Jobs (ubuntu in zwei Jobs), dazu der Hinweis-Job.
 #   Erster Schritt jedes Jobs ist der Waechter werkzeuge/stadtbau/nur_werkzeug.py: jede Datei ausser den Werkzeug-
 #   Dateien (src/Stadtbau.*, tests/Stadtbau.Tests, werkzeuge/stadtbau, AENDERUNGEN_STADTBAU.md, Zeile StadtbauVersion,
 #   .md) macht ihn sofort rot ("voller Lauf noetig: <Datei>"). Merge-Tor eines reinen Werkzeug-PRs = werkzeug 5/5,
@@ -27,6 +28,9 @@
 #   Directory.*, global.json, Mac-/Update-/Release-Tests). Ueber workflow_dispatch (stufe: ohne-mac) oder das Label
 #   "ohne-mac" (ohne "voll"). Erster Schritt jedes Jobs ist der Waechter ohne_mac.py ("Mac-Teile noetig: <Datei>").
 #   Merge-Tor eines solchen PRs = ohne-mac 10/10; release.yml verlangt vor jedem Release immer den vollen Lauf 17/17.
+# Stand Weisung P12-369 (Nico 1a-5a): voll 19 Jobs (ubuntu zwei Jobs, die zwei kurzen Mac-Tests im Job tests-mac-kurz,
+#   pakete wartet auf ihn), ohne-mac 12, werkzeug 7, schnell 3; dazu immer der Hinweis-Job. Echt rot: nur die roten
+#   Jobs neu starten (zaehlt als Versuch, hoechstens 3). Die Zahlen oben sind der Stand ihrer Welle.
 # Am Ende jedes Laufs sagt der Hinweis-Job "urteil (GitHub oder echt)" (immer gruen, zaehlt nicht mit), ob ein Rot nur
 #   von GitHub kommt; dann nur die roten Jobs neu starten (werkzeuge/starttest/urteil_github.py).
 # NuGet-Zwischenspeicher (actions/cache fuer ~/.nuget/packages) gemessen in Meldung P12-87: kein Gewinn (Laden so langsam
@@ -44,7 +48,7 @@ on:
   workflow_dispatch:
     inputs:
       stufe:
-        description: "Stufe: voll (alle 17 Jobs), ohne-mac (10 Jobs, Waechter ohne_mac.py), schnell oder werkzeug (nur Werkzeug, 5 Jobs)"
+        description: "Stufe: voll (alle 19 Jobs), ohne-mac (12 Jobs, Waechter ohne_mac.py), schnell oder werkzeug (nur Werkzeug, 7 Jobs)"
         type: choice
         options: [voll, ohne-mac, schnell, werkzeug]
         default: voll
@@ -68,16 +72,19 @@ env:
   CI_STUFE: ${{ ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && 'voll' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && 'ohne-mac' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))) && 'werkzeug' || 'schnell')) }}
 
 jobs:
-  # Sammelliste 323 (Weisung P12-219, A 0.70.0): pakete steht als erster Job in der Datei, damit GitHub die beiden
-  # Mac-Pakete vor den fuenf Mac-Testjobs einreiht (hoechstens 5 Mac-Jobs laufen gleichzeitig; in Lauf 887 bekam
-  # osx-arm64 keinen Rechner und wurde nach 28 Minuten abgebrochen). Ein Versprechen von GitHub ist die Reihenfolge nicht.
+  # Sammelliste 323: hoechstens 5 Mac-Jobs laufen bei GitHub gleichzeitig (in Lauf 887 bekam osx-arm64 keinen Rechner).
+  # Seit Weisung P12-369 (Nico 2a) wartet pakete auf den Job tests-mac-kurz: die fuenf Mac-Testjobs bekommen beim Start
+  # die fuenf Plaetze, die zwei Mac-Pakete folgen nach den kurzen Mac-Tests (vorher warteten zwei Jobs per Zufall 5-21 min).
   pakete:
     # Spike D: Pakete mit Velopack (Windows-Setup, Linux-AppImage, macOS) und
     # Update-Probe A 1.7.0 -> A 1.7.1 -> B 0.1.0, Rueckschritt muss abgelehnt werden.
     name: pakete (${{ matrix.rid }})
     # Stufe voll (4 Pakete) und ohne-mac (Welle CI schneller 2: nur win-x64 und linux-x64, Listen voll, ohne-mac)
     # Phase 11 FW10 (Weisung P11-18): Intel-Mac osx-x64 mit eigenem Velopack-Kanal
-    if: (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))))
+    # Weisung P12-369 (Nico 2a): erst nach den kurzen Mac-Testjobs (needs), auch wenn sie rot sind (!cancelled());
+    #   in den Stufen ohne-mac/werkzeug ist tests-mac-kurz uebersprungen und pakete startet sofort
+    needs: tests-mac-kurz
+    if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac') && (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) || ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))))"
     strategy:
       fail-fast: false
       matrix:
@@ -175,18 +182,19 @@ jobs:
     # Welle CI schneller (Weisung P11-38, Sammelliste 209): die langen Teile laufen als eigene Jobs nebeneinander
     # (gleiche Pruefungen, gleiche Grenzen, Wachhund und Neustart-Regel je Teil wie vorher). Jeder Eintrag sagt, welche
     # Teile er prueft: einzel = Unit-Tests und Python-Pruefungen, lernen/spiel = Start-Test, metal = Messung macOS nur
-    # Metal, layout100/layout150 = Layout Windows. ubuntu-latest bleibt ein Job mit allen Teilen (Stufe schnell
-    # unveraendert). Hoechstens 5 Mac-Jobs laufen bei GitHub gleichzeitig: darum 2 Jobs fuer macos-15, 3 fuer den
+    # Metal, layout100/layout150 = Layout Windows, werkzeugtests = Unit-Tests des Werkzeugs. Seit Weisung P12-369 (Nico 1a)
+    # ist auch ubuntu-latest in zwei Jobs geteilt (Einzeltests | Lernteil und Spiel), in jeder Stufe. Hoechstens 5 Mac-Jobs laufen bei GitHub gleichzeitig: darum 2 Jobs fuer macos-15, 3 fuer den
     # Intel-Mac, dazu die 2 Mac-Pakete. Merge-Tor = alle 17 Jobs des vollen Laufs gruen (release.yml; seit Phase 13
     # Welle 2 mit pakete (stadtbau win-x64)).
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true},{"os":"macos-15","teil":"Einzeltests und Lernteil","kurz":"einzel-lernen","einzel":true,"lernen":true},{"os":"macos-15","teil":"Spiel und Metal","kurz":"spiel-metal","spiel":true,"metal":true},{"os":"macos-15-intel","teil":"Einzeltests und Spiel","kurz":"einzel-spiel","einzel":true,"spiel":true},{"os":"macos-15-intel","teil":"Lernteil","kurz":"lernen","lernen":true},{"os":"macos-15-intel","teil":"Metal","kurz":"metal","metal":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))) && '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true}]' || '[{"os":"ubuntu-latest","teil":"","kurz":"alle","einzel":true,"lernen":true,"spiel":true}]'))) }}
+        include: ${{ fromJSON(((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"Einzeltests","kurz":"einzel","einzel":true,"werkzeugtests":true},{"os":"ubuntu-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true,"werkzeugtests":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true},{"os":"macos-15","teil":"Einzeltests und Lernteil","kurz":"einzel-lernen","einzel":true,"lernen":true},{"os":"macos-15-intel","teil":"Einzeltests und Spiel","kurz":"einzel-spiel","einzel":true,"spiel":true},{"os":"macos-15-intel","teil":"Lernteil","kurz":"lernen","lernen":true,"werkzeugtests":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'ohne-mac') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ohne-mac') && !contains(github.event.pull_request.labels.*.name, 'voll'))) && '[{"os":"ubuntu-latest","teil":"Einzeltests","kurz":"einzel","einzel":true,"werkzeugtests":true},{"os":"ubuntu-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true,"werkzeugtests":true},{"os":"windows-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Layout 100","kurz":"layout100","layout100":true},{"os":"windows-latest","teil":"Layout 150","kurz":"layout150","layout150":true}]' || (((github.event_name == 'workflow_dispatch' && inputs.stufe == 'werkzeug') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'werkzeug') && !contains(github.event.pull_request.labels.*.name, 'voll') && !contains(github.event.pull_request.labels.*.name, 'ohne-mac'))) && '[{"os":"ubuntu-latest","teil":"Einzeltests","kurz":"einzel","einzel":true,"werkzeugtests":true},{"os":"ubuntu-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true},{"os":"windows-latest","teil":"Einzeltests","kurz":"einzel","einzel":true,"werkzeugtests":true}]' || '[{"os":"ubuntu-latest","teil":"Einzeltests","kurz":"einzel","einzel":true,"werkzeugtests":true},{"os":"ubuntu-latest","teil":"Lernteil und Spiel","kurz":"lernen-spiel","lernen":true,"spiel":true}]'))) }}
     runs-on: ${{ matrix.os }}
     # Phase 11 FW10: Name der Messdateien und des Artefakts messung-<OS>-<Teil>-<Versuch>. runner.os ist auf
     # beiden Macs "macOS"; der Intel-Mac heisst darum "macOS-intel" (sonst gleicher Artefaktname).
-    env:
+    # Welle P12-369: Anker test_env/test_schritte, der Job tests-mac-kurz nutzt dieselben (YAML-Alias)
+    env: &test_env
       MESS_OS: ${{ matrix.os == 'macos-15-intel' && 'macOS-intel' || (startsWith(matrix.os, 'macos') && 'macOS' || (startsWith(matrix.os, 'windows') && 'Windows' || 'Linux')) }}
       # Weisung P11-19 (Nico 03.11.2026, Antwort 1a): feste Ausnahme NUR fuer den Intel-Mac. Messzeiten ueber
       # der Grenze stehen dort als INFO-Zeile (Wert, Grenze, Einzelmessungen) und machen den Lauf nicht rot;
@@ -195,7 +203,7 @@ jobs:
       LERNPLATTFORM_ZEITEN_NUR_INFO: ${{ matrix.os == 'macos-15-intel' && 'macos-15-intel' || '' }}
       # Welle A 0.97.0 (Weisung P12-312 Punkt 4, W3): der Start-Test misst das wie ein Paket gebaute Programm (ReadyToRun)
       LERNPLATTFORM_STARTTEST_PROGRAMM: ${{ (matrix.lernen || matrix.spiel || matrix.metal || matrix.layout100 || matrix.layout150) && format('starttest-programm/Lernplattform{0}', startsWith(matrix.os, 'windows') && '.exe' || '') || '' }}
-    steps:
+    steps: &test_schritte
       - uses: actions/checkout@v7
       # Weisung P12-20: Waechter der Stufe werkzeug, erster Schritt; eine Datei ausserhalb des Werkzeugs macht ihn rot
       #   (Baum des Kopfs gegen origin/main; ein Lauf auf main selbst prueft den letzten Squash-Merge gegen den Commit davor)
@@ -226,13 +234,16 @@ jobs:
         if: matrix.einzel
         # Weisung P12-324 T1: eigene Schrittgrenze (Intel-Mac 60, sonst 30 Minuten), Wert aus werkzeuge/ci/zeitlimits.json
         timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 60 || 34 }}
-        run: dotnet test --project tests/Lernplattform.Tests -c Release
+        # Weisung P12-369 (Nico 5a): Dauer je Test als CTRF-Bericht fuer den Schritt "Langsamste Tests (testdauer.py)"
+        run: dotnet test --project tests/Lernplattform.Tests -c Release --results-directory "${{ github.workspace }}/testdauer" --report-xunit-ctrf --report-xunit-ctrf-filename lernplattform.json
       # Phase 13 Welle 2 (Weisung P12-17): Unit-Tests des Stadtbau-Werkzeugs (Projekt, Pruefungen, Grenzen, Export)
+      # Weisung P12-369 (Nico 2a): am Mac im jeweils kuerzeren Job (macos-15 Spiel und Metal, Intel Lernteil), sonst im
+      #   Einzeltest-Job (Eintrag werkzeugtests der Matrix)
       - name: Tests Stadtbau-Werkzeug
-        if: matrix.einzel
+        if: matrix.werkzeugtests
         # Weisung P12-324 T1: eigene Schrittgrenze (Intel-Mac 60, sonst 30 Minuten), Wert aus werkzeuge/ci/zeitlimits.json
         timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 60 || 30 }}
-        run: dotnet test --project tests/Stadtbau.Tests -c Release
+        run: dotnet test --project tests/Stadtbau.Tests -c Release --results-directory "${{ github.workspace }}/testdauer" --report-xunit-ctrf --report-xunit-ctrf-filename stadtbau.json
       # Welle 4 (Weisung P2-11, R16/A3/A4/F5): Python 0.63.2 liest die Sicherungen fuer die
       # alte App, die der Test BelegDateienFuerPython eben geschrieben hat, und fuehrt sie zusammen
       - uses: actions/checkout@v7
@@ -245,6 +256,12 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      # Weisung P12-369 (Nico 5a): die 20 langsamsten Tests je Job ins Protokoll (nur Anzeige, aendert kein Urteil);
+      #   die lokale Regel vor jedem vollen Lauf prueft dieselbe Datei mit "testdauer.py pruefen" (docs/REGELN.md)
+      - name: Langsamste Tests (testdauer.py)
+        if: always() && (matrix.einzel || matrix.werkzeugtests)
+        shell: bash
+        run: python -I werkzeuge/ci/testdauer.py zeigen testdauer
       # Phase 6 W1 (T1): Tag-Regel in Python gleich der C#-Regel (dieselben Faelle wie ReleaseTests)
       # Weisung P11-19: Neustart-Regel und Ausnahme Intel-Mac mit festen Faellen (Gegenprobe: ohne Ausnahme rot)
       - name: Urteil des Start-Tests (urteil.py selbsttest)
@@ -587,6 +604,21 @@ jobs:
         run: |
           echo "Rueckgabe des 1. Laufs der Testkarte unbekannt, kein Urteil moeglich (Ausgabe rc: '${{ steps.nachladen1.outputs.rc }}')"
           exit 1
+
+  tests-mac-kurz:
+    # Welle CI schneller und fester (Weisung P12-369, Nico 2a): die zwei kurzen Mac-Testjobs (macos-15 Spiel und Metal,
+    # Intel Metal) als eigener Job mit denselben Schritten (Anker test_env/test_schritte aus dem Job tests), nur im
+    # vollen Lauf. pakete wartet mit needs auf diesen Job (auch bei Rot): beim Start haben so die fuenf Mac-Testjobs
+    # die fuenf Mac-Plaetze von GitHub, die Mac-Pakete folgen danach (Sammelliste 323). Gleiche Jobnamen wie vorher.
+    name: tests (${{ matrix.os }}${{ matrix.teil != '' && format(', {0}', matrix.teil) || '' }})
+    if: (github.event.action != 'labeled' || github.event.label.name == 'voll') && ((github.event_name == 'workflow_dispatch' && inputs.stufe == 'voll') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'voll')))
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON('[{"os":"macos-15","teil":"Spiel und Metal","kurz":"spiel-metal","spiel":true,"metal":true,"werkzeugtests":true},{"os":"macos-15-intel","teil":"Metal","kurz":"metal","metal":true}]') }}
+    runs-on: ${{ matrix.os }}
+    env: *test_env
+    steps: *test_schritte
 
   pakete-stadtbau:
     # Phase 13 Welle 2 (Weisung P12-17): Windows-Paket des Stadtbau-Werkzeugs (eigene Linie S, Velopack-Kanal
@@ -1030,7 +1062,7 @@ jobs:
     # stadtbau_release.yml zaehlen ihn nicht mit (Merge-Tor bleibt 17/17 bzw. die Liste der Stufe), urteil.py selbsttest
     # prueft das. Regeln und feste Faelle mit Gegenproben: werkzeuge/starttest/urteil_github.py.
     name: urteil (GitHub oder echt)
-    needs: [tests, pakete, pakete-stadtbau, sollwerte, android, release-entwurf]
+    needs: [tests, tests-mac-kurz, pakete, pakete-stadtbau, sollwerte, android, release-entwurf]
     if: "!cancelled() && (github.event.action != 'labeled' || github.event.label.name == 'voll' || github.event.label.name == 'werkzeug' || github.event.label.name == 'ohne-mac')"
     runs-on: ubuntu-latest
     timeout-minutes: 10

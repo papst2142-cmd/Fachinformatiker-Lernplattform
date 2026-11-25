@@ -277,12 +277,110 @@ public class SpielSitzenTests
     private static readonly Vector3[] Strahlen =
         [Vector3.Normalize(new(0.13f, 1, 0.07f)), Vector3.Normalize(new(0.07f, -1, 0.11f)), Vector3.Normalize(new(1, 0.05f, 0.09f))];
 
+    /// <summary>
+    /// Sammelliste 453: ein Netz fuer viele Punkte vorbereitet (Kanten und Huelle je Dreieck einmal). <see cref="Innen(Vector3, Netzvorrat)"/>
+    /// rechnet je Dreieck genau wie <see cref="Innen(Vector3, List{Dreieck})"/>, laesst aber Dreiecke aus, deren Huelle (mit Rand
+    /// <see cref="Rand"/>) der Strahl gar nicht trifft: dort meldet Moeller-Trumbore nie einen Treffer (Gegenprobe
+    /// <c>Innen_MitVorrat_GleichOhne</c>).
+    /// </summary>
+    internal sealed class Netzvorrat(List<Dreieck> netz)
+    {
+        internal readonly Dreieck[] D = [.. netz];
+        internal readonly Vector3[] E1 = [.. netz.Select(d => d.B - d.A)];
+        internal readonly Vector3[] E2 = [.. netz.Select(d => d.C - d.A)];
+        internal readonly Vector3[] Min = [.. netz.Select(d => Vector3.Min(d.A, Vector3.Min(d.B, d.C)) - new Vector3(Rand))];
+        internal readonly Vector3[] Max = [.. netz.Select(d => Vector3.Max(d.A, Vector3.Max(d.B, d.C)) + new Vector3(Rand))];
+    }
+
+    /// <summary>Rand um die Huelle eines Dreiecks fuer die Vorpruefung (weit groesser als jede Rundung der Rechnung).</summary>
+    internal const float Rand = 1e-3f;
+
+    /// <summary>Trifft der Strahl ab <paramref name="punkt"/> (ab t = -Rand) den Kasten?</summary>
+    private static bool Trifft(Vector3 punkt, Vector3 r, Vector3 lo, Vector3 hi)
+    {
+        float t0 = -Rand, t1 = float.PositiveInfinity;
+        for (var i = 0; i < 3; i++)
+        {
+            var (p, d, l, h) = i switch { 0 => (punkt.X, r.X, lo.X, hi.X), 1 => (punkt.Y, r.Y, lo.Y, hi.Y), _ => (punkt.Z, r.Z, lo.Z, hi.Z) };
+            if (d == 0)
+            {
+                if (p < l || p > h)
+                {
+                    return false;
+                }
+                continue;
+            }
+            var u = (l - p) / d;
+            var v = (h - p) / d;
+            if (u > v)
+            {
+                (u, v) = (v, u);
+            }
+            t0 = MathF.Max(t0, u);
+            t1 = MathF.Min(t1, v);
+            if (t0 > t1)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>Wie <see cref="Innen(Vector3, List{Dreieck})"/>, mit vorbereitetem Netz.</summary>
+    internal static bool Innen(Vector3 punkt, Netzvorrat netz)
+    {
+        var stimmen = 0;
+        for (var strahl = 0; strahl < Strahlen.Length; strahl++)
+        {
+            var r = Strahlen[strahl];
+            var treffer = 0;
+            for (var n = 0; n < netz.D.Length; n++)
+            {
+                if (!Trifft(punkt, r, netz.Min[n], netz.Max[n]))
+                {
+                    continue;
+                }
+                var d = netz.D[n];
+                Vector3 e1 = netz.E1[n], e2 = netz.E2[n];
+                var q = Vector3.Cross(r, e2);
+                var det = Vector3.Dot(e1, q);
+                if (MathF.Abs(det) < 1e-9f)
+                {
+                    continue;
+                }
+                var t0 = punkt - d.A;
+                var u = Vector3.Dot(t0, q) / det;
+                if (u < 0 || u > 1)
+                {
+                    continue;
+                }
+                var k = Vector3.Cross(t0, e1);
+                var v = Vector3.Dot(r, k) / det;
+                if (v < 0 || u + v > 1)
+                {
+                    continue;
+                }
+                if (Vector3.Dot(e2, k) / det > 1e-6f)
+                {
+                    treffer++;
+                }
+            }
+            stimmen += treffer % 2;
+            if (stimmen >= 2 || stimmen + (Strahlen.Length - 1 - strahl) < 2)
+            {
+                break;
+            }
+        }
+        return stimmen >= 2;
+    }
+
     /// <summary>Punkt im Netz: Strahl in drei Richtungen, ungerade Zahl der Treffer in mindestens zwei (Moeller-Trumbore).</summary>
     internal static bool Innen(Vector3 punkt, List<Dreieck> netz)
     {
         var stimmen = 0;
-        foreach (var r in Strahlen)
+        for (var strahl = 0; strahl < Strahlen.Length; strahl++)
         {
+            var r = Strahlen[strahl];
             var treffer = 0;
             foreach (var d in netz)
             {
@@ -311,6 +409,11 @@ public class SpielSitzenTests
                 }
             }
             stimmen += treffer % 2;
+            // Sammelliste 453: steht das Ergebnis fest (zwei Stimmen, oder zwei nicht mehr erreichbar), die uebrigen Strahlen sparen
+            if (stimmen >= 2 || stimmen + (Strahlen.Length - 1 - strahl) < 2)
+            {
+                break;
+            }
         }
         return stimmen >= 2;
     }

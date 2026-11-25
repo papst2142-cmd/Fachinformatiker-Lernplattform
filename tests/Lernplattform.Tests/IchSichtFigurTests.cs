@@ -242,17 +242,25 @@ public class IchSichtFigurTests
         var funde = new List<string>();
         var naechste = float.MaxValue;
         var zahl = 0;
-        foreach (var (name, a, kleidung) in aussehen)
+        // Sammelliste 453: dieselben Faelle (Aussehen x Bewegungsbild), je Fall fuer sich nebeneinander gerechnet; gesammelt wird danach
+        // in derselben Reihenfolge wie nacheinander
+        var faelle = (from x in aussehen from b in Bewegungsbilder() select (x.Name, x.Aussehen, x.Kleidung, b.Bewegung, b.Bild)).ToList();
+        var ergebnisse = new (float Naechste, string? Fund)[faelle.Count];
+        Nebeneinander.Fuer(faelle.Count, i =>
         {
-            foreach (var (bew, bild) in Bewegungsbilder())
+            var (name, a, kleidung, bew, bild) = faelle[i];
+            var f = Pruefen(g, name, a, kleidung, bew, bild);
+            ergebnisse[i] = (f.Naechste, f.KopfDrin > 0 || f.KopfImKegel > 0 || f.Naechste < grenze || f.HalsOffen > 0
+                ? $"{f.Wo}: Kopf {f.KopfDrin} (im Blick {f.KopfImKegel}), naechste Ecke {f.Naechste:0.000} (Grenze {grenze:0.000}), Hals offen {f.HalsOffen}"
+                : null);
+        });
+        foreach (var (n, fund) in ergebnisse)
+        {
+            zahl++;
+            naechste = MathF.Min(naechste, n);
+            if (fund is not null)
             {
-                var f = Pruefen(g, name, a, kleidung, bew, bild);
-                zahl++;
-                naechste = MathF.Min(naechste, f.Naechste);
-                if (f.KopfDrin > 0 || f.KopfImKegel > 0 || f.Naechste < grenze || f.HalsOffen > 0)
-                {
-                    funde.Add($"{f.Wo}: Kopf {f.KopfDrin} (im Blick {f.KopfImKegel}), naechste Ecke {f.Naechste:0.000} (Grenze {grenze:0.000}), Hals offen {f.HalsOffen}");
-                }
+                funde.Add(fund);
             }
         }
         Assert.True(zahl == aussehen.Count * ((2 * Figur.Bilder) + 4 + Figur.RobbenBilder + 1));

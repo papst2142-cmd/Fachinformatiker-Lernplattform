@@ -49,7 +49,7 @@ env:
 
 jobs:
   pruefen:
-    name: pruefen (main, 18/18, Tag, Entwurf)
+    name: pruefen (main, 19/19, Tag, Entwurf)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,7 +77,7 @@ jobs:
           python -I werkzeuge/release/release.py version | tee kennzahlen.txt
           echo "tag=$(grep -m1 '^TAG=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
           echo "anzeige=$(grep -m1 '^ANZEIGE=' kennzahlen.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
-      - name: Voller CI-Lauf 18/18 auf diesem Commit oder mit gleichem Tree
+      - name: Voller CI-Lauf 19/19 auf diesem Commit oder mit gleichem Tree
         id: lauf
         env:
           GH_TOKEN: ${{ github.token }}
@@ -94,7 +94,8 @@ jobs:
           tests (macos-15-intel, Einzeltests und Spiel)
           tests (macos-15-intel, Lernteil)
           tests (macos-15-intel, Metal)
-          tests (ubuntu-latest)
+          tests (ubuntu-latest, Einzeltests)
+          tests (ubuntu-latest, Lernteil und Spiel)
           tests (windows-latest, Einzeltests)
           tests (windows-latest, Layout 100)
           tests (windows-latest, Layout 150)

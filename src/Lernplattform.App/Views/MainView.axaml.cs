@@ -825,8 +825,16 @@ public partial class MainView : UserControl
         {
             Core.Diagnose.Haenger.Vorgang(vorgang);
         }
+        var bauen = uhr.Elapsed.TotalMilliseconds;
         await BildFertigAsync();
         var ms = uhr.Elapsed.TotalMilliseconds;
+        // Weisung P12-369 Punkt 4: langsamer Seitenwechsel (ueber 400 ms) mit Teilschritten notieren, nur Bericht
+        // und nur im Start-Test (AutoModus)
+        if (ms > 400 && AutoModus)
+        {
+            Messung.AutoMessung.Teilschritte((erstes ? "erstes Oeffnen " : "Seitenwechsel (gebaute Seite) ") + id,
+                [("Bauen", bauen), ("erstes Bild", ms)]);
+        }
         Programm.Diagnosedienst.Seite(vorher, id, ms);
         if (erstes)
         {
