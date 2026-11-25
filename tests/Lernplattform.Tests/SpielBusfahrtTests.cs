@@ -87,6 +87,68 @@ public sealed class SpielBusfahrtTests
         Assert.Contains(spiel.Szene.Orte, o => spiel.BusLohnt(o.Id) is not null);
     }
 
+    /// <summary>
+    /// Sammelliste 452 (Weisung P12-370): die Zeiten der Ortsliste mit gemerkten Wegen zu Fuss sind an jeder Stelle gleich der
+    /// Rechnung ohne Merker (zu Fuss wie MinutenZuFuss, Bus wie BusPlan bzw. BusLohntVon ohne Merker): an jedem Ort und an
+    /// vielen freien Stellen der Stadt, mehrfach nacheinander (der Merker kennt die Wege dann schon) und ueber die Grenze von
+    /// BusMerkerStarts Startpunkten hinaus (Merker beginnt neu). Gegenprobe: an mindestens einer Stelle lohnt der Bus.
+    /// </summary>
+    [Fact]
+    public void Zeiten_MitMerker_GleichOhne_AnVielenStellen()
+    {
+        var spiel = Spiel();
+        var orte = spiel.Szene.Orte.Select(o => o.Id).ToList();
+        (long, long)? Ohne(string ziel)
+        {
+            if (!spiel.ImFreien)
+            {
+                return spiel.BusLohntVon(spiel.Jetzt.Ort, ziel, spiel.Jetzt.Uhr);
+            }
+            return spiel.Linie is null || spiel.MinutenZuFuss(ziel) is not { } fuss || spiel.BusPlan(ziel) is not { } plan || plan.Minuten >= fuss
+                ? null : (fuss, plan.Minuten);
+        }
+        var stellen = 0;
+        var lohnt = 0;
+        void Vergleichen(string wo)
+        {
+            for (var runde = 0; runde < 2; runde++)
+            {
+                foreach (var ziel in orte)
+                {
+                    var mit = spiel.BusLohnt(ziel);
+                    Assert.True(Ohne(ziel) == mit, $"{wo} -> {ziel}: mit {mit}, ohne {Ohne(ziel)}");
+                    lohnt += mit is null ? 0 : 1;
+                }
+            }
+            stellen++;
+        }
+        foreach (var ort in orte)
+        {
+            spiel.GeheZu(ort);
+            spiel.SofortAnkommen();
+            Vergleichen(ort);
+        }
+        var sz = spiel.Szene;
+        for (var x = 1.0; x < sz.Breite; x += 2.3)
+        {
+            for (var z = 1.0; z < sz.Tiefe; z += 2.3)
+            {
+                if (!sz.Laufraster.KannStehen(x, z))
+                {
+                    continue;
+                }
+                spiel.GeheZu(x, z);
+                spiel.SofortAnkommen();
+                if (spiel.ImFreien)
+                {
+                    Vergleichen(string.Create(CultureInfo.InvariantCulture, $"({spiel.FigurX:0.00}; {spiel.FigurZ:0.00})"));
+                }
+            }
+        }
+        Assert.True(stellen > StadtSpiel.BusMerkerStarts + orte.Count, stellen.ToString(CultureInfo.InvariantCulture));
+        Assert.True(lohnt > 0);
+    }
+
     private static int StadtZeilen(StadtSpiel spiel) => spiel.Ablauf.Stand.Verlauf.Count(e => e.Art == Stadt.Gegangen);
 
     [Fact]

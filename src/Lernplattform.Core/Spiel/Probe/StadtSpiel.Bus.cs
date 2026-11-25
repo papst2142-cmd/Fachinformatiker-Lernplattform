@@ -85,18 +85,66 @@ public sealed partial class StadtSpiel
     }
 
     /// <summary>Zeiten fuer die Ortsliste: zu Fuss und mit dem Bus, nur wenn der Bus weniger Minuten braucht, sonst null.</summary>
+    /// <remarks>
+    /// Sammelliste 452 (Weisung P12-370): die Ortsliste fragt nach jeder Ankunft fuer jeden Ort. Vorher rechnete jede Frage die
+    /// Wege zu Fuss vom Start zu jeder Haltestelle und von jeder Haltestelle zum Ziel neu (am Mac 110 bis 200 ms je Ankunft).
+    /// Jetzt merkt sich <see cref="BusMerker"/> diese Wege wie die Karte „Laufzeiten“ des Werkzeugs; die Wegsuche ist fest, das
+    /// Ergebnis bleibt gleich (SpielBusfahrtTests vergleicht es an vielen Stellen mit der Rechnung ohne Merker).
+    /// </remarks>
     public (long ZuFuss, long Bus)? BusLohnt(string ziel)
     {
         if (!(ImFreien && !ImInnenraum))
         {
             // an einem Ort (vor der Tuer oder drinnen): dieselbe Rechnung, die das Werkzeug fuer jeden Weg nutzt
-            return BusLohntVon(Jetzt.Ort, ziel, Jetzt.Uhr);
+            return Linie is null || Szene.Ort(Jetzt.Ort) is not { } hier ? null
+                : BusLohntVon(Jetzt.Ort, ziel, Jetzt.Uhr, BusMerker((hier.StehX, hier.StehZ)));
         }
-        if (Linie is null || MinutenZuFuss(ziel) is not { } fuss || BusPlan(ziel) is not { } plan || plan.Minuten >= fuss)
+        if (Linie is not { } linie || MinutenZuFuss(ziel) is not { } fuss || Szene.Ort(ziel) is not { } o)
+        {
+            return null;
+        }
+        // wie BusPlan(ziel), nur mit gemerkten Wegen zu Fuss
+        var start = ((double)FigurX, (double)FigurZ);
+        if (Busfahrt.Planen(linie, Szene.Haltestellen, Szene.Laufraster, start, (o.StehX, o.StehZ), Stadt.Zelle,
+            Stadt.MinutenJeSchritt, Jetzt.Uhr, Stadt.Beginn, BusMerker(start)) is not { } plan || plan.Minuten >= fuss)
         {
             return null;
         }
         return (fuss, plan.Minuten);
+    }
+
+    /// <summary>So viele verschiedene Startpunkte merkt sich <see cref="BusMerker"/>, danach beginnt er neu (Speicher bleibt klein).</summary>
+    internal const int BusMerkerStarts = 64;
+
+    private Busfahrt.Merker? _busMerker;
+
+    private Wegsuche? _busMerkerRaster;
+
+    private (double X, double Y)? _busMerkerStart;
+
+    private int _busMerkerStarts;
+
+    /// <summary>
+    /// Sammelliste 452: Merker der Wege zu Fuss fuer die Zeiten der Ortsliste, je Laufraster (neue Szene = neuer Merker). Die Wege
+    /// von den Haltestellen zu den Orten bleiben gleich; die vom Startpunkt gelten fuer alle Orte einer Liste. Nach
+    /// <see cref="BusMerkerStarts"/> Startpunkten beginnt er neu.
+    /// </summary>
+    private Busfahrt.Merker BusMerker((double X, double Y) start)
+    {
+        var raster = Szene.Laufraster;
+        if (_busMerker is null || !ReferenceEquals(_busMerkerRaster, raster) || (_busMerkerStarts >= BusMerkerStarts && _busMerkerStart != start))
+        {
+            _busMerker = new Busfahrt.Merker();
+            _busMerkerRaster = raster;
+            _busMerkerStart = null;
+            _busMerkerStarts = 0;
+        }
+        if (_busMerkerStart != start)
+        {
+            _busMerkerStart = start;
+            _busMerkerStarts++;
+        }
+        return _busMerker;
     }
 
     /// <summary>

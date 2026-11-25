@@ -204,4 +204,34 @@ public class ReihenfolgeTests
             RahmenplanGewicht.Tageszufall(quelle, k, heute), Plan.Gewicht(quelle, k, werte, heute))).ToList();
         Assert.NotEqual(Liste(fall.GetProperty("ergebnis")), falsch);
     }
+
+    /// <summary>
+    /// Sammelliste 451 (Weisung P12-370): Tageszufall ohne Zwischen-Texte ist fuer jeden Inhalt (Karten und Fragen aller
+    /// Fachrichtungen), an mehreren Tagen, mit Umlauten, Sonderzeichen und sehr langen Texten (ueber 1 024 Bytes, gemieteter
+    /// Puffer) gleich der bisherigen Rechnung ueber den Hex-Text.
+    /// </summary>
+    [Fact]
+    public void Tageszufall_OhneZwischentexte_GleichHexRechnung()
+    {
+        var lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
+        byte[]? Lesen(string name) => Path.Combine(lernen, name + ".json") is var pfad && File.Exists(pfad) ? File.ReadAllBytes(pfad) : null;
+        var alle = Lerninhalte.MitLernen(Inhalte, Lesen, null);
+        var schluessel = alle.Karteikarten.Concat(alle.Quizfragen).Select(e => e.Frage ?? "")
+            .Concat(["", "ÄÖÜäöüß €", "ΟΔΟΣ 漢字 😀", new string('ä', 600), new string('x', 1100) + "ü", string.Concat(Enumerable.Repeat("😀", 300))]).ToList();
+        Assert.True(schluessel.Count > 5000);
+        Assert.Contains(schluessel, s => System.Text.Encoding.UTF8.GetByteCount(s) > 1024);
+        var gezaehlt = 0;
+        foreach (var tag in new[] { new DateOnly(2026, 6, 15), new DateOnly(2027, 1, 1), new DateOnly(2026, 12, 31) })
+        {
+            foreach (var quelle in new[] { Quellen.Karte, Quellen.Quiz })
+            {
+                foreach (var s in schluessel)
+                {
+                    Assert.Equal(RahmenplanGewicht.TageszufallHex(quelle, s, tag), RahmenplanGewicht.Tageszufall(quelle, s, tag));
+                    gezaehlt++;
+                }
+            }
+        }
+        Assert.Equal(schluessel.Count * 6, gezaehlt);
+    }
 }

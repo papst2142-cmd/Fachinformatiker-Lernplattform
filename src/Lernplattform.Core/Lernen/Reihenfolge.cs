@@ -299,9 +299,26 @@ public sealed class RahmenplanGewicht
 
     private int LernfeldStunden(string? thema, List<string> sichtbar)
     {
-        var stunden = (thema is not null && _themaLernfelder.TryGetValue(thema, out var felder) ? felder : [])
-            .Where(sichtbar.Contains).Select(f => Lernfelder[f]).ToList();
-        return stunden.Count > 0 ? stunden.Max() : 0;
+        // Sammelliste 451 (Weisung P12-370): Schleife ohne Zwischenlisten, gleiche Werte wie Where/Select/Max.
+        if (thema is null || !_themaLernfelder.TryGetValue(thema, out var felder))
+        {
+            return 0;
+        }
+        var gefunden = false;
+        var hoechst = 0;
+        foreach (var f in felder)
+        {
+            if (sichtbar.Contains(f))
+            {
+                var stunden = Lernfelder[f];
+                if (!gefunden || stunden > hoechst)
+                {
+                    hoechst = stunden;
+                }
+                gefunden = true;
+            }
+        }
+        return hoechst;
     }
 
     /// <summary>item_weight: Gewicht eines Inhalts (etwa 1 bis 3, mit Pruefungsnaehe bis 4,5).</summary>
@@ -332,18 +349,38 @@ public sealed class RahmenplanGewicht
 
     private double Gewicht(string quelle, string schluessel, Feste fest)
     {
+        // Sammelliste 451 (Weisung P12-370): eine Schleife ohne Zwischenlisten. Hoechstwert wie Enumerable.Max (NaN am Anfang
+        // wird uebersprungen, nur wenn alle NaN sind, bleibt NaN), Ap1/Ap2 wie Any; Ergebnis gleich wie vorher.
         var abschnitte = fest.Abschnitte;
-        var punkte = Punkte(quelle, schluessel).Where(p => _punkte.TryGetValue(p, out var punkt) && abschnitte.Contains(punkt.Abschnitt))
-            .Select(p => _punkte[p]).ToList();
-        var wochen = punkte.Count > 0 ? punkte.Max(p => p.Wochen) : 0;
+        var anzahl = 0;
+        var wochen = 0.0;
+        var ap1 = false;
+        var ap2 = false;
+        if (_inhaltPunkte.TryGetValue((quelle, schluessel), out var kennungen))
+        {
+            foreach (var p in kennungen)
+            {
+                if (!_punkte.TryGetValue(p, out var punkt) || !abschnitte.Contains(punkt.Abschnitt))
+                {
+                    continue;
+                }
+                if (anzahl == 0 || double.IsNaN(wochen) || punkt.Wochen > wochen)
+                {
+                    wochen = punkt.Wochen;
+                }
+                anzahl++;
+                ap1 |= punkt.Ap1;
+                ap2 |= punkt.Ap2;
+            }
+        }
         var gewicht = 1.0 + 1.5 * Math.Sqrt(Math.Min(wochen, WochenMax) / WochenMax)
             + 0.5 * (LernfeldStunden(_thema.GetValueOrDefault((quelle, schluessel)), fest.Sichtbar) / StundenMax);
         var phase = fest.Phase;
-        if (phase == "ap1" && punkte.Any(p => p.Ap1))
+        if (phase == "ap1" && ap1)
         {
             gewicht *= PruefungsFaktor;
         }
-        else if (phase == "ap2" && punkte.Any(p => p.Ap2))
+        else if (phase == "ap2" && ap2)
         {
             gewicht *= PruefungsFaktor;
         }
@@ -352,7 +389,49 @@ public sealed class RahmenplanGewicht
 
     /// <summary>_day_random: (0, 1], aus MD5 von "Datum|Quelle|Schluessel" (nur Reihenfolge, keine Sicherheit).</summary>
 #pragma warning disable CA5351 // MD5 nur als Tageszufall wie in Python, keine Sicherheitsfunktion
+    /// <remarks>
+    /// Sammelliste 451 (Weisung P12-370): ohne Zwischen-Texte gerechnet (vorher Text, Bytes, Hex-Text und Teiltext je Wert; nach
+    /// einem Wechsel der Fachrichtung rund 6 000 Werte im Hintergrund). Die ersten 13 Hex-Ziffern sind die ersten 52 Bit des
+    /// MD5-Werts; gleich der alten Rechnung (Test Tageszufall_OhneZwischentexte_GleichHexRechnung).
+    /// </remarks>
     public static double Tageszufall(string quelle, string schluessel, DateOnly heute)
+    {
+        Span<char> tag = stackalloc char[10];
+        if (!heute.TryFormat(tag, out var tagLaenge, "yyyy-MM-dd", CultureInfo.InvariantCulture))
+        {
+            return TageszufallHex(quelle, schluessel, heute);
+        }
+        var laenge = Encoding.UTF8.GetByteCount(tag[..tagLaenge]) + 2 + Encoding.UTF8.GetByteCount(quelle) + Encoding.UTF8.GetByteCount(schluessel);
+        byte[]? gemietet = null;
+        var bytes = laenge <= 1024 ? stackalloc byte[laenge] : (gemietet = System.Buffers.ArrayPool<byte>.Shared.Rent(laenge)).AsSpan(0, laenge);
+        try
+        {
+            var n = Encoding.UTF8.GetBytes(tag[..tagLaenge], bytes);
+            bytes[n++] = (byte)'|';
+            n += Encoding.UTF8.GetBytes(quelle, bytes[n..]);
+            bytes[n++] = (byte)'|';
+            n += Encoding.UTF8.GetBytes(schluessel, bytes[n..]);
+            Span<byte> md5 = stackalloc byte[16];
+            MD5.HashData(bytes[..n], md5);
+            long wert = 0;
+            for (var i = 0; i < 6; i++)
+            {
+                wert = (wert << 8) | md5[i];
+            }
+            wert = (wert << 4) | (long)(md5[6] >> 4);
+            return (wert + 1) / (double)(4503599627370496L + 1);
+        }
+        finally
+        {
+            if (gemietet is not null)
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return(gemietet);
+            }
+        }
+    }
+
+    /// <summary>Die bisherige Rechnung ueber den Hex-Text (Vergleich in Tests, Rueckfall).</summary>
+    internal static double TageszufallHex(string quelle, string schluessel, DateOnly heute)
     {
         var text = heute.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "|" + quelle + "|" + schluessel;
         var hex = Convert.ToHexStringLower(MD5.HashData(Encoding.UTF8.GetBytes(text)));

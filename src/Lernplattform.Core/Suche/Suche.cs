@@ -46,7 +46,12 @@ public sealed class Suchtext
 
     private static int _aufbauten;
 
-    public Suchtext(Lerninhalte inhalte) : this(inhalte, PythonKlein.Klein, Vorrat)
+    /// <remarks>
+    /// Sammelliste 451 (Weisung P12-370): Kleinschreibung ueber <see cref="RahmenplanGewicht.Klein"/>: unter U+0180 der schnelle
+    /// Weg (ToLowerInvariant, Zeichen fuer Zeichen gleich Python, Phase11FW1Tests), sonst <see cref="PythonKlein"/>. Gleich dem
+    /// Aufbau nur mit PythonKlein fuer jeden Eintrag (SucheTests.Vorrat_GleichOhne_GemeinsameUebernommen).
+    /// </remarks>
+    public Suchtext(Lerninhalte inhalte) : this(inhalte, RahmenplanGewicht.Klein, Vorrat)
     {
     }
 
