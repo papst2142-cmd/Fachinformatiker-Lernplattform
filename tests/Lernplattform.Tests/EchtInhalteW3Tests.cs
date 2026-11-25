@@ -170,6 +170,11 @@ public class EchtInhalteW3Tests
                 ["punkte_selbst"] = selbst,
                 ["punkte_programm"] = 100 - selbst,
             };
+            // A 1.8.0 (Sollwert-Aenderung Nr. 24): Saetze mit neuer Fassung nennen sie
+            if (s.Fassung > 1)
+            {
+                saetze[s.Kennung]!["fassung"] = s.Fassung;
+            }
             if (s.Aufbau is { } aufbau)
             {
                 saetze[s.Kennung]!["aufbau"] = aufbau;
@@ -205,11 +210,22 @@ public class EchtInhalteW3Tests
     {
         var wurzel = JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
         var liste = wurzel["saetze"]!.AsArray();
-        var letzter = (string)liste[liste.Count - 1]!["kennung"]!;
-        // A 0.94.0: der letzte Satz gehoert zu einem Satzpaar (Aufgaben 20 bis 30 Punkte); faellt er, faellt sein Partner mit
-        liste[liste.Count - 1]!["aufgaben"]![0]!["punkte"] = 31;
+        // A 1.8.0 (Weisung P12-372): die letzten fuenf Eintraege sind neue Fassungen; der letzte Satz der ersten Fassung ist Nr. 57
+        var stelle = liste.Select((s, i) => (s, i)).Last(x => x.s!["fassung"] is null).i;
+        var letzter = (string)liste[stelle]!["kennung"]!;
+        Assert.Equal(56, stelle);
+        // A 0.94.0: der Satz gehoert zu einem Satzpaar (Aufgaben 20 bis 30 Punkte); faellt er, faellt sein Partner mit
+        liste[stelle]!["aufgaben"]![0]!["punkte"] = 31;
         var bestand = EchtSaetze.Laden(System.Text.Encoding.UTF8.GetBytes(wurzel.ToJsonString()));
         Assert.Equal([letzter, EchtSaetze.Partner(letzter)], bestand.Fehler.Select(f => f.Kennung));
+        // A 1.8.0: faellt eine neue Fassung, meldet die Ladepruefung sie, und die vorige Fassung bleibt (nie still, nie ohne Satz)
+        var neu = JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
+        var neuListe = neu["saetze"]!.AsArray();
+        var fassung = (string)neuListe[^1]!["kennung"]!;
+        neuListe[^1]!["aufgaben"]![0]!["punkte"] = 31;
+        var mitFassung = EchtSaetze.Laden(System.Text.Encoding.UTF8.GetBytes(neu.ToJsonString()));
+        Assert.Equal([fassung], mitFassung.Fehler.Select(f => f.Kennung));
+        Assert.Equal(1, mitFassung.Satz(fassung)!.Fassung);
         var soll = VergleichsHilfe.Lade("lerninhalte_pruefung.json").GetProperty("pruefungssaetze").GetProperty("fehler");
         Assert.Equal(0, soll.GetArrayLength());
     }

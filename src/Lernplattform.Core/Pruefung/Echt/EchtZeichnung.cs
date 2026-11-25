@@ -26,14 +26,42 @@ public sealed record EchtReihe(string Name, string Einheit, double Max, IReadOnl
 /// <summary>Monitor-Bild einer Anlage: Verlaufslinien je Reihe ueber gemeinsamen Zeitmarken.</summary>
 public sealed record EchtMonitor(string Achse, IReadOnlyList<string> Marken, IReadOnlyList<EchtReihe> Reihen);
 
-/// <summary>Ein Baustein eines Diagramms (UML-Aktivitaet oder ER in Chen) an einer Stelle im Raster.</summary>
-public sealed record EchtElement(string Id, string Typ, string Text, int X, int Y, bool Schluessel);
+/// <summary>
+/// Ein Baustein eines Diagramms (UML-Aktivitaet, ER in Chen, ab A 1.8.0 Klasse, Akteur, Anwendungsfall) an einer Stelle im
+/// Raster. <paramref name="Attribute"/> und <paramref name="Methoden"/> (nur Klasse, A 1.8.0): Zeilen mit "\n" getrennt, leer =
+/// keine (als Text, damit zwei gleiche Bausteine gleich sind).
+/// </summary>
+public sealed record EchtElement(string Id, string Typ, string Text, int X, int Y, bool Schluessel, string Attribute = "", string Methoden = "")
+{
+    /// <summary>Attributzeilen einer Klasse (leer = keine).</summary>
+    public IReadOnlyList<string> AttributZeilen => EchtZeichnung.Zeilen(Attribute);
 
-/// <summary>Eine Verbindung: UML ein Pfeil (Text = Bedingung), ER eine Linie (Kard = 1, n oder m an der Entitaet).</summary>
-public sealed record EchtVerbindung(string Von, string Nach, string Text, string Kard);
+    /// <summary>Methodenzeilen einer Klasse (leer = keine).</summary>
+    public IReadOnlyList<string> MethodenZeilen => EchtZeichnung.Zeilen(Methoden);
+}
 
-/// <summary>Diagramm (Vorgabe oder Musterloesung einer Zeichenaufgabe): Art "uml" oder "er".</summary>
-public sealed record EchtDiagramm(string Art, IReadOnlyList<EchtElement> Elemente, IReadOnlyList<EchtVerbindung> Verbindungen)
+/// <summary>
+/// Eine Verbindung: UML ein Pfeil (Text = Bedingung), ER eine Linie (Kard = 1, n oder m an der Entitaet). Ab A 1.8.0 im
+/// Klassen- und Use-Case-Diagramm mit <paramref name="Typ"/> (Art der Beziehung; bei gerichteten Arten zeigt sie von
+/// <paramref name="Von"/> nach <paramref name="Nach"/>: Vererbung und Generalisierung zum Allgemeinen, Aggregation und
+/// Komposition zum Ganzen, «include» zum eingebundenen Fall, «extend» zum erweiterten Basisfall) und Multiplizitaeten an
+/// beiden Enden (<paramref name="MultVon"/> am Ende von <paramref name="Von"/>, <paramref name="MultNach"/> am Ende von
+/// <paramref name="Nach"/>).
+/// </summary>
+public sealed record EchtVerbindung(string Von, string Nach, string Text, string Kard, string Typ = "", string MultVon = "", string MultNach = "");
+
+/// <summary>Systemgrenze eines Use-Case-Diagramms (A 1.8.0): Name und Rechteck aus Feldern des Rasters (immer Vorgabe).</summary>
+public sealed record EchtGrenze(string Name, int X, int Y, int Breite, int Hoehe)
+{
+    public bool Enthaelt(int x, int y) => x >= X && x < X + Breite && y >= Y && y < Y + Hoehe;
+}
+
+/// <summary>
+/// Diagramm (Vorgabe oder Musterloesung einer Zeichenaufgabe): Art "uml" oder "er", ab A 1.8.0 (Format 4) auch "klasse" und
+/// "usecase" (mit <see cref="Grenze"/>).
+/// </summary>
+public sealed record EchtDiagramm(string Art, IReadOnlyList<EchtElement> Elemente, IReadOnlyList<EchtVerbindung> Verbindungen,
+    EchtGrenze? Grenze = null)
 {
     public EchtElement Element(string id) => Elemente.First(e => e.Id == id);
 }
@@ -66,15 +94,51 @@ public static class EchtZeichnung
         ["wlan"] = "WLAN-Zugangspunkt",
     };
 
-    /// <summary>Bausteine je Diagrammart (Plan P12-152, Nicos Antwort 1b).</summary>
+    /// <summary>A 1.8.0 (Weisung P12-371, Plan P12-232): UML-Klassendiagramm.</summary>
+    public const string Klasse = "klasse";
+
+    /// <summary>A 1.8.0 (Weisung P12-371, Plan P12-232): UML-Use-Case-Diagramm mit vorgegebener Systemgrenze.</summary>
+    public const string UseCase = "usecase";
+
+    /// <summary>Hoechstens so viele Zeichen je Text (Name, Attribut, Methode); gleich dem Baukasten.</summary>
+    public const int TextLaenge = 60;
+
+    /// <summary>Hoechstens so viele Attribute bzw. Methoden je Klasse.</summary>
+    public const int ZeilenMax = 8;
+
+    /// <summary>Bausteine je Diagrammart (Plan P12-152, Nicos Antwort 1b; A 1.8.0 Klasse und Use-Case).</summary>
     public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> Bausteine = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
     {
         [Uml] = ["start", "aktion", "verzweigung", "zusammenfuehrung", "ende"],
         [Er] = ["entitaet", "beziehung", "attribut"],
+        [Klasse] = ["klasse"],
+        [UseCase] = ["akteur", "anwendungsfall"],
+    };
+
+    /// <summary>Diagrammarten, die es erst ab Format 4 (A 1.8.0) gibt.</summary>
+    public static readonly IReadOnlyList<string> ArtenFormat4 = [Klasse, UseCase];
+
+    /// <summary>Arten der Beziehungen (A 1.8.0, Nicos Antworten 1a und 2a); die erste ist die beim Verbinden.</summary>
+    public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> Beziehungen = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
+    {
+        [Klasse] = ["assoziation", "vererbung", "aggregation", "komposition"],
+        [UseCase] = ["assoziation", "include", "extend", "generalisierung"],
     };
 
     /// <summary>Erlaubte Kardinalitaeten in Chen.</summary>
     public static readonly IReadOnlyList<string> Kardinalitaeten = ["1", "n", "m"];
+
+    /// <summary>Multiplizitaeten im Klassendiagramm (feste Liste, Plan P12-232).</summary>
+    public static readonly IReadOnlyList<string> Multiplizitaeten = ["1", "0..1", "*", "0..*", "1..*"];
+
+    /// <summary>Gerichtete Beziehung (Spitze, Dreieck oder Raute am Ende <see cref="EchtVerbindung.Nach"/>)?</summary>
+    public static bool Gerichtet(string typ) => typ is "vererbung" or "aggregation" or "komposition" or "include" or "extend" or "generalisierung";
+
+    /// <summary>Traegt diese Beziehung Multiplizitaeten (Klassendiagramm ohne Vererbung)?</summary>
+    public static bool MitMultiplizitaet(string art, string typ) => art == Klasse && typ is "assoziation" or "aggregation" or "komposition";
+
+    /// <summary>Zeilen aus dem gespeicherten Text (mit "\n" getrennt; leer = keine).</summary>
+    public static IReadOnlyList<string> Zeilen(string text) => text.Length == 0 ? [] : text.Split('\n');
 
     // -- Lesen ----------------------------------------------------------------------------------
 
@@ -163,18 +227,48 @@ public static class EchtZeichnung
             {
                 throw new EchtLadefehler(wo + ": nur ein Attribut kann Schlüssel sein");
             }
-            return new EchtElement(id, typ, text, Stelle(e, "x", RasterBreite, wo), Stelle(e, "y", RasterHoehe, wo), schluessel);
+            // A 1.8.0: Attribute und Methoden nur an einer Klasse, je Zeile Text bis zur Laenge des Baukastens
+            if ((e["attribute"] is not null || e["methoden"] is not null) && typ != "klasse")
+            {
+                throw new EchtLadefehler(wo + ": Attribute und Methoden gibt es nur an einer Klasse");
+            }
+            var attribute = KlassenZeilen(e["attribute"], wo, id, "attribute");
+            var methoden = KlassenZeilen(e["methoden"], wo, id, "methoden");
+            if (ArtenFormat4.Contains(art) && text.Length > TextLaenge)
+            {
+                throw new EchtLadefehler(string.Create(CultureInfo.InvariantCulture, $"{wo}: Name von {id} länger als {TextLaenge} Zeichen"));
+            }
+            return new EchtElement(id, typ, text, Stelle(e, "x", RasterBreite, wo), Stelle(e, "y", RasterHoehe, wo), schluessel, attribute, methoden);
         }).ToList();
         Eindeutig(elemente.Select(e => e.Id), wo, "Baustein");
         Frei(elemente.Select(e => (e.X, e.Y)), wo);
         var verbindungen = d["verbindungen"] is null ? [] : Objekte(d["verbindungen"], wo + " verbindungen", leerErlaubt: true)
-            .Select(v => new EchtVerbindung(Pflicht(v, "von", wo), Pflicht(v, "nach", wo), Text(v["text"]) ?? "", Text(v["kard"]) ?? "")).ToList();
+            .Select(v => new EchtVerbindung(Pflicht(v, "von", wo), Pflicht(v, "nach", wo), Text(v["text"]) ?? "", Text(v["kard"]) ?? "",
+                Text(v["typ"]) ?? "", Text(v["mult_von"]) ?? "", Text(v["mult_nach"]) ?? "")).ToList();
         foreach (var v in verbindungen)
         {
             Verbunden(v.Von, v.Nach, elemente.Select(e => e.Id), wo);
         }
         Paare(verbindungen.Select(v => (v.Von, v.Nach)), wo);
-        var diagramm = new EchtDiagramm(art, elemente, verbindungen);
+        EchtGrenze? grenze = null;
+        if (d["grenze"] is not null || art == UseCase)
+        {
+            if (art != UseCase)
+            {
+                throw new EchtLadefehler(wo + ": eine Systemgrenze gibt es nur im Use-Case-Diagramm");
+            }
+            if (d["grenze"] is not JsonObject g)
+            {
+                throw new EchtLadefehler(wo + ": ein Use-Case-Diagramm braucht die Systemgrenze (\"grenze\")");
+            }
+            grenze = new EchtGrenze(Pflicht(g, "name", wo), Stelle(g, "x", RasterBreite, wo), Stelle(g, "y", RasterHoehe, wo),
+                Stelle(g, "breite", RasterBreite + 1, wo), Stelle(g, "hoehe", RasterHoehe + 1, wo));
+            if (grenze.Breite < 1 || grenze.Hoehe < 1 || grenze.X + grenze.Breite > RasterBreite || grenze.Y + grenze.Hoehe > RasterHoehe)
+            {
+                throw new EchtLadefehler(wo + ": die Systemgrenze liegt nicht ganz im Raster");
+            }
+        }
+        var diagramm = new EchtDiagramm(art, elemente, verbindungen, grenze);
         if (Verstoesse(diagramm, vollstaendig).FirstOrDefault() is { } fehler)
         {
             throw new EchtLadefehler(wo + ": " + fehler);
@@ -187,8 +281,219 @@ public static class EchtZeichnung
     /// <paramref name="vollstaendig"/> = Regeln eines fertigen Diagramms (Musterbild, Pruefung im Baukasten, A 0.78.0);
     /// <paramref name="name"/> benennt Bausteine in den Meldungen (ohne: Kennung bzw. Text wie in der Ladepruefung).
     /// </summary>
-    public static IEnumerable<string> Verstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string>? name = null) =>
-        d.Art == Uml ? UmlVerstoesse(d, vollstaendig, name ?? (e => Baustein(e.Typ) + " " + e.Id)) : ErVerstoesse(d, vollstaendig, name);
+    public static IEnumerable<string> Verstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string>? name = null) => d.Art switch
+    {
+        Uml => UmlVerstoesse(d, vollstaendig, name ?? (e => Baustein(e.Typ) + " " + e.Id)).Concat(NurNeueArten(d)),
+        Klasse => KlassenVerstoesse(d, vollstaendig, name ?? Benannt),
+        UseCase => UseCaseVerstoesse(d, vollstaendig, name ?? Benannt),
+        _ => ErVerstoesse(d, vollstaendig, name).Concat(NurNeueArten(d)),
+    };
+
+    /// <summary>Name in Meldungen der Ladepruefung ohne Namensfunktion: "Klasse „Kunde“", ohne Text die Kennung.</summary>
+    private static string Benannt(EchtElement e) => Baustein(e.Typ) + (e.Text.Length > 0 ? " „" + e.Text + "“" : " " + e.Id);
+
+    /// <summary>Aktivitaet und ER (A 0.77.0) kennen keine Beziehungsarten und keine Multiplizitaeten (A 1.8.0).</summary>
+    private static IEnumerable<string> NurNeueArten(EchtDiagramm d)
+    {
+        if (d.Verbindungen.Any(v => v.Typ.Length > 0 || v.MultVon.Length > 0 || v.MultNach.Length > 0))
+        {
+            yield return "Beziehungsarten und Multiplizitäten gibt es nur im Klassen- und Use-Case-Diagramm";
+        }
+    }
+
+    private static IEnumerable<string> KlassenVerstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string> name)
+    {
+        foreach (var doppelt in d.Elemente.GroupBy(e => NameVergleich(e.Text)).Where(g => g.Key.Length > 0 && g.Count() > 1))
+        {
+            yield return "zwei Klassen heißen „" + doppelt.First().Text + "“";
+        }
+        foreach (var v in d.Verbindungen)
+        {
+            var paar = name(d.Element(v.Von)) + "–" + name(d.Element(v.Nach));
+            if (!Beziehungen[Klasse].Contains(v.Typ))
+            {
+                yield return paar + ": Art muss Assoziation, Vererbung, Aggregation oder Komposition sein";
+                continue;
+            }
+            if (v.Text.Length > 0 || v.Kard.Length > 0)
+            {
+                yield return "Beziehungen im Klassendiagramm tragen keinen Text und keine Kardinalität, nur Multiplizitäten";
+            }
+            if (!Multiplizitaeten.Contains(v.MultVon) && v.MultVon.Length > 0 || !Multiplizitaeten.Contains(v.MultNach) && v.MultNach.Length > 0)
+            {
+                yield return paar + ": Multiplizität nur 1, 0..1, *, 0..* oder 1..*";
+            }
+            if (v.Typ == "vererbung" && (v.MultVon.Length > 0 || v.MultNach.Length > 0))
+            {
+                yield return paar + ": eine Vererbung hat keine Multiplizität";
+            }
+            if (v.Typ == "komposition" && v.MultNach is not ("" or "1" or "0..1"))
+            {
+                yield return paar + ": bei einer Komposition gehört ein Teil zu höchstens einem Ganzen (Multiplizität am Ganzen 1 oder 0..1)";
+            }
+        }
+        if (ImKreis(d, "vererbung") is { } kreis)
+        {
+            yield return "Vererbung im Kreis bei " + name(kreis);
+        }
+        if (!vollstaendig)
+        {
+            yield break;
+        }
+        foreach (var v in d.Verbindungen.Where(v => MitMultiplizitaet(Klasse, v.Typ) && (v.MultVon.Length == 0 || v.MultNach.Length == 0)))
+        {
+            yield return name(d.Element(v.Von)) + "–" + name(d.Element(v.Nach)) + ": Multiplizität an beiden Enden fehlt";
+        }
+        foreach (var e in d.Elemente.Where(e => e.Text.Trim().Length == 0))
+        {
+            yield return name(e) + " ohne Namen";
+        }
+        if (d.Elemente.Count > 1)
+        {
+            foreach (var e in d.Elemente.Where(e => d.Verbindungen.All(v => v.Von != e.Id && v.Nach != e.Id)))
+            {
+                yield return name(e) + " hat keine Beziehung";
+            }
+        }
+    }
+
+    private static IEnumerable<string> UseCaseVerstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string> name)
+    {
+        foreach (var doppelt in d.Elemente.GroupBy(e => e.Typ + "\n" + NameVergleich(e.Text)).Where(g => g.Count() > 1
+            && NameVergleich(g.First().Text).Length > 0))
+        {
+            yield return "zwei Bausteine „" + doppelt.First().Text + "“ gleicher Art";
+        }
+        if (d.Grenze is { } g)
+        {
+            foreach (var e in d.Elemente)
+            {
+                if (e.Typ == "akteur" && g.Enthaelt(e.X, e.Y))
+                {
+                    yield return name(e) + ": ein Akteur steht außerhalb der Systemgrenze";
+                }
+                if (e.Typ == "anwendungsfall" && !g.Enthaelt(e.X, e.Y))
+                {
+                    yield return name(e) + ": ein Anwendungsfall steht innerhalb der Systemgrenze";
+                }
+            }
+        }
+        else
+        {
+            yield return "ein Use-Case-Diagramm braucht die Systemgrenze";
+        }
+        foreach (var v in d.Verbindungen)
+        {
+            var a = d.Element(v.Von);
+            var b = d.Element(v.Nach);
+            var paar = name(a) + "–" + name(b);
+            if (!Beziehungen[UseCase].Contains(v.Typ))
+            {
+                yield return paar + ": Art muss Assoziation, «include», «extend» oder Generalisierung sein";
+                continue;
+            }
+            if (v.Text.Length > 0 || v.Kard.Length > 0 || v.MultVon.Length > 0 || v.MultNach.Length > 0)
+            {
+                yield return "im Use-Case-Diagramm tragen Beziehungen keinen Text und keine Multiplizität";
+            }
+            var (ok, regel) = v.Typ switch
+            {
+                "assoziation" => (a.Typ != b.Typ, "eine Assoziation verbindet einen Akteur mit einem Anwendungsfall"),
+                "include" or "extend" => (a.Typ == "anwendungsfall" && b.Typ == "anwendungsfall", "«include» und «extend» verbinden nur Anwendungsfälle"),
+                _ => (a.Typ == b.Typ, "eine Generalisierung verbindet nur gleiche Bausteine (Akteur mit Akteur, Anwendungsfall mit Anwendungsfall)"),
+            };
+            if (!ok)
+            {
+                yield return paar + ": " + regel;
+            }
+        }
+        if (ImKreis(d, "generalisierung") is { } kreis)
+        {
+            yield return "Generalisierung im Kreis bei " + name(kreis);
+        }
+        if (!vollstaendig)
+        {
+            yield break;
+        }
+        foreach (var e in d.Elemente.Where(e => e.Text.Trim().Length == 0))
+        {
+            yield return name(e) + " ohne Namen";
+        }
+        foreach (var e in d.Elemente)
+        {
+            var eigene = d.Verbindungen.Where(v => v.Von == e.Id || v.Nach == e.Id).ToList();
+            if (e.Typ == "akteur" && !eigene.Any(v => v.Typ is "assoziation" or "generalisierung"))
+            {
+                yield return name(e) + ": ein Akteur ist mit einem Anwendungsfall verbunden";
+            }
+            if (e.Typ == "anwendungsfall" && eigene.Count == 0)
+            {
+                yield return name(e) + " hat keine Beziehung";
+            }
+        }
+    }
+
+    /// <summary>Erster Baustein in einem Kreis aus Beziehungen dieser Art (Vererbung, Generalisierung), sonst null.</summary>
+    private static EchtElement? ImKreis(EchtDiagramm d, string typ)
+    {
+        var nach = d.Verbindungen.Where(v => v.Typ == typ).ToLookup(v => v.Von, v => v.Nach, StringComparer.Ordinal);
+        foreach (var start in d.Elemente)
+        {
+            var gesehen = new HashSet<string>(StringComparer.Ordinal);
+            var offen = new Stack<string>(nach[start.Id]);
+            while (offen.Count > 0)
+            {
+                var id = offen.Pop();
+                if (id == start.Id)
+                {
+                    return start;
+                }
+                if (gesehen.Add(id))
+                {
+                    foreach (var weiter in nach[id])
+                    {
+                        offen.Push(weiter);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Namen tolerant vergleichen (Plan P12-232 Abschnitt 3): Gross/klein egal, Leerzeichen egal, ä = ae, ö = oe, ü = ue,
+    /// ß = ss. Ergebnis ist der Vergleichsschluessel.
+    /// </summary>
+    public static string NameVergleich(string name)
+    {
+        var klein = Lernplattform.Core.Suche.PythonKlein.Klein(name);
+        var sb = new System.Text.StringBuilder(klein.Length);
+        foreach (var c in klein)
+        {
+            switch (c)
+            {
+                case 'ä':
+                    sb.Append("ae");
+                    break;
+                case 'ö':
+                    sb.Append("oe");
+                    break;
+                case 'ü':
+                    sb.Append("ue");
+                    break;
+                case 'ß':
+                    sb.Append("ss");
+                    break;
+                default:
+                    if (!char.IsWhiteSpace(c))
+                    {
+                        sb.Append(c);
+                    }
+                    break;
+            }
+        }
+        return sb.ToString();
+    }
 
     private static IEnumerable<string> UmlVerstoesse(EchtDiagramm d, bool vollstaendig, Func<EchtElement, string> name)
     {
@@ -327,6 +632,10 @@ public static class EchtZeichnung
     /// <summary>Diagramm als Zeilen: je Baustein Art, Text und "verbunden mit …" (Grundlage fuer den Screenreader-Weg).</summary>
     public static IReadOnlyList<string> Textfassung(EchtDiagramm d)
     {
+        if (ArtenFormat4.Contains(d.Art))
+        {
+            return [.. GrenzeText(d), .. d.Elemente.OrderBy(e => e.Y).ThenBy(e => e.X).Select(e => Beschreibung(d, e, "") + ".")];
+        }
         var zeilen = new List<string>();
         foreach (var e in d.Elemente.OrderBy(e => e.Y).ThenBy(e => e.X))
         {
@@ -368,6 +677,64 @@ public static class EchtZeichnung
         return zeilen;
     }
 
+    /// <summary>Use-Case: Zeile zur Systemgrenze (Textfassung und Liste des Baukastens), sonst nichts.</summary>
+    public static IEnumerable<string> GrenzeText(EchtDiagramm d)
+    {
+        if (d.Grenze is { } g)
+        {
+            yield return Beschriftungen.Einsetzen(EchtTexte.GrenzeZeile, g.Name, g.X + 1, g.X + g.Breite, g.Y + 1, g.Y + g.Hoehe);
+        }
+    }
+
+    /// <summary>
+    /// A 1.8.0 Klasse und Use-Case: Baustein mit Attributen, Methoden und allen Beziehungen aus seiner Sicht (Textfassung,
+    /// Liste "Deine Zeichnung"); <paramref name="stelle"/> wird hinter der Bezeichnung eingefuegt (leer = ohne).
+    /// </summary>
+    public static string Beschreibung(EchtDiagramm d, EchtElement e, string stelle)
+    {
+        var satz = Bezeichnung(d, e) + stelle;
+        if (e.Typ == "klasse")
+        {
+            var attribute = e.AttributZeilen.Where(z => z.Trim().Length > 0).ToList();
+            var methoden = e.MethodenZeilen.Where(z => z.Trim().Length > 0).ToList();
+            satz += "; " + EchtTexte.Attribute + ": " + (attribute.Count > 0 ? string.Join(", ", attribute) : EchtTexte.Keine);
+            satz += "; " + EchtTexte.Methoden + ": " + (methoden.Count > 0 ? string.Join(", ", methoden) : EchtTexte.Keine);
+        }
+        var beziehungen = d.Verbindungen.Where(v => v.Von == e.Id || v.Nach == e.Id).Select(v => BeziehungAus(d, e, v)).ToList();
+        return satz + "; " + (beziehungen.Count > 0 ? string.Join("; ", beziehungen) : EchtTexte.OhneVerbindung);
+    }
+
+    /// <summary>Eine Beziehung aus Sicht von <paramref name="e"/>: "erbt von Klasse „Fahrrad“", "«include» Anwendungsfall „Ausweis prüfen“".</summary>
+    public static string BeziehungAus(EchtDiagramm d, EchtElement e, EchtVerbindung v)
+    {
+        var vorn = v.Von == e.Id;
+        var anderer = Bezeichnung(d, d.Element(vorn ? v.Nach : v.Von));
+        var muster = (v.Typ, vorn) switch
+        {
+            ("vererbung", true) => EchtTexte.ErbtVon,
+            ("vererbung", false) => EchtTexte.OberklasseVon,
+            ("aggregation", true) => EchtTexte.TeilVonAggregation,
+            ("aggregation", false) => EchtTexte.GanzesAggregation,
+            ("komposition", true) => EchtTexte.TeilVonKomposition,
+            ("komposition", false) => EchtTexte.GanzesKomposition,
+            ("include", true) => EchtTexte.BindetEin,
+            ("include", false) => EchtTexte.EingebundenVon,
+            ("extend", true) => EchtTexte.Erweitert,
+            ("extend", false) => EchtTexte.ErweitertDurch,
+            ("generalisierung", true) => EchtTexte.Spezialisiert,
+            ("generalisierung", false) => EchtTexte.Verallgemeinert,
+            _ => EchtTexte.AssoziationMit,
+        };
+        var text = Beschriftungen.Einsetzen(muster, anderer);
+        if (MitMultiplizitaet(d.Art, v.Typ) && (v.MultVon.Length > 0 || v.MultNach.Length > 0))
+        {
+            var (hier, dort) = vorn ? (v.MultVon, v.MultNach) : (v.MultNach, v.MultVon);
+            text += " " + Beschriftungen.Einsetzen(EchtTexte.MultHierDort, hier.Length > 0 ? hier : EchtTexte.OhneKardinalitaet,
+                dort.Length > 0 ? dort : EchtTexte.OhneKardinalitaet);
+        }
+        return text;
+    }
+
     /// <summary>"Aktion „Ticket anlegen“", "Verzweigung 1", "Start", "Entität Kunde".</summary>
     public static string Bezeichnung(EchtDiagramm d, EchtElement e)
     {
@@ -389,12 +756,50 @@ public static class EchtZeichnung
         "entitaet" => "Entität",
         "beziehung" => "Beziehung",
         "attribut" => "Attribut",
+        "klasse" => "Klasse",
+        "akteur" => "Akteur",
+        "anwendungsfall" => "Anwendungsfall",
         _ => typ,
     };
 
-    public static string Name(string art) => art == Uml ? EchtTexte.UmlName : EchtTexte.ErName;
+    /// <summary>Name einer Beziehungsart (A 1.8.0): "Assoziation", "«include»" ...</summary>
+    public static string Beziehung(string typ) => typ switch
+    {
+        "assoziation" => "Assoziation",
+        "vererbung" => "Vererbung",
+        "aggregation" => "Aggregation",
+        "komposition" => "Komposition",
+        "include" => "«include»",
+        "extend" => "«extend»",
+        "generalisierung" => "Generalisierung",
+        _ => typ,
+    };
 
-    private static bool MitText(string typ) => typ is "aktion" or "entitaet" or "beziehung" or "attribut";
+    public static string Name(string art) => art switch
+    {
+        Uml => EchtTexte.UmlName,
+        Klasse => EchtTexte.KlasseName,
+        UseCase => EchtTexte.UseCaseName,
+        _ => EchtTexte.ErName,
+    };
+
+    private static bool MitText(string typ) => typ is "aktion" or "entitaet" or "beziehung" or "attribut" or "klasse" or "akteur" or "anwendungsfall";
+
+    /// <summary>Attribut- oder Methodenzeilen einer Klasse lesen (Liste von Texten, jede nicht leer, bis 60 Zeichen).</summary>
+    private static string KlassenZeilen(JsonNode? knoten, string wo, string id, string was)
+    {
+        if (knoten is null)
+        {
+            return "";
+        }
+        var zeilen = Texte(knoten, wo + " " + was);
+        if (zeilen.Count > ZeilenMax || zeilen.Any(z => z.Trim().Length == 0 || z.Length > TextLaenge || z.Contains('\n') || z.Contains('\r')))
+        {
+            throw new EchtLadefehler(string.Create(CultureInfo.InvariantCulture,
+                $"{wo}: {id} {was}: höchstens {ZeilenMax} Zeilen, jede nicht leer und höchstens {TextLaenge} Zeichen"));
+        }
+        return string.Join('\n', zeilen);
+    }
 
     private static string Wert(double wert) => wert.ToString("0.##", CultureInfo.GetCultureInfo("de-DE"));
 

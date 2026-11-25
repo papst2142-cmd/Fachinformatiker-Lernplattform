@@ -22,7 +22,16 @@ namespace Lernplattform.Tests;
 /// </summary>
 public sealed class FachrichtungsPaketTests : IDisposable
 {
-    private const string App = "A 1.5.0";
+    /// <summary>A 1.8.0 (Weisung P12-372): Version der App in den Tests (vorher A 1.5.0; das AE-Paket Stand 2 braucht A 1.8.0).</summary>
+    private const string App = "A 1.8.0";
+
+    /// <summary>
+    /// A 1.8.0: Stand und braucht_app des echten Pakets je Fachrichtung, gleich paket_bauen.LERNEN_TESTDATEIEN (AE Stand 2 mit
+    /// den neuen Fassungen der Pruefungssaetze, DPA und DV Stand 1). Die Datei lernen_ae_1 bleibt als echte Testdatei liegen.
+    /// </summary>
+    private static (long Stand, string Braucht) Echtes(string fr) => fr == "ae" ? (2, "A 1.8.0") : (1, "A 1.5.0");
+
+    private static string EchtDatei(string fr) => Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, Echtes(fr).Stand));
     private static readonly string Lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
     private static readonly string Echt = Path.Combine(Pfade.Wurzel, "tests/Lernplattform.Tests/Testdaten/pakete_echt");
     private static readonly string[] Frs = ["ae", "dpa", "dv"];
@@ -169,10 +178,10 @@ public sealed class FachrichtungsPaketTests : IDisposable
     [Fact]
     public void A1_EchteTestdatei_LernenAe_IstGut_UndGleichDemSchnitt()
     {
-        var bytes = File.ReadAllBytes(Path.Combine(Echt, "lernen_ae_1.fipaket"));
+        var bytes = File.ReadAllBytes(EchtDatei("ae"));
         var e = Paket.PruefenArchiv(new MemoryStream(bytes), App, RepoOrdner.Value);
         Assert.True(e.Gut, e.Grund);
-        Assert.Equal((Paket.ArtLernen, "lernen_ae", "Fachrichtungs-Paket AE", 1L), (e.Kopf!.Art, e.Kopf.Kennung, e.Kopf.Name, e.Kopf.Stand));
+        Assert.Equal((Paket.ArtLernen, "lernen_ae", "Fachrichtungs-Paket AE", 2L), (e.Kopf!.Art, e.Kopf.Kennung, e.Kopf.Name, e.Kopf.Stand));
         Assert.NotNull(e.Lernen);
         // der C#-Nachbau des Schnitts bringt genau dieselben Eintraege an denselben Stellen
         var nachbau = Pruefen(Schnitt("ae"));
@@ -183,8 +192,9 @@ public sealed class FachrichtungsPaketTests : IDisposable
             Assert.True(nachbau.Lernen.Listen[name].Zip(e.Lernen.Listen[name]).All(p => JsonElement.DeepEquals(p.First.Eintrag, p.Second.Eintrag)), name);
         }
         Assert.Equal(nachbau.Lernen!.Saetze.Select(s => s.Stelle), e.Lernen!.Saetze.Select(s => s.Stelle));
-        // A 0.94.0 (P12-304): 10 alte und 10 neue AE-Saetze; die 10 alten stehen mit Stelle und Kennung im Ausschluss
-        Assert.Equal(20, e.Lernen.Saetze.Count);
+        // A 0.94.0 (P12-304): 10 alte und 10 neue AE-Saetze; die 10 alten stehen mit Stelle und Kennung im Ausschluss;
+        // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen (gleiche Kennung, hinten angehaengt)
+        Assert.Equal(25, e.Lernen.Saetze.Count);
         Assert.Equal(EchtInhalteAeTests.Ae, e.Lernen.Ausschluss.Where(a => a.Datei == "pruefungssaetze").Select(a => a.Frage).Order(StringComparer.Ordinal));
         Assert.Equal(1500, e.Lernen.Listen["karteikarten"].Count);
         Assert.Equal(330, e.Lernen.Listen["szenarien_ap2"].Count);
@@ -362,7 +372,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         var vorher = Sha(File.ReadAllBytes(pfad));
         var quelle = Path.Combine(_tmp, "quelle");
         Directory.CreateDirectory(quelle);
-        File.Copy(Path.Combine(Echt, "lernen_ae_1.fipaket"), Path.Combine(quelle, "lernen_ae_1.fipaket"));
+        File.Copy(EchtDatei("ae"), Path.Combine(quelle, Path.GetFileName(EchtDatei("ae"))));
         File.WriteAllBytes(Path.Combine(quelle, "lernen_dpa_1.fipaket"), [1, 2, 3]);   // Fehler: kein Archiv
         // die App ohne eingebaute AE-Inhalte
         var ohneOrdner = new LernenOrdner(MitPlatzhaltern("ae"));
@@ -416,16 +426,16 @@ public sealed class FachrichtungsPaketTests : IDisposable
         Assert.All(zeilen, z => Assert.False(z.ImFahrplan));
         Assert.Empty(v.NeueFachrichtungsStaende());
         // nach einer Suche mit Angebot: Hinweis „neuer Stand da“ und Knopf Laden; nichts ist geladen
-        File.Copy(Path.Combine(Echt, "lernen_ae_1.fipaket"), Path.Combine(quelle, "lernen_ae_1.fipaket"));
+        File.Copy(EchtDatei("ae"), Path.Combine(quelle, Path.GetFileName(EchtDatei("ae"))));
         await v.SuchenAsync(TestContext.Current.CancellationToken);
         var ae = v.Zeilen().Single(z => z.Kennung == "lernen_ae");
-        Assert.Equal((PaketZustand.NeuerStand, PaketTexte.Format(PaketTexte.ZustandEingebautNeu, 1)), (ae.Zustand, ae.ZustandText));
+        Assert.Equal((PaketZustand.NeuerStand, PaketTexte.Format(PaketTexte.ZustandEingebautNeu, 2)), (ae.Zustand, ae.ZustandText));
         Assert.Equal([PaketKnopf.Laden], ae.Knoepfe);
-        Assert.Equal([("ae", 1L)], v.NeueFachrichtungsStaende().Select(n => (n.Fachrichtung, n.Angebot.Stand)));
+        Assert.Equal([("ae", 2L)], v.NeueFachrichtungsStaende().Select(n => (n.Fachrichtung, n.Angebot.Stand)));
         Assert.Empty(v.Fachrichtungen());
         Assert.False(Directory.Exists(Path.Combine(_tmp, "daten5", "pakete")));
         Assert.Null(await v.LadenAsync(ae.Angebot!, null, TestContext.Current.CancellationToken));
-        Assert.Equal((PaketZustand.Geladen, PaketTexte.Format(PaketTexte.ZustandGeladen, 1)),
+        Assert.Equal((PaketZustand.Geladen, PaketTexte.Format(PaketTexte.ZustandGeladen, 2)),
             v.Zeilen().Single(z => z.Kennung == "lernen_ae") is var g ? (g.Zustand, g.ZustandText) : default);
         Assert.Empty(v.NeueFachrichtungsStaende());
         // ohne eingebaute Inhalte: „Nicht geladen“
@@ -479,13 +489,15 @@ public sealed class FachrichtungsPaketTests : IDisposable
     [InlineData("dv")]
     public void A1_EchteTestdateien_JeFachrichtung_Gut(string fr)
     {
-        var e = Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, 1))), App, RepoOrdner.Value);
+        var e = Paket.PruefenArchiv(File.OpenRead(EchtDatei(fr)), App, RepoOrdner.Value);
         Assert.True(e.Gut, e.Grund);
         Assert.Equal(fr, e.Lernen!.Fachrichtung);
-        // Gegenprobe (A 1.5.0, Nico 3a): eine aeltere App (A 1.4.1, auch A 0.91.0) nimmt es nicht: „braucht A 1.5.0“
-        foreach (var alt in new[] { "A 1.4.1", "A 0.91.0", "A 0.90.0" })
+        Assert.Equal(Echtes(fr).Stand, e.Kopf!.Stand);
+        // Gegenprobe (A 1.5.0, Nico 3a): eine aeltere App (A 1.4.1, auch A 0.91.0) nimmt es nicht: „braucht A 1.5.0“;
+        // A 1.8.0: das AE-Paket Stand 2 braucht A 1.8.0 (Saetze Format 4), auch A 1.7.0 nimmt es nicht
+        foreach (var alt in new[] { "A 1.4.1", "A 0.91.0", "A 0.90.0" }.Concat(fr == "ae" ? ["A 1.7.0", "A 1.5.0"] : []))
         {
-            Assert.Equal(PaketTexte.Format(PaketTexte.AppAlt, App), Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, 1))), alt).Grund);
+            Assert.Equal(PaketTexte.Format(PaketTexte.AppAlt, Echtes(fr).Braucht), Paket.PruefenArchiv(File.OpenRead(EchtDatei(fr)), alt).Grund);
         }
     }
 
@@ -596,7 +608,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         n => AppBau.Value.TryGetValue(n, out var b) ? b : null);
 
     private static PaketErgebnis EchtesPaket(string fr, LernenOrdner app) =>
-        Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, 1))), App, app);
+        Paket.PruefenArchiv(File.OpenRead(EchtDatei(fr)), App, app);
 
     /// <summary>
     /// Abnahmesatz 1: der Bau der App schneidet genau AE, DPA und DV heraus. Liest die Einstellung aus LernenTeile.targets und
@@ -636,8 +648,9 @@ public sealed class FachrichtungsPaketTests : IDisposable
                 }
             }
         }
-        // Kurzplan P12-225: 4 500 Karteikarten, 6 361 Quizfragen, 990 AP2-Szenarien, 150 Testprojekte, 54 Fachfragen, 40 Saetze
-        Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40, platzhalter);
+        // Kurzplan P12-225: 4 500 Karteikarten, 6 361 Quizfragen, 990 AP2-Szenarien, 150 Testprojekte, 54 Fachfragen, 40 Saetze;
+        // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen der AE-Saetze
+        Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40 + 5, platzhalter);
         Assert.DoesNotContain(bau.Keys, k => Geschnitten.Any(fr => k.Contains("." + fr + ".", StringComparison.Ordinal)));
         var ordner = AppOrdner();
         Assert.All(Geschnitten, fr => Assert.True(ordner.Fehlt(fr), fr));
@@ -745,12 +758,12 @@ public sealed class FachrichtungsPaketTests : IDisposable
         try
         {
             var ablage = new PaketAblage(ordner, app, "K1");
-            var ziel = ablage.Ladedatei("lernen_ae", 1);
-            File.Copy(Path.Combine(Echt, Paket.Dateiname("lernen_ae", 1)), ziel, true);
-            Assert.True(ablage.Einsetzen(ziel, "lernen_ae", 1, App).Gut);
+            var ziel = ablage.Ladedatei("lernen_ae", 2);
+            File.Copy(EchtDatei("ae"), ziel, true);
+            Assert.True(ablage.Einsetzen(ziel, "lernen_ae", 2, App).Gut);
             List<string> Zeilen(PaketAblage a) => File.Exists(a.GeprueftDatei) ? [.. File.ReadAllLines(a.GeprueftDatei)] : [];
             Assert.Equal("K1", Zeilen(ablage)[0]);
-            Assert.Single(Zeilen(ablage).Skip(1), z => z.StartsWith("ae:1:", StringComparison.Ordinal));
+            Assert.Single(Zeilen(ablage).Skip(1), z => z.StartsWith("ae:2:", StringComparison.Ordinal));
             // gleiche App: dasselbe Ergebnis wie ohne Merker, offene Saetze sind schon gut
             var ohne = new PaketAblage(ordner, app).Liste(App).Single();
             var mit = ablage.Liste(App).Single();
@@ -781,7 +794,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
                 await Task.Delay(20, TestContext.Current.CancellationToken);
             }
             Assert.Equal("K3", Zeilen(k3)[0]);
-            Assert.Single(Zeilen(k3).Skip(1), z => z.StartsWith("ae:1:", StringComparison.Ordinal));
+            Assert.Single(Zeilen(k3).Skip(1), z => z.StartsWith("ae:2:", StringComparison.Ordinal));
             // ohne Paket kein Merker: der Datenordner ist danach wie vorher
             Assert.True(k3.Entfernen("lernen_ae"));
             Assert.False(Directory.Exists(k3.Ordner));
@@ -815,7 +828,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         Func<string, byte[]?> stand2Repo = n => n == name ? bytes : Repo(n);
         var app = AppOrdner();
         var paket1 = EchtesPaket("ae", app);
-        var paket2 = Pruefen(Schnitt("ae", 2, stand2Repo), app);
+        var paket2 = Pruefen(Schnitt("ae", 3, stand2Repo), app);
         Assert.True(paket2.Gut, paket2.Grund);
         Assert.Equal(laenge + 2, paket2.Lernen!.Ende(name));
         var dpaDv = Geschnitten.Skip(1).Select(f => EchtesPaket(f, app).Lernen!).ToList();
@@ -836,7 +849,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         // Gegenprobe: dasselbe Paket mit dem neuen Eintrag an der Stelle der Luecke (die eine neuere App fuer SI haette) ist rot
         var appMitSi = new LernenOrdner(n => n == name ? Encoding.UTF8.GetBytes(JsonNode.Parse(stand2Repo(name)!)!.AsArray().Take(laenge + 1)
             .Select(e => e!.DeepClone()).Aggregate(new JsonArray(), (l, e) => { l.Add(e); return l; }).ToJsonString()) : Repo(n));
-        Assert.StartsWith("Das Paket verschiebt Inhalte", Pruefen(Schnitt("ae", 2, n => n == name
+        Assert.StartsWith("Das Paket verschiebt Inhalte", Pruefen(Schnitt("ae", 3, n => n == name
             ? Encoding.UTF8.GetBytes(JsonNode.Parse(Repo(name)!)!.AsArray().Append(ae.DeepClone()).Aggregate(new JsonArray(), (l, e) => { l.Add(e!.DeepClone()); return l; }).ToJsonString())
             : Repo(n)), appMitSi).Grund, StringComparison.Ordinal);
     }

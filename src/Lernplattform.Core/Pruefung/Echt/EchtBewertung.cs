@@ -303,6 +303,11 @@ public static class EchtBewertung
             ["haken"] = zustand["haken"]?.DeepClone() ?? new JsonObject(),
             ["zeitfrage"] = zustand["zeitfrage"]?.DeepClone(),
         };
+        // A 1.8.0 (Weisung P12-372): beiseite gelegte Antworten einer alten Fassung gehen mit ins Ergebnis (nichts still verworfen)
+        if (zustand[EchtAblauf.AlteFassungen] is { } alt)
+        {
+            daten[EchtAblauf.AlteFassungen] = alt.DeepClone();
+        }
         return new EchtErgebnis(gesamt, Trainer.Note(gesamt), dauer, aufgaben, daten);
     }
 }

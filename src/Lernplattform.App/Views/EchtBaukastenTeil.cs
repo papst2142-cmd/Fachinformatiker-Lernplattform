@@ -37,6 +37,10 @@ public sealed class EchtBaukastenTeil : StackPanel
     private readonly StackPanel _karte = new() { Spacing = 8 };
     private readonly StackPanel _liste = new() { Spacing = 6 };
     private readonly Dictionary<string, Button> _setzen = new(StringComparer.Ordinal);
+    // A 1.8.0 Klasse/Use-Case: Knoepfe der Leiste, die vom gewaehlten Baustein abhaengen
+    private Button? _attributNeu;
+    private Button? _methodeNeu;
+    private Button? _verbindenLeiste;
     private string? _gewaehlt;
     private bool _verbinden;
     private Point? _druck;
@@ -66,6 +70,31 @@ public sealed class EchtBaukastenTeil : StackPanel
             knopf.Click += (_, _) => Setzen(typ);
             _setzen[typ] = knopf;
             palette.Children.Add(knopf);
+        }
+        if (bau.MitBeziehungen)
+        {
+            // A 1.8.0 (Bilder P12-232 02 und 03): "Attribut hinzufügen", "Methode hinzufügen" (Klasse) und "Verbinden …"
+            if (bau.Art == EchtZeichnung.Klasse)
+            {
+                _attributNeu = Knopf(EchtTexte.AttributNeu);
+                _attributNeu.Click += (_, _) => ZeileNeu(methode: false);
+                _methodeNeu = Knopf(EchtTexte.MethodeNeu);
+                _methodeNeu.Click += (_, _) => ZeileNeu(methode: true);
+                foreach (var k in new[] { _attributNeu, _methodeNeu })
+                {
+                    k.Margin = new Thickness(0, 0, 8, 8);
+                    palette.Children.Add(k);
+                }
+            }
+            _verbindenLeiste = Knopf(EchtTexte.VerbindenLeiste);
+            _verbindenLeiste.Margin = new Thickness(0, 0, 8, 8);
+            _verbindenLeiste.Click += (_, _) =>
+            {
+                _verbinden = !_verbinden;
+                KarteMalen();
+                Hinweis(null);
+            };
+            palette.Children.Add(_verbindenLeiste);
         }
         Children.Add(palette);
         _bild = new DiagrammBild(bau.Diagramm, raster: true) { Gewaehlt = _gewaehlt };
@@ -212,11 +241,47 @@ public sealed class EchtBaukastenTeil : StackPanel
         _status.IsVisible = zeigen is not null;
     }
 
+    /// <summary>A 1.8.0: neue Attribut- oder Methodenzeile an der gewaehlten Klasse, Fokus in ihr Feld.</summary>
+    private void ZeileNeu(bool methode)
+    {
+        if (_gewaehlt is not { } id || _bau.ZeileHinzufuegen(id, methode) is not { } nummer)
+        {
+            return;
+        }
+        Neu(sofort: true);
+        var name = Beschriftungen.Einsetzen(methode ? EchtTexte.MethodeNr : EchtTexte.AttributNr, nummer + 1);
+        Dispatcher.UIThread.Post(() => _karte.GetLogicalDescendants().OfType<TextBox>()
+            .FirstOrDefault(t => Avalonia.Automation.AutomationProperties.GetName(t) == name)?.Focus(), DispatcherPriority.Background);
+    }
+
+    /// <summary>A 1.8.0: Knoepfe der Leiste je nach Wahl (Attribut/Methode nur an einer eigenen Klasse, Verbinden mit Wahl).</summary>
+    private void LeisteStand()
+    {
+        var e = _bau.Element(_gewaehlt);
+        var eigeneKlasse = e is { Typ: "klasse" } && !_bau.IstFest(e.Id);
+        if (_attributNeu is not null)
+        {
+            _attributNeu.IsEnabled = eigeneKlasse && e!.AttributZeilen.Count < EchtZeichnung.ZeilenMax;
+        }
+        if (_methodeNeu is not null)
+        {
+            _methodeNeu.IsEnabled = eigeneKlasse && e!.MethodenZeilen.Count < EchtZeichnung.ZeilenMax;
+        }
+        if (_verbindenLeiste is not null)
+        {
+            _verbindenLeiste.IsEnabled = e is not null;
+            var text = _verbinden ? EchtTexte.VerbindenAbbrechen : EchtTexte.VerbindenLeiste;
+            ((TextBlock)_verbindenLeiste.Content!).Text = text;
+            Avalonia.Automation.AutomationProperties.SetName(_verbindenLeiste, text);
+        }
+    }
+
     // -- Karte des gewaehlten Bausteins ---------------------------------------------------------------
 
     private void KarteMalen()
     {
         _karte.Children.Clear();
+        LeisteStand();
         if (_bau.Element(_gewaehlt) is not { } e)
         {
             _karte.Children.Add(new LernText(EchtTexte.NichtsGewaehlt, "Klein", FontWeight.Normal, "Pinsel.muted"));
@@ -231,7 +296,25 @@ public sealed class EchtBaukastenTeil : StackPanel
         }
         else
         {
-            if (EchtBaukasten.MitText(e.Typ))
+            if (EchtBaukasten.MitText(e.Typ) && _bau.MitBeziehungen)
+            {
+                // A 1.8.0 (Bilder P12-232): "Name", bei der Klasse Attribut- und Methodenzeilen mit "Entfernen"
+                var feld = Feld(e.Text, EchtTexte.NameFeld);
+                feld.TextChanged += (_, _) =>
+                {
+                    if (_bau.Beschriften(e.Id, feld.Text ?? ""))
+                    {
+                        TextNeu();
+                    }
+                };
+                _karte.Children.Add(new FeldZeile(Beschriftung(EchtTexte.NameFeld), feld.Breite(380)));
+                if (e.Typ == "klasse")
+                {
+                    KlassenZeilen(e, methode: false);
+                    KlassenZeilen(e, methode: true);
+                }
+            }
+            else if (EchtBaukasten.MitText(e.Typ))
             {
                 _karte.Children.Add(LernTeile.Label(EchtTexte.BausteinText));
                 var feld = Feld(e.Text, EchtTexte.BausteinText);
@@ -268,7 +351,7 @@ public sealed class EchtBaukastenTeil : StackPanel
                 var knopf = Knopf(text);
                 knopf.Margin = new Thickness(0, 0, 8, 8);
                 knopf.IsEnabled = _bau.An(e.X + dx, e.Y + dy) is null && e.X + dx >= 0 && e.Y + dy >= 0
-                    && e.X + dx < EchtZeichnung.RasterBreite && e.Y + dy < EchtZeichnung.RasterHoehe;
+                    && e.X + dx < EchtZeichnung.RasterBreite && e.Y + dy < EchtZeichnung.RasterHoehe && _bau.Passt(e.Typ, e.X + dx, e.Y + dy);
                 knopf.Click += (_, _) =>
                 {
                     if (_bau.Element(e.Id) is { } jetzt && _bau.Verschieben(e.Id, jetzt.X + dx, jetzt.Y + dy))
@@ -302,16 +385,39 @@ public sealed class EchtBaukastenTeil : StackPanel
             _karte.Children.Add(LernTeile.Label(EchtTexte.VerbindenMit));
             var auswahl = Auswahl(andere.Select(x => _bau.Name(x)).ToList(), EchtTexte.VerbindenMit);
             auswahl.SelectedIndex = 0;
+            // A 1.8.0: Art der Beziehung waehlen (gerichtete Arten zeigen vom gewaehlten Baustein zum Ziel)
+            var arten = _bau.MitBeziehungen ? EchtZeichnung.Beziehungen[_bau.Art] : [];
+            var art = _bau.MitBeziehungen ? Auswahl(arten.Select(EchtZeichnung.Beziehung).ToList(), EchtTexte.ArtDerBeziehung) : null;
+            if (art is not null)
+            {
+                art.SelectedIndex = 0;
+            }
             var verbinden = Knopf(EchtTexte.Verbinden);
             verbinden.HorizontalAlignment = HorizontalAlignment.Left;
             verbinden.Click += (_, _) =>
             {
                 if (auswahl.SelectedIndex >= 0 && auswahl.SelectedIndex < andere.Count)
                 {
-                    Verbinden(e.Id, andere[auswahl.SelectedIndex].Id);
+                    if (art is not null && art.SelectedIndex >= 0)
+                    {
+                        var fehler = _bau.Verbinden(e.Id, andere[auswahl.SelectedIndex].Id, arten[art.SelectedIndex]);
+                        Neu(sofort: fehler is null);
+                        Hinweis(fehler);
+                    }
+                    else
+                    {
+                        Verbinden(e.Id, andere[auswahl.SelectedIndex].Id);
+                    }
                 }
             };
             _karte.Children.Add(auswahl);
+            if (art is not null)
+            {
+                _karte.Children.Add(LernTeile.Label(EchtTexte.ArtDerBeziehung));
+                _karte.Children.Add(art);
+                _karte.Children.Add(new LernText(_bau.Art == EchtZeichnung.Klasse ? EchtTexte.RichtungKlasse : EchtTexte.RichtungUseCase,
+                    "Klein", FontWeight.Normal, "Pinsel.muted"));
+            }
             _karte.Children.Add(verbinden);
         }
 
@@ -325,8 +431,16 @@ public sealed class EchtBaukastenTeil : StackPanel
             var anderer = d.Element(v.Von == e.Id ? v.Nach : v.Von);
             var name = EchtZeichnung.Bezeichnung(d, anderer);
             var zeile = new StackPanel { Spacing = 4 };
-            var muster = _bau.Art == EchtZeichnung.Er ? EchtTexte.LinieZu : v.Von == e.Id ? EchtTexte.PfeilZu : EchtTexte.PfeilVon;
-            zeile.Children.Add(new LernText(Beschriftungen.Einsetzen(muster, name), "Klein", FontWeight.Bold, "Pinsel.text_soft"));
+            if (_bau.MitBeziehungen)
+            {
+                zeile.Children.Add(new LernText(EchtZeichnung.BeziehungAus(d, e, v), "Klein", FontWeight.Bold, "Pinsel.text_soft"));
+                BeziehungBearbeiten(zeile, d, e, v, anderer);
+            }
+            else
+            {
+                var muster = _bau.Art == EchtZeichnung.Er ? EchtTexte.LinieZu : v.Von == e.Id ? EchtTexte.PfeilZu : EchtTexte.PfeilVon;
+                zeile.Children.Add(new LernText(Beschriftungen.Einsetzen(muster, name), "Klein", FontWeight.Bold, "Pinsel.text_soft"));
+            }
             if (_bau.BedingungMoeglich(v))
             {
                 var titel = Beschriftungen.Einsetzen(EchtTexte.Bedingung, EchtZeichnung.Bezeichnung(d, d.Element(v.Nach)));
@@ -390,11 +504,121 @@ public sealed class EchtBaukastenTeil : StackPanel
         }
     }
 
+    /// <summary>A 1.8.0: Attribut- oder Methodenzeilen einer eigenen Klasse (Feld und "Entfernen" je Zeile, dann "hinzufügen").</summary>
+    private void KlassenZeilen(Core.Pruefung.Echt.EchtElement e, bool methode)
+    {
+        var zeilen = methode ? e.MethodenZeilen : e.AttributZeilen;
+        for (var i = 0; i < zeilen.Count; i++)
+        {
+            var nummer = i;
+            var name = Beschriftungen.Einsetzen(methode ? EchtTexte.MethodeNr : EchtTexte.AttributNr, nummer + 1);
+            var feld = Feld(zeilen[i].Trim(), name);
+            feld.TextChanged += (_, _) =>
+            {
+                if (_bau.ZeileSetzen(e.Id, methode, nummer, feld.Text ?? ""))
+                {
+                    TextNeu();
+                }
+            };
+            var weg = Knopf(Beschriftungen.Einsetzen(EchtTexte.ZeileEntfernen, name));
+            ((TextBlock)weg.Content!).Text = EchtTexte.Entfernen;
+            weg.Margin = new Thickness(8, 0, 0, 0);
+            weg.Click += (_, _) =>
+            {
+                if (_bau.ZeileEntfernen(e.Id, methode, nummer))
+                {
+                    Neu(sofort: true);
+                }
+            };
+            DockPanel.SetDock(weg, Dock.Right);
+            var reihe = new DockPanel { LastChildFill = true, Children = { weg, feld } }.Breite(460);
+            _karte.Children.Add(new FeldZeile(Beschriftung(methode ? EchtTexte.Methode : EchtTexte.Attribut), reihe));
+        }
+        var neu = Knopf(methode ? EchtTexte.MethodeNeu : EchtTexte.AttributNeu);
+        neu.HorizontalAlignment = HorizontalAlignment.Left;
+        neu.IsEnabled = zeilen.Count < EchtZeichnung.ZeilenMax;
+        neu.Click += (_, _) => ZeileNeu(methode);
+        _karte.Children.Add(neu);
+    }
+
+    /// <summary>A 1.8.0: Art, Richtung und Multiplizitaeten einer eigenen Beziehung (die der Vorgabe bleiben, wie sie sind).</summary>
+    private void BeziehungBearbeiten(StackPanel zeile, Core.Pruefung.Echt.EchtDiagramm d, Core.Pruefung.Echt.EchtElement e,
+        Core.Pruefung.Echt.EchtVerbindung v, Core.Pruefung.Echt.EchtElement anderer)
+    {
+        if (!_bau.ArtFest(v))
+        {
+            var arten = _bau.ArtenZwischen(v.Von, v.Nach);
+            var titel = Beschriftungen.Einsetzen(EchtTexte.ArtZu, EchtZeichnung.Bezeichnung(d, anderer));
+            var art = Auswahl(arten.Select(EchtZeichnung.Beziehung).ToList(), titel);
+            art.SelectedIndex = Math.Max(0, arten.ToList().IndexOf(v.Typ));
+            art.SelectionChanged += (_, _) =>
+            {
+                if (art.SelectedIndex >= 0 && art.SelectedIndex < arten.Count && arten[art.SelectedIndex] != v.Typ)
+                {
+                    var fehler = _bau.ArtSetzen(v.Von, v.Nach, arten[art.SelectedIndex]);
+                    Neu(sofort: fehler is null);
+                    Hinweis(fehler);
+                }
+            };
+            zeile.Children.Add(LernTeile.Label(titel));
+            zeile.Children.Add(art);
+            if (EchtZeichnung.Gerichtet(v.Typ))
+            {
+                var umkehren = Knopf(Beschriftungen.Einsetzen(EchtTexte.Umkehren, EchtZeichnung.Bezeichnung(d, anderer)));
+                umkehren.HorizontalAlignment = HorizontalAlignment.Left;
+                umkehren.Click += (_, _) =>
+                {
+                    var fehler = _bau.Umkehren(v.Von, v.Nach);
+                    Neu(sofort: fehler is null);
+                    Hinweis(fehler);
+                };
+                zeile.Children.Add(umkehren);
+            }
+        }
+        if (!_bau.MultMoeglich(v))
+        {
+            return;
+        }
+        // Multiplizitaet erst am gewaehlten Baustein, dann am anderen Ende
+        foreach (var (ende, amVon) in new[] { (e, v.Von == e.Id), (anderer, v.Von == anderer.Id) })
+        {
+            var titel = Beschriftungen.Einsetzen(EchtTexte.MultAn, EchtZeichnung.Bezeichnung(d, ende));
+            List<string> werte = ["", .. EchtZeichnung.Multiplizitaeten];
+            var jetzt = amVon ? v.MultVon : v.MultNach;
+            var wahl = Auswahl(werte.Select(w => w.Length == 0 ? EchtTexte.OhneKardinalitaet : w).ToList(), titel);
+            wahl.SelectedIndex = Math.Max(0, werte.IndexOf(jetzt));
+            wahl.IsEnabled = !_bau.MultFest(v, amVon);
+            wahl.SelectionChanged += (_, _) =>
+            {
+                if (wahl.SelectedIndex >= 0 && _bau.MultSetzen(v.Von, v.Nach, amVon, werte[wahl.SelectedIndex]))
+                {
+                    _bild.Daten = _bau.Diagramm;
+                    ListeMalen();
+                    _geaendert(true);
+                }
+                else if (wahl.SelectedIndex >= 0 && werte[wahl.SelectedIndex] != jetzt)
+                {
+                    Hinweis(EchtTexte.KompositionGanzes);
+                }
+            };
+            zeile.Children.Add(new FeldZeile(Beschriftung(titel), wahl.Breite(160)));
+        }
+    }
+
+    private static LernText Beschriftung(string text) => new(text, "Klein", FontWeight.Normal, "Pinsel.text_soft")
+    {
+        VerticalAlignment = VerticalAlignment.Center,
+    };
+
     // -- Liste fuer Screenreader und Tastatur ---------------------------------------------------------
 
     private void ListeMalen()
     {
         _liste.Children.Clear();
+        foreach (var grenze in EchtZeichnung.GrenzeText(_bau.Diagramm))
+        {
+            _liste.Children.Add(new LernText(grenze, "Klein", FontWeight.Normal, "Pinsel.text_soft"));
+        }
         var zeilen = _bau.Zeilen();
         if (zeilen.Count == 0)
         {

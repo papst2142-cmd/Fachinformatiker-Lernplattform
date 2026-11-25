@@ -260,7 +260,7 @@
   }
  },
  "pruefungssaetze": {
-  "format": 3,
+  "format": 4,
   "fehler": [],
   "saetze": {
    "alle_ap1_01": {
@@ -2468,23 +2468,25 @@
      "angaben": 1,
      "luecke": 3,
      "tabelle": 2,
-     "zeichnen": 1,
-     "zeilen": 12
+     "zeichnen": 2,
+     "zeilen": 11
     },
     "operatoren": {
      "begruenden": 1,
      "beschreiben": 2,
-     "ergaenzen": 4,
+     "ergaenzen": 3,
      "erlaeutern": 5,
      "ermitteln": 3,
      "erstellen": 3,
-     "nennen": 1
+     "nennen": 1,
+     "zeichnen": 1
     },
     "punkte_selbst": 79,
     "punkte_programm": 21,
+    "fassung": 2,
     "aufbau": "paar",
     "gebiete": {
-     "diagramm": 25,
+     "diagramm": 31,
      "pseudocode": 6,
      "sql": 6
     }
@@ -2517,8 +2519,8 @@
      "angaben": 5,
      "rechnen": 1,
      "tabelle": 1,
-     "zeichnen": 1,
-     "zeilen": 11
+     "zeichnen": 2,
+     "zeilen": 10
     },
     "operatoren": {
      "begruenden": 2,
@@ -2533,6 +2535,7 @@
     },
     "punkte_selbst": 94,
     "punkte_programm": 6,
+    "fassung": 2,
     "aufbau": "paar",
     "gebiete": {
      "diagramm": 27,
@@ -2568,8 +2571,8 @@
      "angaben": 3,
      "auswahl": 2,
      "luecke": 1,
-     "zeichnen": 1,
-     "zeilen": 13
+     "zeichnen": 2,
+     "zeilen": 12
     },
     "operatoren": {
      "begruenden": 2,
@@ -2583,6 +2586,7 @@
     },
     "punkte_selbst": 89,
     "punkte_programm": 11,
+    "fassung": 2,
     "aufbau": "paar",
     "gebiete": {
      "diagramm": 23,
@@ -2602,7 +2606,7 @@
     ],
     "teile": [
      5,
-     5,
+     6,
      4,
      5
     ],
@@ -2619,12 +2623,12 @@
      "angaben": 3,
      "luecke": 1,
      "tabelle": 3,
-     "zeichnen": 1,
+     "zeichnen": 2,
      "zeilen": 11
     },
     "operatoren": {
      "begruenden": 3,
-     "beschreiben": 1,
+     "beschreiben": 2,
      "ergaenzen": 4,
      "erlaeutern": 3,
      "ermitteln": 1,
@@ -2635,6 +2639,7 @@
     },
     "punkte_selbst": 79,
     "punkte_programm": 21,
+    "fassung": 2,
     "aufbau": "paar",
     "gebiete": {
      "diagramm": 21,
@@ -2670,25 +2675,27 @@
     "formen": {
      "angaben": 4,
      "auswahl": 1,
-     "tabelle": 2,
+     "tabelle": 1,
+     "zeichnen": 1,
      "zeilen": 13
     },
     "operatoren": {
      "begruenden": 2,
      "beschreiben": 2,
-     "ergaenzen": 3,
+     "ergaenzen": 2,
      "erlaeutern": 4,
      "ermitteln": 1,
      "erstellen": 2,
      "nennen": 4,
      "vergleichen": 1,
-     "zeichnen": 1
+     "zeichnen": 2
     },
-    "punkte_selbst": 85,
-    "punkte_programm": 15,
+    "punkte_selbst": 91,
+    "punkte_programm": 9,
+    "fassung": 2,
     "aufbau": "paar",
     "gebiete": {
-     "diagramm": 24,
+     "diagramm": 30,
      "pseudocode": 10,
      "sql": 4
     }

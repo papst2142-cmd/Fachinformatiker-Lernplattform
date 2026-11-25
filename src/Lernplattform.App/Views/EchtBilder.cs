@@ -503,6 +503,11 @@ public sealed class DiagrammBild : EchtBild
     private readonly bool _raster;
     private string? _gewaehlt;
     private readonly Dictionary<string, (Point Mitte, Size Form, FormattedText? Text)> _orte = new(StringComparer.Ordinal);
+    // A 1.8.0: Faecher einer Klasse (Name, Attribute, Methoden) und Lage der Systemgrenze (Use-Case)
+    private readonly Dictionary<string, (IReadOnlyList<FormattedText> Attribute, IReadOnlyList<FormattedText> Methoden, double NameHoehe, double AttributHoehe)> _faecher
+        = new(StringComparer.Ordinal);
+    private Rect? _grenzeRahmen;
+    private FormattedText? _grenzeText;
 
     /// <param name="raster">
     /// A 0.78.0 Zeichenflaeche des Baukastens: Felder des Rasters sichtbar, eine Spalte und eine Zeile Platz rechts und unten
@@ -541,8 +546,8 @@ public sealed class DiagrammBild : EchtBild
 
     private void Groessen()
     {
-        var x = _d.Elemente.Select(e => e.X).DefaultIfEmpty(-1).Max() + 1;
-        var y = _d.Elemente.Select(e => e.Y).DefaultIfEmpty(-1).Max() + 1;
+        var x = _d.Elemente.Select(e => e.X).Append(_d.Grenze is { } gx ? gx.X + gx.Breite - 1 : -1).DefaultIfEmpty(-1).Max() + 1;
+        var y = _d.Elemente.Select(e => e.Y).Append(_d.Grenze is { } gy ? gy.Y + gy.Hoehe - 1 : -1).DefaultIfEmpty(-1).Max() + 1;
         (_spalten, _zeilen) = _raster
             ? (Math.Clamp(x + 1, 4, EchtZeichnung.RasterBreite), Math.Clamp(y + 1, 5, EchtZeichnung.RasterHoehe))
             : (Math.Max(1, x), Math.Max(1, y));
@@ -583,6 +588,11 @@ public sealed class DiagrammBild : EchtBild
         "attribut" => (WortBreite(e.Text, 0.95) + 0.2 * F) / (0.9 * 0.74),
         "aktion" => (WortBreite(e.Text) + 1.2 * F) / 0.86,
         "entitaet" => (WortBreite(e.Text, 1, fett: true) + 1.2 * F) / 0.8,
+        // A 1.8.0: Klasse (laengstes Wort aus Name und Zeilen), Anwendungsfall wie Attribut, Akteur mit Name unter der Figur
+        "klasse" => (e.AttributZeilen.Concat(e.MethodenZeilen).Select(z => WortBreite(z, 0.9)).Append(WortBreite(e.Text, 1, fett: true))
+            .Max() + 1.0 * F) / 0.92,
+        "anwendungsfall" => (WortBreite(e.Text, 0.95) + 0.2 * F) / (0.92 * 0.74),
+        "akteur" => (WortBreite(e.Text, 0.95) + 0.4 * F) / 0.92,
         _ => 0,
     }).DefaultIfEmpty(0).Max());
 
@@ -607,6 +617,15 @@ public sealed class DiagrammBild : EchtBild
                 var ab = 0.9 * _zelle;
                 var at = Text(e.Text, Linie, 0.95, breite: ab * 0.74);
                 return (new Size(ab, Math.Max(2.2 * F, at.Height + 1.0 * F)), at);
+            case "klasse":
+                return (Klasse(e), null);
+            case "anwendungsfall":
+                var fb = 0.92 * _zelle;
+                var ftx = Text(e.Text, Linie, 0.95, breite: fb * 0.74);
+                return (new Size(fb, Math.Max(2.4 * F, ftx.Height + 1.2 * F)), ftx);
+            case "akteur":
+                var ak = Text(e.Text, Linie, 0.95, breite: 0.92 * _zelle);
+                return (new Size(Math.Max(2.2 * F, Math.Min(ak.Width, 0.92 * _zelle)), 3.4 * F + ak.Height), ak);
             default:    // aktion, entitaet
                 var b = (e.Typ == "aktion" ? 0.86 : 0.8) * _zelle;
                 var t = Text(e.Text, Linie, 1, fett: e.Typ == "entitaet", breite: b - 1.0 * F);
@@ -614,14 +633,49 @@ public sealed class DiagrammBild : EchtBild
         }
     }
 
+    /// <summary>A 1.8.0: Klasse mit drei Faechern (Name fett und mittig, Attribute, Methoden linksbuendig); merkt die Faecher.</summary>
+    private Size Klasse(EchtElement e)
+    {
+        var b = 0.92 * _zelle;
+        var innen = b - 0.8 * F;
+        FormattedText Zeile(string z)
+        {
+            var t = Text(z, Linie, 0.9, breite: innen);
+            t.TextAlignment = TextAlignment.Left;
+            return t;
+        }
+        var name = Text(e.Text, Linie, 1, fett: true, breite: innen);
+        var attribute = e.AttributZeilen.Where(z => z.Trim().Length > 0).Select(Zeile).ToList();
+        var methoden = e.MethodenZeilen.Where(z => z.Trim().Length > 0).Select(Zeile).ToList();
+        var leer = 0.9 * F;
+        var nameHoehe = Math.Max(1.3 * F, name.Height) + 0.5 * F;
+        var attributHoehe = Math.Max(leer, attribute.Sum(t => t.Height)) + 0.4 * F;
+        var methodenHoehe = Math.Max(leer, methoden.Sum(t => t.Height)) + 0.4 * F;
+        _faecher[e.Id] = (attribute, methoden, nameHoehe, attributHoehe);
+        _orte[e.Id] = (default, default, name);
+        return new Size(b, nameHoehe + attributHoehe + methodenHoehe);
+    }
+
+    /// <summary>Name der Systemgrenze; im Baukasten mit dem Zusatz "(vorgegeben)" wie im freigegebenen Bild.</summary>
+    private FormattedText? GrenzeText() => _d.Grenze is { } g
+        ? Text(g.Name + (_raster ? " " + EchtTexte.Vorgegeben : ""), Linie, 0.95, fett: true) : null;
+
     protected override Size Planen(double breite)
     {
         var min = ZelleMin;
         _zelle = Math.Clamp(breite / _spalten, min, Math.Max(11.5 * F, min));
         _links = Math.Max(0, (breite - _zelle * _spalten) / 2);
         _orte.Clear();
+        _faecher.Clear();
         var hoehen = new double[_zeilen];
-        var formen = _d.Elemente.ToDictionary(e => e.Id, Form, StringComparer.Ordinal);
+        var formen = _d.Elemente.ToDictionary(e => e.Id, e =>
+        {
+            var f = Form(e);
+            return e.Typ == "klasse" ? (f.Form, _orte[e.Id].Text) : f;
+        }, StringComparer.Ordinal);
+        _grenzeText = GrenzeText();
+        // Use-Case: unter der letzten Zeile der Systemgrenze ein Streifen fuer ihren Namen (wie im freigegebenen Bild)
+        var streifen = _grenzeText is { } gt ? gt.Height + 0.6 * F : 0;
         foreach (var e in _d.Elemente)
         {
             hoehen[e.Y] = Math.Max(hoehen[e.Y], formen[e.Id].Form.Height);
@@ -634,8 +688,16 @@ public sealed class DiagrammBild : EchtBild
             oben[r] = y;
             hoehe[r] = Math.Max(hoehen[r], _raster ? 2.8 * F : 1.4 * F);
             y += hoehe[r] + Luecke;
+            if (_d.Grenze is { } g && r == g.Y + g.Hoehe - 1)
+            {
+                y += streifen;
+            }
         }
         (_oben, _hoehe) = (oben, hoehe);
+        _grenzeRahmen = _d.Grenze is { } gr
+            ? new Rect(new Point(_links + gr.X * _zelle + 0.3 * F, oben[gr.Y] - Luecke / 2 + 0.2 * F),
+                new Point(_links + (gr.X + gr.Breite) * _zelle - 0.3 * F, oben[gr.Y + gr.Hoehe - 1] + hoehe[gr.Y + gr.Hoehe - 1] + streifen))
+            : null;
         foreach (var e in _d.Elemente)
         {
             var mitte = new Point(_links + (e.X + 0.5) * _zelle, oben[e.Y] + hoehe[e.Y] / 2);
@@ -663,7 +725,7 @@ public sealed class DiagrammBild : EchtBild
         double t = e.Typ switch
         {
             "beziehung" or "verzweigung" or "zusammenfuehrung" => 1 / (Math.Abs(ux) / a + Math.Abs(uy) / b),
-            "attribut" or "start" or "ende" => 1 / Math.Sqrt(ux * ux / (a * a) + uy * uy / (b * b)),
+            "attribut" or "start" or "ende" or "anwendungsfall" => 1 / Math.Sqrt(ux * ux / (a * a) + uy * uy / (b * b)),
             _ => Math.Min(Math.Abs(ux) < 1e-9 ? double.MaxValue : a / Math.Abs(ux), Math.Abs(uy) < 1e-9 ? double.MaxValue : b / Math.Abs(uy)),
         };
         return new Point(m.X + ux * t, m.Y + uy * t);
@@ -684,11 +746,20 @@ public sealed class DiagrammBild : EchtBild
                 }
             }
         }
+        if (_grenzeRahmen is { } rahmen && _grenzeText is { } name)
+        {
+            dc.DrawRectangle(null, Stift(1.6), rahmen);
+            dc.DrawText(name, new Point(rahmen.X + 0.5 * F, rahmen.Bottom - name.Height - 0.3 * F));
+        }
         foreach (var v in _d.Verbindungen)
         {
             if (_d.Art == EchtZeichnung.Er)
             {
                 ErLinie(dc, v);
+            }
+            else if (EchtZeichnung.Beziehungen.ContainsKey(_d.Art))
+            {
+                Beziehung(dc, v);
             }
             else
             {
@@ -719,6 +790,15 @@ public sealed class DiagrammBild : EchtBild
                 case "aktion":
                     dc.DrawRectangle(Flaeche, stift, new Rect(m.X - s.Width / 2, m.Y - s.Height / 2, s.Width, s.Height), 0.8 * F, 0.8 * F);
                     break;
+                case "anwendungsfall":
+                    dc.DrawEllipse(Grund, stift, m, s.Width / 2, s.Height / 2);
+                    break;
+                case "akteur":
+                    Akteur(dc, m, s, text);
+                    continue;
+                case "klasse":
+                    KlasseZeichnen(dc, e, m, s, text!);
+                    continue;
                 default:    // entitaet
                     dc.DrawRectangle(Flaeche, stift, new Rect(m.X - s.Width / 2, m.Y - s.Height / 2, s.Width, s.Height));
                     break;
@@ -742,6 +822,163 @@ public sealed class DiagrammBild : EchtBild
                 new Rect(g.Mitte.X - g.Form.Width / 2 - rand, g.Mitte.Y - g.Form.Height / 2 - rand, g.Form.Width + 2 * rand, g.Form.Height + 2 * rand),
                 0.5 * F, 0.5 * F);
         }
+    }
+
+    /// <summary>A 1.8.0: Akteur als Strichfigur, Name darunter.</summary>
+    private void Akteur(DrawingContext dc, Point m, Size s, FormattedText? name)
+    {
+        var stift = Stift(1.5);
+        var oben = m.Y - s.Height / 2 + 0.2 * F;
+        var kopf = 0.45 * F;
+        var hals = oben + 2 * kopf;
+        var huefte = hals + 1.2 * F;
+        dc.DrawEllipse(Grund, stift, new Point(m.X, oben + kopf), kopf, kopf);
+        dc.DrawLine(stift, new Point(m.X, hals), new Point(m.X, huefte));
+        dc.DrawLine(stift, new Point(m.X - 0.8 * F, hals + 0.45 * F), new Point(m.X + 0.8 * F, hals + 0.45 * F));
+        dc.DrawLine(stift, new Point(m.X, huefte), new Point(m.X - 0.6 * F, huefte + 0.9 * F));
+        dc.DrawLine(stift, new Point(m.X, huefte), new Point(m.X + 0.6 * F, huefte + 0.9 * F));
+        if (name is not null)
+        {
+            Mitte(dc, name, m.X, m.Y + s.Height / 2 - name.Height / 2);
+        }
+    }
+
+    /// <summary>A 1.8.0: Klasse mit drei Faechern.</summary>
+    private void KlasseZeichnen(DrawingContext dc, EchtElement e, Point m, Size s, FormattedText name)
+    {
+        var stift = Stift(1.5);
+        var rahmen = new Rect(m.X - s.Width / 2, m.Y - s.Height / 2, s.Width, s.Height);
+        dc.DrawRectangle(Grund, stift, rahmen);
+        var (attribute, methoden, nameHoehe, attributHoehe) = _faecher[e.Id];
+        Mitte(dc, name, m.X, rahmen.Y + nameHoehe / 2);
+        var linie1 = rahmen.Y + nameHoehe;
+        var linie2 = linie1 + attributHoehe;
+        dc.DrawLine(Stift(1.1), new Point(rahmen.X, linie1), new Point(rahmen.Right, linie1));
+        dc.DrawLine(Stift(1.1), new Point(rahmen.X, linie2), new Point(rahmen.Right, linie2));
+        var y = linie1 + 0.2 * F;
+        foreach (var t in attribute)
+        {
+            dc.DrawText(t, new Point(rahmen.X + 0.4 * F, y));
+            y += t.Height;
+        }
+        y = linie2 + 0.2 * F;
+        foreach (var t in methoden)
+        {
+            dc.DrawText(t, new Point(rahmen.X + 0.4 * F, y));
+            y += t.Height;
+        }
+    }
+
+    /// <summary>
+    /// A 1.8.0 Klasse und Use-Case: gerade Linie zwischen den Raendern. Vererbung und Generalisierung mit hohlem Dreieck am
+    /// Allgemeinen, Aggregation mit hohler, Komposition mit gefuellter Raute am Ganzen, «include»/«extend» gestrichelt mit
+    /// offener Spitze am Ziel und dem Wort daneben (nie auf der Linie); Multiplizitaeten an beiden Enden neben der Linie.
+    /// </summary>
+    private void Beziehung(DrawingContext dc, EchtVerbindung v)
+    {
+        var a = _d.Element(v.Von);
+        var b = _d.Element(v.Nach);
+        var ma = _orte[a.Id].Mitte;
+        var mb = _orte[b.Id].Mitte;
+        var p1 = Rand(a, mb.X - ma.X, mb.Y - ma.Y);
+        var p2 = Rand(b, ma.X - mb.X, ma.Y - mb.Y);
+        var dx = p2.X - p1.X;
+        var dy = p2.Y - p1.Y;
+        var laenge = Math.Max(1e-9, Math.Sqrt(dx * dx + dy * dy));
+        var (ux, uy) = (dx / laenge, dy / laenge);
+        // Seite fuer Texte: nach oben, bei senkrechten Linien nach rechts
+        var (nx, ny) = (-uy, ux);
+        if (Math.Abs(ny) < 0.3 ? nx < 0 : ny > 0)
+        {
+            (nx, ny) = (uy, -ux);
+        }
+        var gestrichelt = v.Typ is "include" or "extend";
+        var stift = gestrichelt ? new Pen(Linie, Math.Max(1, 1.3 * F / 12), new DashStyle([5, 4], 0)) : Stift(1.4);
+        var spitze = v.Typ switch
+        {
+            "vererbung" or "generalisierung" => 1.0 * F,
+            "aggregation" or "komposition" => 1.6 * F,
+            _ => 0,
+        };
+        var ende = new Point(p2.X - ux * spitze, p2.Y - uy * spitze);
+        dc.DrawLine(stift, p1, ende);
+        switch (v.Typ)
+        {
+            case "vererbung":
+            case "generalisierung":
+                Dreieck(dc, p2, ux, uy);
+                break;
+            case "aggregation":
+            case "komposition":
+                dc.DrawGeometry(v.Typ == "komposition" ? Linie : Grund, Stift(1.3), RauteLaengs(new Point(p2.X - ux * 0.8 * F, p2.Y - uy * 0.8 * F), ux, uy));
+                break;
+            case "include":
+            case "extend":
+                OffeneSpitze(dc, p2, ux, uy);
+                var wort = Text(EchtZeichnung.Beziehung(v.Typ), Linie, 0.85);
+                var mitte = new Point((p1.X + p2.X) / 2 + nx * (0.3 * F + wort.Height / 2), (p1.Y + p2.Y) / 2 + ny * (0.3 * F + wort.Height / 2));
+                Mitte(dc, wort, mitte.X, mitte.Y);
+                break;
+        }
+        if (v.MultVon.Length > 0)
+        {
+            MultText(dc, v.MultVon, p1, ux, uy, nx, ny, 0);
+        }
+        if (v.MultNach.Length > 0)
+        {
+            MultText(dc, v.MultNach, p2, -ux, -uy, nx, ny, spitze);
+        }
+    }
+
+    private void MultText(DrawingContext dc, string mult, Point ende, double ux, double uy, double nx, double ny, double weg)
+    {
+        var t = Text(mult, Linie, 0.95, fett: true);
+        var ab = weg + 0.4 * F + Math.Abs(ux) * t.Width / 2 + Math.Abs(uy) * t.Height / 2;
+        var seite = 0.25 * F + Math.Abs(nx) * t.Width / 2 + Math.Abs(ny) * t.Height / 2;
+        Mitte(dc, t, ende.X + ux * ab + nx * seite, ende.Y + uy * ab + ny * seite);
+    }
+
+    /// <summary>Hohles Dreieck mit der Spitze an <paramref name="spitze"/> in Richtung (ux, uy).</summary>
+    private void Dreieck(DrawingContext dc, Point spitze, double ux, double uy)
+    {
+        var l = 1.0 * F;
+        var b = 0.6 * F;
+        var basis = new Point(spitze.X - ux * l, spitze.Y - uy * l);
+        var g = new StreamGeometry();
+        using (var c = g.Open())
+        {
+            c.BeginFigure(spitze, true);
+            c.LineTo(new Point(basis.X - uy * b, basis.Y + ux * b));
+            c.LineTo(new Point(basis.X + uy * b, basis.Y - ux * b));
+            c.EndFigure(true);
+        }
+        dc.DrawGeometry(Grund, Stift(1.3), g);
+    }
+
+    /// <summary>Raute laengs der Linie (Mitte, Richtung): 1,6 Schriftgroessen lang.</summary>
+    private StreamGeometry RauteLaengs(Point mitte, double ux, double uy)
+    {
+        var l = 0.8 * F;
+        var b = 0.4 * F;
+        var g = new StreamGeometry();
+        using var c = g.Open();
+        c.BeginFigure(new Point(mitte.X + ux * l, mitte.Y + uy * l), true);
+        c.LineTo(new Point(mitte.X - uy * b, mitte.Y + ux * b));
+        c.LineTo(new Point(mitte.X - ux * l, mitte.Y - uy * l));
+        c.LineTo(new Point(mitte.X + uy * b, mitte.Y - ux * b));
+        c.EndFigure(true);
+        return g;
+    }
+
+    /// <summary>Offene Pfeilspitze (zwei Striche) an <paramref name="spitze"/>.</summary>
+    private void OffeneSpitze(DrawingContext dc, Point spitze, double ux, double uy)
+    {
+        var l = 0.8 * F;
+        var b = 0.45 * F;
+        var basis = new Point(spitze.X - ux * l, spitze.Y - uy * l);
+        var stift = Stift(1.4);
+        dc.DrawLine(stift, spitze, new Point(basis.X - uy * b, basis.Y + ux * b));
+        dc.DrawLine(stift, spitze, new Point(basis.X + uy * b, basis.Y - ux * b));
     }
 
     private void ErLinie(DrawingContext dc, EchtVerbindung v)

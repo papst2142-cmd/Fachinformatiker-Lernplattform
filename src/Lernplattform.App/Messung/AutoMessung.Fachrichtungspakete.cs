@@ -13,7 +13,7 @@ namespace Lernplattform.Messung;
 
 /// <summary>
 /// Welle A 0.91.0 (Weisung P12-300 Punkte 1, 3, 5, 6; Nico 3a 4a): Fachrichtungs-Pakete im Start-Test mit der Testquelle und den
-/// echten Testdateien <c>lernen_ae_1</c>, <c>lernen_dpa_1</c>, <c>lernen_dv_1</c>. Seit A 1.5.0 (Weisung P12-358) bringt die App
+/// echten Testdateien <c>lernen_ae_2</c> (A 1.8.0, vorher <c>lernen_ae_1</c>), <c>lernen_dpa_1</c>, <c>lernen_dv_1</c>. Seit A 1.5.0 (Weisung P12-358) bringt die App
 /// AE, DPA und DV nicht mehr mit: je Fachrichtung Sperre beim offenen Pruefungssatz, Entfernen (danach fehlen die Inhalte, auf der
 /// Startseite genau eine Karte mit „Laden“), der Messpunkt „Fachrichtungs-Paket einsetzen &lt;FR&gt;“ (Pruefen bis die
 /// Sicht steht, ohne Download, einmalig und streng 400 ms), danach dieselben Inhalte wie vorher (das Paket ist der Stand von
@@ -40,7 +40,7 @@ public static partial class AutoMessung
         Directory.CreateDirectory(quelle);
         foreach (var fr in FachrichtungsPaket.Fachrichtungen)
         {
-            var datei = Path.Combine(EchtOrdner, Paket.Dateiname(FachrichtungsPaket.Kennung(fr), 1));
+            var datei = Path.Combine(EchtOrdner, Paket.Dateiname(FachrichtungsPaket.Kennung(fr), EchtStand(fr)));
             if (!File.Exists(datei))
             {
                 Pruefe("Testdatei " + fr, false, datei + " fehlt");
@@ -103,10 +103,10 @@ public static partial class AutoMessung
                         karten.Count + " Karten: " + string.Join(" | ", texte) + ", Knoepfe " + knopf.Count);
                 }
                 // Messpunkt (Nico 4a): Pruefen und Einsetzen der geladenen Datei bis die Sicht steht, ohne Download, einmalig, streng
-                var ziel = v.Ablage.Ladedatei(kennung, 1);
-                File.Copy(Path.Combine(quelle, Paket.Dateiname(kennung, 1)), ziel, true);
+                var ziel = v.Ablage.Ladedatei(kennung, EchtStand(kennung));
+                File.Copy(Path.Combine(quelle, Paket.Dateiname(kennung, EchtStand(kennung))), ziel, true);
                 var uhr = Stopwatch.StartNew();
-                var ergebnis = v.Ablage.Einsetzen(ziel, kennung, 1, Aktualisierung.Aktualisierung.Anzeige);
+                var ergebnis = v.Ablage.Einsetzen(ziel, kennung, EchtStand(kennung), Aktualisierung.Aktualisierung.Anzeige);
                 if (!ergebnis.Gut)
                 {
                     Pruefe(name + " einsetzen", false, ergebnis.Grund ?? "?");
@@ -120,7 +120,7 @@ public static partial class AutoMessung
                 Pruefe(name + " gleiche Inhalte mit Paket", mit == vorher && mit.Length > 0 && Zustand.Aktuell.Pakete.ContainsKey(fr),
                     mit == vorher ? "gleich (" + vorher + ")" : "ANDERS: vorher " + vorher + ", mit Paket " + mit);
                 var zeile = v.Zeilen().FirstOrDefault(z => z.Kennung == kennung);
-                Pruefe(name + " Zeile", zeile?.ZustandText == PaketTexte.Format(PaketTexte.ZustandGeladen, 1) && zeile.Name == "Fachrichtungs-Paket " + name,
+                Pruefe(name + " Zeile", zeile?.ZustandText == PaketTexte.Format(PaketTexte.ZustandGeladen, EchtStand(kennung)) && zeile.Name == "Fachrichtungs-Paket " + name,
                     (zeile?.Name ?? "keine Zeile") + ": " + zeile?.ZustandText);
                 if (ansicht.GebauteSeiten.GetValueOrDefault(Seiten.Dashboard) is DashboardSeite mitPaket)
                 {
@@ -132,7 +132,7 @@ public static partial class AutoMessung
                 }
             }
             Pruefe("Lernstand bytegleich", Lernstand() == vorherLernstand, Lernstand() == vorherLernstand ? "gleich" : "GEAENDERT");
-            Pruefe("Datenordner mit den drei Paketen", FachrichtungsPaket.Fachrichtungen.All(f => Directory.Exists(Path.Combine(daten, PaketAblage.OrdnerName, FachrichtungsPaket.Kennung(f), "1"))),
+            Pruefe("Datenordner mit den drei Paketen", FachrichtungsPaket.Fachrichtungen.All(f => Directory.Exists(Path.Combine(daten, PaketAblage.OrdnerName, FachrichtungsPaket.Kennung(f), EchtStand(f).ToString(System.Globalization.CultureInfo.InvariantCulture)))),
                 "lernen_ae, lernen_dpa, lernen_dv wieder eingesetzt");
         }
         finally
@@ -205,17 +205,23 @@ public static partial class AutoMessung
         return funde;
     }
 
-    /// <summary>Echte Testdatei Stand 1 einsetzen (ohne Download); null = gut, sonst der Grund.</summary>
+    /// <summary>
+    /// A 1.8.0 (Weisung P12-372): Stand der echten Testdatei je Fachrichtungs-Paket, gleich paket_bauen.LERNEN_TESTDATEIEN (AE Stand 2
+    /// mit den neuen Fassungen der Pruefungssaetze, DPA und DV Stand 1); Test A1_EchteTestdateien_JeFachrichtung_Gut prueft beides.
+    /// </summary>
+    internal static long EchtStand(string kennungOderFr) => kennungOderFr is "ae" or "lernen_ae" ? 2 : 1;
+
+    /// <summary>Echte Testdatei einsetzen (ohne Download); null = gut, sonst der Grund.</summary>
     private static string? EinsetzenAus(PaketAblage ablage, string kennung)
     {
-        var datei = Path.Combine(EchtOrdner, Paket.Dateiname(kennung, 1));
+        var datei = Path.Combine(EchtOrdner, Paket.Dateiname(kennung, EchtStand(kennung)));
         if (!File.Exists(datei))
         {
             return datei + " fehlt";
         }
-        var ziel = ablage.Ladedatei(kennung, 1);
+        var ziel = ablage.Ladedatei(kennung, EchtStand(kennung));
         File.Copy(datei, ziel, true);
-        var ergebnis = ablage.Einsetzen(ziel, kennung, 1, Aktualisierung.Aktualisierung.Anzeige);
+        var ergebnis = ablage.Einsetzen(ziel, kennung, EchtStand(kennung), Aktualisierung.Aktualisierung.Anzeige);
         return ergebnis.Gut ? null : ergebnis.Grund ?? "?";
     }
 

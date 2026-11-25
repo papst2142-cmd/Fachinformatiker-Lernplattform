@@ -42,7 +42,25 @@ LERNEN_ORDNER = os.path.join("inhalte_csharp", "lernen")
 # echte Testdateien der App (Stand 1, je Fachrichtung); nach jeder Inhalte-Aenderung einer Fachrichtung neu bauen
 # (selbsttest prueft die Gleichheit mit dem heutigen Bau)
 # Welle A 1.5.0 (Weisung P12-358, Nico 3a): die echten Pakete Stand 1 brauchen A 1.5.0 (die erste App ohne eigene Inhalte AE/DPA/DV)
-LERNEN_TESTDATEI = (1, "A 1.5.0")
+# A 1.8.0 (Weisung P12-372): Stand und braucht_app je Fachrichtung; AE Stand 2 mit den neuen Fassungen (Saetze Format 4)
+# braucht A 1.8.0. Die Testdatei des vorigen Stands bleibt als echte Testdatei liegen (nie loeschen).
+LERNEN_TESTDATEIEN = {"ae": (2, "A 1.8.0"), "dpa": (1, "A 1.5.0"), "dv": (1, "A 1.5.0")}
+
+
+def lernen_testdatei(fr):
+    """(Stand, braucht_app) des echten Pakets einer Fachrichtung (eine Stelle fuer Bau, Selbsttest und Release)."""
+    return LERNEN_TESTDATEIEN[fr]
+
+
+def _satz_format(quelle_format, eigene):
+    """Format der Saetze im Paket: 4 nur mit neuer Fassung oder Klassen-/Use-Case-Diagramm, 3 nur mit Satzpaar, sonst 2
+    (aeltere Apps lesen ein Paket ohne diese Felder weiter)."""
+    roh = [json.dumps(e["satz"], ensure_ascii=False) for e in eigene]
+    if any("fassung" in e["satz"] for e in eigene) or any('"diagramm": "klasse"' in r or '"diagramm": "usecase"' in r for r in roh):
+        return quelle_format
+    if any("aufbau" in e["satz"] for e in eigene):
+        return min(quelle_format, 3)
+    return min(quelle_format, 2)
 KENNUNG = re.compile(r"^[a-z][a-z0-9_]{1,31}\Z")
 RESERVIERT = {"stadt1", "falschlieferung"}
 
@@ -130,8 +148,7 @@ def lernen_schnitt(repo, fr):
               if isinstance(s, dict) and s.get("fachrichtung") == fr and s.get("im_paket") is not True]
     # A 0.94.0: Format 3 nur, wenn ein Satz das Satzpaar ("aufbau") braucht; sonst bleibt das Paket im Format 2
     # (DPA/DV bytegleich, auch fuer Apps vor A 0.94.0 lesbar)
-    saetze = {"format": saetze_quelle["format"] if any("aufbau" in e["satz"] for e in eigene) else min(saetze_quelle["format"], 2),
-              "saetze": eigene}
+    saetze = {"format": _satz_format(saetze_quelle["format"], eigene), "saetze": eigene}
     return _json(lernen), _json(saetze)
 
 
@@ -225,10 +242,11 @@ def lernen_selbsttest(repo):
             if not lernen_rueckbau(repo, fr, _json(anders), saetze):
                 funde.append("lernen_" + fr + ": Gegenprobe (Eintrag geaendert) nicht erkannt")
             # echte Testdatei der App: gleiche Bytes wie der heutige Bau
-            echt = os.path.join(repo, "tests", "Lernplattform.Tests", "Testdaten", "pakete_echt", "lernen_%s_%d.fipaket" % (fr, LERNEN_TESTDATEI[0]))
+            stand, braucht = lernen_testdatei(fr)
+            echt = os.path.join(repo, "tests", "Lernplattform.Tests", "Testdaten", "pakete_echt", "lernen_%s_%d.fipaket" % (fr, stand))
             c = os.path.join(tmp, "c")
             os.makedirs(c, exist_ok=True)
-            with open(lernen_bauen(repo, fr, c, LERNEN_TESTDATEI[0], LERNEN_TESTDATEI[1]), "rb") as f:
+            with open(lernen_bauen(repo, fr, c, stand, braucht), "rb") as f:
                 neu = f.read()
             if not os.path.exists(echt):
                 funde.append("Testdatei " + os.path.basename(echt) + " fehlt")
@@ -236,7 +254,12 @@ def lernen_selbsttest(repo):
                 with open(echt, "rb") as f:
                     if f.read() != neu:
                         funde.append("Testdatei " + os.path.basename(echt) + " weicht vom Bau ab (neu bauen: paket_bauen.py lernen " + fr + " "
-                                     + "tests/Lernplattform.Tests/Testdaten/pakete_echt --stand %d --braucht-app \"%s\")" % LERNEN_TESTDATEI)
+                                     + "tests/Lernplattform.Tests/Testdaten/pakete_echt --stand %d --braucht-app \"%s\")" % (stand, braucht))
+        # A 1.8.0: Satz-Format je Inhalt (Gegenproben: Fassung oder Klassendiagramm -> 4, Satzpaar -> 3, sonst 2)
+        for eigene, soll in (([{"satz": {"fassung": 2}}], 4), ([{"satz": {"a": {"diagramm": "klasse"}}}], 4),
+                             ([{"satz": {"aufbau": "paar"}}], 3), ([{"satz": {"kennung": "x"}}], 2)):
+            if _satz_format(4, eigene) != soll:
+                funde.append("Satz-Format %s statt %d" % (_satz_format(4, eigene), soll))
         try:
             lernen_schnitt(repo, "si")
             funde.append("Gegenprobe Fachrichtung si: nicht abgelehnt")

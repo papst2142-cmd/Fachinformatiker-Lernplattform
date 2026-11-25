@@ -16,7 +16,8 @@ des echten Ladens (python3.12 -I). Nichts hier laedt hoch, legt einen Tag an ode
 
 Welle A 1.5.0 (Weisung P12-358, Sammelliste 386): die drei Fachrichtungs-Pakete lernen_ae, lernen_dpa, lernen_dv haben
 keinen Ordner unter pakete/: sie werden mit paket_bauen.py lernen aus inhalte_csharp/lernen/ geschnitten (eine Quelle).
-Stand und braucht_app des Releases stehen an genau einer Stelle (paket_bauen.LERNEN_TESTDATEI), und die gebaute Datei muss
+Stand und braucht_app des Releases stehen an genau einer Stelle (paket_bauen.LERNEN_TESTDATEIEN je Fachrichtung, seit A 1.8.0;
+AE Stand 2), und die gebaute Datei muss
 Byte fuer Byte gleich der echten Testdatei tests/Lernplattform.Tests/Testdaten/pakete_echt/lernen_<fr>_<stand>.fipaket sein.
   paket_release.py lernen-kopf <lernen_fr>
       gibt KENNUNG=, STAND=, TAG=, DATEI=, NAME=, ART=lernen, FR= aus.
@@ -78,7 +79,7 @@ def lernen_kopf(kennung):
     fr = kennung[len("lernen_"):] if kennung.startswith("lernen_") else ""
     if fr not in paket_bauen.FACHRICHTUNGEN:
         raise ValueError(kennung + " ist kein Fachrichtungs-Paket (lernen_ae, lernen_dpa, lernen_dv)")
-    stand, _ = paket_bauen.LERNEN_TESTDATEI
+    stand, _ = paket_bauen.lernen_testdatei(fr)
     werte = {"KENNUNG": kennung, "STAND": str(stand), "TAG": "vP%s.%d" % (kennung, stand), "DATEI": "%s_%d.fipaket" % (kennung, stand),
              "NAME": "Fachrichtungs-Paket " + fr.upper(), "ART": "lernen", "FR": fr}
     if not TAG.match(werte["TAG"]):
@@ -93,7 +94,7 @@ def lernen_echt(kennung):
 
 def lernen_bauen(kennung, ziel, repo=WURZEL):
     w = lernen_kopf(kennung)
-    stand, braucht = paket_bauen.LERNEN_TESTDATEI
+    stand, braucht = paket_bauen.lernen_testdatei(w["FR"])
     pfad = paket_bauen.lernen_bauen(repo, w["FR"], ziel, stand, braucht)
     echt = lernen_echt(kennung)
     if not os.path.exists(echt):
@@ -131,7 +132,8 @@ def lernen_selbsttest():
             except (ValueError, OSError, KeyError) as e:
                 funde.append(str(e))
                 continue
-            if not t.startswith("Art: lernen\n") or "A 1.5.0" not in t or "\nRelease-Seite: " + SEITE + "vP%s.1" % k not in t:
+            stand, braucht = paket_bauen.lernen_testdatei(fr)
+            if not t.startswith("Art: lernen\n") or braucht not in t or "\nRelease-Seite: " + SEITE + "vP%s.%d" % (k, stand) not in t:
                 funde.append(k + ": Release-Text falsch")
         # Gegenproben: fremde Kennung, falsche Datei
         for falsch in ("lernen_si", "stadt1", "lernen_"):

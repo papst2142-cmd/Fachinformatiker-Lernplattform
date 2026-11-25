@@ -105,7 +105,8 @@ public class EchtInhalteAePaareTests
     public void AE_NurAngehaengt_DateiDavorBytegleich_Format3()
     {
         var echt = File.ReadAllBytes(EchtTestDatei.Datei);
-        Assert.Equal(3, (int)JsonNode.Parse(echt)!["format"]!);
+        // A 1.8.0 (Weisung P12-372): die Datei traegt Format 4 (neue Fassungen); geprueft wird weiter der Teil bis A 0.93.0
+        Assert.Equal(4, (int)JsonNode.Parse(echt)!["format"]!);
         var roh = EchtTestDatei.AlsFormat2(echt);
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
@@ -114,7 +115,7 @@ public class EchtInhalteAePaareTests
         roh[100] ^= 1;
         Assert.NotEqual(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
         var anders = (byte[])echt.Clone();
-        anders[13] = (byte)'4';
+        anders[13] = (byte)'5';
         Assert.ThrowsAny<Exception>(() => EchtTestDatei.AlsFormat2(anders));
     }
 
@@ -278,7 +279,10 @@ public class EchtInhalteAePaareTests
                 var text = string.Join(" ", t.Text);
                 if (t.Antwort.Form == EchtSaetze.FormZeichnen)
                 {
-                    Assert.Contains(t.Antwort.Diagramm, new[] { EchtZeichnung.Uml, EchtZeichnung.Er });
+                    // A 1.8.0 (Weisung P12-372): Klassen- und Use-Case-Diagramm nur in den neuen Fassungen und nur dort, wo die
+                    // neue Fassung den Teil geaendert hat (EchtW1BaukastenTests prueft die fuenf Teile einzeln)
+                    Assert.Contains(t.Antwort.Diagramm, t.Fassung >= 2
+                        ? new[] { EchtZeichnung.Klasse, EchtZeichnung.UseCase } : new[] { EchtZeichnung.Uml, EchtZeichnung.Er });
                 }
                 if (t.Operator is "erstellen" or "zeichnen" && t.Antwort.Form != EchtSaetze.FormZeichnen
                     && (text.Contains("diagramm", StringComparison.OrdinalIgnoreCase) || text.Contains("Skizze", StringComparison.Ordinal)

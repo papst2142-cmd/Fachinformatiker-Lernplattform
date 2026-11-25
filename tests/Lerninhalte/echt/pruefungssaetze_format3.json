@@ -1,0 +1,5222 @@
+{
+ "format": 3,
+ "saetze": [
+  {
+   "kennung": "alle_ap1_01",
+   "fachrichtung": "alle",
+   "bereich": "ap1",
+   "firma": "Velowerk Tannau GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Velowerk Tannau GmbH verleiht Fahrräder und Lastenräder und repariert sie in einer eigenen Werkstatt.",
+    "Sie hat 38 Beschäftigte: den Hauptsitz mit Verwaltung in Tannau, eine Filiale in der Altstadt und die neue Filiale am Ostkai.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker in der kleinen IT-Abteilung und betreuen die Einrichtung der neuen Filiale."
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "titel": "Angebote für die Annahme-PCs",
+     "art": "tabelle",
+     "spalten": [
+      "Merkmal",
+      "Nordlicht IT",
+      "Kesselbach Systemhaus"
+     ],
+     "zeilen": [
+      [
+       "Preis je PC (netto)",
+       "689,00 €",
+       "645,00 €"
+      ],
+      [
+       "Leistungsaufnahme im Betrieb",
+       "38 W",
+       "52 W"
+      ],
+      [
+       "Arbeitsspeicher",
+       "16 GiB",
+       "8 GiB"
+      ],
+      [
+       "Garantie",
+       "36 Monate, Vor-Ort-Service",
+       "24 Monate, Einsenden"
+      ],
+      [
+       "Zahlung",
+       "2 % Skonto innerhalb von 10 Tagen",
+       "30 Tage netto"
+      ]
+     ]
+    },
+    {
+     "nr": "2",
+     "titel": "Netzplan der Filiale Ostkai",
+     "art": "text",
+     "zeilen": [
+      "Router R1: Anschluss ans Internet über den Provider.",
+      "Router R1, Schnittstelle Verwaltung: erste nutzbare Adresse im Netz 10.24.8.0/26.",
+      "Router R1, Schnittstelle Werkstatt: erste nutzbare Adresse im Netz 10.24.8.64/27.",
+      "Switch SW1 (Verwaltung): 3 PCs, 1 Drucker.",
+      "Switch SW2 (Werkstatt): 6 Annahme-PCs, 1 Belegdrucker.",
+      "Die Annahme-PCs bekommen ihre Adresse per DHCP vom Router."
+     ]
+    },
+    {
+     "nr": "3",
+     "titel": "IP-Konfiguration eines Annahme-PCs",
+     "art": "code",
+     "zeilen": [
+      "IP-Adresse . . . . . . : 10.24.8.70",
+      "Subnetzmaske . . . . . : 255.255.255.224",
+      "Standardgateway  . . . : 10.24.8.1",
+      "DNS-Server . . . . . . : 10.24.8.65"
+     ]
+    },
+    {
+     "nr": "4",
+     "titel": "Pseudocode",
+     "art": "code",
+     "zeilen": [
+      "summe ← 0",
+      "FÜR i ← 1 BIS 5",
+      "    WENN i MOD 2 = 0 DANN",
+      "        summe ← summe + i * 10",
+      "    SONST",
+      "        summe ← summe + i",
+      "    ENDE WENN",
+      "ENDE FÜR",
+      "AUSGABE summe"
+     ]
+    },
+    {
+     "nr": "5",
+     "titel": "Auszug aus dem Handbuch des NAS",
+     "art": "englisch",
+     "zeilen": [
+      "The NAS model VX-4 can create snapshots every 15 minutes.",
+      "Snapshots are stored on the same disks as the original data.",
+      "Therefore, a snapshot does not replace an external backup.",
+      "The device sends an e-mail when a disk reports errors.",
+      "Firmware updates must be installed manually by an administrator."
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Neue Arbeitsplätze für die Werkstattannahme",
+     "punkte": 25,
+     "einleitung": [
+      "Für die Annahme in der neuen Filiale Ostkai sollen sechs PCs beschafft werden. Zwei Angebote liegen vor (Anlage 1)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Merkmale außer dem Preis, auf die Sie beim Vergleich der Angebote achten."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Garantie und Service (vor Ort oder Einsenden)",
+        "Leistungsaufnahme im Betrieb",
+        "Größe des Arbeitsspeichers",
+        "Zahlungsbedingungen"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie den Überweisungsbetrag für sechs PCs von Nordlicht IT bei Zahlung mit Skonto. Auf den Nettopreis kommen 19 % Umsatzsteuer. Runden Sie auf ganze Cent."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 4821.07,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Netto: 6 × 689,00 € = 4 134,00 €",
+        "Brutto: 4 134,00 € × 1,19 = 4 919,46 €",
+        "Skonto 2 %: 4 919,46 € × 0,98 = 4 821,07 €"
+       ],
+       "hinweise": [
+        {
+         "text": "Netto und Umsatzsteuer richtig gerechnet (4 919,46 €)",
+         "punkte": 1
+        },
+        {
+         "text": "Skonto von 2 % richtig abgezogen",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "berechnen",
+       "text": [
+        "Die PCs laufen an 250 Arbeitstagen je 8 Stunden, 1 kWh kostet 0,32 €. Berechnen Sie, um wie viel Euro die Stromkosten für sechs PCs im Jahr beim Angebot von Kesselbach höher sind."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 53.76,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 1
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Nordlicht: 6 × 38 W × 2 000 h = 456 kWh, × 0,32 €/kWh = 145,92 €",
+        "Kesselbach: 6 × 52 W × 2 000 h = 624 kWh, × 0,32 €/kWh = 199,68 €",
+        "Unterschied: 199,68 € − 145,92 € = 53,76 €"
+       ],
+       "hinweise": [
+        {
+         "text": "Energie je Angebot richtig (456 kWh und 624 kWh)",
+         "punkte": 1
+        },
+        {
+         "text": "Kosten je Angebot richtig (145,92 € und 199,68 €)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "begruenden",
+       "text": [
+        "Entscheiden Sie sich für eines der beiden Angebote und begründen Sie Ihre Wahl mit zwei Merkmalen aus Anlage 1."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Zum Beispiel Nordlicht IT: höherer Preis je Gerät, aber geringere Stromkosten, mehr Arbeitsspeicher, Garantie vor Ort über 36 Monate und Skonto.",
+        "Kesselbach ist nur bei den Anschaffungskosten günstiger."
+       ],
+       "hinweise": [
+        {
+         "text": "Entscheidung klar genannt",
+         "punkte": 1
+        },
+        {
+         "text": "erstes Merkmal passend begründet",
+         "punkte": 1
+        },
+        {
+         "text": "zweites Merkmal passend begründet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Tabelle mit den umgerechneten Werten."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Angabe",
+         "Umgerechnet"
+        ],
+        "zeilen": [
+         [
+          "1 GiB in MiB",
+          "1024"
+         ],
+         [
+          "16 GiB in MiB",
+          {
+           "loesung": [
+            "16384",
+            "16.384",
+            "16 384"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "2 TB in GB",
+          {
+           "loesung": [
+            "2000",
+            "2.000",
+            "2 000"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "512 MiB in GiB",
+          {
+           "loesung": [
+            "0,5",
+            "0.5"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "4 TiB in GiB",
+          {
+           "loesung": [
+            "4096",
+            "4.096",
+            "4 096"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "loesung": [
+        "16 GiB = 16 384 MiB",
+        "2 TB = 2 000 GB",
+        "512 MiB = 0,5 GiB",
+        "4 TiB = 4 096 GiB"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Vorteile einer Garantie mit Vor-Ort-Service gegenüber einer Garantie mit Einsenden."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Kürzere Ausfallzeit: der Techniker kommt, das Gerät muss nicht verschickt werden.",
+        "Kein Aufwand für Verpackung und Versand, keine Gefahr von Transportschäden.",
+        "Daten verlassen das Haus nicht."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "ermitteln",
+       "text": [
+        "Welche Größe gibt die „Leistungsaufnahme im Betrieb“ in Anlage 1 an?"
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "die elektrische Leistung in Watt",
+         "die Energie in Kilowattstunden",
+         "die Spannung in Volt",
+         "die Stromstärke in Ampere"
+        ],
+        "richtig": [
+         0
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "die elektrische Leistung in Watt"
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Prüfschritte bei der Annahme der gelieferten PCs."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Lieferschein mit der Bestellung vergleichen",
+        "Anzahl und Seriennummern prüfen",
+        "Verpackung und Geräte auf Schäden prüfen",
+        "Funktionstest durchführen"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Netz der Filiale Ostkai",
+     "punkte": 26,
+     "einleitung": [
+      "Sie richten das Netz der neuen Filiale ein. Den Plan finden Sie in Anlage 2."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für den Belegdrucker der Werkstatt die IP-Adresse (letzte nutzbare Adresse im Netz der Werkstatt), die Subnetzmaske und das Standardgateway."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "IP-Adresse",
+          "art": "ip",
+          "loesung": [
+           "10.24.8.94"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Subnetzmaske",
+          "art": "maske",
+          "loesung": [
+           "255.255.255.224"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Standardgateway",
+          "art": "ip",
+          "loesung": [
+           "10.24.8.65"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "IP-Adresse 10.24.8.94",
+        "Subnetzmaske 255.255.255.224 (/27)",
+        "Standardgateway 10.24.8.65"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie die Anzahl der nutzbaren Adressen im Netz der Verwaltung."
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Adressen",
+        "ergebnis": 62,
+        "toleranz": 0,
+        "punkte_ergebnis": 1
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "/26 lässt 6 Bit für Hosts: 2⁶ − 2 = 62 nutzbare Adressen"
+       ],
+       "hinweise": [
+        {
+         "text": "Rechenweg 2⁶ − 2 (Netz- und Broadcastadresse abgezogen)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie einen Grund, warum Verwaltung und Werkstatt in getrennten Netzen liegen."
+       ],
+       "punkte": 2,
+       "angaben": 1,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Sicherheit: Geräte der Werkstatt erreichen die Verwaltung nur über den Router, dort lässt sich der Verkehr regeln.",
+        "Weniger Broadcast-Verkehr in jedem Netz.",
+        "Fehler in einem Netz stören das andere nicht."
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Aufgaben eines Routers."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Verbindet verschiedene Netze",
+        "Wählt den Weg der Pakete (Routing)",
+        "Übersetzt private in öffentliche Adressen (NAT)",
+        "Filtert Verkehr zwischen den Netzen"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Tabelle der beiden Netze."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Netz",
+         "Netzadresse",
+         "Broadcastadresse",
+         "Präfix"
+        ],
+        "zeilen": [
+         [
+          "Verwaltung",
+          "10.24.8.0",
+          {
+           "loesung": [
+            "10.24.8.63"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "/26",
+            "26",
+            "255.255.255.192"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Werkstatt",
+          {
+           "loesung": [
+            "10.24.8.64"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "10.24.8.95"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "/27",
+            "27",
+            "255.255.255.224"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Verwaltung: Broadcast 10.24.8.63, Präfix /26",
+        "Werkstatt: Netzadresse 10.24.8.64, Broadcast 10.24.8.95, Präfix /27"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, wofür ein DHCP-Server im Netz der Werkstatt sorgt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "loesung": [
+        "Er vergibt den PCs automatisch eine IP-Konfiguration: Adresse, Subnetzmaske, Standardgateway und DNS-Server."
+       ],
+       "hinweise": [
+        {
+         "text": "automatische Vergabe der IP-Konfiguration erklärt",
+         "punkte": 2
+        },
+        {
+         "text": "mindestens zwei Bestandteile genannt (Maske, Gateway, DNS)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "korrigieren",
+       "text": [
+        "Ein Annahme-PC erreicht das Internet nicht. Ermitteln Sie den falschen Eintrag in Anlage 3 und geben Sie den richtigen Wert an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Falscher Eintrag",
+          "art": "text",
+          "loesung": [
+           "Standardgateway",
+           "Gateway",
+           "Standard-Gateway"
+          ],
+          "punkte": 2
+         },
+         {
+          "name": "Richtiger Wert",
+          "art": "ip",
+          "loesung": [
+           "10.24.8.65"
+          ],
+          "punkte": 2
+         }
+        ]
+       },
+       "anlagen": [
+        "2",
+        "3"
+       ],
+       "loesung": [
+        "Das Standardgateway 10.24.8.1 liegt nicht im Netz der Werkstatt (10.24.8.64/27).",
+        "Richtig ist 10.24.8.65."
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie WLAN und Kabel für die Annahme-PCs anhand von zwei Merkmalen und geben Sie eine Empfehlung."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Übertragung: Kabel ist stabiler und schneller, WLAN teilt sich die Bandbreite.",
+        "Sicherheit: Kabel nur mit Zugang zur Dose, WLAN auch von außen erreichbar.",
+        "Flexibilität: WLAN ohne Verkabelung.",
+        "Empfehlung: feste Annahme-PCs per Kabel anschließen."
+       ],
+       "hinweise": [
+        {
+         "text": "erstes Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "zweites Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "passende Empfehlung",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Sicherheit an den Annahme-Arbeitsplätzen",
+     "punkte": 24,
+     "einleitung": [
+      "An den Annahme-PCs werden Kundendaten und Zahlungen erfasst. Sie planen die Sicherheit."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ordnen Sie jedes Merkmal der Art der Authentifizierung zu (Wissen, Besitz oder Biometrie)."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Merkmal",
+         "Art"
+        ],
+        "zeilen": [
+         [
+          "PIN",
+          "Wissen"
+         ],
+         [
+          "Chipkarte",
+          {
+           "loesung": [
+            "Besitz",
+            "Haben"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Fingerabdruck",
+          {
+           "loesung": [
+            "Biometrie",
+            "Sein",
+            "biometrisch"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Passwort",
+          {
+           "loesung": [
+            "Wissen"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Hardware-Token",
+          {
+           "loesung": [
+            "Besitz",
+            "Haben"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Gesichtserkennung",
+          {
+           "loesung": [
+            "Biometrie",
+            "Sein",
+            "biometrisch"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Antwort auf eine Sicherheitsfrage",
+          {
+           "loesung": [
+            "Wissen"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "loesung": [
+        "Chipkarte und Hardware-Token: Besitz",
+        "Fingerabdruck und Gesichtserkennung: Biometrie",
+        "Passwort und Sicherheitsfrage: Wissen"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Anmeldung mit Chipkarte und PIN sicherer ist als ein Passwort allein."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "loesung": [
+        "Zwei verschiedene Faktoren (Besitz und Wissen) werden verlangt.",
+        "Wer nur die PIN kennt oder nur die Karte hat, kommt nicht hinein."
+       ],
+       "hinweise": [
+        {
+         "text": "zwei verschiedene Faktoren genannt",
+         "punkte": 2
+        },
+        {
+         "text": "Angreifer braucht beides",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Regeln für eine Passwort-Richtlinie."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Mindestlänge, zum Beispiel 12 Zeichen",
+        "Groß- und Kleinbuchstaben, Ziffern und Sonderzeichen",
+        "keine Namen oder Wörter aus dem Wörterbuch",
+        "nicht für mehrere Dienste verwenden",
+        "nach einem Verdacht sofort ändern"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie zwei Schutzziele der Informationssicherheit am Beispiel der Kundendaten."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Vertraulichkeit: nur Befugte sehen die Kundendaten.",
+        "Integrität: die Daten werden nicht unbemerkt verändert.",
+        "Verfügbarkeit: die Daten sind bei der Annahme abrufbar."
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ermitteln",
+       "text": [
+        "Welche Maßnahme schützt die Daten eines gestohlenen Notebooks vor dem Auslesen der Festplatte?"
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Verschlüsselung des ganzen Datenträgers",
+         "ein Bildschirmschoner mit Kennwort",
+         "ein aktueller Virenscanner",
+         "ein Kennwort für das WLAN"
+        ],
+        "richtig": [
+         0
+        ]
+       },
+       "loesung": [
+        "Verschlüsselung des ganzen Datenträgers"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, was man unter Phishing versteht."
+       ],
+       "punkte": 3,
+       "angaben": 1,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Gefälschte Nachrichten oder Webseiten, die wie echte aussehen, sollen Zugangsdaten oder Zahlungsdaten abgreifen."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "begruenden",
+       "text": [
+        "Die Werkstatt schützt die UEFI-Einstellungen der PCs mit einem Kennwort. Begründen Sie diese Maßnahme."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "loesung": [
+        "Unbefugte können Startreihenfolge und Sicherheitseinstellungen nicht ändern.",
+        "So lässt sich zum Beispiel kein fremdes System vom USB-Stick starten."
+       ],
+       "hinweise": [
+        {
+         "text": "Begründung: Einstellungen nur für Befugte änderbar",
+         "punkte": 2
+        },
+        {
+         "text": "passendes Beispiel (Start vom USB-Stick verhindern)",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Datensicherung und ein kleines Programm",
+     "punkte": 25,
+     "einleitung": [
+      "Die Reparaturaufträge der Annahme werden auf einem NAS gespeichert und gesichert."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "berechnen",
+       "text": [
+        "An jedem Werktag entstehen 1 800 Dateien mit je 350 KiB. Berechnen Sie den Speicherbedarf für 250 Werktage in GiB. Runden Sie auf zwei Nachkommastellen."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "GiB",
+        "ergebnis": 150.2,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "loesung": [
+        "Je Tag: 1 800 × 350 KiB = 630 000 KiB",
+        "Je Jahr: 630 000 KiB × 250 = 157 500 000 KiB",
+        "157 500 000 KiB ÷ 1 024 ÷ 1 024 = 150,20 GiB"
+       ],
+       "hinweise": [
+        {
+         "text": "Tages- oder Jahresbedarf in KiB richtig",
+         "punkte": 1
+        },
+        {
+         "text": "Umrechnung in GiB mit 1 024 × 1 024",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Die Daten aus a) lassen sich um 40 % verkleinern. Auf dem NAS sind 1 200 GiB frei. Berechnen Sie, für wie viele Jahre der Platz reicht. Runden Sie auf eine Nachkommastelle."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Jahre",
+        "ergebnis": 13.3,
+        "toleranz": 0.05,
+        "ersatz_ergebnis": 12.5,
+        "punkte_ergebnis": 1
+       },
+       "ersatzwert": {
+        "bezug": "4a",
+        "text": "Falls Sie a) nicht lösen konnten, rechnen Sie mit 160 GiB im Jahr."
+       },
+       "loesung": [
+        "Komprimiert: 150,20 GiB × 0,6 = 90,12 GiB je Jahr",
+        "1 200 GiB ÷ 90,12 GiB = 13,3 Jahre",
+        "Mit dem Ersatzwert: 160 GiB × 0,6 = 96 GiB, 1 200 ÷ 96 = 12,5 Jahre"
+       ],
+       "hinweise": [
+        {
+         "text": "komprimierter Jahresbedarf richtig (90,12 GiB oder 96 GiB)",
+         "punkte": 1
+        },
+        {
+         "text": "freier Platz durch den Jahresbedarf geteilt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie Datensicherung und Archivierung anhand von Zweck und Aufbewahrung."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Zweck: die Sicherung stellt verlorene Daten wieder her, das Archiv bewahrt abgeschlossene Daten unverändert auf.",
+        "Aufbewahrung: Sicherungen werden nach einem Plan überschrieben, Archive bleiben für Fristen erhalten."
+       ],
+       "hinweise": [
+        {
+         "text": "Zweck beider richtig unterschieden",
+         "punkte": 2
+        },
+        {
+         "text": "Aufbewahrung beider richtig unterschieden",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei organisatorische Maßnahmen für eine zuverlässige Datensicherung."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Zuständigkeit und Vertretung festlegen",
+        "Sicherungsplan schriftlich festlegen",
+        "Rücksicherung regelmäßig testen",
+        "eine Kopie außer Haus lagern"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie mit einem Schreibtischtest, welchen Wert das Programm in Anlage 4 ausgibt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "",
+        "ergebnis": 69,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "i = 1: summe = 1",
+        "i = 2: summe = 21",
+        "i = 3: summe = 24",
+        "i = 4: summe = 64",
+        "i = 5: summe = 69",
+        "Ausgabe: 69"
+       ],
+       "hinweise": [
+        {
+         "text": "Werte je Durchlauf nachvollziehbar notiert",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, was der Ausdruck i MOD 2 in Zeile 3 berechnet."
+       ],
+       "punkte": 2,
+       "angaben": 1,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Den Rest der ganzzahligen Division von i durch 2: 0 bei geraden, 1 bei ungeraden Zahlen."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Funktionen des NAS, die der englische Text in Anlage 5 beschreibt."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Snapshots alle 15 Minuten",
+        "E-Mail, wenn eine Festplatte Fehler zeigt"
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie mit dem Text, warum Snapshots keine externe Sicherung ersetzen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Die Snapshots liegen auf denselben Festplatten wie die Daten.",
+        "Fallen die Platten oder das Gerät aus, sind Daten und Snapshots zugleich verloren."
+       ],
+       "hinweise": [
+        {
+         "text": "Snapshots liegen auf denselben Festplatten",
+         "punkte": 2
+        },
+        {
+         "text": "Folge: ein Ausfall trifft beide",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "i",
+       "operator": "ermitteln",
+       "text": [
+        "Welche Aussage zu den Firmware-Updates steht im Text?"
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Sie müssen von Hand durch eine Administratorin oder einen Administrator installiert werden.",
+         "Sie werden jede Nacht automatisch installiert.",
+         "Sie kommen als Anhang einer E-Mail.",
+         "Sie ersetzen die Snapshots."
+        ],
+        "richtig": [
+         0
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Sie müssen von Hand durch eine Administratorin oder einen Administrator installiert werden."
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "si_b1_01",
+   "fachrichtung": "si",
+   "bereich": "b1",
+   "firma": "Lindgrün Pflegedienst GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Lindgrün Pflegedienst GmbH ist ein ambulanter Pflegedienst mit 140 Beschäftigten. Die Zentrale mit Verwaltung und Serverraum liegt in Hallbergen, eine Außenstelle in Wiesbach.",
+    "Rund 60 Pflegekräfte fahren täglich Touren zu ihren Patientinnen und Patienten und dokumentieren die Pflege auf Tablets.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Systemintegration in der IT-Abteilung, die aus drei Personen besteht.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Leistung des Dateiservers in der Zentrale",
+    "2. Netz der Außenstelle Wiesbach",
+    "3. Datenbank für die Tourenplanung",
+    "4. Sicherung und Tablets der Pflege"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "monitor",
+     "titel": "Auslastung des Dateiservers FS-01 am Dienstagvormittag",
+     "achse": "Uhrzeit",
+     "marken": [
+      "07:00",
+      "07:30",
+      "08:00",
+      "08:30",
+      "09:00",
+      "09:30",
+      "10:00",
+      "10:30",
+      "11:00",
+      "11:30",
+      "12:00"
+     ],
+     "reihen": [
+      {
+       "name": "Prozessor",
+       "einheit": "%",
+       "max": 100,
+       "werte": [
+        8,
+        12,
+        18,
+        22,
+        25,
+        24,
+        21,
+        19,
+        17,
+        15,
+        12
+       ]
+      },
+      {
+       "name": "Arbeitsspeicher belegt",
+       "einheit": "%",
+       "max": 100,
+       "werte": [
+        61,
+        63,
+        66,
+        70,
+        72,
+        73,
+        74,
+        74,
+        73,
+        72,
+        71
+       ]
+      },
+      {
+       "name": "Datenträger D: aktive Zeit",
+       "einheit": "%",
+       "max": 100,
+       "werte": [
+        15,
+        40,
+        78,
+        96,
+        99,
+        98,
+        97,
+        95,
+        88,
+        60,
+        35
+       ]
+      },
+      {
+       "name": "Netzwerk",
+       "einheit": "Mbit/s",
+       "max": 1000,
+       "werte": [
+        40,
+        120,
+        210,
+        260,
+        280,
+        270,
+        265,
+        250,
+        220,
+        150,
+        90
+       ]
+      }
+     ],
+     "zeilen": [
+      "Der Dateiserver hat einen Netzwerkanschluss mit 1 Gbit/s und vier Festplatten mit 7 200 Umdrehungen je Minute im RAID 5."
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "netzplan",
+     "titel": "Netzplan der Außenstelle Wiesbach",
+     "knoten": [
+      {
+       "id": "inet",
+       "typ": "internet",
+       "name": "Internet",
+       "x": 2,
+       "y": 0
+      },
+      {
+       "id": "rt",
+       "typ": "router",
+       "name": "Router RT-W",
+       "x": 2,
+       "y": 1,
+       "info": [
+        "G0/0: 198.51.100.18/30",
+        "G0/1.10: 172.20.10.1/24",
+        "G0/1.20: 172.20.20.1/24",
+        "G0/1.30: 172.20.30.1/26"
+       ]
+      },
+      {
+       "id": "sw",
+       "typ": "switch",
+       "name": "Switch SW-W1",
+       "x": 2,
+       "y": 2,
+       "info": [
+        "24 Ports"
+       ]
+      },
+      {
+       "id": "pc",
+       "typ": "pc",
+       "name": "PCs Verwaltung (8)",
+       "x": 0,
+       "y": 3,
+       "info": [
+        "VLAN 10"
+       ]
+      },
+      {
+       "id": "ap",
+       "typ": "wlan",
+       "name": "WLAN-Zugangspunkt AP-W1",
+       "x": 1,
+       "y": 3,
+       "info": [
+        "Tablets der Pflege"
+       ]
+      },
+      {
+       "id": "nas",
+       "typ": "nas",
+       "name": "NAS-W",
+       "x": 3,
+       "y": 3,
+       "info": [
+        "172.20.10.20"
+       ]
+      },
+      {
+       "id": "dr",
+       "typ": "drucker",
+       "name": "Drucker (3)",
+       "x": 4,
+       "y": 3,
+       "info": [
+        "DHCP"
+       ]
+      }
+     ],
+     "kanten": [
+      {
+       "von": "inet",
+       "nach": "rt",
+       "text": "Glasfaser, 500 Mbit/s"
+      },
+      {
+       "von": "rt",
+       "nach": "sw",
+       "text": "Port 24, Trunk mit VLAN 10, 20 und 30"
+      },
+      {
+       "von": "sw",
+       "nach": "pc",
+       "text": "Ports 1 bis 8, VLAN 10"
+      },
+      {
+       "von": "sw",
+       "nach": "ap",
+       "text": "Port 20, VLAN 20"
+      },
+      {
+       "von": "sw",
+       "nach": "nas",
+       "text": "Port 21, VLAN 10"
+      },
+      {
+       "von": "sw",
+       "nach": "dr",
+       "text": "Port 22, VLAN 30"
+      }
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "code",
+     "titel": "Auszug aus der Konfiguration von SW-W1",
+     "zeilen": [
+      " 1  interface Port21",
+      " 2   description NAS-W",
+      " 3   switchport mode access",
+      " 4   switchport access vlan 10",
+      " 5  interface Port22",
+      " 6   description Drucker",
+      " 7   switchport mode access",
+      " 8   switchport access vlan 20",
+      " 9  interface Port24",
+      "10   description Uplink RT-W",
+      "11   switchport mode trunk",
+      "12   switchport trunk allowed vlan 10,20,30"
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "text",
+     "titel": "Anforderungen an die Datenbank der Tourenplanung",
+     "zeilen": [
+      "Zu jeder Pflegekraft werden Personalnummer, Name und Qualifikation gespeichert.",
+      "Eine Tour hat eine Tournummer, ein Datum und eine Startzeit. Jede Tour fährt genau eine Pflegekraft, eine Pflegekraft fährt viele Touren.",
+      "Zu jeder Patientin und jedem Patienten werden Patientennummer, Name und Adresse gespeichert.",
+      "Auf einer Tour werden mehrere Patientinnen und Patienten besucht, und jede Person wird auf vielen Touren besucht. Für jeden Besuch wird die geplante Uhrzeit gespeichert."
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "englisch",
+     "titel": "Excerpt from the tablet management guide",
+     "zeilen": [
+      "The tablets can be locked to a single app. This is called kiosk mode.",
+      "In kiosk mode, the home button and the notification bar are disabled.",
+      "An administrator can leave kiosk mode with a six-digit PIN that is set in the management console.",
+      "If a tablet has not contacted the management server for 14 days, all business data on the tablet is wiped automatically.",
+      "Updates are only installed between 01:00 and 04:00 while the tablet is charging."
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Leistung des Dateiservers in der Zentrale",
+     "punkte": 25,
+     "einleitung": [
+      "In der Zentrale klagen die Beschäftigten, dass das Öffnen der Pflegedokumentation am Vormittag lange dauert. Sie haben die Auslastung des Dateiservers FS-01 einen Vormittag lang aufgezeichnet (Anlage 1)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie anhand von Anlage 1 die Komponente, die am Vormittag den Engpass bildet."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Prozessor",
+         "Arbeitsspeicher",
+         "Datenträger D:",
+         "Netzwerkanschluss"
+        ],
+        "richtig": [
+         2
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Datenträger D: (aktive Zeit von 08:30 bis 10:30 zwischen 95 und 99 %)"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie Ihre Wahl mit Werten aus Anlage 1."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Die aktive Zeit des Datenträgers liegt von 08:30 bis 10:30 bei 95 bis 99 %, er ist also fast dauernd beschäftigt.",
+        "Prozessor (höchstens 25 %), Arbeitsspeicher (höchstens 74 %) und Netzwerk (höchstens 280 von 1 000 Mbit/s) haben noch Reserven.",
+        "Anfragen müssen auf den Datenträger warten, darum dauert das Öffnen lange."
+       ],
+       "hinweise": [
+        {
+         "text": "Werte des Datenträgers genannt (95 bis 99 % am Vormittag)",
+         "punkte": 1
+        },
+        {
+         "text": "Reserven bei mindestens zwei anderen Komponenten mit Werten belegt",
+         "punkte": 1
+        },
+        {
+         "text": "Folge erklärt: Zugriffe warten auf den Datenträger",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Maßnahmen, die den Engpass beheben oder mildern."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "SSDs statt Festplatten einsetzen",
+        "RAID mit mehr Platten oder RAID 10 statt RAID 5",
+        "mehr Arbeitsspeicher als Zwischenspeicher (Cache)",
+        "Virenscan oder Indexierung in die Nacht verlegen",
+        "Daten auf einen zweiten Server verteilen"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "berechnen",
+       "text": [
+        "Die Geschäftsführung bestellt sechs SSDs mit je 3,84 TB für ein RAID 6. Berechnen Sie die nutzbare Kapazität in TB."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "TB",
+        "ergebnis": 15.36,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "loesung": [
+        "RAID 6 braucht die Kapazität von zwei Platten für die Paritäten.",
+        "(6 − 2) × 3,84 TB = 15,36 TB"
+       ],
+       "hinweise": [
+        {
+         "text": "zwei Platten für die Paritäten abgezogen",
+         "punkte": 1
+        },
+        {
+         "text": "Rechnung (6 − 2) × 3,84 TB",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "berechnen",
+       "text": [
+        "Die Pflegedokumentation belegt heute 9,2 TB und wächst jedes Jahr um 1,1 TB. Berechnen Sie, nach wie vielen vollen Jahren der neue Speicher aus d) erstmals zu mehr als 90 % belegt ist."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Jahre",
+        "ergebnis": 5,
+        "toleranz": 0,
+        "ersatz_ergebnis": 7,
+        "punkte_ergebnis": 2
+       },
+       "ersatzwert": {
+        "bezug": "1d",
+        "text": "Falls Sie d) nicht lösen konnten, rechnen Sie mit 18 TB."
+       },
+       "loesung": [
+        "90 % von 15,36 TB = 13,824 TB",
+        "(13,824 TB − 9,2 TB) ÷ 1,1 TB je Jahr ≈ 4,2 Jahre",
+        "Nach 4 Jahren: 13,6 TB (noch darunter), nach 5 Jahren: 14,7 TB, also nach 5 Jahren.",
+        "Mit dem Ersatzwert 18 TB: 90 % = 16,2 TB, (16,2 − 9,2) ÷ 1,1 ≈ 6,4, also nach 7 Jahren."
+       ],
+       "hinweise": [
+        {
+         "text": "Grenze 90 % der Kapazität richtig berechnet",
+         "punkte": 1
+        },
+        {
+         "text": "auf volle Jahre aufgerundet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Vorteile von SSDs gegenüber Festplatten für diesen Dateiserver."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Viel kürzere Zugriffszeiten: viele gleichzeitige kleine Zugriffe werden schnell bedient.",
+        "Keine beweglichen Teile: unempfindlicher gegen Erschütterung, leise.",
+        "Geringere Leistungsaufnahme und Wärme im Serverraum."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie RAID 6 und RAID 10 mit sechs gleichen Platten anhand der nutzbaren Kapazität und der Ausfallsicherheit."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "loesung": [
+        "Kapazität: RAID 6 nutzt vier von sechs Platten, RAID 10 nur drei von sechs.",
+        "Ausfallsicherheit: RAID 6 übersteht den Ausfall von zwei beliebigen Platten, RAID 10 nur, wenn nicht beide Platten eines Spiegels ausfallen."
+       ],
+       "hinweise": [
+        {
+         "text": "Kapazität beider Stufen verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Ausfallsicherheit beider Stufen verglichen",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Netz der Außenstelle Wiesbach",
+     "punkte": 25,
+     "einleitung": [
+      "Die Außenstelle Wiesbach bekommt einen neuen Switch und ein WLAN für die Tablets der Pflege. Den Netzplan finden Sie in Anlage 2."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für das Netz des VLAN 30 die Netzadresse und die Broadcastadresse sowie das Standardgateway der Drucker."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Netzadresse VLAN 30",
+          "art": "ip",
+          "loesung": [
+           "172.20.30.0"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Broadcastadresse VLAN 30",
+          "art": "ip",
+          "loesung": [
+           "172.20.30.63"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Standardgateway der Drucker",
+          "art": "ip",
+          "loesung": [
+           "172.20.30.1"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Netzadresse 172.20.30.0",
+        "Broadcastadresse 172.20.30.63 (/26)",
+        "Standardgateway 172.20.30.1 (G0/1.30 von RT-W)"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie, wie viele Geräte im VLAN 30 höchstens eine Adresse bekommen können, wenn der Router bereits eine Adresse belegt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Geräte",
+        "ergebnis": 61,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "/26 lässt 6 Bit für Hosts: 2⁶ − 2 = 62 nutzbare Adressen",
+        "abzüglich der Adresse des Routers: 62 − 1 = 61"
+       ],
+       "hinweise": [
+        {
+         "text": "nutzbare Adressen 2⁶ − 2 = 62",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, was „Trunk“ an der Verbindung zwischen RT-W und SW-W1 bedeutet."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Über eine einzige Leitung laufen die Daten mehrerer VLANs (10, 20 und 30).",
+        "Jeder Rahmen trägt dazu eine VLAN-Kennung (Tag nach IEEE 802.1Q), damit Router und Switch ihn dem richtigen VLAN zuordnen."
+       ],
+       "hinweise": [
+        {
+         "text": "mehrere VLANs über eine Leitung",
+         "punkte": 2
+        },
+        {
+         "text": "Kennzeichnung der Rahmen mit der VLAN-ID (tagged, 802.1Q)",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Tabelle der Switchports von SW-W1. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Port",
+         "Gerät",
+         "VLAN",
+         "Rahmen"
+        ],
+        "zeilen": [
+         [
+          "1 bis 8",
+          "PCs Verwaltung",
+          "10",
+          "untagged"
+         ],
+         [
+          "20",
+          "AP-W1",
+          "20",
+          {
+           "loesung": [
+            "untagged"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "21",
+          "NAS-W",
+          {
+           "loesung": [
+            "10"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "untagged"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "22",
+          "Drucker",
+          {
+           "loesung": [
+            "30"
+           ],
+           "punkte": 1
+          },
+          "untagged"
+         ],
+         [
+          "24",
+          "RT-W",
+          "10, 20, 30",
+          {
+           "loesung": [
+            "tagged"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Port 20: untagged",
+        "Port 21: VLAN 10, untagged",
+        "Port 22: VLAN 30",
+        "Port 24: tagged (Trunk)"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Maßnahmen, die das WLAN der Tablets absichern."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Verschlüsselung mit WPA3",
+        "Anmeldung je Gerät über 802.1X statt eines gemeinsamen Kennworts",
+        "eigenes VLAN, nur nötige Zugriffe über den Router freigeben",
+        "Firmware des Zugangspunkts aktuell halten",
+        "kein offenes Gastnetz im selben VLAN"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "korrigieren",
+       "text": [
+        "Die Drucker an Port 22 bekommen keine Adresse aus dem Netz des VLAN 30. Ermitteln Sie in Anlage 3 die falsche Zeile und geben Sie die richtige Zeile an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Nummer der falschen Zeile",
+          "art": "zahl",
+          "loesung": [
+           "8"
+          ],
+          "punkte": 2
+         },
+         {
+          "name": "Richtige Zeile",
+          "art": "text",
+          "loesung": [
+           "switchport access vlan 30"
+          ],
+          "punkte": 2
+         }
+        ]
+       },
+       "anlagen": [
+        "2",
+        "3"
+       ],
+       "loesung": [
+        "Zeile 8 ordnet Port 22 dem VLAN 20 zu.",
+        "Richtig: switchport access vlan 30"
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "begruenden",
+       "text": [
+        "Die Geschäftsführung möchte die Außenstelle über ein VPN von Standort zu Standort mit der Zentrale verbinden. Begründen Sie diese Lösung gegenüber einer VPN-Einwahl jedes einzelnen Geräts."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Der Tunnel steht dauerhaft zwischen den Routern, die Geräte brauchen keine eigene VPN-Software.",
+        "Alle Geräte der Außenstelle, auch Drucker und NAS, erreichen die Zentrale.",
+        "Nur zwei Endpunkte sind zu verwalten."
+       ],
+       "hinweise": [
+        {
+         "text": "Tunnel zwischen den Standorten statt je Gerät erklärt",
+         "punkte": 1
+        },
+        {
+         "text": "Vorteil für die Geräte genannt (keine Software, auch Drucker und NAS)",
+         "punkte": 1
+        },
+        {
+         "text": "Vorteil für die Verwaltung genannt",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Datenbank für die Tourenplanung",
+     "punkte": 25,
+     "einleitung": [
+      "Die Touren der Pflegekräfte werden bisher in einer Tabellenkalkulation geplant. Sie sollen eine Datenbank vorbereiten. Die Anforderungen stehen in Anlage 4."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie ein ER-Modell in Chen-Notation mit allen Entitäten, Beziehungen, Attributen und Kardinalitäten aus Anlage 4.",
+        "Der Anfang ist vorgegeben. Kennzeichnen Sie Schlüsselattribute durch Unterstreichen."
+       ],
+       "punkte": 9,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "er",
+        "vorgabe": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "pnr",
+           "typ": "attribut",
+           "text": "Personalnummer",
+           "x": 0,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "pname",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "tnr",
+           "typ": "attribut",
+           "text": "Tournummer",
+           "x": 4,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "pk",
+           "typ": "entitaet",
+           "text": "Pflegekraft",
+           "x": 1,
+           "y": 1
+          },
+          {
+           "id": "faehrt",
+           "typ": "beziehung",
+           "text": "fährt",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "tour",
+           "typ": "entitaet",
+           "text": "Tour",
+           "x": 5,
+           "y": 1
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "pk",
+           "nach": "pnr"
+          },
+          {
+           "von": "pk",
+           "nach": "pname"
+          },
+          {
+           "von": "tour",
+           "nach": "tnr"
+          },
+          {
+           "von": "faehrt",
+           "nach": "pk"
+          },
+          {
+           "von": "faehrt",
+           "nach": "tour"
+          }
+         ]
+        },
+        "muster": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "pnr",
+           "typ": "attribut",
+           "text": "Personalnummer",
+           "x": 0,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "pname",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "qual",
+           "typ": "attribut",
+           "text": "Qualifikation",
+           "x": 2,
+           "y": 0
+          },
+          {
+           "id": "tnr",
+           "typ": "attribut",
+           "text": "Tournummer",
+           "x": 4,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "datum",
+           "typ": "attribut",
+           "text": "Datum",
+           "x": 5,
+           "y": 0
+          },
+          {
+           "id": "zeit",
+           "typ": "attribut",
+           "text": "Startzeit",
+           "x": 6,
+           "y": 0
+          },
+          {
+           "id": "pk",
+           "typ": "entitaet",
+           "text": "Pflegekraft",
+           "x": 1,
+           "y": 1
+          },
+          {
+           "id": "faehrt",
+           "typ": "beziehung",
+           "text": "fährt",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "tour",
+           "typ": "entitaet",
+           "text": "Tour",
+           "x": 5,
+           "y": 1
+          },
+          {
+           "id": "uhr",
+           "typ": "attribut",
+           "text": "geplante Uhrzeit",
+           "x": 3,
+           "y": 2
+          },
+          {
+           "id": "besucht",
+           "typ": "beziehung",
+           "text": "besucht",
+           "x": 5,
+           "y": 2
+          },
+          {
+           "id": "pat",
+           "typ": "entitaet",
+           "text": "Patient",
+           "x": 5,
+           "y": 3
+          },
+          {
+           "id": "patnr",
+           "typ": "attribut",
+           "text": "Patientennummer",
+           "x": 4,
+           "y": 4,
+           "schluessel": true
+          },
+          {
+           "id": "patname",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 5,
+           "y": 4
+          },
+          {
+           "id": "adresse",
+           "typ": "attribut",
+           "text": "Adresse",
+           "x": 6,
+           "y": 4
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "pk",
+           "nach": "pnr"
+          },
+          {
+           "von": "pk",
+           "nach": "pname"
+          },
+          {
+           "von": "pk",
+           "nach": "qual"
+          },
+          {
+           "von": "tour",
+           "nach": "tnr"
+          },
+          {
+           "von": "tour",
+           "nach": "datum"
+          },
+          {
+           "von": "tour",
+           "nach": "zeit"
+          },
+          {
+           "von": "faehrt",
+           "nach": "pk",
+           "kard": "1"
+          },
+          {
+           "von": "faehrt",
+           "nach": "tour",
+           "kard": "n"
+          },
+          {
+           "von": "besucht",
+           "nach": "tour",
+           "kard": "n"
+          },
+          {
+           "von": "besucht",
+           "nach": "pat",
+           "kard": "m"
+          },
+          {
+           "von": "besucht",
+           "nach": "uhr"
+          },
+          {
+           "von": "pat",
+           "nach": "patnr"
+          },
+          {
+           "von": "pat",
+           "nach": "patname"
+          },
+          {
+           "von": "pat",
+           "nach": "adresse"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Entitäten: Pflegekraft, Tour, Patient (je mit Schlüsselattribut)",
+        "Beziehung „fährt“ zwischen Pflegekraft (1) und Tour (n)",
+        "Beziehung „besucht“ zwischen Tour (n) und Patient (m) mit dem Attribut „geplante Uhrzeit“"
+       ],
+       "hinweise": [
+        {
+         "text": "Entität Patient mit Schlüssel Patientennummer",
+         "punkte": 2
+        },
+        {
+         "text": "Beziehung „besucht“ zwischen Tour und Patient",
+         "punkte": 2
+        },
+        {
+         "text": "Kardinalität n:m bei „besucht“",
+         "punkte": 1
+        },
+        {
+         "text": "Kardinalität 1:n bei „fährt“",
+         "punkte": 1
+        },
+        {
+         "text": "Attribut „geplante Uhrzeit“ an der Beziehung „besucht“",
+         "punkte": 2
+        },
+        {
+         "text": "übrige Attribute vollständig (Qualifikation, Datum, Startzeit, Name, Adresse)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, wie die Beziehung „besucht“ im Tabellenmodell umgesetzt wird."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Es entsteht eine eigene Tabelle Besuch mit den Fremdschlüsseln Tournummer und Patientennummer.",
+        "Beide zusammen bilden den Primärschlüssel, dazu kommt die Spalte geplante Uhrzeit."
+       ],
+       "hinweise": [
+        {
+         "text": "eigene Tabelle mit zwei Fremdschlüsseln",
+         "punkte": 2
+        },
+        {
+         "text": "zusammengesetzter Primärschlüssel oder Spalte geplante Uhrzeit genannt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Schlüssel des Tabellenmodells. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Tabelle",
+         "Primärschlüssel",
+         "Fremdschlüssel"
+        ],
+        "zeilen": [
+         [
+          "Pflegekraft",
+          "Personalnummer",
+          "keiner"
+         ],
+         [
+          "Tour",
+          {
+           "loesung": [
+            "Tournummer"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "Personalnummer"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Patient",
+          {
+           "loesung": [
+            "Patientennummer"
+           ],
+           "punkte": 1
+          },
+          "keiner"
+         ],
+         [
+          "Besuch",
+          {
+           "loesung": [
+            "Tournummer, Patientennummer",
+            "Tournummer und Patientennummer",
+            "Patientennummer, Tournummer",
+            "Patientennummer und Tournummer"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "Tournummer, Patientennummer",
+            "Tournummer und Patientennummer",
+            "Patientennummer, Tournummer",
+            "Patientennummer und Tournummer"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Tour: Primärschlüssel Tournummer, Fremdschlüssel Personalnummer",
+        "Patient: Primärschlüssel Patientennummer",
+        "Besuch: Primärschlüssel Tournummer und Patientennummer, beide sind auch Fremdschlüssel"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Maßnahmen, mit denen die Patientendaten in der Datenbank geschützt werden."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Rechte nach Rollen vergeben (nur nötige Zugriffe)",
+        "Datenträger oder Datenbank verschlüsseln",
+        "Zugriffe protokollieren",
+        "regelmäßig sichern und die Rücksicherung prüfen"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie die Datenbank mit der bisherigen Tabellenkalkulation anhand von zwei Merkmalen und geben Sie eine Empfehlung."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Gleichzeitiges Arbeiten: die Datenbank erlaubt viele Nutzer zugleich, die Tabellendatei ist oft gesperrt.",
+        "Datenqualität: Schlüssel und Beziehungen verhindern doppelte oder widersprüchliche Einträge, in der Tabelle ist alles frei eintragbar.",
+        "Empfehlung: Datenbank."
+       ],
+       "hinweise": [
+        {
+         "text": "erstes Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "zweites Merkmal für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "passende Empfehlung",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Sicherung und Tablets der Pflege",
+     "punkte": 25,
+     "einleitung": [
+      "Zum Schluss geht es um die nächtliche Datensicherung und die Verwaltung der Tablets."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "berechnen",
+       "text": [
+        "Die nächtliche Vollsicherung umfasst 2,4 TB und wird über eine Leitung mit 10 Gbit/s auf ein NAS geschrieben. Wegen Protokoll-Overhead stehen nur 80 % der Übertragungsrate zur Verfügung. Berechnen Sie die Dauer in Minuten (1 TB = 10¹² Byte)."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Minuten",
+        "ergebnis": 40,
+        "toleranz": 0.5,
+        "punkte_ergebnis": 2
+       },
+       "loesung": [
+        "Datenmenge: 2,4 × 10¹² Byte × 8 = 1,92 × 10¹³ bit",
+        "nutzbare Rate: 10 Gbit/s × 0,8 = 8 × 10⁹ bit/s",
+        "Dauer: 1,92 × 10¹³ bit ÷ 8 × 10⁹ bit/s = 2 400 s = 40 min"
+       ],
+       "hinweise": [
+        {
+         "text": "Byte in Bit umgerechnet",
+         "punkte": 1
+        },
+        {
+         "text": "nutzbare Rate mit 80 % berechnet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, warum zusätzlich eine Kopie der Sicherung außer Haus nötig ist."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Brand, Wasser oder Diebstahl in der Zentrale treffen Server und NAS zugleich.",
+        "Auch Schadsoftware kann die Sicherung im selben Netz verschlüsseln.",
+        "Nur eine Kopie an einem anderen Ort bleibt dann erhalten."
+       ],
+       "hinweise": [
+        {
+         "text": "Gefahr für Server und Sicherung am selben Ort genannt",
+         "punkte": 1
+        },
+        {
+         "text": "zweite Gefahr genannt (z. B. Schadsoftware)",
+         "punkte": 1
+        },
+        {
+         "text": "Folgerung: getrennter Ort erhält die Daten",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Angaben, die ein Sicherungsplan enthalten muss."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "welche Daten gesichert werden",
+        "wann und wie oft gesichert wird",
+        "wohin gesichert wird",
+        "wie lange die Sicherungen aufbewahrt werden",
+        "wer zuständig ist und wann die Rücksicherung geprüft wird"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Aufgaben einer Verwaltung für Mobilgeräte (MDM) bei den Tablets der Pflege."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Verlorene Tablets aus der Ferne sperren oder löschen, damit keine Patientendaten nach außen gelangen.",
+        "Apps und Updates zentral verteilen, ohne jedes Gerät einzeln anzufassen.",
+        "Richtlinien vorgeben, z. B. Bildschirmsperre mit PIN und Verschlüsselung."
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Aussagen nach Anlage 5 zutreffen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Im Kiosk-Modus lässt sich nur eine App benutzen.",
+         "Die PIN zum Verlassen des Kiosk-Modus legt jede Pflegekraft selbst fest.",
+         "Nach 14 Tagen ohne Verbindung zum Verwaltungsserver werden die Firmendaten gelöscht.",
+         "Updates werden jederzeit installiert, sobald sie verfügbar sind."
+        ],
+        "richtig": [
+         0,
+         2
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Zutreffend: nur eine App im Kiosk-Modus; Löschen der Firmendaten nach 14 Tagen ohne Verbindung."
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "beschreiben",
+       "text": [
+        "Eine Pflegekraft lässt ihr Tablet während eines Urlaubs von drei Wochen ausgeschaltet zu Hause. Beschreiben Sie, was nach Anlage 5 passiert und was danach zu tun ist."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Nach 14 Tagen ohne Verbindung werden die Firmendaten auf dem Tablet gelöscht, sobald die Regel greift.",
+        "Danach muss das Tablet neu eingerichtet oder die Daten erneut übertragen werden."
+       ],
+       "hinweise": [
+        {
+         "text": "Löschen der Firmendaten nach 14 Tagen erkannt",
+         "punkte": 2
+        },
+        {
+         "text": "Folge: neu einrichten oder Daten neu übertragen",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie die tägliche Vollsicherung mit einer wöchentlichen Vollsicherung und täglichen differenziellen Sicherungen anhand der Dauer der Sicherung und des Aufwands bei der Rücksicherung. Geben Sie eine Empfehlung."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Dauer: die tägliche Vollsicherung sichert jede Nacht alles (hier 40 min), die differenzielle nur die Änderungen seit der letzten Vollsicherung.",
+        "Rücksicherung: bei Vollsicherung ein Satz, bei differenzieller die letzte Voll- und die letzte differenzielle Sicherung.",
+        "Empfehlung: bei 40 min im Nachtfenster reicht die tägliche Vollsicherung; wird sie zu lang, die differenzielle."
+       ],
+       "hinweise": [
+        {
+         "text": "Dauer beider Verfahren verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Rücksicherung beider Verfahren verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "passende Empfehlung",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "ae_b1_06",
+   "fachrichtung": "ae",
+   "bereich": "b1",
+   "aufbau": "paar",
+   "firma": "Radstation Mühlbach GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Radstation Mühlbach GmbH betreibt in der Stadt Mühlbach einen Fahrradverleih mit 40 Stationen und rund 600 Rädern, davon etwa ein Drittel Elektroräder. Am Firmensitz arbeiten 35 Beschäftigte in Verwaltung, Kundendienst und Werkstatt; ein Servicewagen verteilt die Räder zwischen den Stationen.",
+    "Bisher leihen Kundinnen und Kunden die Räder mit einer Karte am Terminal der Station aus. Künftig soll eine Ausleih-App die Ausleihe übernehmen: Die App spricht über eine Webschnittstelle mit dem Ausleih-Server der Firma, der Server öffnet die Schlösser an den Stellplätzen.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Anwendungsentwicklung in der IT-Abteilung der Firma und arbeiten im Projektteam, das die App, die Webschnittstelle und die Datenbank plant.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Webschnittstelle der Ausleih-App",
+    "2. Ablauf der Ausleihe",
+    "3. Datenmodell für Räder und Stationen",
+    "4. Beteiligte und Einführung"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "code",
+     "titel": "Beispiel einer HTTP-Anfrage der Ausleih-App (mit Zeilennummern)",
+     "zeilen": [
+      " 1  POST /api/v1/reservierungen HTTP/1.1",
+      " 2  Host: api.radstation-muehlbach.example",
+      " 3  Authorization: Bearer 7f3c9a51e0b24d6c",
+      " 4  Content-Type: application/json",
+      " 5  Accept: application/json",
+      " 6",
+      " 7  {",
+      " 8    \"rad_id\": 1187,",
+      " 9    \"station_id\": 14,",
+      "10    \"zahlart\": \"guthaben\"",
+      "11  }"
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "englisch",
+     "titel": "Excerpt from the API description of the rental service",
+     "zeilen": [
+      "The rental API uses JSON for all requests and responses.",
+      "Every request must send a valid access token in the Authorization header; requests without a token are rejected with status 401.",
+      "A reservation holds the bike for 15 minutes and expires automatically if the ride has not started by then.",
+      "All times are given in UTC in the format defined by ISO 8601.",
+      "A client may send at most 60 requests per minute; further requests are answered with status 429 until the next minute begins."
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "text",
+     "titel": "Geplanter Ablauf der Ausleihe mit der App",
+     "zeilen": [
+      "Beteiligt sind die Kundin, die App, der Ausleih-Server, die Datenbank und das Schloss am Stellplatz.",
+      "1. Die Kundin scannt mit der App den Code am Rad. Die App sendet eine Ausleih-Anfrage mit der Radnummer an den Server.",
+      "2. Der Server fragt in der Datenbank den Zustand des Rads ab und erhält ihn als Antwort.",
+      "3. Ist das Rad frei, legt der Server in der Datenbank eine Ausleihe an und schickt dem Schloss den Befehl zum Öffnen. Das Schloss meldet „offen“ zurück. Danach antwortet der Server der App mit „Ausleihe gestartet“, und die App zeigt der Kundin die Startzeit an.",
+      "4. Ist das Rad nicht frei (reserviert oder in Wartung), antwortet der Server der App mit einer Fehlermeldung, und die App zeigt der Kundin den Hinweis „Rad nicht verfügbar“.",
+      "Vorgabe für das Diagramm: die Lebenslinien Kundin, App, Server, Datenbank und Schloss (von links nach rechts) und die erste Nachricht Kundin → App „Code am Rad scannen“."
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "code",
+     "titel": "Pseudocode der Server-Funktion bearbeiteAusleihe mit Lücken (1) bis (3)",
+     "zeilen": [
+      " 1  funktion bearbeiteAusleihe(kunde, rad)",
+      " 2    wenn kunde.istGesperrt() dann",
+      " 3      rückgabe 403",
+      " 4    ende wenn",
+      " 5    wenn ______(1)______ dann",
+      " 6      rückgabe 409",
+      " 7    ende wenn",
+      " 8    ausleihe ← neue Ausleihe(kunde, rad, jetzt())",
+      " 9    datenbank.speichere(ausleihe)",
+      "10    ______(2)______",
+      "11    offen ← rad.getSchloss().oeffnen()",
+      "12    wenn nicht offen dann",
+      "13      datenbank.loesche(ausleihe)",
+      "14      rad.setZustand(\"frei\")",
+      "15      rückgabe 503",
+      "16    ende wenn",
+      "17    ______(3)______",
+      "18  ende funktion",
+      "",
+      "Regeln: Ein Rad hat den Zustand \"frei\", \"reserviert\", \"verliehen\" oder \"wartung\". Nur ein freies Rad darf ausgeliehen werden; während der Ausleihe hat es den Zustand \"verliehen\". Die Funktion gibt den HTTP-Statuscode der Antwort an die App zurück; eine erfolgreich angelegte Ausleihe meldet sie mit 201.",
+      "Die Klasse Rad bietet getZustand(): String (liefert den Zustand), setZustand(zustand: String) und getSchloss(): Schloss. rad.getSchloss().oeffnen() liefert wahr, wenn das Schloss „offen“ meldet, sonst falsch."
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "text",
+     "titel": "Anforderungen an die Datenhaltung der Ausleihe",
+     "zeilen": [
+      "Eine Station hat eine Stationsnummer, einen Namen und eine Zahl von Stellplätzen.",
+      "Ein Rad hat eine Radnummer, einen Typ (normal oder elektrisch) und einen Akkustand. Jedes Rad ist genau einer Station zugeordnet; einer Station sind viele Räder zugeordnet.",
+      "Eine Kundin oder ein Kunde hat eine Kundennummer, einen Namen und eine E-Mail-Adresse.",
+      "Kundinnen und Kunden leihen Räder aus. Zu jeder Ausleihe werden Startzeit und Endzeit gespeichert. Ein Kunde kann viele Räder ausleihen, ein Rad wird mit der Zeit von vielen Kunden ausgeliehen.",
+      "Die Werkstatt erfasst Schäden: Ein Schaden hat eine Schadensnummer, eine Beschreibung und ein Meldedatum. Er betrifft genau ein Rad; ein Rad kann viele Schäden haben."
+     ]
+    },
+    {
+     "nr": "6",
+     "art": "code",
+     "titel": "Tabellenmodell (Auszug; PK = Primärschlüssel, FK = Fremdschlüssel)",
+     "zeilen": [
+      "station (station_id PK, name, stellplaetze)",
+      "rad (rad_id PK, typ, akkustand, station_id FK → station)",
+      "typ: 'N' = normales Rad, 'E' = Elektrorad; akkustand in Prozent, bei normalen Rädern leer (NULL)"
+     ]
+    },
+    {
+     "nr": "7",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle station",
+     "spalten": [
+      "station_id",
+      "name",
+      "stellplaetze"
+     ],
+     "zeilen": [
+      [
+       "1",
+       "Marktplatz",
+       "16"
+      ],
+      [
+       "2",
+       "Bahnhof Süd",
+       "24"
+      ],
+      [
+       "3",
+       "Freibad",
+       "10"
+      ],
+      [
+       "4",
+       "Lindenallee",
+       "12"
+      ]
+     ]
+    },
+    {
+     "nr": "8",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle rad (– = leer)",
+     "spalten": [
+      "rad_id",
+      "typ",
+      "akkustand",
+      "station_id"
+     ],
+     "zeilen": [
+      [
+       "1103",
+       "N",
+       "–",
+       "2"
+      ],
+      [
+       "1187",
+       "E",
+       "18",
+       "1"
+      ],
+      [
+       "1240",
+       "E",
+       "64",
+       "2"
+      ],
+      [
+       "1311",
+       "E",
+       "22",
+       "3"
+      ],
+      [
+       "1352",
+       "N",
+       "–",
+       "3"
+      ],
+      [
+       "1408",
+       "E",
+       "9",
+       "4"
+      ],
+      [
+       "1420",
+       "E",
+       "31",
+       "1"
+      ],
+      [
+       "1466",
+       "E",
+       "24",
+       "2"
+      ]
+     ]
+    },
+    {
+     "nr": "9",
+     "art": "tabelle",
+     "titel": "Stakeholder-Tabelle (Entwurf des Projektteams)",
+     "spalten": [
+      "Beteiligter",
+      "Befürchtung",
+      "Maßnahme"
+     ],
+     "zeilen": [
+      [
+       "Stammkundschaft mit Ausleihkarte",
+       "Ohne Smartphone ist keine Ausleihe mehr möglich.",
+       "Die Karte bleibt gültig; an den zehn größten Stationen bleibt ein Terminal stehen."
+      ],
+      [
+       "Beschäftigte im Kundendienst",
+       "?",
+       "?"
+      ],
+      [
+       "Werkstatt",
+       "?",
+       "?"
+      ],
+      [
+       "Stadtverwaltung (vergibt die Stellflächen)",
+       "?",
+       "?"
+      ]
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Webschnittstelle der Ausleih-App",
+     "punkte": 24,
+     "einleitung": [
+      "Die App soll über eine REST-Schnittstelle mit dem Ausleih-Server sprechen; später sollen auch die Terminals diese Schnittstelle nutzen. Eine Beispielanfrage und einen Auszug aus der Beschreibung der Schnittstelle zeigen die Anlagen 1 und 2."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Grundgedanken, nach denen eine REST-Schnittstelle aufgebaut ist."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "loesung": [
+        "Ressourcen: Jede Sache (Station, Rad, Reservierung) ist eine Ressource mit eigener Adresse (URI), z. B. /api/v1/stationen/14.",
+        "Einheitliche Schnittstelle: Auf alle Ressourcen wird mit denselben HTTP-Methoden zugegriffen (GET lesen, POST anlegen, PUT/PATCH ändern, DELETE löschen).",
+        "Zustandslos: Jede Anfrage enthält alle nötigen Angaben (auch das Zugangstoken); der Server merkt sich zwischen zwei Anfragen keine Sitzung.",
+        "Darstellung: Ressourcen werden in einem vereinbarten Format übertragen, meist JSON; der Statuscode meldet das Ergebnis.",
+        "Client und Server sind getrennt und können unabhängig weiterentwickelt werden."
+       ],
+       "hinweise": [
+        {
+         "text": "erster Grundgedanke richtig erläutert (z. B. Ressourcen mit eigener URI)",
+         "punkte": 2
+        },
+        {
+         "text": "zweiter Grundgedanke richtig erläutert (z. B. einheitliche HTTP-Methoden, zustandslos)",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie in der Tabelle zu jedem Vorgang der App die CRUD-Operation und die passende HTTP-Methode. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Vorgang in der App",
+         "CRUD-Operation",
+         "HTTP-Methode"
+        ],
+        "zeilen": [
+         [
+          "Liste der Stationen anzeigen",
+          "Read",
+          "GET"
+         ],
+         [
+          "Ein Rad für sich reservieren",
+          {
+           "loesung": [
+            "create",
+            "c",
+            "erstellen",
+            "anlegen",
+            "erzeugen",
+            "create (anlegen)",
+            "create (erstellen)",
+            "create (erzeugen)"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "post"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Die Reservierung auf ein anderes Rad umbuchen",
+          {
+           "loesung": [
+            "update",
+            "u",
+            "ändern",
+            "aendern",
+            "aktualisieren",
+            "update (ändern)"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "put",
+            "patch",
+            "put oder patch",
+            "patch oder put",
+            "put/patch",
+            "patch/put",
+            "put / patch",
+            "patch / put",
+            "put, patch",
+            "patch, put",
+            "put bzw. patch",
+            "patch bzw. put",
+            "put und patch"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Die Reservierung stornieren",
+          {
+           "loesung": [
+            "delete",
+            "d",
+            "löschen",
+            "loeschen",
+            "delete (löschen)"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "delete"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "loesung": [
+        "Rad reservieren: Create, POST (neue Ressource Reservierung)",
+        "Reservierung umbuchen: Update, PUT (ganz ersetzen) oder PATCH (teilweise ändern)",
+        "Reservierung stornieren: Delete, DELETE"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie aus der Anfrage in Anlage 1 die HTTP-Methode, den Pfad der Ressource, den Namen der Kopfzeile, die das Format des Inhalts angibt, und die Zeile, in der der Nachrichtenrumpf (Body) beginnt."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "HTTP-Methode",
+          "art": "text",
+          "loesung": [
+           "POST"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Pfad der Ressource",
+          "art": "text",
+          "loesung": [
+           "/api/v1/reservierungen",
+           "api/v1/reservierungen"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Kopfzeile für das Format des Inhalts",
+          "art": "text",
+          "loesung": [
+           "Content-Type",
+           "Content-Type:",
+           "Content-Type: application/json"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zeile, in der der Nachrichtenrumpf beginnt",
+          "art": "zahl",
+          "loesung": [
+           "7"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Methode: POST (Zeile 1, Startzeile der Anfrage)",
+        "Pfad: /api/v1/reservierungen (Zeile 1)",
+        "Format des Inhalts: Kopfzeile Content-Type (Zeile 4, application/json); Accept in Zeile 5 nennt das gewünschte Antwortformat",
+        "Die Leerzeile 6 trennt die Kopfzeilen vom Rumpf; der JSON-Rumpf beginnt in Zeile 7."
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie in der Tabelle zu jedem Statuscode seine Gruppe in der Schreibweise 1xx bis 5xx. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Antwort des Servers",
+         "Statuscode",
+         "Gruppe"
+        ],
+        "zeilen": [
+         [
+          "Die Liste der Stationen wird geliefert.",
+          "200",
+          "2xx"
+         ],
+         [
+          "Die Reservierung wurde angelegt.",
+          "201",
+          {
+           "loesung": [
+            "2xx",
+            "2**",
+            "2xx.",
+            "2 xx",
+            "2..",
+            "2"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Die alte Adresse der Schnittstelle verweist dauerhaft auf die neue.",
+          "301",
+          {
+           "loesung": [
+            "3xx",
+            "3**",
+            "3xx.",
+            "3 xx",
+            "3..",
+            "3"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Das Rad ist schon von jemand anderem reserviert.",
+          "409",
+          {
+           "loesung": [
+            "4xx",
+            "4**",
+            "4xx.",
+            "4 xx",
+            "4..",
+            "4"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Die Datenbank des Servers ist nicht erreichbar.",
+          "503",
+          {
+           "loesung": [
+            "5xx",
+            "5**",
+            "5xx.",
+            "5 xx",
+            "5..",
+            "5"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "loesung": [
+        "Die erste Ziffer bestimmt die Gruppe.",
+        "201: 2xx Erfolg (Created)",
+        "301: 3xx Umleitung (Moved Permanently)",
+        "409: 4xx Fehler des Clients (Conflict)",
+        "503: 5xx Fehler des Servers (Service Unavailable)"
+       ]
+      },
+      {
+       "nr": "ea",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie aus dem englischen Text in Anlage 2, wie viele Minuten eine Reservierung gilt, welchen Statuscode eine Anfrage ohne Zugangstoken erhält und wie viele Anfragen ein Client je Minute höchstens senden darf."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Gültigkeit einer Reservierung in Minuten",
+          "art": "zahl",
+          "loesung": [
+           "15"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Statuscode ohne Zugangstoken",
+          "art": "zahl",
+          "loesung": [
+           "401"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Anfragen je Minute höchstens",
+          "art": "zahl",
+          "loesung": [
+           "60"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Reservierung: 15 Minuten (Satz 3)",
+        "ohne Token: 401 (Satz 2)",
+        "höchstens 60 Anfragen je Minute (Satz 5)"
+       ]
+      },
+      {
+       "nr": "eb",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Schnittstelle laut Anlage 2 die Zahl der Anfragen je Minute begrenzt, und wie die App reagieren sollte, wenn sie den Statuscode 429 erhält."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "2"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Die Grenze schützt den Server vor Überlast, etwa durch eine fehlerhafte App, die Anfragen in einer Schleife sendet, oder durch absichtliche Angriffe; so bleibt die Schnittstelle für alle Kundinnen und Kunden erreichbar.",
+        "Bei 429 sollte die App nicht sofort erneut senden, sondern bis zum Beginn der nächsten Minute warten, die Anfrage dann einmal wiederholen und der Kundin einen Hinweis anzeigen."
+       ],
+       "hinweise": [
+        {
+         "text": "Grund: Schutz vor Überlast oder Missbrauch, Verfügbarkeit für alle",
+         "punkte": 2
+        },
+        {
+         "text": "Reaktion: warten und später wiederholen, Hinweis anzeigen",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Ablauf der Ausleihe",
+     "punkte": 26,
+     "einleitung": [
+      "Das Projektteam beschreibt die Ausleihe mit der App als UML-Sequenzdiagramm und entwirft dazu die Funktion des Servers, die eine Ausleih-Anfrage bearbeitet."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie auf Papier das UML-Sequenzdiagramm der Ausleihe nach Anlage 3. Übernehmen Sie die vorgegebenen Lebenslinien und die erste Nachricht und ergänzen Sie alle weiteren Nachrichten, die Antworten und die Verzweigung für ein freies und ein nicht freies Rad."
+       ],
+       "punkte": 13,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 16
+       },
+       "anlagen": [
+        "3"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Lebenslinien: Kundin, App, Server, Datenbank, Schloss (vorgegeben)",
+        "1. Kundin -> App: Code am Rad scannen (vorgegeben)",
+        "2. App -> Server: Ausleih-Anfrage ausleihen(radNr), z. B. POST /api/v1/ausleihen",
+        "3. Server -> Datenbank: Zustand des Rads abfragen",
+        "4. Datenbank --> Server: Zustand (Antwort, gestrichelter Pfeil)",
+        "alt [Rad frei]",
+        "  5. Server -> Datenbank: Ausleihe anlegen",
+        "  6. Server -> Schloss: öffnen",
+        "  7. Schloss --> Server: offen",
+        "  8. Server --> App: Ausleihe gestartet",
+        "  9. App -> Kundin: Startzeit anzeigen",
+        "[sonst] (Rad reserviert oder in Wartung)",
+        "  5. Server --> App: Fehlermeldung",
+        "  6. App -> Kundin: Hinweis „Rad nicht verfügbar“ anzeigen",
+        "Nachrichten von oben nach unten in zeitlicher Reihenfolge; Antworten gestrichelt."
+       ],
+       "hinweise": [
+        {
+         "text": "Ausleih-Anfrage App -> Server mit Radnummer",
+         "punkte": 1
+        },
+        {
+         "text": "Abfrage Server -> Datenbank und Antwort mit dem Zustand",
+         "punkte": 2
+        },
+        {
+         "text": "alt-Fragment mit zwei Bereichen und Bedingungen [Rad frei] / [sonst]",
+         "punkte": 3
+        },
+        {
+         "text": "im Bereich [Rad frei]: Ausleihe in der Datenbank anlegen",
+         "punkte": 1
+        },
+        {
+         "text": "Befehl Server -> Schloss „öffnen“ und Rückmeldung „offen“",
+         "punkte": 2
+        },
+        {
+         "text": "Antwort „Ausleihe gestartet“ an die App und Anzeige der Startzeit",
+         "punkte": 2
+        },
+        {
+         "text": "im Bereich [sonst]: Fehlermeldung an die App und Hinweis an die Kundin",
+         "punkte": 1
+        },
+        {
+         "text": "richtige zeitliche Reihenfolge, Antworten als gestrichelte Pfeile",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie im Pseudocode der Anlage 4 die Lücken (1) bis (3), sodass die Funktion die Regeln unter dem Pseudocode erfüllt. Geben Sie je Lücke die vollständige Zeile an."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "4"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "(1) Zeile 5:  wenn rad.getZustand() ≠ \"frei\" dann",
+        "(2) Zeile 10:  rad.setZustand(\"verliehen\")",
+        "(3) Zeile 17:  rückgabe 201"
+       ],
+       "hinweise": [
+        {
+         "text": "Lücke (1): Bedingung „Zustand des Rads ist nicht frei“ über getZustand()",
+         "punkte": 2
+        },
+        {
+         "text": "Lücke (2): Zustand des Rads mit setZustand auf \"verliehen\" setzen",
+         "punkte": 2
+        },
+        {
+         "text": "Lücke (3): Rückgabe des Statuscodes 201",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Funktion in Anlage 4 in den Zeilen 13 und 14 die Ausleihe wieder löscht und das Rad freigibt, wenn das Schloss nicht öffnet."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Ohne diese Zeilen stünde in der Datenbank eine Ausleihe, obwohl die Kundin das Rad nicht nutzen kann: Daten und Wirklichkeit stimmen nicht mehr überein (Konsistenz).",
+        "Folgen wären eine Gebühr für eine Fahrt, die nicht stattfand, und ein Rad, das als verliehen gilt und von niemandem mehr ausgeliehen werden kann."
+       ],
+       "hinweise": [
+        {
+         "text": "Datenbestand bleibt konsistent mit dem tatsächlichen Zustand",
+         "punkte": 2
+        },
+        {
+         "text": "eine Folge genannt (falsche Gebühr oder blockiertes Rad)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie die Bedeutung einer Lebenslinie und eines Aktivierungsbalkens in einem UML-Sequenzdiagramm."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Lebenslinie: senkrechte, gestrichelte Linie unter einem Beteiligten (Objekt oder Akteur); sie zeigt, dass er während des Ablaufs besteht, die Zeit läuft nach unten.",
+        "Aktivierungsbalken: schmales Rechteck auf der Lebenslinie; es zeigt, wann der Beteiligte aktiv ist, also eine Nachricht bearbeitet, bis er antwortet."
+       ],
+       "hinweise": [
+        {
+         "text": "Lebenslinie richtig beschrieben",
+         "punkte": 2
+        },
+        {
+         "text": "Aktivierungsbalken richtig beschrieben",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Datenmodell für Räder und Stationen",
+     "punkte": 25,
+     "einleitung": [
+      "Für die Ausleihe wird eine relationale Datenbank geplant. Die Anforderungen stehen in Anlage 5; die Tabellen station und rad sind schon angelegt (Anlagen 6 bis 8)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie im Baukasten das ER-Modell in Chen-Notation nach Anlage 5. Station, Rad und ihre Beziehung sind vorgegeben; ergänzen Sie alle weiteren Entitäten, Beziehungen, Attribute (Schlüssel markieren) und alle Kardinalitäten."
+       ],
+       "punkte": 12,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "er",
+        "vorgabe": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "station",
+           "typ": "entitaet",
+           "text": "Station",
+           "x": 1,
+           "y": 2
+          },
+          {
+           "id": "s_nr",
+           "typ": "attribut",
+           "text": "Stationsnummer",
+           "x": 0,
+           "y": 1,
+           "schluessel": true
+          },
+          {
+           "id": "s_name",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "s_plaetze",
+           "typ": "attribut",
+           "text": "Stellplätze",
+           "x": 2,
+           "y": 1
+          },
+          {
+           "id": "zugeordnet",
+           "typ": "beziehung",
+           "text": "ist zugeordnet",
+           "x": 1,
+           "y": 4
+          },
+          {
+           "id": "rad",
+           "typ": "entitaet",
+           "text": "Rad",
+           "x": 1,
+           "y": 6
+          },
+          {
+           "id": "r_nr",
+           "typ": "attribut",
+           "text": "Radnummer",
+           "x": 0,
+           "y": 5,
+           "schluessel": true
+          },
+          {
+           "id": "r_typ",
+           "typ": "attribut",
+           "text": "Typ",
+           "x": 0,
+           "y": 6
+          },
+          {
+           "id": "r_akku",
+           "typ": "attribut",
+           "text": "Akkustand",
+           "x": 0,
+           "y": 7
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "station",
+           "nach": "s_nr"
+          },
+          {
+           "von": "station",
+           "nach": "s_name"
+          },
+          {
+           "von": "station",
+           "nach": "s_plaetze"
+          },
+          {
+           "von": "zugeordnet",
+           "nach": "station"
+          },
+          {
+           "von": "zugeordnet",
+           "nach": "rad"
+          },
+          {
+           "von": "rad",
+           "nach": "r_nr"
+          },
+          {
+           "von": "rad",
+           "nach": "r_typ"
+          },
+          {
+           "von": "rad",
+           "nach": "r_akku"
+          }
+         ]
+        },
+        "muster": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "station",
+           "typ": "entitaet",
+           "text": "Station",
+           "x": 1,
+           "y": 2
+          },
+          {
+           "id": "s_nr",
+           "typ": "attribut",
+           "text": "Stationsnummer",
+           "x": 0,
+           "y": 1,
+           "schluessel": true
+          },
+          {
+           "id": "s_name",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "s_plaetze",
+           "typ": "attribut",
+           "text": "Stellplätze",
+           "x": 2,
+           "y": 1
+          },
+          {
+           "id": "zugeordnet",
+           "typ": "beziehung",
+           "text": "ist zugeordnet",
+           "x": 1,
+           "y": 4
+          },
+          {
+           "id": "rad",
+           "typ": "entitaet",
+           "text": "Rad",
+           "x": 1,
+           "y": 6
+          },
+          {
+           "id": "r_nr",
+           "typ": "attribut",
+           "text": "Radnummer",
+           "x": 0,
+           "y": 5,
+           "schluessel": true
+          },
+          {
+           "id": "r_typ",
+           "typ": "attribut",
+           "text": "Typ",
+           "x": 0,
+           "y": 6
+          },
+          {
+           "id": "r_akku",
+           "typ": "attribut",
+           "text": "Akkustand",
+           "x": 0,
+           "y": 7
+          },
+          {
+           "id": "leiht",
+           "typ": "beziehung",
+           "text": "leiht aus",
+           "x": 4,
+           "y": 6
+          },
+          {
+           "id": "l_start",
+           "typ": "attribut",
+           "text": "Startzeit",
+           "x": 4,
+           "y": 5
+          },
+          {
+           "id": "l_ende",
+           "typ": "attribut",
+           "text": "Endzeit",
+           "x": 4,
+           "y": 7
+          },
+          {
+           "id": "kunde",
+           "typ": "entitaet",
+           "text": "Kunde",
+           "x": 6,
+           "y": 6
+          },
+          {
+           "id": "k_nr",
+           "typ": "attribut",
+           "text": "Kundennummer",
+           "x": 7,
+           "y": 5,
+           "schluessel": true
+          },
+          {
+           "id": "k_name",
+           "typ": "attribut",
+           "text": "Name",
+           "x": 7,
+           "y": 6
+          },
+          {
+           "id": "k_mail",
+           "typ": "attribut",
+           "text": "E-Mail-Adresse",
+           "x": 7,
+           "y": 7
+          },
+          {
+           "id": "betrifft",
+           "typ": "beziehung",
+           "text": "betrifft",
+           "x": 1,
+           "y": 9
+          },
+          {
+           "id": "schaden",
+           "typ": "entitaet",
+           "text": "Schaden",
+           "x": 1,
+           "y": 11
+          },
+          {
+           "id": "sch_nr",
+           "typ": "attribut",
+           "text": "Schadensnummer",
+           "x": 0,
+           "y": 10,
+           "schluessel": true
+          },
+          {
+           "id": "sch_text",
+           "typ": "attribut",
+           "text": "Beschreibung",
+           "x": 0,
+           "y": 11
+          },
+          {
+           "id": "sch_datum",
+           "typ": "attribut",
+           "text": "Meldedatum",
+           "x": 2,
+           "y": 11
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "station",
+           "nach": "s_nr"
+          },
+          {
+           "von": "station",
+           "nach": "s_name"
+          },
+          {
+           "von": "station",
+           "nach": "s_plaetze"
+          },
+          {
+           "von": "zugeordnet",
+           "nach": "station",
+           "kard": "1"
+          },
+          {
+           "von": "zugeordnet",
+           "nach": "rad",
+           "kard": "n"
+          },
+          {
+           "von": "rad",
+           "nach": "r_nr"
+          },
+          {
+           "von": "rad",
+           "nach": "r_typ"
+          },
+          {
+           "von": "rad",
+           "nach": "r_akku"
+          },
+          {
+           "von": "leiht",
+           "nach": "rad",
+           "kard": "m"
+          },
+          {
+           "von": "leiht",
+           "nach": "kunde",
+           "kard": "n"
+          },
+          {
+           "von": "leiht",
+           "nach": "l_start"
+          },
+          {
+           "von": "leiht",
+           "nach": "l_ende"
+          },
+          {
+           "von": "kunde",
+           "nach": "k_nr"
+          },
+          {
+           "von": "kunde",
+           "nach": "k_name"
+          },
+          {
+           "von": "kunde",
+           "nach": "k_mail"
+          },
+          {
+           "von": "betrifft",
+           "nach": "rad",
+           "kard": "1"
+          },
+          {
+           "von": "betrifft",
+           "nach": "schaden",
+           "kard": "n"
+          },
+          {
+           "von": "schaden",
+           "nach": "sch_nr"
+          },
+          {
+           "von": "schaden",
+           "nach": "sch_text"
+          },
+          {
+           "von": "schaden",
+           "nach": "sch_datum"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "5"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Station 1 : n Rad über „ist zugeordnet“ (Kardinalitäten eintragen)",
+        "Kunde (Kundennummer als Schlüssel, Name, E-Mail-Adresse)",
+        "Rad m : n Kunde über „leiht aus“ mit den Attributen Startzeit und Endzeit an der Beziehung",
+        "Schaden (Schadensnummer als Schlüssel, Beschreibung, Meldedatum)",
+        "Rad 1 : n Schaden über „betrifft“"
+       ],
+       "hinweise": [
+        {
+         "text": "Entität Kunde mit Schlüssel Kundennummer, Name und E-Mail-Adresse",
+         "punkte": 2
+        },
+        {
+         "text": "Beziehung „leiht aus“ zwischen Rad und Kunde mit Kardinalität m : n",
+         "punkte": 3
+        },
+        {
+         "text": "Startzeit und Endzeit als Attribute der Beziehung",
+         "punkte": 2
+        },
+        {
+         "text": "Entität Schaden mit Schlüssel Schadensnummer, Beschreibung und Meldedatum",
+         "punkte": 2
+        },
+        {
+         "text": "Beziehung „betrifft“ zwischen Rad und Schaden mit 1 : n",
+         "punkte": 2
+        },
+        {
+         "text": "Kardinalität 1 : n zwischen Station und Rad eingetragen",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Der Servicewagen soll Elektroräder mit fast leerem Akku einsammeln. Erstellen Sie zum Tabellenmodell in Anlage 6 eine SQL-Abfrage, die für alle Elektroräder mit einem Akkustand unter 25 Prozent die Radnummer, den Akkustand und den Namen der Station ausgibt, aufsteigend sortiert nach dem Akkustand."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "SELECT r.rad_id, r.akkustand, s.name",
+        "FROM rad r",
+        "JOIN station s ON r.station_id = s.station_id",
+        "WHERE r.typ = 'E' AND r.akkustand < 25",
+        "ORDER BY r.akkustand ASC;"
+       ],
+       "hinweise": [
+        {
+         "text": "Ausgabe von Radnummer, Akkustand und Stationsname",
+         "punkte": 1
+        },
+        {
+         "text": "JOIN von rad und station über station_id",
+         "punkte": 2
+        },
+        {
+         "text": "WHERE mit beiden Bedingungen (typ = 'E' und akkustand < 25)",
+         "punkte": 2
+        },
+        {
+         "text": "ORDER BY akkustand aufsteigend",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie mit den Beispieldaten aus den Anlagen 7 und 8, welche Zeilen eine Abfrage liefert, die alle Elektroräder mit einem Akkustand unter 25 Prozent aufsteigend nach dem Akkustand ausgibt: die Zahl der Zeilen, den Namen der Station in der ersten Zeile, die Radnummer in der zweiten Zeile und den Akkustand in der letzten Zeile. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der Zeilen",
+          "art": "zahl",
+          "loesung": [
+           "4"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Name der Station in der ersten Zeile",
+          "art": "text",
+          "loesung": [
+           "Lindenallee",
+           "4",
+           "Station 4",
+           "Lindenallee (4)",
+           "4 Lindenallee"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Radnummer in der zweiten Zeile",
+          "art": "zahl",
+          "loesung": [
+           "1187"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Akkustand in der letzten Zeile",
+          "art": "zahl",
+          "loesung": [
+           "24"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "7",
+        "8"
+       ],
+       "loesung": [
+        "Treffer: 1408 (9 %, Lindenallee), 1187 (18 %, Marktplatz), 1311 (22 %, Freibad), 1466 (24 %, Bahnhof Süd)",
+        "1240 (64 %) und 1420 (31 %) liegen darüber; die normalen Räder 1103 und 1352 haben keinen Akkustand.",
+        "Also 4 Zeilen, erste Zeile Lindenallee, zweite Zeile Rad 1187, letzte Zeile Akkustand 24."
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, wie die Beziehung „leiht aus“ aus Anlage 5 im relationalen Tabellenmodell umgesetzt wird."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Für die m:n-Beziehung wird eine eigene Tabelle (Zwischentabelle) ausleihe angelegt.",
+        "Sie enthält die Fremdschlüssel rad_id (→ rad) und kunden_id (→ kunde) sowie die Attribute startzeit und endzeit.",
+        "Primärschlüssel: eine eigene ausleihe_id oder zusammengesetzt aus rad_id und startzeit (dasselbe Rad kann mehrmals vom selben Kunden geliehen werden)."
+       ],
+       "hinweise": [
+        {
+         "text": "eigene Tabelle für die m:n-Beziehung",
+         "punkte": 1
+        },
+        {
+         "text": "beide Fremdschlüssel auf rad und kunde",
+         "punkte": 1
+        },
+        {
+         "text": "Startzeit und Endzeit in dieser Tabelle, passender Primärschlüssel",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Beteiligte und Einführung",
+     "punkte": 25,
+     "einleitung": [
+      "Vor dem Start der Entwicklung sammelt das Projektteam, wer von der neuen App betroffen ist, und plant die Einführung. Den Entwurf der Stakeholder-Tabelle zeigt Anlage 9."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Stakeholder-Tabelle in Anlage 9 für die drei Beteiligten mit Fragezeichen um je eine passende Befürchtung und eine Maßnahme des Projektteams."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 8
+       },
+       "anlagen": [
+        "9"
+       ],
+       "loesung": [
+        "Kundendienst: Befürchtung viele Anrufe wegen Problemen mit der App, Wegfall von Aufgaben; Maßnahme: frühe Schulung, Hilfeseite und Fragenkatalog in der App, Kundendienst testet die App im Pilotbetrieb mit.",
+        "Werkstatt: Befürchtung Mehrarbeit durch neue Schlösser oder doppelte Erfassung von Schäden; Maßnahme: Schadensmeldung direkt aus der App in die Werkstattliste, Werkstatt bei der Auswahl der Schlösser beteiligen.",
+        "Stadtverwaltung: Befürchtung Räder werden außerhalb der Stationen abgestellt, Datenschutzbeschwerden; Maßnahme: Rückgabe nur an Stationen (Schloss), regelmäßige Berichte, Datenschutzkonzept vorlegen."
+       ],
+       "hinweise": [
+        {
+         "text": "Kundendienst: passende Befürchtung",
+         "punkte": 1
+        },
+        {
+         "text": "Kundendienst: passende Maßnahme",
+         "punkte": 1
+        },
+        {
+         "text": "Werkstatt: passende Befürchtung",
+         "punkte": 1
+        },
+        {
+         "text": "Werkstatt: passende Maßnahme",
+         "punkte": 1
+        },
+        {
+         "text": "Stadtverwaltung: passende Befürchtung",
+         "punkte": 1
+        },
+        {
+         "text": "Stadtverwaltung: passende Maßnahme",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erlaeutern",
+       "text": [
+        "Die App soll während der Fahrt alle 30 Sekunden den Standort des Rads speichern. Erläutern Sie zwei Maßnahmen, mit denen die Firma diese Standortdaten der Kundschaft datenschutzgerecht behandelt."
+       ],
+       "punkte": 6,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Datenminimierung: nur Start- und Rückgabestation speichern; den Fahrtverlauf nur, wenn er für einen Zweck nötig ist (z. B. Diebstahl), und dann so grob wie möglich.",
+        "Speicherbegrenzung: Fahrtverläufe nach Ende der Ausleihe und Abrechnung nach kurzer, festgelegter Frist automatisch löschen.",
+        "Pseudonymisierung: für Auswertungen (z. B. beliebte Strecken) die Daten ohne Kundennummer verwenden.",
+        "Transparenz und Rechtsgrundlage: in der App verständlich informieren, wozu die Daten dienen; wo nötig Einwilligung einholen.",
+        "Schutz: Übertragung verschlüsselt (TLS), Zugriff nur für berechtigte Rollen, Zugriffe protokollieren."
+       ],
+       "hinweise": [
+        {
+         "text": "erste Maßnahme genannt und erläutert",
+         "punkte": 3
+        },
+        {
+         "text": "zweite Maßnahme genannt und erläutert",
+         "punkte": 3
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "begruenden",
+       "text": [
+        "Die Geschäftsführung möchte die App an allen 40 Stationen am selben Tag einführen. Das Projektteam schlägt vor, zuerst vier Wochen an fünf Stationen zu starten. Begründen Sie diesen Vorschlag."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Im Pilotbetrieb zeigen sich Fehler (z. B. Schlösser, Funkverbindung, Abrechnung) an wenigen Stationen; sie lassen sich beheben, bevor alle Kundinnen und Kunden betroffen sind.",
+        "Kundendienst und Werkstatt sammeln Erfahrung, Rückmeldungen der Kundschaft fließen in die App ein, das Risiko eines großen Ausfalls sinkt."
+       ],
+       "hinweise": [
+        {
+         "text": "Grund: Fehler werden früh mit geringem Schaden erkannt und behoben, Risiko sinkt",
+         "punkte": 3
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie vier weitere Beteiligte (Stakeholder) des Projekts, die nicht in Anlage 9 stehen."
+       ],
+       "punkte": 4,
+       "angaben": 4,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "9"
+       ],
+       "loesung": [
+        "Geschäftsführung (Auftraggeber)",
+        "Gelegenheitskundschaft, z. B. Gäste der Stadt",
+        "Datenschutzbeauftragte Person",
+        "Betriebsrat",
+        "Hersteller der Schlösser",
+        "Zahlungsdienstleister",
+        "Fahrerinnen und Fahrer des Servicewagens",
+        "Projektteam und Entwicklung",
+        "Betrieb der Server (IT-Betrieb)"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie zwei Kennzahlen, an denen die Firma nach dem Pilotbetrieb erkennen kann, ob die App ihren Zweck erfüllt."
+       ],
+       "punkte": 6,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Anteil der Ausleihen über die App an allen Ausleihen der Pilotstationen: zeigt, ob die Kundschaft die App annimmt.",
+        "Zahl der abgebrochenen oder fehlgeschlagenen Ausleihen (z. B. Schloss öffnet nicht) je 100 Ausleihen: zeigt die Zuverlässigkeit.",
+        "Zeit vom Scannen bis zum offenen Schloss: zeigt, ob die Ausleihe schnell genug ist.",
+        "Zahl der Anfragen beim Kundendienst zur App je Woche: zeigt, wie verständlich die App ist.",
+        "Bewertungen und Rückmeldungen der Kundschaft in einer kurzen Umfrage."
+       ],
+       "hinweise": [
+        {
+         "text": "erste Kennzahl beschrieben, mit Aussage",
+         "punkte": 3
+        },
+        {
+         "text": "zweite Kennzahl beschrieben, mit Aussage",
+         "punkte": 3
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "ae_b2_06",
+   "fachrichtung": "ae",
+   "bereich": "b2",
+   "aufbau": "paar",
+   "firma": "Radstation Mühlbach GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Radstation Mühlbach GmbH betreibt in der Stadt Mühlbach einen Fahrradverleih mit 40 Stationen und rund 600 Rädern, davon etwa ein Drittel Elektroräder. Am Firmensitz arbeiten 35 Beschäftigte in Verwaltung, Kundendienst und Werkstatt.",
+    "Das in Bereich 1 geplante Projekt wird jetzt umgesetzt: Die Ausleih-App, die Webschnittstelle und die Datenbank des Ausleih-Servers werden programmiert und getestet.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Anwendungsentwicklung in der IT-Abteilung der Firma und programmieren im Entwicklungsteam mit.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Sortieren der Stationsliste",
+    "2. Auswertungen der Ausleihen",
+    "3. Testen der Gebührenfunktion",
+    "4. Ablauf der Rückgabe"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "text",
+     "titel": "Klasse Station und Vergleichsfunktionen",
+     "zeilen": [
+      "Klasse Station: - name: String; - freieRaeder: int; - freieStellplaetze: int; - entfernung: int (Meter vom Standort der Kundin); + getName(): String; + getFreieRaeder(): int; + getFreieStellplaetze(): int; + getEntfernung(): int",
+      "Eine Vergleichsfunktion vergleiche(a, b) erhält zwei Stationen. Sie gibt eine negative Zahl zurück, wenn a vor b stehen soll, eine positive Zahl, wenn b vor a stehen soll, und 0, wenn die Reihenfolge der beiden gleichgültig ist.",
+      "Beispiel: funktion vergleicheNachEntfernung(a, b) mit rückgabe a.getEntfernung() − b.getEntfernung() ordnet die Stationen aufsteigend nach der Entfernung.",
+      "Pseudocode: Felder beginnen beim Index 0, länge(feld) liefert die Zahl der Elemente. Eine Funktion kann als Parameter übergeben und über den Namen des Parameters aufgerufen werden, z. B. vergleiche(stationen[0], stationen[1])."
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "tabelle",
+     "titel": "Stationen in der Nähe einer Kundin (Auszug)",
+     "spalten": [
+      "Name",
+      "freie Räder",
+      "freie Stellplätze",
+      "Entfernung in m"
+     ],
+     "zeilen": [
+      [
+       "Marktplatz",
+       "5",
+       "1",
+       "300"
+      ],
+      [
+       "Bahnhof Süd",
+       "2",
+       "6",
+       "650"
+      ],
+      [
+       "Freibad",
+       "7",
+       "0",
+       "120"
+      ],
+      [
+       "Rathaus",
+       "0",
+       "3",
+       "700"
+      ],
+      [
+       "Uferweg",
+       "3",
+       "4",
+       "450"
+      ]
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "code",
+     "titel": "Tabellenmodell der Ausleih-Datenbank (PK = Primärschlüssel, FK = Fremdschlüssel)",
+     "zeilen": [
+      "station (station_id PK, name, stellplaetze)",
+      "rad (rad_id PK, typ, akkustand, station_id FK → station)",
+      "kunde (kunden_id PK, name, email, guthaben_cent)",
+      "ausleihe (ausleihe_id PK, rad_id FK → rad, kunden_id FK → kunde, start_station_id FK → station, ziel_station_id FK → station, startzeit, endzeit, gebuehr_cent)",
+      "reservierung (reservierung_id PK, rad_id FK → rad, kunden_id FK → kunde, angelegt_um, gueltig_bis)",
+      "Zeitpunkte als Text im Format 'JJJJ-MM-TT hh:mm'. Bei einer laufenden Ausleihe sind ziel_station_id, endzeit und gebuehr_cent leer (NULL)."
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle ausleihe (– = leer)",
+     "spalten": [
+      "ausleihe_id",
+      "rad_id",
+      "kunden_id",
+      "start_station_id",
+      "ziel_station_id",
+      "startzeit",
+      "endzeit",
+      "gebuehr_cent"
+     ],
+     "zeilen": [
+      [
+       "5001",
+       "1103",
+       "21",
+       "2",
+       "1",
+       "2026-11-02 07:45",
+       "2026-11-02 08:05",
+       "100"
+      ],
+      [
+       "5002",
+       "1187",
+       "34",
+       "1",
+       "2",
+       "2026-11-02 08:10",
+       "2026-11-02 09:02",
+       "210"
+      ],
+      [
+       "5003",
+       "1240",
+       "21",
+       "2",
+       "3",
+       "2026-11-02 12:30",
+       "2026-11-02 13:40",
+       "300"
+      ],
+      [
+       "5004",
+       "1103",
+       "47",
+       "1",
+       "1",
+       "2026-11-02 14:00",
+       "2026-11-02 14:25",
+       "100"
+      ],
+      [
+       "5005",
+       "1311",
+       "52",
+       "2",
+       "2",
+       "2026-11-02 15:10",
+       "2026-11-02 15:48",
+       "140"
+      ],
+      [
+       "5006",
+       "1240",
+       "34",
+       "3",
+       "2",
+       "2026-11-02 16:05",
+       "2026-11-02 17:35",
+       "400"
+      ],
+      [
+       "5007",
+       "1187",
+       "47",
+       "2",
+       "–",
+       "2026-11-02 17:20",
+       "–",
+       "–"
+      ],
+      [
+       "5008",
+       "1311",
+       "21",
+       "3",
+       "1",
+       "2026-11-02 18:00",
+       "2026-11-02 18:12",
+       "100"
+      ]
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle station",
+     "spalten": [
+      "station_id",
+      "name",
+      "stellplaetze"
+     ],
+     "zeilen": [
+      [
+       "1",
+       "Marktplatz",
+       "16"
+      ],
+      [
+       "2",
+       "Bahnhof Süd",
+       "24"
+      ],
+      [
+       "3",
+       "Freibad",
+       "10"
+      ]
+     ]
+    },
+    {
+     "nr": "6",
+     "art": "code",
+     "titel": "Fehlerhafte SQL-Abfrage (mit Zeilennummern)",
+     "zeilen": [
+      "1  SELECT k.kunden_id, k.name, COUNT(*) AS anzahl",
+      "2  FROM ausleihe a",
+      "3  JOIN kunde k ON a.rad_id = k.kunden_id",
+      "4  WHERE COUNT(*) >= 3",
+      "5  GROUP BY k.kunden_id, k.name",
+      "6  ORDER BY anzahl DESC;"
+     ]
+    },
+    {
+     "nr": "7",
+     "art": "code",
+     "titel": "Pseudocode der Funktion berechneGebuehr (Beträge in Cent, mit Zeilennummern)",
+     "zeilen": [
+      " 1  funktion berechneGebuehr(minuten, kunde)",
+      " 2    gebuehr ← 100",
+      " 3    wenn minuten > 30 dann",
+      " 4      gebuehr ← gebuehr + (minuten − 30) × 5",
+      " 5    ende wenn",
+      " 6    wenn kunde.hatAbo() dann",
+      " 7      gebuehr ← gebuehr − 100",
+      " 8    ende wenn",
+      " 9    rückgabe gebuehr",
+      "10  ende funktion"
+     ]
+    },
+    {
+     "nr": "8",
+     "art": "text",
+     "titel": "Ablauf der Rückgabe eines Rads",
+     "zeilen": [
+      "1. Die Kundin schiebt das Rad in einen freien Stellplatz; das Schloss rastet ein und meldet die Radnummer an den Server.",
+      "2. Der Server sucht die offene Ausleihe zu diesem Rad.",
+      "3. Findet er keine offene Ausleihe, schreibt er einen Eintrag ins Fehlerprotokoll, und der Ablauf endet.",
+      "4. Sonst trägt er die Endzeit ein und berechnet danach die Gebühr.",
+      "5. Reicht das Guthaben der Kundin, bucht er die Gebühr vom Guthaben ab; sonst belastet er das hinterlegte Zahlungsmittel.",
+      "6. In beiden Fällen sendet der Server danach eine Quittung an die App, und der Ablauf endet."
+     ]
+    },
+    {
+     "nr": "9",
+     "art": "text",
+     "titel": "Regeln für das Abbuchen der Gebühr",
+     "zeilen": [
+      "Die Klasse Kunde bietet: getGuthaben(): int (Cent), setGuthaben(betrag: int), belasteZahlungsmittel(betrag: int): boolean (wahr, wenn die Zahlung gelingt) und sperren().",
+      "Ist das Guthaben mindestens so groß wie die Gebühr, wird die Gebühr vom Guthaben abgezogen.",
+      "Sonst wird das vorhandene Guthaben ganz verbraucht (auf 0 gesetzt), und nur der fehlende Rest wird über das Zahlungsmittel eingezogen.",
+      "Gelingt diese Zahlung nicht, wird die Kundin oder der Kunde gesperrt."
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Sortieren der Stationsliste",
+     "punkte": 28,
+     "einleitung": [
+      "Die App zeigt einer Kundin die Stationen in ihrer Nähe je nach Zweck in unterschiedlicher Reihenfolge an. Dafür soll es eine einzige Sortierfunktion geben, der die gewünschte Ordnung als Vergleichsfunktion übergeben wird (Anlage 1)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie in Pseudocode eine Funktion sortiere(stationen, vergleiche), die das Feld stationen mit einem Sortierverfahren Ihrer Wahl im Feld selbst sortiert. Die Reihenfolge darf allein über die übergebene Vergleichsfunktion vergleiche bestimmt werden; eingebaute Sortierfunktionen sind nicht erlaubt."
+       ],
+       "punkte": 12,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 16
+       },
+       "anlagen": [
+        "1"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "funktion sortiere(stationen, vergleiche)",
+        "  für i von 1 bis länge(stationen) − 1",
+        "    aktuell ← stationen[i]",
+        "    j ← i − 1",
+        "    solange j >= 0 und vergleiche(stationen[j], aktuell) > 0",
+        "      stationen[j + 1] ← stationen[j]",
+        "      j ← j − 1",
+        "    ende solange",
+        "    stationen[j + 1] ← aktuell",
+        "  ende für",
+        "ende funktion",
+        "(Sortieren durch Einfügen; „und“ prüft die rechte Bedingung nur, wenn die linke wahr ist. Andere Verfahren wie Bubblesort oder Auswahlsortieren mit vergleiche(...) > 0 statt „>“ sind ebenso richtig.)"
+       ],
+       "hinweise": [
+        {
+         "text": "Funktionskopf mit den Parametern stationen und vergleiche",
+         "punkte": 1
+        },
+        {
+         "text": "Schleifen laufen über das ganze Feld, Feldgrenzen 0 bis länge − 1 richtig",
+         "punkte": 2
+        },
+        {
+         "text": "Vergleich nur über vergleiche(...) mit Auswertung des Vorzeichens (> 0)",
+         "punkte": 3
+        },
+        {
+         "text": "Verschieben oder Tauschen ohne Datenverlust (Hilfsvariable)",
+         "punkte": 3
+        },
+        {
+         "text": "innere Schleife bzw. Abbruch richtig, Feld ist am Ende vollständig sortiert",
+         "punkte": 2
+        },
+        {
+         "text": "einheitlicher, lesbarer Pseudocode mit Einrückung",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Für die Rückgabe soll die App die Stationen aufsteigend nach einem Rangwert ordnen: Der Rangwert ist die Entfernung in Metern; hat eine Station weniger als zwei freie Stellplätze, kommen 500 Meter hinzu, weil man dort oft keinen Platz findet. Erstellen Sie in Pseudocode die Vergleichsfunktion vergleicheFuerRueckgabe(a, b)."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 10
+       },
+       "anlagen": [
+        "1"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "funktion rangwert(s)",
+        "  wert ← s.getEntfernung()",
+        "  wenn s.getFreieStellplaetze() < 2 dann",
+        "    wert ← wert + 500",
+        "  ende wenn",
+        "  rückgabe wert",
+        "ende funktion",
+        "",
+        "funktion vergleicheFuerRueckgabe(a, b)",
+        "  rückgabe rangwert(a) − rangwert(b)",
+        "ende funktion"
+       ],
+       "hinweise": [
+        {
+         "text": "Werte über die get-Methoden gelesen",
+         "punkte": 1
+        },
+        {
+         "text": "Zuschlag von 500 genau bei weniger als zwei freien Stellplätzen",
+         "punkte": 2
+        },
+        {
+         "text": "Rangwert für beide Stationen gleich gebildet",
+         "punkte": 1
+        },
+        {
+         "text": "Rückgabe negativ, positiv oder 0 passend zur Ordnung (z. B. Differenz der Rangwerte)",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie die Reihenfolge, in der die Stationen aus Anlage 2 nach dem Rangwert aus b) angezeigt werden (Entfernung, bei weniger als zwei freien Stellplätzen plus 500 Meter, aufsteigend). Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Platz",
+         "Station"
+        ],
+        "zeilen": [
+         [
+          "1",
+          "Uferweg"
+         ],
+         [
+          "2",
+          {
+           "loesung": [
+            "freibad"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "3",
+          {
+           "loesung": [
+            "bahnhof süd",
+            "bahnhof sued"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "4",
+          {
+           "loesung": [
+            "rathaus"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "5",
+          {
+           "loesung": [
+            "marktplatz"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Rangwerte: Uferweg 450, Freibad 120 + 500 = 620, Bahnhof Süd 650, Rathaus 700, Marktplatz 300 + 500 = 800",
+        "Reihenfolge: Uferweg, Freibad, Bahnhof Süd, Rathaus, Marktplatz"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Vorteile, die Ordnung als Vergleichsfunktion an sortiere zu übergeben, statt für jede Ordnung eine eigene Sortierfunktion zu schreiben."
+       ],
+       "punkte": 6,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Wiederverwendung: Das Sortierverfahren steht nur einmal im Code; ein Fehler wird an einer Stelle behoben und einmal getestet.",
+        "Erweiterbarkeit: Für eine neue Ordnung (z. B. nach freien Rädern) genügt eine kleine neue Vergleichsfunktion, sortiere bleibt unverändert.",
+        "Testbarkeit und Übersicht: Vergleichsfunktionen lassen sich einzeln mit zwei Stationen testen; Sortieren und fachliche Regel sind getrennt."
+       ],
+       "hinweise": [
+        {
+         "text": "erster Vorteil erläutert",
+         "punkte": 3
+        },
+        {
+         "text": "zweiter Vorteil erläutert",
+         "punkte": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Auswertungen der Ausleihen",
+     "punkte": 25,
+     "einleitung": [
+      "Die Ausleihen werden in einer relationalen Datenbank gespeichert. Das Tabellenmodell steht in Anlage 3, Beispieldaten in den Anlagen 4 und 5."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Abfrage, die für jede Startstation den Namen der Station, die Zahl der beendeten Ausleihen sowie die durchschnittliche, die kleinste und die größte Gebühr dieser Ausleihen ausgibt. Laufende Ausleihen (endzeit leer) zählen nicht mit. Sortieren Sie absteigend nach der Zahl der Ausleihen."
+       ],
+       "punkte": 10,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 10
+       },
+       "anlagen": [
+        "3"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "SELECT s.name, COUNT(*) AS anzahl, AVG(a.gebuehr_cent) AS durchschnitt,",
+        "       MIN(a.gebuehr_cent) AS kleinste, MAX(a.gebuehr_cent) AS groesste",
+        "FROM ausleihe a",
+        "JOIN station s ON a.start_station_id = s.station_id",
+        "WHERE a.endzeit IS NOT NULL",
+        "GROUP BY s.station_id, s.name",
+        "ORDER BY anzahl DESC;"
+       ],
+       "hinweise": [
+        {
+         "text": "COUNT, AVG, MIN und MAX auf die richtigen Spalten",
+         "punkte": 3
+        },
+        {
+         "text": "JOIN über start_station_id = station_id",
+         "punkte": 2
+        },
+        {
+         "text": "laufende Ausleihen mit endzeit IS NOT NULL ausgeschlossen",
+         "punkte": 2
+        },
+        {
+         "text": "GROUP BY je Station",
+         "punkte": 2
+        },
+        {
+         "text": "ORDER BY Zahl der Ausleihen DESC",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Anweisung, die alle Reservierungen löscht, deren Gültigkeit vor dem 03.11.2026 um 10:00 Uhr endete."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "anlagen": [
+        "3"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "DELETE FROM reservierung",
+        "WHERE gueltig_bis < '2026-11-03 10:00';"
+       ],
+       "hinweise": [
+        {
+         "text": "DELETE FROM reservierung",
+         "punkte": 2
+        },
+        {
+         "text": "WHERE gueltig_bis < '2026-11-03 10:00' (Vergleich und Zeitpunkt richtig)",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie mit den Beispieldaten aus den Anlagen 4 und 5 für die Startstation Bahnhof Süd die Zahl der beendeten Ausleihen sowie die durchschnittliche, die kleinste und die größte Gebühr in Cent."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der beendeten Ausleihen",
+          "art": "zahl",
+          "loesung": [
+           "3"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "durchschnittliche Gebühr in Cent",
+          "art": "zahl",
+          "loesung": [
+           "180",
+           "180,0",
+           "180.0"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "kleinste Gebühr in Cent",
+          "art": "zahl",
+          "loesung": [
+           "100"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "größte Gebühr in Cent",
+          "art": "zahl",
+          "loesung": [
+           "300"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "4",
+        "5"
+       ],
+       "loesung": [
+        "Bahnhof Süd hat station_id 2. Start dort: 5001 (100), 5003 (300), 5005 (140) und 5007 (läuft noch, zählt nicht).",
+        "Zahl 3, Durchschnitt (100 + 300 + 140) ÷ 3 = 180, kleinste 100, größte 300."
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "korrigieren",
+       "text": [
+        "Die Abfrage in Anlage 6 soll alle Kundinnen und Kunden mit mindestens drei Ausleihen ausgeben, sie enthält aber zwei Fehler. Korrigieren Sie die Abfrage und geben Sie die betroffenen Zeilen richtig an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "Zeile 3: JOIN kunde k ON a.kunden_id = k.kunden_id (verknüpft über die Kundennummer, nicht über die Radnummer)",
+        "Zeile 4: WHERE-Zeile streichen; eine Bedingung auf eine Gruppenfunktion steht nach GROUP BY:",
+        "GROUP BY k.kunden_id, k.name",
+        "HAVING COUNT(*) >= 3",
+        "ORDER BY anzahl DESC;"
+       ],
+       "hinweise": [
+        {
+         "text": "Fehler 1: Verbindung über a.kunden_id = k.kunden_id",
+         "punkte": 2
+        },
+        {
+         "text": "Fehler 2: COUNT-Bedingung als HAVING nach GROUP BY statt WHERE",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, was passiert, wenn ein Datensatz aus der Tabelle rad gelöscht werden soll, auf den noch Datensätze der Tabelle ausleihe verweisen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "3"
+       ],
+       "loesung": [
+        "Der Fremdschlüssel ausleihe.rad_id sichert die referenzielle Integrität: Die Datenbank lehnt das Löschen ab, solange noch Ausleihen auf das Rad verweisen.",
+        "Sonst verwiesen Ausleihen auf ein Rad, das es nicht mehr gibt. Nur wenn beim Fremdschlüssel ON DELETE CASCADE oder SET NULL festgelegt ist, werden die Ausleihen mitgelöscht bzw. ihr Verweis geleert."
+       ],
+       "hinweise": [
+        {
+         "text": "Löschen wird wegen des Fremdschlüssels abgelehnt (referenzielle Integrität)",
+         "punkte": 2
+        },
+        {
+         "text": "Grund (verwaiste Verweise) oder Ausnahme CASCADE/SET NULL genannt",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Testen der Gebührenfunktion",
+     "punkte": 24,
+     "einleitung": [
+      "Die Gebühr einer Ausleihe berechnet die Funktion in Anlage 7: 100 Cent Grundgebühr, ab der 31. Minute 5 Cent je Minute, Kundinnen und Kunden mit Abo zahlen keine Grundgebühr. Die Funktion soll mit White-Box-Tests geprüft werden."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie die Anweisungsüberdeckung, die Zweigüberdeckung und die Pfadüberdeckung und wie diese drei Überdeckungen aufeinander aufbauen."
+       ],
+       "punkte": 7,
+       "angaben": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 7
+       },
+       "loesung": [
+        "Anweisungsüberdeckung: Jede Anweisung wird von mindestens einem Testfall mindestens einmal ausgeführt.",
+        "Zweigüberdeckung: Jeder Zweig jeder Verzweigung (auch ein leerer sonst-Zweig) wird mindestens einmal durchlaufen.",
+        "Pfadüberdeckung: Jeder mögliche Weg vom Anfang bis zum Ende der Funktion wird mindestens einmal durchlaufen.",
+        "Aufbau: Pfadüberdeckung schließt Zweigüberdeckung ein, Zweigüberdeckung schließt Anweisungsüberdeckung ein; die Zahl der nötigen Testfälle steigt von der Anweisungs- über die Zweig- zur Pfadüberdeckung."
+       ],
+       "hinweise": [
+        {
+         "text": "Anweisungsüberdeckung richtig erläutert",
+         "punkte": 2
+        },
+        {
+         "text": "Zweigüberdeckung richtig erläutert (auch leere Zweige)",
+         "punkte": 2
+        },
+        {
+         "text": "Pfadüberdeckung richtig erläutert",
+         "punkte": 2
+        },
+        {
+         "text": "Aufbau in Worten: Pfadüberdeckung umfasst Zweigüberdeckung, diese umfasst Anweisungsüberdeckung",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für die Funktion in Anlage 7, wie viele Testfälle mindestens nötig sind für eine vollständige Anweisungsüberdeckung, eine vollständige Zweigüberdeckung und eine vollständige Pfadüberdeckung."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Anweisungsüberdeckung",
+          "art": "zahl",
+          "loesung": [
+           "1"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zweigüberdeckung",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Pfadüberdeckung",
+          "art": "zahl",
+          "loesung": [
+           "4"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "7"
+       ],
+       "loesung": [
+        "Anweisungen: ein Testfall mit minuten > 30 und Abo führt alle Zeilen aus → 1",
+        "Zweige: beide Bedingungen je einmal wahr und einmal falsch → 2 (z. B. 50 Minuten mit Abo, 20 Minuten ohne Abo)",
+        "Pfade: zwei unabhängige Verzweigungen hintereinander → 2 × 2 = 4"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie alle Pfade durch die Funktion in Anlage 7. Geben Sie je Pfad die durchlaufenen Zeilen (ohne Zeilen mit „ende“), einen Testfall und die erwartete Gebühr an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "anlagen": [
+        "7"
+       ],
+       "loesung": [
+        "Pfad 1: Zeilen 2, 3, 6, 9 – 20 Minuten, ohne Abo – 100 Cent",
+        "Pfad 2: Zeilen 2, 3, 4, 6, 9 – 50 Minuten, ohne Abo – 200 Cent",
+        "Pfad 3: Zeilen 2, 3, 6, 7, 9 – 20 Minuten, mit Abo – 0 Cent",
+        "Pfad 4: Zeilen 2, 3, 4, 6, 7, 9 – 50 Minuten, mit Abo – 100 Cent"
+       ],
+       "hinweise": [
+        {
+         "text": "Pfad ohne Zeile 4 und 7 mit passendem Testfall und Ergebnis",
+         "punkte": 1
+        },
+        {
+         "text": "Pfad mit Zeile 4, ohne Zeile 7, mit Testfall und Ergebnis",
+         "punkte": 1
+        },
+        {
+         "text": "Pfad mit Zeile 7, ohne Zeile 4, mit Testfall und Ergebnis",
+         "punkte": 1
+        },
+        {
+         "text": "Pfad mit Zeile 4 und 7 mit Testfall und Ergebnis",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "zeichnen",
+       "text": [
+        "Zeichnen Sie auf Papier für berechneGebuehr (Anlage 7) einen Kontrollflussgraphen: je ein Knoten für die Zeilen 2, 3, 4, 6, 7 und 9, Pfeile für alle möglichen Übergänge, Pfeile aus Verzweigungen mit wahr oder falsch beschriftet."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 12
+       },
+       "anlagen": [
+        "7"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Knoten: 2, 3, 4, 6, 7, 9",
+        "Kanten: 2 → 3; 3 → 4 [wahr]; 3 → 6 [falsch]; 4 → 6; 6 → 7 [wahr]; 6 → 9 [falsch]; 7 → 9",
+        "Knoten 2 ist der Startknoten, Knoten 9 der Endknoten."
+       ],
+       "hinweise": [
+        {
+         "text": "alle sechs Knoten vorhanden, 2 als Start und 9 als Ende",
+         "punkte": 1
+        },
+        {
+         "text": "Verzweigung bei 3 mit Kanten zu 4 (wahr) und zu 6 (falsch)",
+         "punkte": 2
+        },
+        {
+         "text": "Verzweigung bei 6 mit Kanten zu 7 (wahr) und zu 9 (falsch)",
+         "punkte": 2
+        },
+        {
+         "text": "Kanten 2 → 3, 4 → 6 und 7 → 9",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "erlaeutern",
+       "text": [
+        "Zum neuen Jahr ändert die Firma den Tarif, dafür wird berechneGebuehr angepasst. Erläutern Sie, was ein Regressionstest ist und warum die vorhandenen Testfälle dafür automatisiert ausgeführt werden sollten."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "7"
+       ],
+       "loesung": [
+        "Regressionstest: Nach einer Änderung werden die schon vorhandenen Tests erneut ausgeführt, um zu prüfen, dass bisher richtige Funktionen noch richtig arbeiten (keine neuen Fehler durch die Änderung).",
+        "Automatisiert: Die Tests laufen nach jeder Änderung schnell, gleich und ohne Aufwand (z. B. beim Bauen), Fehler fallen sofort auf; nur die Tests zum geänderten Tarif bekommen neue Sollwerte."
+       ],
+       "hinweise": [
+        {
+         "text": "Begriff Regressionstest richtig erläutert",
+         "punkte": 2
+        },
+        {
+         "text": "Grund für die Automatisierung erläutert",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Ablauf der Rückgabe",
+     "punkte": 23,
+     "einleitung": [
+      "Gibt eine Kundin ein Rad zurück, beendet der Server die Ausleihe und rechnet ab. Den Ablauf beschreibt Anlage 8, die Regeln für das Abbuchen Anlage 9."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "zeichnen",
+       "text": [
+        "Zeichnen Sie im Baukasten ein UML-Aktivitätsdiagramm des Ablaufs der Rückgabe nach Anlage 8. Der Start und die erste Aktion sind vorgegeben."
+       ],
+       "punkte": 11,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "uml",
+        "vorgabe": {
+         "art": "uml",
+         "elemente": [
+          {
+           "id": "st",
+           "typ": "start",
+           "x": 3,
+           "y": 0
+          },
+          {
+           "id": "einrasten",
+           "typ": "aktion",
+           "text": "Rad einrasten, Schloss meldet Radnummer",
+           "x": 3,
+           "y": 1
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "st",
+           "nach": "einrasten"
+          }
+         ]
+        },
+        "muster": {
+         "art": "uml",
+         "elemente": [
+          {
+           "id": "st",
+           "typ": "start",
+           "x": 3,
+           "y": 0
+          },
+          {
+           "id": "einrasten",
+           "typ": "aktion",
+           "text": "Rad einrasten, Schloss meldet Radnummer",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "suchen",
+           "typ": "aktion",
+           "text": "Offene Ausleihe suchen",
+           "x": 3,
+           "y": 2
+          },
+          {
+           "id": "v1",
+           "typ": "verzweigung",
+           "x": 3,
+           "y": 3
+          },
+          {
+           "id": "protokoll",
+           "typ": "aktion",
+           "text": "Eintrag ins Fehlerprotokoll",
+           "x": 6,
+           "y": 3
+          },
+          {
+           "id": "ende1",
+           "typ": "ende",
+           "x": 6,
+           "y": 4
+          },
+          {
+           "id": "endzeit",
+           "typ": "aktion",
+           "text": "Endzeit eintragen",
+           "x": 3,
+           "y": 4
+          },
+          {
+           "id": "gebuehr",
+           "typ": "aktion",
+           "text": "Gebühr berechnen",
+           "x": 3,
+           "y": 5
+          },
+          {
+           "id": "v2",
+           "typ": "verzweigung",
+           "x": 3,
+           "y": 6
+          },
+          {
+           "id": "guthaben",
+           "typ": "aktion",
+           "text": "Gebühr vom Guthaben abbuchen",
+           "x": 1,
+           "y": 7
+          },
+          {
+           "id": "zahlung",
+           "typ": "aktion",
+           "text": "Zahlungsmittel belasten",
+           "x": 5,
+           "y": 7
+          },
+          {
+           "id": "zf",
+           "typ": "zusammenfuehrung",
+           "x": 3,
+           "y": 8
+          },
+          {
+           "id": "quittung",
+           "typ": "aktion",
+           "text": "Quittung an die App senden",
+           "x": 3,
+           "y": 9
+          },
+          {
+           "id": "ende2",
+           "typ": "ende",
+           "x": 3,
+           "y": 10
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "st",
+           "nach": "einrasten"
+          },
+          {
+           "von": "einrasten",
+           "nach": "suchen"
+          },
+          {
+           "von": "suchen",
+           "nach": "v1"
+          },
+          {
+           "von": "v1",
+           "nach": "protokoll",
+           "text": "[keine offene Ausleihe]"
+          },
+          {
+           "von": "protokoll",
+           "nach": "ende1"
+          },
+          {
+           "von": "v1",
+           "nach": "endzeit",
+           "text": "[Ausleihe gefunden]"
+          },
+          {
+           "von": "endzeit",
+           "nach": "gebuehr"
+          },
+          {
+           "von": "gebuehr",
+           "nach": "v2"
+          },
+          {
+           "von": "v2",
+           "nach": "guthaben",
+           "text": "[Guthaben reicht]"
+          },
+          {
+           "von": "v2",
+           "nach": "zahlung",
+           "text": "[Guthaben reicht nicht]"
+          },
+          {
+           "von": "guthaben",
+           "nach": "zf"
+          },
+          {
+           "von": "zahlung",
+           "nach": "zf"
+          },
+          {
+           "von": "zf",
+           "nach": "quittung"
+          },
+          {
+           "von": "quittung",
+           "nach": "ende2"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "8"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Start → Rad einrasten, Schloss meldet Radnummer → Offene Ausleihe suchen",
+        "Verzweigung: [keine offene Ausleihe] → Eintrag ins Fehlerprotokoll → Ende",
+        "[Ausleihe gefunden] → Endzeit eintragen → Gebühr berechnen",
+        "Verzweigung: [Guthaben reicht] → Gebühr vom Guthaben abbuchen; [Guthaben reicht nicht] → Zahlungsmittel belasten",
+        "Zusammenführung → Quittung an die App senden → Ende"
+       ],
+       "hinweise": [
+        {
+         "text": "Aktion „Offene Ausleihe suchen“ nach der vorgegebenen Aktion",
+         "punkte": 1
+        },
+        {
+         "text": "Verzweigung mit den Bedingungen [Ausleihe gefunden] und [keine offene Ausleihe]",
+         "punkte": 2
+        },
+        {
+         "text": "Eintrag ins Fehlerprotokoll mit eigenem Ende",
+         "punkte": 2
+        },
+        {
+         "text": "Endzeit eintragen und danach Gebühr berechnen",
+         "punkte": 2
+        },
+        {
+         "text": "zweite Verzweigung nach dem Guthaben mit Abbuchen bzw. Belasten des Zahlungsmittels",
+         "punkte": 2
+        },
+        {
+         "text": "Zusammenführung der beiden Zweige",
+         "punkte": 1
+        },
+        {
+         "text": "Quittung an die App und Ende",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie in Pseudocode die Funktion bucheGebuehr(kunde, gebuehr) nach den Regeln in Anlage 9."
+       ],
+       "punkte": 7,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 12
+       },
+       "anlagen": [
+        "9"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "funktion bucheGebuehr(kunde, gebuehr)",
+        "  guthaben ← kunde.getGuthaben()",
+        "  wenn guthaben >= gebuehr dann",
+        "    kunde.setGuthaben(guthaben − gebuehr)",
+        "  sonst",
+        "    rest ← gebuehr − guthaben",
+        "    kunde.setGuthaben(0)",
+        "    wenn nicht kunde.belasteZahlungsmittel(rest) dann",
+        "      kunde.sperren()",
+        "    ende wenn",
+        "  ende wenn",
+        "ende funktion"
+       ],
+       "hinweise": [
+        {
+         "text": "Guthaben über getGuthaben gelesen und mit der Gebühr verglichen (>=)",
+         "punkte": 2
+        },
+        {
+         "text": "Abbuchen über setGuthaben(guthaben − gebuehr)",
+         "punkte": 1
+        },
+        {
+         "text": "Rest berechnet und Guthaben auf 0 gesetzt",
+         "punkte": 1
+        },
+        {
+         "text": "nur der Rest über belasteZahlungsmittel eingezogen",
+         "punkte": 2
+        },
+        {
+         "text": "Sperren, wenn die Zahlung nicht gelingt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie zum Tabellenmodell in Anlage 3 eine SQL-Anweisung, die bei der Rückgabe der Ausleihe 5007 die Zielstation 3, die Endzeit 02.11.2026 18:31 Uhr und die Gebühr von 305 Cent einträgt."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "3"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "UPDATE ausleihe",
+        "SET ziel_station_id = 3, endzeit = '2026-11-02 18:31', gebuehr_cent = 305",
+        "WHERE ausleihe_id = 5007;"
+       ],
+       "hinweise": [
+        {
+         "text": "UPDATE ausleihe",
+         "punkte": 1
+        },
+        {
+         "text": "SET mit den drei Spalten und richtigen Werten",
+         "punkte": 2
+        },
+        {
+         "text": "WHERE ausleihe_id = 5007",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  }
+ ]
+}
