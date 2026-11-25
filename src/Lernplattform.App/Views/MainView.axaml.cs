@@ -678,7 +678,50 @@ public partial class MainView : UserControl
             return LayoutFertigAsync(top);
         }
         top.RequestAnimationFrame(_ => top.RequestAnimationFrame(_ => fertig.TrySetResult()));
+        if (AutoModus)
+        {
+            var sekunden = KeinBildZahl == 0 ? KeinBildSekunden : KeinBildDanachSekunden;
+            KeinBildWache(top, fertig, TimeSpan.FromSeconds(sekunden), zustand =>
+            {
+                KeinBildZahl++;
+                Messwerte.Notiere(string.Create(CultureInfo.InvariantCulture,
+                    $"  FEHLER: kein Bild nach {sekunden} s (Fenster verdeckt?), {KeinBildZahl}. Mal: {zustand}"));
+                Console.Error.WriteLine("KEIN BILD nach " + sekunden + " s: " + zustand);
+                if (KeinBildZahl == 1)
+                {
+                    (top as Window)?.Activate();   // fuer die folgenden Schritte nach vorn holen; der Fund bleibt
+                }
+            });
+        }
         return fertig.Task;
+    }
+
+    /// <summary>
+    /// Weisung P12-380 W6 (Sammelliste 459): kommt im Start-Test <see cref="KeinBildSekunden"/> lang kein Bild (Intel-Mac
+    /// Lauf 1229: Fenster ohne Bildtakt, der Lauf hing 19 Minuten bis zum Wachhund), wird das sofort ein Fund mit dem
+    /// Fensterzustand statt eines stillen Haengers. Der Fund bleibt rot (zaehlt in <see cref="KeinBildZahl"/>); das Warten
+    /// endet nur, damit der Lauf seine Angaben schreibt. Danach wartet jedes weitere Bild hoechstens
+    /// <see cref="KeinBildDanachSekunden"/>. Nur im Start-Test (<see cref="AutoModus"/>); das Programm wartet sonst wie immer.
+    /// </summary>
+    internal const int KeinBildSekunden = 10;
+    internal const int KeinBildDanachSekunden = 1;
+    internal static int KeinBildZahl { get; private set; }
+
+    /// <summary>W6: kommt <paramref name="fertig"/> nicht binnen <paramref name="zeit"/>, <paramref name="melden"/> mit dem
+    /// Fensterzustand aufrufen und das Warten beenden (Start-Test prueft die Wache selbst, <c>AutoMessung.KeinBildProbeAsync</c>).</summary>
+    internal static void KeinBildWache(TopLevel top, TaskCompletionSource fertig, TimeSpan zeit, Action<string> melden)
+    {
+        DispatcherTimer.RunOnce(() =>
+        {
+            if (fertig.Task.IsCompleted)
+            {
+                return;
+            }
+            var fenster = top as Window;
+            melden(string.Create(CultureInfo.InvariantCulture,
+                $"Fenster sichtbar {fenster?.IsVisible}, aktiv {fenster?.IsActive}, Zustand {fenster?.WindowState}, Groesse {top.ClientSize.Width:0}x{top.ClientSize.Height:0}, Vorgang {Core.Diagnose.Haenger.Kuerzlich(0)}"));
+            fertig.TrySetResult();
+        }, zeit);
     }
 
     /// <summary>Sammelliste 364: zweimal alle Arbeit bis zur niedrigsten Stufe abwarten und das Layout ganz durchrechnen.</summary>

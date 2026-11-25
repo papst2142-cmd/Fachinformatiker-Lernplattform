@@ -198,11 +198,22 @@ public sealed class SpielKachelnTests
                     }
                 }
             }
-            var frei = 0;
-            foreach (var q in punkte)
+            // Sammelliste 457 (Weisung P12-380, W7): dieselben Punkte, jeder genau einmal, nebeneinander gerechnet (Regeln lesen
+            // nur; das schnelle Raster wird vorher einmal gebaut); Pruefung danach in derselben Reihenfolge wie vorher.
+            _ = regeln.Frei(punkte[0]);
+            var vollJe = new bool[punkte.Count];
+            var schnellJe = new bool[punkte.Count];
+            Nebeneinander.Fuer(punkte.Count, i =>
             {
-                var voll = regeln.Pruefen(q).Frei;
-                Assert.True(voll == regeln.Frei(q), $"{szene.Breite}: Punkt {q.X:R} {q.Y:R}, voll {voll}");
+                vollJe[i] = regeln.Pruefen(punkte[i]).Frei;
+                schnellJe[i] = regeln.Frei(punkte[i]);
+            });
+            var frei = 0;
+            for (var i = 0; i < punkte.Count; i++)
+            {
+                var q = punkte[i];
+                var voll = vollJe[i];
+                Assert.True(voll == schnellJe[i], $"{szene.Breite}: Punkt {q.X:R} {q.Y:R}, voll {voll}");
                 frei += voll ? 1 : 0;
             }
             // beide Antworten kommen vor
