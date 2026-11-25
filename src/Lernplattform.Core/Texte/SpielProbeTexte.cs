@@ -362,4 +362,70 @@ public static class SpielProbeTexte
     public const string AllesAusgepackt = "Alles ist ausgepackt.";
     public const string EinrichtenAufstellen = "Tippe auf den Boden, wo es hin soll. Ein zweites Tippen auf die Vorschau stellt es auf.";
     public const string EinrichtenVerschieben = "Tippe auf den Boden, um es dorthin zu stellen, oder drehe es.";
+
+    // ---- Welle A 1.9.0 (Sammelliste 450, Weisungen P12-375 bis P12-377): Knoepfe anordnen ----
+
+    /// <summary>Knopf in der Karte „Steuerung“ (nur Handy und Tablet) und Titel der Leiste im Bearbeiten-Modus.</summary>
+    public const string KnoepfeAnordnen = "Knöpfe anordnen";
+
+    public const string KnoepfeAnordnenSatz = "Verschiebe die runden Knöpfe im Spiel und stelle für jeden die Größe ein. Hoch und quer haben je eine eigene Anordnung.";
+
+    /// <summary>Leiste ohne gewaehlten Knopf.</summary>
+    public const string AnordnenTippen = "Knopf antippen";
+
+    /// <summary>Name des Reglers (Screenreader), {0} = Knopf.</summary>
+    public const string AnordnenGroesse = "Größe {0}";
+
+    public const string AnordnenRaster = "Raster";
+
+    public const string AnordnenStandard = "Standard";
+
+    public const string AnordnenAbbrechen = "Abbrechen";
+
+    public const string AnordnenFertig = "Fertig";
+
+    public const string AnordnenHinweis = "Knopf antippen und ziehen";
+
+    public const string AnordnenHinweisRaster = "Knopf antippen und ziehen · er rastet ein";
+
+    /// <summary>Name eines Knopfs im Bearbeiten-Modus (Screenreader), {0} = Knopf.</summary>
+    public const string AnordnenVerschieben = "{0}, verschieben";
+
+    /// <summary>Pfeile fuer den gewaehlten Knopf (Screenreader), {0} = Knopf.</summary>
+    public const string AnordnenLinks = "{0} nach links";
+
+    public const string AnordnenRechts = "{0} nach rechts";
+
+    public const string AnordnenOben = "{0} nach oben";
+
+    public const string AnordnenUnten = "{0} nach unten";
+
+    public const string AnordnenStandardTitel = "Standard wiederherstellen?";
+
+    /// <summary>{0} = „Querformat“ oder „Hochformat“ (diese Ausrichtung), {1} = die andere.</summary>
+    public const string AnordnenStandardFrage = "Alle Knöpfe im {0} kommen an ihren Standard-Platz und auf 100 % Größe zurück. Das {1} bleibt, wie es ist.";
+
+    public const string Querformat = "Querformat";
+
+    public const string Hochformat = "Hochformat";
+
+    public const string AnordnenZuruecksetzen = "Zurücksetzen";
+
+    public const string AnordnenAussen = "Hier nicht: zu nah am Rand oder an der Kopfzeile";
+
+    public const string AnordnenLeiste = "Hier nicht: auf der Leiste";
+
+    public const string AnordnenUeberlappt = "Hier nicht: zu nah an einem anderen Knopf";
+
+    public const string AnordnenStickPlatz = "Hier nicht: dann bleibt kein Platz für einen Stick";
+
+    public const string AnordnenZurueck = " · springt beim Loslassen zurück";
+
+    /// <summary>Hinweis im Spiel, einmal je Sitzung, wenn die eigene Anordnung auf diesem Bildschirm nicht passt.</summary>
+    public const string AnordnenPasstNicht = "Deine Knöpfe passen hier nicht hin. Es gilt der Standard.";
+
+    /// <summary>Name des Handlungsknopfs im Bearbeiten-Modus (dort gibt es keine Handlung).</summary>
+    public const string KnopfHandlung = "Handlung";
+
+    public const string PlatzFuerStick = "Platz für\nden Stick";
 }

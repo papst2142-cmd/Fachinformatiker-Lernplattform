@@ -361,6 +361,8 @@ public static partial class AutoMessung
         funde += await Daumen400Async(ansicht);
         Zeitplan("Handlung444Async");
         funde += await Handlung444Async(ansicht);
+        Zeitplan("Anordnen450Async");
+        funde += await Anordnen450Async(ansicht);
         return funde;
     }
 

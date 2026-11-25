@@ -842,6 +842,8 @@ public sealed partial class SpielSeite : Grid
             Flaeche.LeisteX = _unten.IsVisible ? (unten.X, unten.X + _unten.Bounds.Width) : (0, 0);
         }
         DaumenSetzen();
+        // Welle A 1.9.0 (Sammelliste 450): Bearbeiten-Modus „Knöpfe anordnen“ folgt Groesse und Drehung (nur bei einer Aenderung)
+        AnordnenLegen();
     }
 
     private void Anordnen()
@@ -918,6 +920,16 @@ public sealed partial class SpielSeite : Grid
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+        if (_anordnen is not null)
+        {
+            // Welle A 1.9.0: im Bearbeiten-Modus ist das Spiel angehalten (keine Spieltasten); Esc bricht ab
+            if (e.Key == Key.Escape && !e.Handled)
+            {
+                e.Handled = true;
+                AnordnenEnde(false);
+            }
+            return;
+        }
         if (e.Key == Key.Escape && !e.Handled && _auswahl is { IsVisible: true })
         {
             // Welle A 1.6.0: Esc schliesst zuerst die Auswahl der Handlungen
@@ -1004,6 +1016,12 @@ public sealed partial class SpielSeite : Grid
     private void Zurueck(object? sender, RoutedEventArgs e)
     {
         e.Handled = true;
+        if (_anordnen is not null)
+        {
+            // Welle A 1.9.0: Zurueck-Taste im Bearbeiten-Modus = „Abbrechen“
+            AnordnenEnde(false);
+            return;
+        }
         if (Tafel is { IsVisible: true } tafel && tafel.Zurueck())
         {
             return;

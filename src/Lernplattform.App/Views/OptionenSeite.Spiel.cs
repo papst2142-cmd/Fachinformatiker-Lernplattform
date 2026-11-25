@@ -121,6 +121,31 @@ public sealed partial class OptionenSeite
         EmpfindlichkeitAnhaengen(panel, Empfindlichkeit.StickLinks, SpielProbeTexte.EmpfindlichkeitStickLinks);
         EmpfindlichkeitAnhaengen(panel, Empfindlichkeit.StickRechts, SpielProbeTexte.EmpfindlichkeitStickRechts);
         panel.Children.Add(new LernText(SpielProbeTexte.EmpfindlichkeitSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
+        // Welle A 1.9.0 (Sammelliste 450, Nico 1a): „Knöpfe anordnen“ nur am Handy und Tablet (am PC gibt es die runden Knoepfe nicht)
+        if (KnoepfeAnordnenFuerTests ?? !Pc)
+        {
+            KnoepfeAnordnenAnhaengen(panel);
+        }
+    }
+
+    private readonly Action? _knoepfeAnordnen;
+
+    /// <summary>Start-Test: den Knopf „Knöpfe anordnen“ auch am PC zeigen (null = nur Handy und Tablet).</summary>
+    internal static bool? KnoepfeAnordnenFuerTests { get; set; }
+
+    /// <summary>Start-Test: der Knopf „Knöpfe anordnen“ (null ohne aufgeklappte Karte oder am PC).</summary>
+    public Button? KnoepfeAnordnenKnopf { get; private set; }
+
+    private void KnoepfeAnordnenAnhaengen(Panel panel)
+    {
+        var titel = new LernText(SpielProbeTexte.KnoepfeAnordnen, "Normal", FontWeight.Normal, "Pinsel.text") { Margin = new Avalonia.Thickness(0, GruppenAbstand, 0, 0) };
+        var knopf = Schrift.Knopf(SpielProbeTexte.KnoepfeAnordnen);
+        knopf.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+        knopf.Click += (_, _) => _knoepfeAnordnen?.Invoke();
+        KnoepfeAnordnenKnopf = knopf;
+        panel.Children.Add(titel);
+        panel.Children.Add(knopf);
+        panel.Children.Add(new LernText(SpielProbeTexte.KnoepfeAnordnenSatz, "Klein", FontWeight.Normal, "Pinsel.muted"));
     }
 
     private readonly List<(Empfindlichkeit Art, Slider Regler, TextBlock Zahl)> _empfindlich = [];

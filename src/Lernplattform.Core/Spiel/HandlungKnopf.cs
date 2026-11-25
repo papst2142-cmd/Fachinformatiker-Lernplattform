@@ -101,6 +101,39 @@ public static class HandlungKnopf
     }
 
     /// <summary>
+    /// Welle A 1.9.0 (Sammelliste 450): Platz des Namensschilds (linke obere Ecke) bei einer eigenen Anordnung der Knoepfe: ueber dem
+    /// Handlungsknopf, sonst darunter, rechts daneben, links daneben, sonst rechts neben dem Auge. Nie auf der Kopfzeile, der Leiste
+    /// oder einem der <paramref name="knoepfe"/> (Mitte, Durchmesser), nie ausserhalb. Kein Platz: null.
+    /// </summary>
+    public static ((double X, double Y) Ecke, bool Ueber)? NameFrei(Sticks.Bereich b, double breite, double hoehe, ((double X, double Y) M, double D) handlung,
+        ((double X, double Y) M, double D) ich, IReadOnlyList<((double X, double Y) M, double D)> knoepfe)
+    {
+        var (h, d) = handlung;
+        var luft = NameAbstand + 2;
+        var wahl = new List<((double X, double Y) Ecke, bool Ueber)>
+        {
+            ((Math.Max(4, h.X - (d / 2)), h.Y - (d / 2) - NameAbstand - hoehe), true),
+            ((Math.Max(4, h.X - (d / 2)), h.Y + (d / 2) + NameAbstand), false),
+            ((h.X + (d / 2) + luft, h.Y - (hoehe / 2)), false),
+            ((h.X - (d / 2) - luft - breite, h.Y - (hoehe / 2)), false),
+            ((ich.M.X + (ich.D / 2) + luft, ich.M.Y - (hoehe / 2)), false),
+        };
+        var leiste = KnopfAnordnung.Leiste(b);
+        foreach (var (ecke, oben) in wahl)
+        {
+            var rechteck = (ecke.X, ecke.Y, ecke.X + breite, ecke.Y + hoehe);
+            var frei = ecke.Y >= b.Oben + 4 && ecke.Y + hoehe <= b.Hoehe && ecke.X >= 0 && ecke.X + breite <= b.Breite
+                && !(leiste.X2 > leiste.X1 && ecke.X < leiste.X2 && leiste.X1 < ecke.X + breite && ecke.Y < leiste.Y2 && leiste.Y1 < ecke.Y + hoehe)
+                && !knoepfe.Any(m => Sticks.KreisInRechteck(m.M.X, m.M.Y, m.D / 2, rechteck));
+            if (frei)
+            {
+                return (ecke, oben);
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Welle A 1.6.0 (Weisung P12-361, Nico: „wesentlich schöner, wenn das sich alles um die Finger abspielt“): Mitte des runden
     /// Handy-Symbols (Groesse wie die Ich-Sicht) am Handy und Tablet rechts neben dem linken Stick (Nico 1a, Weisung P12-362), auf
     /// der Hoehe seiner Mitte (der Stick in der Ecke); laege es dort auf der Leiste unten, steht es knapp ueber ihr. Kein Platz in
