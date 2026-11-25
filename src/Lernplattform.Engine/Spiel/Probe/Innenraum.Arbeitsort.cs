@@ -44,18 +44,32 @@ public sealed partial class Innenraum
         else if (Kundenorte(inhalt).FirstOrDefault(k => Py.Gleich(k["id"], ort)) is { } kunde && kunde["gebaeude"] is PyObjekt kg)
         {
             basis = kg;
-            if (innenraeume is not null && Get(innenraeume, "zusatz_kunden") is PyObjekt zk && Get(zk, ort) is PyObjekt zo)
-            {
-                basis = MitZusatz(basis, zo);
-            }
         }
         else
         {
             return null;
         }
+        return MitZusaetzen(ort, basis, innenraeume);
+    }
+
+    /// <summary>
+    /// Der Grundriss <paramref name="basis"/> eines Spiel-Orts (Buero, Wohnung, Zweigstelle, Kunde) mit allen angehaengten
+    /// Zusaetzen in der Reihenfolge des Betretens: <c>zusatz_kunden</c>, Einrichtung aus <c>zusatz_moebel</c> (ohne die Plaetze der
+    /// Personen), <c>zusatz_schraenke</c>. Traegt der Grundriss die Markierung <see cref="Stadtbau.SpielRaumErsatz.Eingebaut"/>
+    /// (im Werkzeug geaendert, Welle A 1.10.0), sind sie schon drin und er bleibt, wie er ist.
+    /// </summary>
+    public static PyObjekt MitZusaetzen(string ort, PyObjekt basis, PyObjekt? innenraeume)
+    {
+        if (innenraeume is not null && Get(innenraeume, "zusatz_kunden") is PyObjekt zk && Get(zk, ort) is PyObjekt zo)
+        {
+            basis = MitZusatz(basis, zo);
+        }
         var (gebaeude, _) = MoebelZusatz(innenraeume, ort, basis);
         return MitZusatz(gebaeude, SchrankZusatz(innenraeume, ort));
     }
+
+    /// <summary>Welle A 1.10.0: sind die Zusaetze schon im Grundriss (im Werkzeug geaendert)?</summary>
+    public static bool ZusaetzeEingebaut(PyObjekt gebaeude) => Py.Hat(gebaeude, Stadtbau.SpielRaumErsatz.Eingebaut) && Py.Wahr(gebaeude[Stadtbau.SpielRaumErsatz.Eingebaut]);
 
     /// <summary>
     /// Welle E4 (Antwort 3c): Text am Arbeitsort eines Auftrags, dessen Questgeber nicht dort wartet. Gilt im Raum des

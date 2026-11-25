@@ -35,9 +35,11 @@ public sealed partial class Projekt
     /// Arbeitsort hat (im Stand oder im Verlauf), bekommt 4 (<see cref="FormatFuer"/>); jede andere bleibt bei 3 und bitgleich.
     /// 5 seit Welle Nachladen (S 0.54.0, Weisung P12-280, Nico 2b): nur eine leere Stadt groesser als 64 je Seite (bis 256);
     /// seit S 0.55.0 (Weisung P12-282) auch eine Datei mit Stadtteil-Namen (im Stand oder im Verlauf). 6 seit Inhaltspakete W3
-    /// (S 0.57.0, Weisung P12-297): nur eine Paket-Stadt (Teil "stadtdaten/paket", <see cref="StadtPaket"/>).
+    /// (S 0.57.0, Weisung P12-297): nur eine Paket-Stadt (Teil "stadtdaten/paket", <see cref="StadtPaket"/>). 7 seit S 0.64.0
+    /// (Weisung P12-381): nur eine Datei mit einem geaenderten Raum des Spiels (Schluessel „spiel:…“ in den Grundrissen oder im
+    /// Verlauf); jede andere bleibt bitgleich.
     /// </summary>
-    public const long FormatVersion = 6;
+    public const long FormatVersion = 7;
 
     /// <summary>
     /// Formatnummer beim Schreiben: 5 fuer eine leere Stadt groesser als 64 je Seite oder mit dem Teil "stadtdaten/stadtteile"
@@ -45,13 +47,17 @@ public sealed partial class Projekt
     /// enthaelt, sonst 3. Ein Schluessel steht im JSON-Text als <c>"arbeitsort": </c>; derselbe Wortlaut in einem Text (Titel,
     /// Frage) steht dort maskiert (<c>\"arbeitsort\": </c>) und zaehlt darum nicht.
     /// </summary>
-    internal static long FormatFuer(string aussenText, string verlaufText, (double Breite, double Hoehe)? leer = null) =>
-        aussenText.Contains(PaketSchluessel, StringComparison.Ordinal) || verlaufText.Contains(PaketSchluessel, StringComparison.Ordinal) ? 6
+    internal static long FormatFuer(string aussenText, string verlaufText, (double Breite, double Hoehe)? leer = null, bool spielRaeume = false) =>
+        spielRaeume || verlaufText.Contains(SpielOrtSchluessel, StringComparison.Ordinal) ? 7
+        : aussenText.Contains(PaketSchluessel, StringComparison.Ordinal) || verlaufText.Contains(PaketSchluessel, StringComparison.Ordinal) ? 6
         : (leer is { } l && (l.Breite > Stadtteile.AltesFormatBis || l.Hoehe > Stadtteile.AltesFormatBis))
             // S 0.56.0 (Sammelliste 362): eine vergroesserte Karte ueber 64 (im Stand oder im Verlauf)
             || GrosseKarteImText(aussenText) || GrosseKarteImText(verlaufText)
             || aussenText.Contains(NamenSchluessel, StringComparison.Ordinal) || verlaufText.Contains(NamenSchluessel, StringComparison.Ordinal) ? 5
         : aussenText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) || verlaufText.Contains(ArbeitsortSchluessel, StringComparison.Ordinal) ? 4 : 3;
+
+    /// <summary>Schritt an einem Raum des Spiels im Verlauf (S 0.64.0).</summary>
+    private const string SpielOrtSchluessel = "{\"ort\": \"" + SpielRaeume.Praefix;
 
     /// <summary>Teil einer Paket-Stadt in "aussen" und im Verlauf (S 0.57.0).</summary>
     private const string PaketSchluessel = "\"stadtdaten/" + StadtPaket.Abschnitt + "\": ";
@@ -442,6 +448,9 @@ public sealed partial class Projekt
         }
     }
 
+    /// <summary>Raum des Spiels des zuletzt angewandten Schritts (Rueckgaengig/Wiederholen), sonst null (S 0.64.0).</summary>
+    public string? LetzterSchrittSpielRaum { get; private set; }
+
     /// <summary>Wurde zuletzt (Rueckgaengig/Wiederholen) ein Schritt der Stadt draussen angewandt?</summary>
     public bool LetzterSchrittDraussen { get; private set; }
 
@@ -466,10 +475,11 @@ public sealed partial class Projekt
         {
             throw new InvalidOperationException("Projekt ist nur zum Lesen geöffnet.");
         }
-        if (SpielRaeume.Ist(ort))
+        if (SpielRaeume.Ist(ort) && !SpielRaumBearbeiten(ort))
         {
-            // Welle S 0.60.0: Raeume des Spiels nur ansehen (das Format der Stadt-Datei traegt sie nicht)
-            throw new InvalidOperationException("Räume des Spiels lassen sich nur ansehen.");
+            // Welle S 0.60.0: Raeume des Spiels nur ansehen; seit S 0.64.0 (Weisung P12-381) aenderbar, nur nicht in einer leeren
+            // Stadt oder Paket-Stadt (das Spiel nimmt sie nur aus Stadt 1)
+            throw new InvalidOperationException("Räume des Spiels lassen sich nur in Stadt 1 ändern.");
         }
         var (basis, etage) = Etagen.Teilen(ort);
         T Mit(PyObjekt eg)
@@ -549,6 +559,14 @@ public sealed partial class Projekt
             }
             return;
         }
+        if (SpielRaeume.Ist(s.Ort))
+        {
+            // S 0.64.0: Raum des Spiels (die Oberflaeche zeigt ihn in ihrer eigenen Ansicht, der Ort bleibt)
+            _grundrisse[s.Ort] = Lesen(text);
+            LetzterSchrittSpielRaum = s.Ort;
+            return;
+        }
+        LetzterSchrittSpielRaum = null;
         var basis = Etagen.Teilen(s.Ort).Ort;
         _grundrisse[basis] = Lesen(text);
         // Phase 13 Welle 5: Schritt auf einer Etage zeigt die Etage (gibt es sie danach nicht mehr: das Erdgeschoss)
@@ -660,6 +678,12 @@ public sealed partial class Projekt
         {
             grundrisse.Add(ort, _grundrisse[ort]);
         }
+        // S 0.64.0: geaenderte Raeume des Spiels (nur sie; ein nur geoeffneter Raum bleibt draussen, das Projekt bitgleich)
+        var spielRaeume = GeaenderteSpielRaeume;
+        foreach (var s in spielRaeume)
+        {
+            grundrisse.Add(s, _grundrisse[s]);
+        }
         var aussen = new StringBuilder("{");
         if (_aussen is not null)
         {
@@ -691,7 +715,7 @@ public sealed partial class Projekt
         var verlaufText = verlauf.Append(']').ToString();
         var objekt = new List<(string, string)>
         {
-            ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatFuer(aussenText, verlaufText, Leer is { } lg ? (lg.Breite, lg.Hoehe) : null))), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
+            ("format", PythonJson.Standard(Format)), ("formatversion", PythonJson.Standard(FormatFuer(aussenText, verlaufText, Leer is { } lg ? (lg.Breite, lg.Hoehe) : null, spielRaeume.Count > 0))), ("werkzeug", PythonJson.Standard(Werkzeug.Kennzeile)),
             ("name", PythonJson.Standard(Name)), ("stadt", PythonJson.Standard(Basis.StadtId)), ("basis", PythonJson.Standard(Leer is null ? Basis.Nummer : null)),
             ("leer", PythonJson.Standard(leer)), ("ort", PythonJson.Standard(Ort)), ("nachricht", PythonJson.Standard(Nachricht)), ("grundrisse", PythonJson.Standard(grundrisse)),
             ("aussen", aussenText), ("verlauf", verlaufText), ("zeiger", PythonJson.Standard((long)Math.Max(0, _zeiger - start))),
@@ -755,7 +779,7 @@ public sealed partial class Projekt
         {
             foreach (var (ort, grundriss) in g)
             {
-                if (p.Orte.Contains(ort) && grundriss is PyObjekt go)
+                if ((p.Orte.Contains(ort) || p.SpielRaumGueltig(ort)) && grundriss is PyObjekt go)
                 {
                     p._grundrisse[ort] = go;
                 }
@@ -774,7 +798,7 @@ public sealed partial class Projekt
         {
             foreach (var s in v.OfType<PyObjekt>())
             {
-                if (s["ort"] is string ort && (p.Orte.Contains(ort) || ((ort == StadtOrt || IstBau(ort)) && s["vorher"] is PyObjekt && s["nachher"] is PyObjekt)))
+                if (s["ort"] is string ort && (p.Orte.Contains(ort) || p.SpielRaumGueltig(ort) || ((ort == StadtOrt || IstBau(ort)) && s["vorher"] is PyObjekt && s["nachher"] is PyObjekt)))
                 {
                     p._verlauf.Add(new Schritt(ort, Py.Str(s["was"]), PythonJson.Standard(s["vorher"]), PythonJson.Standard(s["nachher"])));
                 }
@@ -838,6 +862,16 @@ public sealed partial class Projekt
             if (PythonJson.Standard(g) != PythonJson.Standard(p.Original(ort)))
             {
                 p._grundrisse[ort] = g;
+            }
+        }
+        // S 0.64.0 (Weisung P12-381): geaenderte Raeume des Spiels aus dem Teil „stadtdaten/spielraeume“ (ohne Merker)
+        foreach (var st in StadtDateiOhneInnenFuerTests.Value || !p.SpielRaeumeAenderbar ? [] : SpielRaumErsatz.Lesen(f.Stadtdaten))
+        {
+            var g = (PyObjekt)Py.Kopie(st.Neu)!;
+            g.RemoveAll(e => e.Key == SpielRaumErsatz.Eingebaut);
+            if (p.SpielRaumGueltig(SpielRaeume.Praefix + st.Raum))
+            {
+                p._grundrisse[SpielRaeume.Praefix + st.Raum] = g;
             }
         }
         p.Nachricht = f.Nachricht;
@@ -1002,9 +1036,9 @@ public sealed partial class Projekt
     public (long Dreiecke, int Aufrufe) Grenzen(string ort) => PruefenMitGrenzen(ort).Grenzen;
 
     /// <summary>Die Stadt (draussen und alle Innenraeume) als Fassung, wie sie ein Export schreiben wuerde (Pruefung, 3D).</summary>
-    public StadtFassung Stand(string erstellt = "") =>
+    public StadtFassung Stand(string erstellt = "") => MitSpielRaeumen(
         Aussen.Fassung(AussenStand, Basis, Innenraeume(), Leer is null ? Basis.Nummer + 1 : 1, Leer is null ? Basis.Nummer : null, Werkzeug.Kennzeile, erstellt,
-            Nachricht.Length > 2000 ? Nachricht[..2000] : Nachricht);
+            Nachricht.Length > 2000 ? Nachricht[..2000] : Nachricht));
 
     /// <summary>Pruefung der Stadt draussen (blockiert, rund eine halbe Sekunde; in der Oberflaeche im Hintergrund).</summary>
     /// <remarks>Welle Q1 (S 0.40.0): dazu die Funde der Quests und Questgeber (<see cref="QuestFunde"/>).</remarks>
@@ -1067,7 +1101,7 @@ public sealed partial class Projekt
     /// </summary>
     public byte[] Exportieren(DateTimeOffset zeit)
     {
-        if (GeaenderteOrte.Count == 0 && !AussenGeaendert)
+        if (GeaenderteOrte.Count == 0 && !AussenGeaendert && GeaenderteSpielRaeume.Count == 0)
         {
             throw new StadtbauFehler(["Es gibt noch keine Änderung zum Exportieren."]);
         }

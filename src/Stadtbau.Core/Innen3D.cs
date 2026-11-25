@@ -16,7 +16,9 @@ namespace Stadtbau.Core;
 public static class Innen3D
 {
     /// <summary>Was ein Bau braucht (Kopien vom Oberflaechen-Faden).</summary>
-    public sealed record Auftrag(string Schluessel, PyObjekt Aussen, StadtFassung Basis, PyObjekt Innenraeume, Spieldaten Daten);
+    /// <remarks>S 0.64.0: <paramref name="SpielRaeume"/> = Ersatzstuecke der geaenderten Raeume des Spiels.</remarks>
+    public sealed record Auftrag(string Schluessel, PyObjekt Aussen, StadtFassung Basis, PyObjekt Innenraeume, Spieldaten Daten,
+        IReadOnlyList<SpielRaumErsatz.Stueck>? SpielRaeume = null);
 
     /// <summary>Ergebnis: das Spiel (neu oder das vorige), der fertige Innenraum und die Stelle der Figur.</summary>
     public sealed record Ergebnis(StadtSpiel Spiel, bool SpielNeu, string AussenText, Innenraum Innen, Vector3 Figur);
@@ -26,7 +28,7 @@ public static class Innen3D
 
     /// <summary>Auf dem Oberflaechen-Faden: Kopien fuer den Bau.</summary>
     public static Auftrag Vorbereiten(Projekt p, string schluessel) =>
-        new(schluessel, (PyObjekt)Py.Kopie(p.AussenStand)!, p.Basis, (PyObjekt)Py.Kopie(p.Innenraeume())!, p.Daten);
+        new(schluessel, (PyObjekt)Py.Kopie(p.AussenStand)!, p.Basis, (PyObjekt)Py.Kopie(p.Innenraeume())!, p.Daten, p.SpielRaumStuecke());
 
     /// <summary>
     /// Im Hintergrund: Spiel (nur neu, wenn sich draussen etwas geaendert hat: <paramref name="vorher"/> mit gleichem
@@ -48,9 +50,12 @@ public static class Innen3D
         {
             // Welle S 0.60.0 (Weisung P12-337): Raum aus den Spieldaten (Wohnung, Buero, Serverfarm, Zweigstelle, Kunde), gebaut
             // mit demselben Weg wie das Spiel beim Betreten
-            var inhalt = spiel.Ablauf.Stand.Inhalt;
-            var raum = SpielRaeume.Finden(a.Schluessel, inhalt, a.Innenraeume) ?? throw new InvalidDataException(Texte.SpielRaumFehlt);
-            var spielRaum = SpielRaeume.Bauen(raum, inhalt, a.Innenraeume, spiel.Grafik, spiel.GeschaefteDaten, spiel.Feste)
+            // S 0.64.0 (Weisung P12-381): mit den geaenderten Raeumen des Spiels, eingesetzt wie im Spiel (Werkzeug = Spiel)
+            var stuecke = a.SpielRaeume ?? [];
+            var inhalt = SpielRaumErsatz.Inhalt(spiel.Ablauf.Stand.Inhalt, stuecke);
+            var innenraeume = SpielRaumErsatz.Innenraeume(a.Innenraeume, stuecke);
+            var raum = SpielRaeume.Finden(a.Schluessel, inhalt, innenraeume) ?? throw new InvalidDataException(Texte.SpielRaumFehlt);
+            var spielRaum = SpielRaeume.Bauen(raum, inhalt, innenraeume, spiel.Grafik, spiel.GeschaefteDaten, spiel.Feste)
                 ?? throw new InvalidDataException(Texte.SpielRaumFehlt);
             spielRaum.Vorbereiten();
             return new Ergebnis(spiel, spielNeu, text, spielRaum, Start(a.Innenraeume, a.Schluessel, 0, spielRaum));

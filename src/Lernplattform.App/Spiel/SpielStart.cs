@@ -113,7 +113,9 @@ public static class SpielStart
         lock (FassungSperre)
         {
             // Welle A 1.2.0 (Weisung P12-334): breite Grundrisse in den Innenraeumen der Fassung (z. B. Serverfarm)
-            return _fassung ??= GrundrisseBreit.Fassung(MitVerbautPruefen(AktiveFassung.Laden(Lesen)), Breit());
+            // Welle A 1.10.0: dazu die im Werkzeug geaenderten Raeume des Spiels (Serverfarm in den Innenraeumen; passt ein
+            // Stueck nicht, laedt die Fassung nicht: klarer Fehler, nie still)
+            return _fassung ??= SpielRaumErsatz.Fassung(GrundrisseBreit.Fassung(MitVerbautPruefen(AktiveFassung.Laden(Lesen)), Breit()));
         }
     }
 
@@ -148,7 +150,7 @@ public static class SpielStart
     /// </summary>
     internal static (Stadt Stadt, PyObjekt Innenraeume) AusFassungFuerTests(long nummer)
     {
-        var fassung = GrundrisseBreit.Fassung(MitVerbautPruefen(AktiveFassung.LadenNummer(Lesen, nummer)), Breit());
+        var fassung = SpielRaumErsatz.Fassung(GrundrisseBreit.Fassung(MitVerbautPruefen(AktiveFassung.LadenNummer(Lesen, nummer)), Breit()));
         return (fassung.StadtFuer(InhaltLaden(fassung).Inhalt), fassung.Innenraeume);
     }
 
@@ -159,7 +161,13 @@ public static class SpielStart
     internal static (Stadt Stadt, PyObjekt Innenraeume) AusDateiFuerTests(byte[] datei)
     {
         // Welle A 1.2.0 (Weisung P12-334): auch Paket-Staedte und Testkarten mit den breiten Grundrissen (greift nur bei alten Raeumen)
-        var fassung = GrundrisseBreit.Fassung(MitVerbautPruefen(StadtFassung.Lesen(datei)), Breit());
+        var gelesen = StadtFassung.Lesen(datei);
+        if (SpielRaumErsatz.Hat(gelesen.Stadtdaten))
+        {
+            // Welle A 1.10.0: Raeume des Spiels aendert nur Stadt 1 (eine Paket-Stadt oder Testkarte damit ist ein klarer Fehler)
+            throw new StadtbauFehler(["Räume des Spiels lassen sich nur in Stadt 1 ändern."]);
+        }
+        var fassung = GrundrisseBreit.Fassung(MitVerbautPruefen(gelesen), Breit());
         return (fassung.StadtFuer(InhaltLaden(fassung).Inhalt), fassung.Innenraeume);
     }
 
@@ -225,7 +233,8 @@ public static class SpielStart
         // Phase 12 Welle 1: die Moebel nur der C#-Linie (geschaefte.json moebel_neu, z. B. die vier Kleiderschraenke)
         // Welle A 1.2.0 (Weisung P12-334): breite Grundrisse als Daten, Spiel-Kern und Innenraum lesen genau diese
         var mitMoebeln = Geschaefte.NeueMoebelEinfuegen(inhalt, Py.Lesen(Muss("inhalte_csharp/spiel/geschaefte.json")) as PyObjekt);
-        return (GrundrisseBreit.Einsetzen(mitMoebeln, GrundrisseBreit.Inhalt, Breit()), lernen);
+        // Welle A 1.10.0 (Weisungen P12-380 bis P12-382): die im Werkzeug geaenderten Raeume des Spiels nach den breiten Grundrissen
+        return (SpielRaumErsatz.Inhalt(GrundrisseBreit.Einsetzen(mitMoebeln, GrundrisseBreit.Inhalt, Breit()), fassung ?? Fassung()), lernen);
     }
 
     /// <summary>

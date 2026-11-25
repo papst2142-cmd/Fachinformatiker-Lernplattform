@@ -27,7 +27,8 @@ public static class InnenFunde
     public sealed record Auftrag(List<Raum> Raeume, Spieldaten Daten, PyObjekt BasisInnenraeume);
 
     /// <summary>Schluessel aller Raeume, die das Senden sperren koennen (wie bisher in <see cref="Projekt.RoteFunde"/>).</summary>
-    public static List<string> Schluessel(Projekt p) => [.. p.GeaenderteOrte.Concat(p.Bauten).SelectMany(p.EtagenVon)];
+    /// <remarks>S 0.64.0 (Weisung P12-381): dazu jeder geaenderte Raum des Spiels (seine Funde sperren den Export).</remarks>
+    public static List<string> Schluessel(Projekt p) => [.. p.GeaenderteOrte.Concat(p.Bauten).SelectMany(p.EtagenVon), .. p.GeaenderteSpielRaeume];
 
     /// <summary>Auf dem Oberflaechen-Faden: Kopien der Grundrisse aller Raeume (<paramref name="nur"/>: nur diese Schluessel).</summary>
     public static Auftrag Vorbereiten(Projekt p, IEnumerable<string>? nur = null)
@@ -51,6 +52,10 @@ public static class InnenFunde
     /// <summary>Funde und Grenzen eines Raums.</summary>
     public static (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) PruefenMitGrenzen(Auftrag a, Raum r)
     {
+        if (SpielRaeume.Ist(r.Schluessel))
+        {
+            return SpielRaum(a, r);
+        }
         var (basis, etage) = Etagen.Teilen(r.Schluessel);
         var (funde, grenzen) = KatalogPruefung.Innen(Katalog.Aktiv, basis, r.Grundriss, r.Personen, a.Daten.Grafik, a.Daten.Geschaefte, a.BasisInnenraeume, etage);
         if (r.Erdgeschoss is { } eg)
@@ -61,6 +66,56 @@ public static class InnenFunde
         // S 0.19.0 (Nico 3a, 5a): Etagen eines selbst gebauten Gebaeudes gegen die Ebenen seines Entwurfs
         funde.AddRange(r.EntwurfFunde);
         return (funde, grenzen);
+    }
+
+    /// <summary>
+    /// S 0.64.0 (Weisung P12-381): ein Raum des Spiels mit den Regeln jedes Innenraums (Ansicht des Spiels) und den Regeln des
+    /// Spiels (<see cref="SpielRaumRegeln"/>: Tuer nach draussen, Erreichbarkeit, Flur, Diele, Tuerbreite, Arbeitsplaetze,
+    /// Schreibtisch und Kleiderschrank, Ladepruefung).
+    /// </summary>
+    private static (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) SpielRaum(Auftrag a, Raum r)
+    {
+        var raum = SpielRaeume.Finden(r.Schluessel, a.Daten.Inhalt, a.BasisInnenraeume);
+        if (raum is null)
+        {
+            return ([new StadtbauFund(Texte.SpielRaumFehlt, "Zurück auf den Stand des Spiels.", true)], (0, 0));
+        }
+        var kennung = Projekt.SpielRaumKennung(r.Schluessel);
+        (List<StadtbauFund> Funde, (long Dreiecke, int Aufrufe) Grenzen) Alle(PyObjekt g)
+        {
+            var (f, gr) = KatalogPruefung.Innen(Katalog.Aktiv, raum.Ansicht, g, r.Personen, a.Daten.Grafik, a.Daten.Geschaefte, a.BasisInnenraeume);
+            f.AddRange(SpielRaumRegeln.Pruefen(kennung, g, a.Daten.Inhalt, a.BasisInnenraeume));
+            return (f, gr);
+        }
+        var (funde, grenzen) = Alle(r.Grundriss);
+        if (SpielRaumErsatz.Grundlage(kennung, a.Daten.Inhalt, a.BasisInnenraeume) is not { } original)
+        {
+            return (funde, grenzen);
+        }
+        // Was das Spiel heute schon so hat, ist kein Fund der Aenderung (Nico 2c: die Fundliste prueft die Aenderung): ein Fund
+        // zaehlt nur, wenn ihn der unveraenderte Raum nicht ebenso hat (gleicher Text, je Text gezaehlt). Die Grenzen zaehlen nur,
+        // wenn die Aenderung Dreiecke oder Zeichenaufrufe ueber den heutigen Stand hebt.
+        var (vorher, grenzenVorher) = Alle(original);
+        var schon = vorher.GroupBy(f => (f.Text, f.Rot)).ToDictionary(g => g.Key, g => g.Count());
+        var neu = new List<StadtbauFund>();
+        foreach (var f in funde)
+        {
+            if (f.Text.StartsWith("Die Grenzen sind", StringComparison.Ordinal))
+            {
+                if (grenzen.Dreiecke > grenzenVorher.Dreiecke || grenzen.Aufrufe > grenzenVorher.Aufrufe)
+                {
+                    neu.Add(f);
+                }
+                continue;
+            }
+            if (schon.TryGetValue((f.Text, f.Rot), out var n) && n > 0)
+            {
+                schon[(f.Text, f.Rot)] = n - 1;
+                continue;
+            }
+            neu.Add(f);
+        }
+        return (neu, grenzen);
     }
 
     /// <summary>Nur die roten Funde, je Raum gruppiert; Raeume ohne Rot fallen weg.</summary>

@@ -69,7 +69,7 @@ public static partial class StadtbauPruefung
         {
             // Welle E4: Formatnummer 2 genau dann, wenn eine Quest einen Arbeitsort hat (sonst laese ein aelteres Programm
             // den Arbeitsort still nicht oder lehnte eine Datei ohne Arbeitsort ab)
-            funde.Add(string.Create(CultureInfo.InvariantCulture, $"Feld „formatversion“ ist {Py.Int(d["formatversion"])}, passt aber nicht zum Inhalt (Paket-Stadt 4, sonst Karte groesser als 64 oder mit Stadtteil-Namen 3, sonst mit Arbeitsort einer Quest 2, sonst 1)."));
+            funde.Add(string.Create(CultureInfo.InvariantCulture, $"Feld „formatversion“ ist {Py.Int(d["formatversion"])}, passt aber nicht zum Inhalt (geänderte Räume des Spiels 5, sonst Paket-Stadt 4, sonst Karte groesser als 64 oder mit Stadtteil-Namen 3, sonst mit Arbeitsort einer Quest 2, sonst 1)."));
         }
         if (d["stadt"] is not PyObjekt stadt)
         {
@@ -92,6 +92,15 @@ public static partial class StadtbauPruefung
             {
                 // Welle A 0.89.0 / S 0.57.0 (Weisung P12-297 W3-1): Abschnitt "paket" einer Paket-Stadt
                 funde.AddRange(StadtPaket.Fehler(d["stadtdaten"] as PyObjekt, id));
+            }
+            // Welle A 1.10.0 / S 0.64.0: geaenderte Raeume des Spiels (Aufbau der Ersatzstuecke; nur in Stadt 1, nie in einer Paket-Stadt)
+            if (d["stadtdaten"] is PyObjekt sdRaeume && Py.Hat(sdRaeume, SpielRaumErsatz.Abschnitt))
+            {
+                funde.AddRange(SpielRaumErsatz.Format(sdRaeume[SpielRaumErsatz.Abschnitt]));
+                if (StadtPaket.Hat(sdRaeume))
+                {
+                    funde.Add("Eine Paket-Stadt kann keine Räume des Spiels ändern (Abschnitt „" + SpielRaumErsatz.Abschnitt + "“).");
+                }
             }
             if (!Py.IstNurInt(stadt["fassung"]) || Py.Int(stadt["fassung"]) < 0)
             {
@@ -199,6 +208,19 @@ public static partial class StadtbauPruefung
         foreach (var f in fassung.StadtId == AktiveFassung.Stadt1 ? SpielKern.Regeln.WeltPruefen(fassung.MitKarte(inhalt)) : [])
         {
             funde.Add("Das Spiel lädt die Karte nicht: " + f);
+        }
+        // Welle A 1.10.0 / S 0.64.0: geaenderte Raeume des Spiels nur in Stadt 1, jedes Stueck muss zum Stand des Spiels passen
+        if (SpielRaumErsatz.Hat(fassung.Stadtdaten))
+        {
+            if (fassung.StadtId != AktiveFassung.Stadt1)
+            {
+                funde.Add("Räume des Spiels lassen sich nur in Stadt 1 ändern.");
+            }
+            else
+            {
+                funde.AddRange(SpielRaumErsatz.Unpassend(SpielRaumErsatz.Lesen(fassung.Stadtdaten), inhalt, fassung.Innenraeume)
+                    .Select(r => $"Raum des Spiels „{r}“: die Änderung passt nicht mehr zum Stand des Spiels."));
+            }
         }
         var welt = SpielDaten.Objekt(fassung.Karte["welt"]);
         var (breite, hoehe) = (Py.F(welt["breite"]), Py.F(welt["hoehe"]));
