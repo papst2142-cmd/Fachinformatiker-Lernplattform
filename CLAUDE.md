@@ -48,13 +48,13 @@ Hier nur Routinen, der heutige Stand und bleibende Regeln. Die ausfuehrliche Ges
 
 ## Aktueller Stand (nur heute, bei jeder Welle ERSETZEN, nicht anhängen)
 - **Phasen 0–13 abgenommen** (Phase 13 Stadtbau-Werkzeug: Bericht `Fi-Austausch/anlagen/P13-Bericht_Phase13.md`, abgenommen von Nico 14.11.2026, Antworten 1b 2a 3a, Weisung P12-246). Stadt 1 von Nico ist seit A 0.71.0 im Spiel (Fassung 1), seit A 0.75.2 als Fassung 2 (`aktiv.json` = 2, gemalte Hügel, beide Fundlisten 0 rot).
-- Auf `main`: **A 1.9.0 / S 0.63.0** (zuletzt Knöpfe anordnen, Sammelliste 450, P12-375 bis P12-378, PR #245, main **5913abc**, Lauf 1229 19/19). Release macht Chat.
-- **In Arbeit:** nichts; warten auf Weisung P12-379. Danach (je nur nach eigener Weisung): 414, 415, 388 (mit 359), Beta 1.
+- Auf `main`: **A 1.9.0 / S 0.63.0** (zuletzt Knöpfe anordnen, Sammelliste 450, P12-375 bis P12-378, PR #245, main **5913abc**, Lauf 1229 19/19, vA1.9.0 latest durch Chat). Release macht Chat.
+- **In Arbeit:** nichts; warten auf Weisung P12-380 (P12-379: warten, Doku erlaubt). Danach (je nur nach Nicos Wahl und eigener Weisung): 456 volle Breite Baukasten, 414, 415, Prüfung echt W2/W3 (388 mit 359), Beta 1.
 - Lehre A 1.7.0 (Lauf 1202): vor jedem vollen Lauf `testdauer.py pruefen` auf dem lokalen CTRF-Bericht (REGELN „Ablauf einer Welle“ C).
 - Lehre A 1.3.2: Start-Test lokal braucht `LERNPLATTFORM_TESTKARTE=<repo>/tests/Lernplattform.Tests/Testdaten/testkarte_256.fistadt` (wie `ci.yml`); Android baut im Container nicht, neue Android-Dateien vorab gegen Mono.Android-Referenzen übersetzen.
 - Lehre A 0.80.0: nach jeder Engine-Änderung auch `tests/Stadtbau.Tests` lokal laufen lassen (feste Zählwerte; PR-Lauf 990 war deshalb rot).
-- **Geltende Weisungen:** `weisungen/README.md` nennt sie. Stand 25.11.2026: P12-378 erledigt; nächste Weisung P12-379.
-- Nächste Nummern: Meldung **P12-244**, Weisung P12-379, Sollwert-Änderung **Nr. 25** (Nr. 24 = G52 mit Format 4 und fünf AE-Fassungen, A 1.8.0), Sammelliste **461** (frühere Nummern in `docs/WELLEN_GESCHICHTE.md`).
+- **Geltende Weisungen:** `weisungen/README.md` nennt sie. Stand 25.11.2026: P12-379; nächste Weisung P12-380.
+- Nächste Nummern: Meldung **P12-244**, Weisung P12-380, Sollwert-Änderung **Nr. 25** (Nr. 24 = G52 mit Format 4 und fünf AE-Fassungen, A 1.8.0), Sammelliste **461** (frühere Nummern in `docs/WELLEN_GESCHICHTE.md`).
 - Offene Sammelliste-Punkte (sonst alles erledigt, Einzelheiten in der Geschichte): 457 lange Tests nahe 90 s, 458 DV-Reiter macos-15, 459 Intel-Metal-Hänger LayoutAsync, 460 Handy-X macos-15 (nur beobachten); 451 Wackelfehler „erstes Öffnen“ (Karteikarten AE u. a., Teil von P12-368); 366 Spielteil Ubuntu nahe Wachhund (Layoutprüfung der Spielansichten wartet auf Bilder; Layout-Warten dort erst mit eigenem Beleg), nur nach Weisung; 359/360 Lücken AE (Baukasten für Klassen-, Use-Case-Diagramm, Struktogramm; SQL ausführen), nur nach eigener Weisung; 338, 326, 319, 308, 268, 270, 232, 227, 221 nur beobachten (nie lockern; 338 = Werkzeug-Messpunkt „3D nach Aenderung“ auf GitHub nahe 400 ms); 265 feste Ausnahme in `TuerSetzenTests`; 239 Talheim-Nord/Birkenhain (Nico); 215 Möbelhaus größer (Nico mit dem Werkzeug); 224 Artefaktname `stadtbau-android-S-…` fest; 372 Karteikarten-Editor (Beta, erst Kurzplan); 369 Lücke 2 DPA (nur notiert); 211, 122/123 K; 214 offen bis 1.0.
 
 ## Nicos Wünsche treu umsetzen (Lehre 13.11.2026)
