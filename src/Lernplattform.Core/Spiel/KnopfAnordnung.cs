@@ -224,8 +224,10 @@ public static class KnopfAnordnung
         }));
 
     /// <summary>
-    /// Hat ein ganzer Stick (Radius wie <see cref="Sticks.Lage"/>) in seiner Haelfte unten Platz (Mitte nicht ueber
-    /// <see cref="Sticks.ZoneOben"/>), ohne einen Knopf zu beruehren?
+    /// Hat ein ganzer Stick (Radius wie <see cref="Sticks.Lage"/>) in seiner Haelfte Platz, ohne einen Knopf zu beruehren, und kann
+    /// ein Daumen ihn starten? Wie im Spiel: der Daumen setzt im unteren Teil auf (ab <see cref="Sticks.ZoneOben"/>, nicht auf einem
+    /// Knopf), der Stick rueckt von den Knoepfen weg bis hoechstens an die Kopfzeile (Lauf 1225: auf niedrigen Bildern verlangte
+    /// die alte Regel die Mitte unter ZoneOben, dann war schon der Standard ungueltig).
     /// </summary>
     public static bool StickPlatz(IReadOnlyDictionary<Knopf, Platz> a, Sticks.Bereich b, Sticks.Seite seite) => StickStelle(a, b, seite) is not null;
 
@@ -236,13 +238,31 @@ public static class KnopfAnordnung
         var r = Math.Min(Sticks.Radius, Math.Min(b.FreiHoehe / 2, halb / 2));
         var (links, rechts) = seite == Sticks.Seite.Links ? (r, halb - r) : (halb + r, b.Breite - r);
         var mit = b with { Sperre = default, SperreLinks = default, SperreTelefon = default, Flaechen = Sperren(a, b) };
-        var oben = Math.Max(b.Oben + r, Sticks.ZoneOben(b));
+        var oben = b.Oben + r;
         var unten = b.Hoehe - b.Unten - r;
-        if (rechts < links)
+        if (rechts < links || !DaumenStart(mit, seite))
         {
             return null;
         }
         return Sticks.NaechsteFreie((links + rechts) / 2, unten, r, seite, mit, links, rechts, oben, unten) is { } m ? (m.X, m.Y, r) : null;
+    }
+
+    /// <summary>Gibt es in der Haelfte eine Stelle (Raster 2 Punkte), an der ein Daumen einen Stick dieser Seite startet?</summary>
+    private static bool DaumenStart(Sticks.Bereich mit, Sticks.Seite seite)
+    {
+        var halb = mit.Breite / 2;
+        var (x1, x2) = seite == Sticks.Seite.Links ? (0.0, halb - 1) : (halb, mit.Breite);
+        for (var y = Math.Ceiling(Sticks.ZoneOben(mit)); y <= mit.Hoehe; y += 2)
+        {
+            for (var x = x1; x <= x2; x += 2)
+            {
+                if (Sticks.SeiteFuer(x, y, mit) == seite)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // ---------------------------------------------------------------- Raster und Hilfslinien

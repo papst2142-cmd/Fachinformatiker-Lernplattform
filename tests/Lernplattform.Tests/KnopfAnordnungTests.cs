@@ -30,6 +30,12 @@ public sealed class KnopfAnordnungTests
         ("S24 quer", new(915, 412, 64, 60, 367, 547)),
         // Start-Test A 1.9.0: Handy hoch mit breiter Leiste (die Ecke des linken Sticks liegt nicht auf dem 2-Punkte-Raster)
         ("Handy hoch breite Leiste", new(384, 832, 64, 128, 12, 372)),
+        // Lauf 1225 (Windows, Fenster auf den Bildschirm begrenzt): niedrigere Bilder; der Standard muss auch hier erlaubt sein
+        ("Windows Handy hoch", new(384, 681, 64, 128, 12, 372)),
+        ("Windows Tablet quer", new(1008, 681, 64, 80, 455, 553)),
+        ("Handy hoch 16:9", new(360, 640, 64, 80, 131, 229)),
+        ("Handy hoch 16:9 breite Leiste", new(360, 640, 64, 128, 12, 348)),
+        ("Handy quer 16:9", new(640, 360, 64, 80, 271, 369)),
     ];
 
     private static Dictionary<Knopf, Platz> Bewegt(Dictionary<Knopf, Platz> a, Knopf k, double dx, double dy, int? prozent = null) =>
@@ -191,6 +197,22 @@ public sealed class KnopfAnordnungTests
             var (ox, oy, or) = Sticks.Lage(sp.X + rs + 4, Math.Min(sp.Y + rs + 4, b.Hoehe - b.Unten - 1), Sticks.Seite.Rechts, ohne);
             Assert.True(KnopfAnordnung.Sperren(eigen, b).Alle.Any(q => Sticks.KreisInRechteck(ox, oy, or, q)), $"{name}: Gegenprobe ohne Flaechen");
         }
+        // Gegenprobe Stick-Regel (Lauf 1225): auf dem niedrigen Bild rechts fuenf Knoepfe in 150 % uebereinander in der Mitte der
+        // rechten Haelfte, je mit Luft: kein ganzer Stick passt mehr daneben, darueber oder darunter -> „kein Platz fuer den Stick“
+        var w = Bereiche.Single(e => e.Name == "Windows Handy hoch").B;
+        var turm = new Dictionary<Knopf, Platz>(KnopfAnordnung.Standard(w));
+        var y = 68.0;
+        double? vorher = null;
+        foreach (var k in new[] { Knopf.Springen, Knopf.Knien, Knopf.Liegen, Knopf.Handlung, Knopf.Ich })
+        {
+            var t = KnopfAnordnung.Treffer(KnopfAnordnung.Durchmesser(k, w, 150)) / 2;
+            y += vorher is { } v ? v + t + KnopfAnordnung.Luft : t;
+            turm[k] = new Platz(288, y, 150);
+            vorher = t;
+        }
+        Assert.Equal(KnopfAnordnung.Fehler.StickPlatz, KnopfAnordnung.Pruefen(turm, w).Fehler);
+        Assert.True(KnopfAnordnung.StickPlatz(turm, w, Sticks.Seite.Links));
+        Assert.False(KnopfAnordnung.StickPlatz(turm, w, Sticks.Seite.Rechts));
     }
 
     [Fact]
