@@ -343,7 +343,9 @@ public sealed class EchtFormatTeil
         _zweiSpalten = ZweiSpalten;
         var aufgabeReiter = _reiter is not (Ausgang or Zeit);
         var mitAnlagen = aufgabeReiter && satz.Aufgaben[int.Parse(_reiter, CultureInfo.InvariantCulture) - 1].Teile.Any(t => t.Anlagen.Count > 0);
-        _umschalter!.IsVisible = aufgabeReiter && !(_zweiSpalten && mitAnlagen);
+        // Sammelliste 456: eine Aufgabe mit Baukasten nutzt im breiten Fenster die volle Breite, ihre Anlagen stehen darunter
+        var mitBaukasten = aufgabeReiter && _a.ImLauf && EchtAnlagenAnzeige.VolleBreite(satz.Aufgaben[int.Parse(_reiter, CultureInfo.InvariantCulture) - 1]);
+        _umschalter!.IsVisible = aufgabeReiter && !(_zweiSpalten && mitAnlagen && !mitBaukasten);
         if (_reiter == Ausgang)
         {
             var text = new StackPanel { Spacing = 8 };
@@ -391,7 +393,16 @@ public sealed class EchtFormatTeil
                 }
                 return Schrift.KopfKarte(Beschriftungen.Einsetzen(EchtTexte.AufgabeTitel, n, aufgabe.Titel), EchtTexte.PunkteText(aufgabe.Punkte), inhalt);
             }
-            if (_zweiSpalten && mitAnlagen)
+            if (_zweiSpalten && mitAnlagen && mitBaukasten && !_anlagen)
+            {
+                // Sammelliste 456 (Nico 2b): "Aufgabe" = volle Breite, darunter ihre Anlagen; "Anlagen" = Anlagen daneben wie bisher
+                _inhalt.Children.Add(AufgabeKarte());
+                foreach (var anlage in AnlagenVon(satz, aufgabe))
+                {
+                    _inhalt.Children.Add(AnlageKarte(anlage, _alsText));
+                }
+            }
+            else if (_zweiSpalten && mitAnlagen)
             {
                 // breiter PC: links die Aufgabe, rechts ihre Anlagen (Plan P12-152 Abschnitt 3)
                 var rechts = new StackPanel { Spacing = 14 };

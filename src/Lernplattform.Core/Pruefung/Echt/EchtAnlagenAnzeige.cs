@@ -12,6 +12,19 @@ public static class EchtAnlagenAnzeige
     /// <summary>Gegenprobe 363: der Umschalter nennt die Zahl aller Anlagen des Satzes wie bis A 0.84.0 (nur Tests, je Ablauf).</summary>
     public static bool ZahlAltFuerTests { get => ZahlAlt.Value; set => ZahlAlt.Value = value; }
 
+    private static readonly AsyncLocal<bool> VolleBreiteAlt = new();
+
+    /// <summary>Gegenprobe 456: Aufgaben mit Baukasten stehen wie bis A 1.10.0 neben ihren Anlagen (nur Tests, je Ablauf).</summary>
+    public static bool VolleBreiteAltFuerTests { get => VolleBreiteAlt.Value; set => VolleBreiteAlt.Value = value; }
+
+    /// <summary>
+    /// A 1.11.0 (Sammelliste 456, Weisungen P12-385/P12-386): eine Aufgabe mit mindestens einer Zeichenaufgabe (im Lauf mit
+    /// Baukasten) steht im breiten Fenster in voller Breite, ihre Anlagen darunter; der Umschalter "Aufgabe / Anlagen (n)"
+    /// bleibt und zeigt unter "Anlagen" die Anlagen daneben. Aufgaben ohne Zeichenaufgabe bleiben in zwei Spalten.
+    /// </summary>
+    public static bool VolleBreite(EchtAufgabe aufgabe) =>
+        !VolleBreiteAlt.Value && aufgabe.Teile.Any(t => t.Antwort.Form == EchtSaetze.FormZeichnen);
+
     /// <summary>Anlagen, auf die die Aufgabe verweist (alle, wenn sie auf keine verweist), in der Reihenfolge des Satzes.</summary>
     public static IReadOnlyList<EchtAnlage> Von(EchtSatz satz, EchtAufgabe aufgabe)
     {
