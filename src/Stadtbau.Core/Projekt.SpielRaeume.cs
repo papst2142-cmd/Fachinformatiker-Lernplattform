@@ -62,7 +62,8 @@ public sealed partial class Projekt
 
     /// <summary>Raeume des Spiels, deren Grundriss sich gegenueber dem Spiel geaendert hat (Reihenfolge der Liste).</summary>
     public IReadOnlyList<string> GeaenderteSpielRaeume =>
-        !SpielRaeumeAenderbar ? []
+        // ohne bearbeiteten Raum des Spiels keine Liste der Raeume bauen (Projekt anlegen, Stand, Export bleiben so schnell wie bisher)
+        !SpielRaeumeAenderbar || !_grundrisse.Keys.Any(SpielRaeume.Ist) ? []
         : [.. SpielRaeumeListe().Select(r => r.Schluessel).Where(s => _grundrisse.TryGetValue(s, out var g) && SpielRaumOriginal(s) is { } o
             && PythonJson.Standard(g) != PythonJson.Standard(o))];
 
