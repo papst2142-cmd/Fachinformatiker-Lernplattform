@@ -398,6 +398,7 @@ public static partial class AutoMessung
         var ids = Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)
             .Concat(Texte.NavigationHandy.Select(p => p.Id))
             .Concat([Seiten.Lernen, Seiten.Hilfe, Seiten.Suche])
+            .Concat(Pruefungsteile.ReiterSeiten).Concat([Pruefungsteile.Teil2, Pruefungsteile.Mehr])   // A 1.15.0: Seiten der Pruefungsteile
             .Distinct().ToList();
         foreach (var id in ids)
         {
@@ -414,6 +415,8 @@ public static partial class AutoMessung
         funde += await P8W2bMesspunkteAsync(ansicht);   // Phase 8 W2b: Seitenleiste und Optionen
         Zeitplan("P11SeitenleisteAsync");
         funde += await P11SeitenleisteAsync(ansicht);   // A 1.15.0: Seitenleiste nach Pruefungsteilen (Variante B)
+        Zeitplan("PruefungsteilKlicksAsync");
+        funde += await PruefungsteilKlicksAsync(ansicht);   // A 1.15.0: jede bisherige Seite in hoechstens zwei Klicks
         Zeitplan("P8W8OptionenAsync");
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
         Zeitplan("PaketeAsync");
@@ -599,6 +602,11 @@ public static partial class AutoMessung
                         await neuGerechnet.Geladen;
                         await ansicht.BildFertigAsync();
                     }
+                    if (ansicht.GebauteSeiten[id] is PruefungsteilSeite teilSeite)
+                    {
+                        await teilSeite.Geladen;
+                        await ansicht.BildFertigAsync();
+                    }
                     if (ansicht.GebauteSeiten[id] is FortschrittSeite fortschritt)
                     {
                         await fortschritt.Geladen;
@@ -620,6 +628,14 @@ public static partial class AutoMessung
                 }
                 // Phase 2: Ansichten nach dem Pruefen, Ergebnis und Fenster der Uebernahme
                 await foreach (var (ansichtName, _) in Gemessen364("W2Ansichten", MitLernen ? W2Ansichten(ansicht, inhalte) : Keine<(string, int)>()))
+                {
+                    foreach (var fund in Layoutpruefung.Pruefe(ansicht))
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {ansichtName}: {fund}");
+                    }
+                }
+                // A 1.15.0: Reiter und Unteransichten der Pruefungsteile
+                await foreach (var ansichtName in Gemessen364("PruefungsteilAnsichten", MitLernen ? PruefungsteilAnsichten(ansicht) : Keine<string>()))
                 {
                     foreach (var fund in Layoutpruefung.Pruefe(ansicht))
                     {

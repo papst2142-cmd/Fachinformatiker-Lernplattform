@@ -811,7 +811,8 @@ public partial class MainView : UserControl
         }
         if (gebaut && _seiten[id] is PruefungsteilSeite teil)
         {
-            teil.Gezeigt(_reiterBeimZeigen);
+            // aus Leiste, Startseite oder Brotkrumen immer zuerst „Üben“ (wie der Entwurf), so bleibt jede Seite in zwei Klicks
+            teil.Gezeigt(_reiterBeimZeigen ?? Core.Texte.Pruefungsteile.Ueben);
         }
         _reiterBeimZeigen = null;
         if (gebaut && _seiten[id] is TrainerSeite trainer)

@@ -93,6 +93,7 @@ public static partial class AutoMessung
         var inhalte = await Zustand.Inhalte;
         foreach (var id in Texte.NavigationPc.SelectMany(p => p.Unter.Prepend(p)).Select(p => p.Id)
             .Concat(Texte.NavigationHandy.Select(p => p.Id)).Concat([Seiten.Lernen, Seiten.Hilfe, Seiten.Suche])
+            .Concat(Pruefungsteile.ReiterSeiten).Concat([Pruefungsteile.Teil2, Pruefungsteile.Mehr])
             .Where(id => id != Seiten.Spiel).Distinct().ToList())
         {
             await ansicht.ZeigeAsync(id);

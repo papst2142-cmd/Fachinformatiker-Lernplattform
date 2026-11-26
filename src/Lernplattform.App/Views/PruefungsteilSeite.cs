@@ -388,6 +388,9 @@ public sealed class PruefungsteilSeite : UserControl
         }
     }
 
+    /// <summary>Start-Test: hat dieser Teil Saetze im echten Format (Satz- und Aufgabenliste)?</summary>
+    internal bool HatSaetze => _daten is { } d && d.Saetze[_seite].Count > 0;
+
     /// <summary>Start-Test: Unteransicht „Satz wählen“ (einzeln = false) bzw. „Aufgabe wählen“ zeigen.</summary>
     internal void ListeFuerTests(bool einzeln)
     {
