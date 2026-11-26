@@ -96,6 +96,8 @@ public static class Pruefungsteile
         new("progress", "INSIGHTS_ROUNDED", "Fortschritt", "Rahmenplan, Prüfungen und Lerntage", ["#7C3AED", "#22D3EE"]),
         new("settings", "SETTINGS_ROUNDED", "Optionen", "Aussehen, Fachrichtung, Sicherung und Updates", ["primary"]),
         new("help", "HELP_OUTLINE_ROUNDED", Navigation.Hilfe, "Erklärungen und Rundgang", ["success"]),
+        // die ganze Liste der AP2-Szenarien (in den Bereichen gefiltert), damit sie am Handy in zwei Klicks erreichbar bleibt
+        new("scenarios", "DIAMOND_ROUNDED", "AP2-Szenarien", "%d Aufgaben aus allen Bereichen von Teil 2", ["#DB2777", "#FB923C"]),
     ];
 
     public static readonly Kopftitel MehrKopf = new(Mehr, "MEHR", "ÜBERSICHT");
@@ -110,6 +112,23 @@ public static class Pruefungsteile
         "progress" or "settings" or "help" when unten => Mehr,
         _ when Fachbereiche.Alle.Contains(id) => unten ? Navigation.LernenId : "cards",
         _ => null,
+    };
+
+    /// <summary>
+    /// Seiten, die eine Seite mit einem Knopf oeffnet (Weisung P12-406, Abnahmesatz „jede bisherige Seite in hoechstens zwei
+    /// Klicks“): Teil 1 und die Bereiche den Pruefungstrainer (Üben, Probeklausur, echtes Format) und ihre Szenarien, Teil 2 die
+    /// Bereiche und das Projekt, die Sammelseiten ihre Eintraege, Karteikarten die Fachbereiche. <paramref name="mitSzenarien"/>:
+    /// hat der Teil Szenarien (sonst fehlt die Zeile).
+    /// </summary>
+    public static IReadOnlyList<string> Ziele(string seite, bool mitSzenarien = true) => seite switch
+    {
+        Teil1 => mitSzenarien ? ["quiz", "ap1scenarios"] : ["quiz"],
+        Teil2 => [B1, B2, Wiso, "testproject", "abschluss"],
+        B1 or B2 or Wiso => mitSzenarien ? ["quiz", "scenarios"] : ["quiz"],
+        Navigation.LernenId => [.. Navigation.Lernen.Select(e => e.Id)],
+        Mehr => [.. MehrEintraege.Select(e => e.Id)],
+        "cards" => Fachbereiche.Alle,
+        _ => [],
     };
 
     // -- Brotkrumen der neuen Seiten (die bisherigen Seiten behalten ihre Kopfzeile, G9 kopfleiste_pc/_handy) ------------

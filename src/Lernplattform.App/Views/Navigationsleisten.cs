@@ -57,8 +57,14 @@ public sealed class Navigationsleisten
         // Weisung P8-56: "Programm beenden" immer; Patch A 0.37.0 (Sammelliste 206, Antwort 4a) auch auf Android (Tablet quer)
         BeendenKnopf = BeendenEintrag();
         unten.Children.Add(BeendenKnopf);
-        var fuss = new StackPanel { Children = { unten, LernstatusKasten(), Version() } };
-        var rollen = new ScrollViewer { Content = oben, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
+        // A 1.15.0: unten angeheftet nur Hilfe, Optionen und Programm beenden (wie im Entwurf Hilfe und Optionen); LERNSTATUS und
+        // Version stehen am Ende des Bildlaufs, damit bei 1280 x 800 alle Eintraege bis Fortschritt ohne Rollen zu sehen sind
+        var fuss = new StackPanel { Margin = new Thickness(0, 0, 0, 12), Children = { unten } };
+        var rollen = new ScrollViewer
+        {
+            Content = new StackPanel { Children = { oben, LernstatusKasten(), Version() } },
+            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+        };
         var aufbau = new DockPanel();
         var logo = LogoZeile();
         DockPanel.SetDock(logo, Dock.Top);

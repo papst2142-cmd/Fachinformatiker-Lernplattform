@@ -225,7 +225,6 @@ public partial class GeraetetexteTests
         ("Programm/AbgleichDienst.cs", "Android ? AbgleichSteuerung.Handy : AbgleichSteuerung.Pc,", "Verhalten: Ausloeser und Zeiten des Abgleichs (L10, P2-12)"),
         ("Views/DashboardSeite.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter"),
         ("Views/DashboardSeite.cs", "if (Pc || w.Faellig.Wiederholen)", "Verhalten: \"Jetzt wiederholen\" am Handy nur mit Faelligem (R3, P2-6)"),
-        ("Views/Navigationsleisten.cs", "foreach (var punkt in Texte.Seitenleiste.Concat(Texte.NavigationPc.Where(p => Navigation.PcLeisteUnten.Contains(p.Id))))", "Aufbau: Seitenleiste (B5; A 0.38.0 Titel wie Handy)"),
         ("Views/Navigationsleisten.cs", "var raster = new Grid { ColumnDefinitions = new ColumnDefinitions(string.Join(\",\", Enumerable.Repeat(\"*\", Texte.NavigationHandy.Count))) };", "Aufbau: untere Leiste (B1, B5)"),
         ("Views/Navigationsleisten.cs", "foreach (var punkt in Texte.NavigationHandy)", "Aufbau: untere Leiste (B1, B5)"),
         ("Views/KlausurTeil.cs", "private static readonly bool Pc = !OperatingSystem.IsAndroid();", "Schalter (B12)"),
