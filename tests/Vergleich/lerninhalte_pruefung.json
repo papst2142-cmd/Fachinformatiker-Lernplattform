@@ -1353,8 +1353,8 @@
      "luecke": 4,
      "rechnen": 3,
      "tabelle": 2,
-     "zeichnen": 2,
-     "zeilen": 11
+     "zeichnen": 1,
+     "zeilen": 12
     },
     "operatoren": {
      "begruenden": 2,
@@ -1367,8 +1367,7 @@
      "nennen": 3
     },
     "punkte_selbst": 68,
-    "punkte_programm": 32,
-    "fassung": 2
+    "punkte_programm": 32
    },
    "ae_b2_03": {
     "fachrichtung": "ae",

@@ -105,8 +105,8 @@ public class EchtInhalteAeTests
             }
         }
         Assert.True(AeSaetze.Count(s => s.Aufgaben.SelectMany(a => a.Teile).Any(t => t.Antwort.Form == EchtSaetze.FormZeichnen)) >= 4);
-        // A 1.12.0 (P12-390): ae_b2_02 2a ist in Fassung 2 ein Struktogramm im Baukasten; mitgezaehlt wird darum Papier oder Struktogramm
-        Assert.True(AeSaetze.Count(s => s.Aufgaben.SelectMany(a => a.Teile).Any(t => Papier(t) || t.Antwort.Struktogramm is not null)) >= 3);
+        // A 1.12.0 (P12-393): ae_b2_02 bleibt auf Papier, darum wieder die strenge Zaehlung von A 1.11.0
+        Assert.True(AeSaetze.Count(s => s.Aufgaben.SelectMany(a => a.Teile).Any(Papier)) >= 3);
         // Gegenprobe
         var satz = AeSaetze.First(s => s.Aufgaben.SelectMany(a => a.Teile).Any(Papier));
         var a = satz.Aufgaben.First(x => x.Teile.Any(Papier));

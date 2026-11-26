@@ -12,15 +12,15 @@ namespace Lernplattform.Tests;
 /// Stelle von "Neuer Block kommt", Nach oben/unten, Heraus, Entfernen, Fall hinzufuegen/entfernen), Text genau wie eingegeben;
 /// (3) das Musterbild wird streng gelesen, jede Verletzung ist eine klare Meldung; die eigene Zeichnung stuerzt nie ab;
 /// (4) nach dem Abgeben zaehlt das Programm Bausteine, Schachtelung, Faelle, leere Zweige und Tiefe gegen das Musterbild,
-/// Texte nie; (5) Format 5, zwei neue AE-Fassungen nur angehaengt, Format 4 bleibt als echte Testdatei ladbar. Jede Regel mit
+/// Texte nie; (5) Format 5, eine neue AE-Fassung (ae_b2_08; ae_b2_02 heraus nach Weisung P12-393, Nico 1b) nur angehaengt, Format 4 bleibt als echte Testdatei ladbar. Jede Regel mit
 /// Gegenprobe.
 /// </summary>
 public class EchtStruktogrammTests
 {
     private static readonly string Format4 = Path.Combine(Pfade.Wurzel, "tests", "Lerninhalte", "echt", "pruefungssaetze_format4.json");
 
-    /// <summary>Die zwei neuen Fassungen: Satz, Aufgabe, Teil (Weisung P12-390).</summary>
-    public static readonly (string Kennung, int Aufgabe, string Nr)[] Neu = [("ae_b2_02", 2, "a"), ("ae_b2_08", 2, "b")];
+    /// <summary>Die neue Fassung: Satz, Aufgabe, Teil (Weisung P12-390; ae_b2_02 seit P12-393 heraus, Nico 1b).</summary>
+    public static readonly (string Kennung, int Aufgabe, string Nr)[] Neu = [("ae_b2_08", 2, "b")];
 
     private static IReadOnlyList<EchtBlock> Lesen(string json, bool vollstaendig = true) =>
         EchtStruktogramm.Lesen(JsonNode.Parse(json), "Test", vollstaendig);
@@ -38,7 +38,7 @@ public class EchtStruktogrammTests
     private static byte[] Datei(int format, params JsonObject[] saetze) =>
         Encoding.UTF8.GetBytes(new JsonObject { ["format"] = format, ["saetze"] = new JsonArray([.. saetze.Select(s => s.DeepClone())]) }.ToJsonString());
 
-    // ---- (5) Format 5 und die zwei neuen Fassungen ------------------------------------------------------------------------
+    // ---- (5) Format 5 und die neue Fassung ------------------------------------------------------------------------
 
     [Fact]
     public void Format4_EchteTestdateiLaedt_StruktogrammErstAbFormat5_NeueresFormatKlar()
@@ -51,15 +51,15 @@ public class EchtStruktogrammTests
         Assert.DoesNotContain(bestand.Saetze.SelectMany(s => s.Aufgaben).SelectMany(a => a.Teile), t => t.Antwort.Struktogramm is not null);
         // ein Struktogramm in einer Datei mit Format 4: klare Meldung, die alte Fassung bleibt geladen (nie still)
         var wurzel = JsonNode.Parse(alt)!.AsObject();
-        wurzel["saetze"]!.AsArray().Add(Roh("ae_b2_02", 2));
+        wurzel["saetze"]!.AsArray().Add(Roh("ae_b2_08", 2));
         var mit = EchtSaetze.Laden(Encoding.UTF8.GetBytes(wurzel.ToJsonString()));
-        Assert.Contains(mit.Fehler, f => f.Kennung == "ae_b2_02" && f.Meldung.EndsWith("Diagramm \"struktogramm\" erst ab Format 5", StringComparison.Ordinal));
-        Assert.Equal(1, mit.Satz("ae_b2_02")!.Fassung);
+        Assert.Contains(mit.Fehler, f => f.Kennung == "ae_b2_08" && f.Meldung.EndsWith("Diagramm \"struktogramm\" erst ab Format 5", StringComparison.Ordinal));
+        Assert.Equal(1, mit.Satz("ae_b2_08")!.Fassung);
         // Gegenprobe: dieselbe Datei als Format 5 laedt die neue Fassung an der Stelle der alten
         wurzel["format"] = 5;
         var neu = EchtSaetze.Laden(Encoding.UTF8.GetBytes(wurzel.ToJsonString()));
         Assert.Empty(neu.Fehler);
-        Assert.Equal(2, neu.Satz("ae_b2_02")!.Fassung);
+        Assert.Equal(2, neu.Satz("ae_b2_08")!.Fassung);
         Assert.Equal(bestand.Saetze.Select(s => s.Kennung), neu.Saetze.Select(s => s.Kennung));
         // neuere Formatnummer: klarer Fehler der ganzen Datei
         var sechs = EchtSaetze.Laden(Datei(6, Roh("alle_ap1_01", 1)));
@@ -71,21 +71,21 @@ public class EchtStruktogrammTests
     [Fact]
     public void Struktogramm_MitVorgabe_IstFehler_OhneMusterIstFehler()
     {
-        var satz = Roh("ae_b2_02", 2);
-        var teil = satz["aufgaben"]![1]!["teile"]![0]!.AsObject();
+        var satz = Roh("ae_b2_08", 2);
+        var teil = satz["aufgaben"]![1]!["teile"]![1]!.AsObject();
         teil["antwort"]!["vorgabe"] = JsonNode.Parse(Bloecke(Anw));
-        Assert.Contains(EchtSaetze.Laden(Datei(5, satz, Roh("ae_b1_02", 1))).Fehler,
-            f => f.Kennung == "ae_b2_02" && f.Meldung.EndsWith("ein Struktogramm hat keine Vorgabe", StringComparison.Ordinal));
-        satz = Roh("ae_b2_02", 2);
-        satz["aufgaben"]![1]!["teile"]![0]!["antwort"]!.AsObject().Remove("muster");
-        Assert.Contains(EchtSaetze.Laden(Datei(5, satz, Roh("ae_b1_02", 1))).Fehler,
-            f => f.Kennung == "ae_b2_02" && f.Meldung.EndsWith("Musterbild fehlt", StringComparison.Ordinal));
+        Assert.Contains(EchtSaetze.Laden(Datei(5, satz, Roh("ae_b1_08", 1))).Fehler,
+            f => f.Kennung == "ae_b2_08" && f.Meldung.EndsWith("ein Struktogramm hat keine Vorgabe", StringComparison.Ordinal));
+        satz = Roh("ae_b2_08", 2);
+        satz["aufgaben"]![1]!["teile"]![1]!["antwort"]!.AsObject().Remove("muster");
+        Assert.Contains(EchtSaetze.Laden(Datei(5, satz, Roh("ae_b1_08", 1))).Fehler,
+            f => f.Kennung == "ae_b2_08" && f.Meldung.EndsWith("Musterbild fehlt", StringComparison.Ordinal));
         // Gegenprobe: der echte Satz laedt ohne Fehler
-        Assert.Empty(EchtSaetze.Laden(Datei(5, Roh("ae_b2_02", 2), Roh("ae_b1_02", 1))).Fehler);
+        Assert.Empty(EchtSaetze.Laden(Datei(5, Roh("ae_b2_08", 2), Roh("ae_b1_08", 1))).Fehler);
     }
 
     [Fact]
-    public void ZweiFassungen_NurAngehaengt_AlteBytegleich_GenauDieseTeile()
+    public void EineFassung_NurAngehaengt_AlteBytegleich_GenauDieserTeil()
     {
         var echt = File.ReadAllBytes(EchtTestDatei.Datei);
         Assert.Equal(5, (int)JsonNode.Parse(echt)!["format"]!);
@@ -93,12 +93,12 @@ public class EchtStruktogrammTests
         var laenge = vorher.Length - "\n ]\n}".Length;
         var roh = EchtTestDatei.AlsFormat(echt, 4);
         Assert.True(roh.AsSpan(0, laenge).SequenceEqual(vorher.AsSpan(0, laenge)), "Datei bis zu den neuen Fassungen nicht bytegleich mit Format 4");
-        Assert.StartsWith(",\n  {\n   \"kennung\": \"ae_b2_02\",\n   \"fassung\": 2,", Encoding.UTF8.GetString(roh, laenge, 80), StringComparison.Ordinal);
+        Assert.StartsWith(",\n  {\n   \"kennung\": \"ae_b2_08\",\n   \"fassung\": 2,", Encoding.UTF8.GetString(roh, laenge, 80), StringComparison.Ordinal);
         // Gegenprobe: ein geaendertes Zeichen vorn faellt auf
         roh[300] ^= 1;
         Assert.False(roh.AsSpan(0, laenge).SequenceEqual(vorher.AsSpan(0, laenge)));
         var liste = JsonNode.Parse(echt)!["saetze"]!.AsArray();
-        Assert.Equal(64, liste.Count);
+        Assert.Equal(63, liste.Count); // P12-393: nur ae_b2_08 (ae_b2_02 heraus)
         Assert.Equal(Neu.Select(n => n.Kennung), liste.Skip(62).Select(s => (string?)s!["kennung"]));
         Assert.All(liste.Skip(62), s => Assert.Equal(2, (int)s!["fassung"]!));
 

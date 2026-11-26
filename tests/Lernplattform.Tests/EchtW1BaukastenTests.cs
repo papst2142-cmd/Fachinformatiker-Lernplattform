@@ -166,7 +166,7 @@ public class EchtW1BaukastenTests
         roh[200] ^= 1;
         Assert.NotEqual(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
         var liste = JsonNode.Parse(echt)!["saetze"]!.AsArray();
-        Assert.Equal(64, liste.Count); // seit A 1.12.0 zwei Struktogramm-Fassungen dahinter (EchtStruktogrammTests)
+        Assert.Equal(63, liste.Count); // seit A 1.12.0 eine Struktogramm-Fassung dahinter (ae_b2_08, P12-393; EchtStruktogrammTests)
         Assert.Equal(Neu.Select(n => n.Kennung), liste.Skip(57).Take(5).Select(s => (string?)s!["kennung"]));
         Assert.All(liste.Skip(57), s => Assert.Equal(2, (int)s!["fassung"]!));
         Assert.All(liste.Take(57), s => Assert.Null(s!["fassung"]));

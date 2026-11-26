@@ -81,8 +81,8 @@ public class EchtAnlagenAnzeigeTests
         Assert.Equal([false, false, false, false], Breit("alle_ap1_01"));
         var alle = bestand.Saetze.SelectMany(s => s.Aufgaben).ToList();
         Assert.All(alle, a => Assert.Equal(a.Teile.Any(t => t.Antwort.Form == EchtSaetze.FormZeichnen), EchtAnlagenAnzeige.VolleBreite(a)));
-        // A 1.12.0 (Weisung P12-390): dazu die zwei Struktogramm-Aufgaben (ae_b2_02 Aufgabe 2, ae_b2_08 Aufgabe 2)
-        Assert.Equal(33, alle.Count(EchtAnlagenAnzeige.VolleBreite));
+        // A 1.12.0 (Weisung P12-390): dazu die Struktogramm-Aufgabe ae_b2_08 Aufgabe 2 (ae_b2_02 heraus, P12-393)
+        Assert.Equal(32, alle.Count(EchtAnlagenAnzeige.VolleBreite));
     }
 
     /// <summary>Gegenprobe 456: mit der bisherigen Rechnung steht keine Aufgabe in voller Breite, der Test oben waere rot.</summary>
