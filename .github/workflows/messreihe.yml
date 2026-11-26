@@ -1,0 +1,78 @@
+# Messreihe 438 (Engine festigen 3, A 1.16.0, Weisung P12-399 Antwort 1a): misst den kalten Bau der Stadt je System in vier
+# Fassungen (Engine vorab uebersetzt ja/nein x TieredPGO Vorgabe/aus). Nur von Hand (workflow_dispatch), nur Messung: aendert
+# ci.yml, release.yml und keine Einstellung des Programms; zaehlt nie als Merge-Tor und nie fuer einen Release. Ergebnis als
+# Artefakt messreihe-<rid> (Tabelle ergebnis.md und alle Messdateien) und in der Zusammenfassung des Laufs.
+# Start: von Hand (workflow_dispatch, nur von main aus moeglich) oder am Pull Request mit dem Label "messreihe" (danach
+# wieder entfernen); jedes andere Label startet nichts.
+name: Messreihe 438
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      starts_spiel:
+        description: "Starts je Fassung fuer das Spiel (Teil kaltbau)"
+        default: "5"
+      starts_werkzeug:
+        description: "Starts je Fassung fuer das Werkzeug (Teil stadtbau, nur Windows und Linux)"
+        default: "2"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  AVALONIA_TELEMETRY_OPTOUT: "1"
+  LERNPLATTFORM_TON: "aus"
+
+jobs:
+  messen:
+    name: messreihe (${{ matrix.rid }})
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'messreihe'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, rid: linux-x64, werkzeug: true }
+          - { os: windows-latest, rid: win-x64, werkzeug: true }
+          - { os: macos-15, rid: osx-arm64, werkzeug: false }
+          - { os: macos-15-intel, rid: osx-x64, werkzeug: false }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Selbsttests der Messreihe
+        shell: bash
+        run: python -I werkzeuge/messreihe/auswerten.py selbsttest
+      - name: Desktop bauen
+        run: dotnet build src/Lernplattform.Desktop -c Release
+      - name: Werkzeug bauen
+        if: matrix.werkzeug
+        run: dotnet build src/Stadtbau.Desktop -c Release
+      - name: Messen
+        shell: bash
+        env:
+          LERNPLATTFORM_DATUM: "2026-06-15"
+        run: bash werkzeuge/messreihe/messen.sh ${{ matrix.rid }} messreihe ${{ inputs.starts_spiel || '5' }} ${{ matrix.werkzeug && (inputs.starts_werkzeug || '2') || '0' }}
+      - name: Zusammenfassung
+        if: always()
+        shell: bash
+        run: cat messreihe/ergebnis.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: messreihe-${{ matrix.rid }}
+          path: |
+            messreihe/ergebnis.md
+            messreihe/messung_*.txt
+            messreihe/messung_*.log
+            messreihe/publish_*.log
+          if-no-files-found: warn

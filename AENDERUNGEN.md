@@ -1,5 +1,13 @@
 # Änderungen
 
+## A 1.16.0
+Eine Pflege-Version für den Unterbau der 3D-Stadt.
+
+- Der Programmteil, der die Stadt baut und zeichnet, ist jetzt in kleinere, nach Themen geordnete Dateien aufgeteilt. Am Programm selbst hat sich dadurch nichts geändert: Die Stadt, die Innenräume und jedes Bild sehen genau gleich aus wie vorher.
+- Zwei sehr lange Prüfungen des Spiels laufen beim Testen jetzt allein statt neben anderen. Sie prüfen dasselbe wie vorher, sind unter Windows aber deutlich schneller fertig.
+- Neu ist eine eigene Messreihe, die misst, wie schnell die Stadt beim allerersten Öffnen gebaut wird. Sie ändert keine Einstellung des Programms.
+- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.15.0
 Die Lernplattform ist jetzt so aufgebaut wie deine Abschlussprüfung: Teil 1, Teil 2 mit seinen Prüfungsbereichen und das Abschlussprojekt.
 

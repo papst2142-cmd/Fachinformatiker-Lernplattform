@@ -1,6 +1,7 @@
 # Die eigene Engine (Spiel und Stadtbau-Werkzeug)
 
-Stand A 0.62.1 / S 0.37.1 (Weisung P12-175 „Engine festigen“ Stufe 1, Weisung P12-176 Stufe 2 Teil 1). Dieses Blatt erklärt, woraus die 3D-Stadt besteht,
+Stand A 1.16.0 / S 0.64.0 (zuerst A 0.62.1 / S 0.37.1, Weisungen P12-175/P12-176; zuletzt „Engine festigen 3“, Weisung
+P12-395/P12-399). Dieses Blatt erklärt, woraus die 3D-Stadt besteht,
 wie Daten vom Werkzeug ins Spiel kommen und welche Regeln für jede Änderung gelten. Einzelheiten stehen im Code
 (Kommentare am Anfang jeder Datei) und in `CLAUDE.md`; hier stehen nur Überblick und Verweise.
 
@@ -61,6 +62,16 @@ Typ im richtigen Projekt, Gegenprobe Engine→Core rot) und im IL (kein Namensra
   im freien Bereich und in der eigenen Hälfte (Radius 60, bei wenig Platz kleiner, nie unter 30), Ausschlag ab der Stelle des
   Aufsetzens (`Steuerung.AusStick`), rechter Stick wie die rechte Maustaste (`Drehen`, 300 Punkte je Sekunde, nach oben = Blick
   hoch). Die Spielfläche führt die Finger (`StadtFlaeche.Sticks.cs`), das Werkzeug nutzt den Baustein nicht.
+- **Haltungen** (`Figur.cs`: `Figur.Springen`, `Ducken`, `Kriechen`; `Innenraum.Haltungen.cs`, seit A 0.93.0): springen,
+  ducken und kriechen als Bilder der Figur; drinnen gilt eine Haltung nur, wenn die Figur dabei nichts berührt (0,02 Spiel),
+  ganz im Raum bleibt und nichts über die Mitte einer Wand reicht. Nur Darstellung (kein Ereignis, keine Spielzeit); Test
+  `SpielHaltungenTests`. Sitzen und Liegen: `Innenraum.Sitzen.cs`.
+- **Bauen nebeneinander** (`StadtSzene.Nebeneinander.cs`, seit A 1.4.0): Mittellinien, Laufraster und der Plan des Instancing
+  entstehen auf mehreren Kernen; das Ergebnis gleicht Byte für Byte dem Bau der Reihe nach (`StadtNebeneinanderTests`,
+  Gegenproben nur je Ablauf).
+- **Kleingrün rechnerfest** (`Szene.cs`, seit A 1.4.1, Sammelliste 437): ist die Lage eines Stücks nur eine Drehung um die
+  Hochachse mit gleichmäßiger Größe, rechnet die Farbe je Dreieck aus dem ungedrehten Modell; gleiche Büsche, Steine und Bäume
+  fassen sich im Winter darum auf jedem Rechner gleich zusammen (Gegenprobe je Ablauf: Rechnung wie bis A 1.4.0).
 - **Wasser** (`Wasser.cs`): Fluss, Teiche, Stege, Eis im Winter, als Flächen im Stadtnetz.
 - **Gelände** (`Gelaende.cs`, seit A 0.66.0): `stadtdaten.gelaende` mit Hügeln (`huegel`: Mitte, Radius 1–3, Höhe 0,2–1,5,
   rund oder länglich bis 6, Drehung in 15 Grad) und gemalten Höhen (`gemalt`: `[i, j, Hundertstel]` im Raster 0,5). Höhe =
@@ -253,3 +264,29 @@ Ersetzt „kein Streaming“ (Nico 11.11.2026; Nachladen fest vor der Beta seit 
 - **Spiel:** das Spiel rechnet nichts mit dem Abschnitt; die App lehnt ein Paket ab, dessen Stadt den Abschnitt eines anderen
   Pakets trägt (`PaketTexte.StadtAnderesPaket`). Pakete im Repo unter `pakete/<kennung>/`, geprüft wie Stadt 1 (beide
   Fundlisten 0 rot, Grenzen je Kachel, jeder Ort erreichbar; `Stadtbau.Tests/PaketeImRepoTests`).
+
+## 11. Teil-Dateien und Größe je Datei (A 1.16.0, Weisung P12-395 Punkt 1, Nico 3a in P12-399)
+
+Große Dateien der Engine sind reine Umzüge in Teil-Dateien derselben `partial class` (kein Zeichen Code geändert, Summe der
+Zeilen gleich, Fingerabdrücke, `StadtSzeneHash`, Rechnerfest-Werte und Fotos gleich):
+
+| Datei | Teil-Dateien (Thema) |
+|---|---|
+| `StadtSzene.cs` | `.Netze` (Bau der Netze), `.Bauen` (Bau der ganzen Stadt), `.Strassen` (Straßen, Mittellinien), `.Laufraster`, `.Gruen` (Bäume, Farben der Modelle), `.Modelle` (Modelle der Stadt) |
+| `Innenraum.cs` | `.Eingaben` (Bau aus dem Spielstand), `.Aufbau` (Böden, Wände, Treppen), `.Deko` (Einrichtung), `.Eigen` (eigene Möbelformen) |
+| `App/Spiel/StadtFlaeche.cs` | `.Shader` (Shader-Quellen), `.Zeichnen` (ein Bild), `.Vorladen` (Vorladen, Hochladen), `.Netze` (Figur, Markierung, Sätze; `RingRadius`), `.Bedienung` (Maus, Finger, Tasten), `.GlNetz` (Netz auf der Grafikkarte) |
+
+Regel: **höchstens 1 500 Zeilen je Datei** in `src/Lernplattform.Engine/` und in `App/Spiel/StadtFlaeche*.cs`
+(`EngineDateigroesseTests`, mit Gegenprobe 1 501 Zeilen = Fund). Wird eine Datei zu groß, kommt ein Thema als neue Teil-Datei
+dazu (nur Umzug, Nachweis wie oben); die Grenze wird nie angehoben. Tests, die Quelltext lesen, nennen die Teil-Datei.
+
+## 12. Messreihe kalter Bau (A 1.16.0, Sammelliste 438, Nico 1a in P12-399)
+
+Eigener Ablauf `.github/workflows/messreihe.yml`, nur von Hand (Dispatch von `main` oder Label `messreihe` am Pull Request,
+danach entfernen); er misst nur, zählt nie als Merge-Tor und ändert keine Einstellung. `werkzeuge/messreihe/messen.sh` baut das
+Spiel (und am PC das Werkzeug) zweimal, die Ordner unterscheiden sich nur in `Lernplattform.Engine.dll` (vorab übersetzt mit
+ReadyToRun ja/nein, geprüft mit `r2r.py`), und startet je Fassung frische Prozesse mit TieredPGO Vorgabe oder aus
+(`DOTNET_TieredPGO=0`), abwechselnd der Reihe nach. Start-Test-Teil `kaltbau` (`AutoMessung.Kaltbau.cs`): erstes Öffnen der
+Spielseite und „Stadt bauen Testkarte (geladen)“; das Werkzeug misst mit dem Teil `stadtbau`. Tabelle (Median und alle
+Einzelwerte, „fehlt“ statt Weglassen): `auswerten.py`, Artefakt `messreihe-<rid>`. Ergebnis und Empfehlung stehen in
+Meldung P12-265; eine Umstellung des Programms (z. B. Engine vorab übersetzen) nur nach eigener Weisung.
