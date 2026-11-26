@@ -320,6 +320,12 @@ public sealed partial class SpielSeite
             return;
         }
         var skala = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+        // Welle A 1.13.0: ohne Pfeil ist der Handy-Knopf die einzige Breite in der Mitte; eben erst sichtbar geworden ist er noch
+        // nicht gemessen (DesiredSize 0, „Spiel verlassen“ stand ohne 3D am schmalen Handy daneben und ragte aus der Karte)
+        if (_questKnopf.IsVisible && _questKnopf.DesiredSize.Width <= 0)
+        {
+            _questKnopf.Measure(Size.Infinity);
+        }
         var mitte = _questKnopf.IsVisible ? _questKnopf.DesiredSize.Width : 0;
         var innen = hoechstens - _unten.Padding.Left - _unten.Padding.Right - _unten.BorderThickness.Left - _unten.BorderThickness.Right
             - zeile.Margin.Left - zeile.Margin.Right;
