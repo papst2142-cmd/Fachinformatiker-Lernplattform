@@ -62,7 +62,7 @@ public sealed class Navigationsleisten
         var fuss = new StackPanel { Margin = new Thickness(0, 0, 0, 12), Children = { unten } };
         var rollen = new ScrollViewer
         {
-            Content = new StackPanel { Children = { oben, LernstatusKasten(), Version() } },
+            Content = new StackPanel { Children = { oben, Version() } },
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
         var aufbau = new DockPanel();
@@ -118,9 +118,6 @@ public sealed class Navigationsleisten
     /// <summary>Beschriftung eines Eintrags der Seitenleiste (Start-Test).</summary>
     public string Titel(string id) => _titel[id];
     private readonly Dictionary<string, (Border Strich, TextBlock Text, bool Unter)> _seitenTeile = new(StringComparer.Ordinal);
-    private TextBlock? _statusWert;
-    private Grid? _statusSpur;
-    private int _statusLaeuft;
 
     /// <summary>Logo wie Sidebar (pady 22/20, padx 20): Ring 34 mit Punkt 12, "FI" und "Lernplattform".</summary>
     private static Control LogoZeile()
@@ -239,30 +236,6 @@ public sealed class Navigationsleisten
         return knopf;
     }
 
-    /// <summary>Kasten LERNSTATUS (card, Radius 14, Rand border, aussen 14, innen 14/12/10).</summary>
-    private Control LernstatusKasten()
-    {
-        var titel = Schrift.Pt(Navigation.Lernstatus, 11, FontWeight.Bold, "Pinsel.muted");
-        var name = Schrift.Pt(Core.Dashboard.DashboardTexte.SeitenleisteBalken, 13, FontWeight.Normal, "Pinsel.text_dim");
-        name.TextWrapping = TextWrapping.Wrap;
-        _statusWert = Schrift.Pt("", 13, FontWeight.Normal, "Pinsel.muted");
-        _statusWert.HorizontalAlignment = HorizontalAlignment.Right;
-        _statusSpur = new Grid { Height = 9, ColumnDefinitions = new ColumnDefinitions("0*,1000*") };
-        var hinten = new Border { CornerRadius = new CornerRadius(4.5) }.Farbe(Border.BackgroundProperty, "Pinsel.ring_bg");
-        Grid.SetColumnSpan(hinten, 2);
-        _statusSpur.Children.Add(hinten);
-        _statusSpur.Children.Add(new Border { CornerRadius = new CornerRadius(4.5), IsVisible = false }.Farbe(Border.BackgroundProperty, FarbenAnwenden.Paar("accent", "accent2")));
-        var kasten = new Border
-        {
-            Margin = new Thickness(14, 8, 14, 0),
-            Padding = new Thickness(14, 12, 14, 10),
-            CornerRadius = new CornerRadius(14),
-            BorderThickness = new Thickness(1),
-            Child = new StackPanel { Spacing = 6, Children = { titel, name, _statusWert, _statusSpur } },
-        }.Farbe(Border.BackgroundProperty, "Pinsel.card").Farbe(Border.BorderBrushProperty, "Pinsel.border");
-        return kasten;
-    }
-
     private static Control Version()
     {
         var text = Schrift.Pt(Beschriftungen.Einsetzen(Navigation.Fusszeile, Aktualisierung.Aktualisierung.Anzeige), 11, FontWeight.Normal, "Pinsel.muted");
@@ -271,59 +244,9 @@ public sealed class Navigationsleisten
         return text;
     }
 
-    /// <summary>Zeigt bearbeitet / gesamt im Kasten LERNSTATUS (Sidebar.update_status).</summary>
-    public void Lernstatus(long bearbeitet, int gesamt)
-    {
-        if (_statusWert is null || _statusSpur is null)
-        {
-            return;
-        }
-        _statusWert.Text = Core.Dashboard.DashboardTexte.DeInt(bearbeitet) + " / " + Core.Dashboard.DashboardTexte.DeInt(gesamt);
-        var anteil = (int)Math.Round(Math.Max(0, Math.Min(1, (double)bearbeitet / Math.Max(1, gesamt))) * 1000);
-        _statusSpur.ColumnDefinitions[0].Width = new GridLength(anteil, GridUnitType.Star);
-        _statusSpur.ColumnDefinitions[1].Width = new GridLength(1000 - anteil, GridUnitType.Star);
-        _statusSpur.Children[1].IsVisible = anteil > 0;
-        Avalonia.Automation.AutomationProperties.SetName(_statusSpur, Core.Dashboard.DashboardTexte.SeitenleisteBalken + " " + _statusWert.Text);
-    }
-
-    /// <summary>Liest den Lernstatus im Hintergrund neu (nach jedem Seitenwechsel; hoechstens eine Lesung zugleich).</summary>
-    public void LernstatusLesen()
-    {
-        if (Interlocked.Exchange(ref _statusLaeuft, 1) == 1)
-        {
-            Volatile.Write(ref _statusNochmal, 1);    // Phase 9 W2: nach der laufenden Lesung noch einmal (z. B. neue Sicht)
-            return;
-        }
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                if (await Zustand.DashboardInhalte is { } inhalte)
-                {
-                    var pfad = System.IO.Path.Combine(Core.Daten.Ablage.Datenordner(), Core.Daten.Lernstand.DateiName);
-                    var (bearbeitet, gesamt) = Core.Dashboard.Lernstatus.Lesen(pfad, inhalte);
-                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => Lernstatus(bearbeitet, gesamt));
-                }
-            }
-            catch (Exception fehler)
-            {
-                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _statusLaeuft, 0);
-                if (Interlocked.Exchange(ref _statusNochmal, 0) == 1)
-                {
-                    LernstatusLesen();
-                }
-            }
-        });
-    }
-
-    private int _statusNochmal;
-
-    /// <summary>Start-Test: Zeile "x / y" im Kasten LERNSTATUS (leer, bis sie gelesen ist).</summary>
-    public string LernstatusText => _statusWert?.Text ?? "";
+    /// <summary>Start-Test (A 1.15.0, Weisung P12-409): alle Texte der Seitenleiste, fuer die Gegenprobe ohne Kasten LERNSTATUS.</summary>
+    public IReadOnlyList<string> SeitenleisteTexteFuerTests =>
+        [.. Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(Seitenleiste).OfType<TextBlock>().Select(t => t.Text ?? "")];
 
     /// <summary>Start-Test: Klick auf einen Eintrag der Seitenleiste wie mit der Maus.</summary>
     public void KlickFuerTests(string id) => _seitenKnoepfe[id].RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));

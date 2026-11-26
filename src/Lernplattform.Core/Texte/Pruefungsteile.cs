@@ -83,7 +83,7 @@ public static class Pruefungsteile
         new(LeistenArt.Eintrag, "progress", "Fortschritt"),
     ];
 
-    /// <summary>Unten angeheftet (ausserhalb des Bildlaufs): Hilfe und Optionen, darunter wie bisher „Programm beenden“, LERNSTATUS, Version.</summary>
+    /// <summary>Unten angeheftet (ausserhalb des Bildlaufs): Hilfe und Optionen, darunter wie bisher „Programm beenden“ (der Kasten LERNSTATUS entfiel mit Weisung P12-409, Nico 2a).</summary>
     public static readonly IReadOnlyList<LeistenZeile> SeitenleisteUnten =
     [
         new(LeistenArt.Eintrag, "help", Navigation.Hilfe),

@@ -457,7 +457,6 @@ public partial class MainView : UserControl
         {
             Zeige(AktuelleSeite);
         }
-        _leisten.LernstatusLesen();
         NachladeanzeigeSetzen();
     }
 
@@ -855,14 +854,11 @@ public partial class MainView : UserControl
             _herkunft = null;
         }
         _leisten.Markiere(id, _herkunft);
-        // Phase 8 W2b: Kasten LERNSTATUS im Hintergrund neu zaehlen (wie refresh nach dem Lernen in Python)
-        _leisten.LernstatusLesen();
         Core.Diagnose.Haenger.Seite(id);   // Phase 5 W2: Seite fuer die Haenger-Diagnose
     }
 
     private void NachAbgleich()
     {
-        _leisten.LernstatusLesen();
         if (!_seiten.TryGetValue(AktuelleSeite, out var seite))
         {
             return;
