@@ -48,6 +48,12 @@ public sealed record EchtAntwort(string Form)
     public string Diagramm { get; init; } = "";
     public EchtDiagramm? Vorgabe { get; init; }
     public EchtDiagramm? Muster { get; init; }
+
+    /// <summary>
+    /// A 1.12.0 (Weisung P12-390): Musterbild einer Struktogramm-Aufgabe (Diagramm "struktogramm", ab Format 5), sonst null.
+    /// Ein Struktogramm hat keine Vorgabe und kein <see cref="Muster"/> im Raster.
+    /// </summary>
+    public IReadOnlyList<EchtBlock>? Struktogramm { get; init; }
 }
 
 /// <summary>Eine Teilaufgabe (a, b, ba, bb ...).</summary>
@@ -152,9 +158,10 @@ public static class EchtSaetze
     /// <summary>
     /// Hoechstes bekanntes Format: 1 = Welle 1 (A 0.76.0), 2 = gezeichnete Anlagen und Zeichenaufgaben (A 0.77.0),
     /// 3 = AE-Satzpaare mit Feld "aufbau" und Feld "gebiet" je Teil (A 0.94.0, Weisung P12-304), 4 = Klassen- und
-    /// Use-Case-Diagramm im Baukasten und neue Fassung eines Satzes mit Feld "fassung" (A 1.8.0, Weisungen P12-371/372).
+    /// Use-Case-Diagramm im Baukasten und neue Fassung eines Satzes mit Feld "fassung" (A 1.8.0, Weisungen P12-371/372),
+    /// 5 = Struktogramm im Baukasten (Diagramm "struktogramm" mit Baum "bloecke", A 1.12.0, Weisung P12-390).
     /// </summary>
-    public const int Format = 4;
+    public const int Format = 5;
 
     /// <summary>Aufbau eines Satzes im AE-Satzpaar (Strukturblatt Abschnitt 7).</summary>
     public const string AufbauPaar = "paar";
@@ -801,6 +808,23 @@ public static class EchtSaetze
                 return new EchtAntwort(form) { Optionen = optionen, Richtig = richtig };
             case FormZeichnen:
                 var art = Pflicht(a, "diagramm");
+                if (art == EchtStruktogramm.Art)
+                {
+                    // A 1.12.0 (Weisung P12-390): Struktogramm als Baum, keine Vorgabe
+                    if (format < 5)
+                    {
+                        throw new EchtLadefehler(wo + ": Diagramm \"" + art + "\" erst ab Format 5");
+                    }
+                    if (a["vorgabe"] is not null)
+                    {
+                        throw new EchtLadefehler(wo + ": ein Struktogramm hat keine Vorgabe");
+                    }
+                    return new EchtAntwort(form)
+                    {
+                        Diagramm = art,
+                        Struktogramm = EchtStruktogramm.Lesen(a["muster"], wo + " Musterbild", vollstaendig: true),
+                    };
+                }
                 if (!EchtZeichnung.Bausteine.ContainsKey(art))
                 {
                     throw new EchtLadefehler(wo + ": Diagramm muss \"uml\" oder \"er\" sein");

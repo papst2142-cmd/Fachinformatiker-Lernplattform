@@ -1,5 +1,5 @@
 {
- "format": 4,
+ "format": 5,
  "saetze": [
   {
    "kennung": "alle_ap1_01",
@@ -89076,6 +89076,1297 @@
         {
          "text": "passende Gegenmaßnahme",
          "punkte": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "ae_b2_08",
+   "fassung": 2,
+   "fachrichtung": "ae",
+   "bereich": "b2",
+   "aufbau": "paar",
+   "firma": "Kantinenservice Sonnhalde GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Kantinenservice Sonnhalde GmbH betreibt im Auftrag von Industrie- und Verwaltungsbetrieben 12 Betriebskantinen im Raum Felsgrubenau und beschäftigt 280 Mitarbeiterinnen und Mitarbeiter. Verwaltung, Zentralküche und die IT-Abteilung haben ihren Sitz in Sonnhalde.",
+    "Das in Bereich 1 geplante Vorbestell-System mit Allergenangaben wird jetzt umgesetzt: Gäste bestellen ihre Gerichte vor, das System warnt bei Allergenen aus ihrem Allergieprofil, und die Daten gehen an die Kassen der Kantinen.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Anwendungsentwicklung in der IT-Abteilung und entwickeln Teile des Systems.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Nicht abgeholte Essen",
+    "2. Allergenprüfung",
+    "3. Freigabe von Restportionen",
+    "4. Auswertungen mit SQL"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "code",
+     "titel": "Klassen des Vorbestell-Systems und Hinweise zum Pseudocode",
+     "zeilen": [
+      "Klasse Bestellung: - kantinenNr: int; - abholtag: Datum; - status: String; - gast: Gast; - gericht: Gericht",
+      "  + getKantinenNr(): int; + getAbholtag(): Datum; + getStatus(): String; + getGast(): Gast; + getGericht(): Gericht",
+      "  status ist \"offen\" (noch nicht abgeholt), \"abgeholt\" oder \"storniert\"",
+      "Klasse Gast: - personalNr: int; - allergene: String[]",
+      "  + getPersonalNr(): int; + getAllergene(): String[] (Codes des Allergieprofils, leeres Feld ohne Profil)",
+      "Klasse Gericht: - bezeichnung: String; - allergene: String[]",
+      "  + getBezeichnung(): String; + getAllergene(): String[]",
+      "Pseudocode: Felder beginnen beim Index 0; länge(feld) liefert die Zahl der Elemente; ausgabe(...) gibt einen Text aus;",
+      "  Zuweisung mit ←, Vergleich mit = und ≠, Schleifen: für i von 0 bis n - 1 … ende für, solange … ende solange"
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "tabelle",
+     "titel": "Beispieldaten im Feld bestellungen (Auszug)",
+     "spalten": [
+      "Index",
+      "getKantinenNr()",
+      "getAbholtag()",
+      "getStatus()"
+     ],
+     "zeilen": [
+      [
+       "0",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "1",
+       "3",
+       "02.12.2026",
+       "offen"
+      ],
+      [
+       "2",
+       "7",
+       "02.12.2026",
+       "offen"
+      ],
+      [
+       "3",
+       "3",
+       "02.12.2026",
+       "storniert"
+      ],
+      [
+       "4",
+       "3",
+       "01.12.2026",
+       "offen"
+      ],
+      [
+       "5",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "6",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "7",
+       "3",
+       "02.12.2026",
+       "offen"
+      ],
+      [
+       "8",
+       "9",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "9",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ]
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "code",
+     "titel": "Pseudocode der Allergenprüfung (fehlerhaft)",
+     "zeilen": [
+      " 1  funktion enthaeltAllergen(gerichtCodes, profilCodes)",
+      " 2    n ← länge(gerichtCodes)",
+      " 3    m ← länge(profilCodes)",
+      " 4    gefunden ← falsch",
+      " 5    i ← 0",
+      " 6    solange i < n oder gefunden = falsch",
+      " 7      für j von 0 bis m",
+      " 8        wenn gerichtCodes[i] = profilCodes[j] dann",
+      " 9          gefunden ← wahr",
+      "10        ende wenn",
+      "11      ende für",
+      "12      i ← i + 1",
+      "13    ende solange",
+      "14    rückgabe gefunden",
+      "15  ende funktion"
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "text",
+     "titel": "Regeln für die Ausgabeliste eines Tages",
+     "zeilen": [
+      "Die Prozedur ausgabeliste(bestellungen, tag) geht alle Bestellungen im Feld bestellungen der Reihe nach durch.",
+      "Bestellungen mit einem anderen Abholtag und stornierte Bestellungen werden übersprungen.",
+      "Für jede andere Bestellung werden die Bezeichnung des Gerichts und die Personalnummer des Gastes ausgegeben, und die Bestellung wird gezählt.",
+      "Liefert enthaeltAllergen (Anlage 3, ohne Fehler) für die Allergene des Gerichts und des Gastes wahr, wird zusätzlich „Rückfrage Allergen“ ausgegeben und gezählt.",
+      "Nach allen Bestellungen werden die Zahl der ausgegebenen Bestellungen und die Zahl der Rückfragen ausgegeben."
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "code",
+     "titel": "Pseudocode der Freigabe einer Restportion",
+     "zeilen": [
+      "// uhrzeit und getAbholEnde() sind Uhrzeiten (hh:mm), die sich vergleichen lassen",
+      " 1  funktion freigeben(bestellung, uhrzeit)",
+      " 2    frei ← falsch",
+      " 3    wenn bestellung.getStatus() = \"offen\" dann",
+      " 4      wenn uhrzeit >= bestellung.getAbholEnde() dann",
+      " 5        frei ← wahr",
+      " 6      ende wenn",
+      " 7    ende wenn",
+      " 8    rückgabe frei",
+      " 9  ende funktion"
+     ]
+    },
+    {
+     "nr": "6",
+     "art": "code",
+     "titel": "Tabellenmodell der Vorbestell-Datenbank (PK = Primärschlüssel, FK = Fremdschlüssel)",
+     "zeilen": [
+      "Kantine (KantinenNr PK, Name, Ort)",
+      "Gericht (GerichtNr PK, Bezeichnung, Grundpreis)",
+      "Allergen (Code PK, Bezeichnung)",
+      "Gericht_Allergen (GerichtNr PK, FK → Gericht; Code PK, FK → Allergen)",
+      "Gast (Personalnummer PK, KantinenNr FK → Kantine)",
+      "Vorbestellung (BestellNr PK, Personalnummer FK → Gast, GerichtNr FK → Gericht, KantinenNr FK → Kantine, Abholtag, Status)",
+      "Abholtag hat den Typ DATE (Schreibweise '2026-12-01'); Status ist 'offen', 'abgeholt' oder 'storniert'."
+     ]
+    },
+    {
+     "nr": "7",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle Vorbestellung",
+     "spalten": [
+      "BestellNr",
+      "Personalnummer",
+      "GerichtNr",
+      "KantinenNr",
+      "Abholtag",
+      "Status"
+     ],
+     "zeilen": [
+      [
+       "1001",
+       "50112",
+       "12",
+       "7",
+       "2026-12-01",
+       "abgeholt"
+      ],
+      [
+       "1002",
+       "50140",
+       "12",
+       "7",
+       "2026-12-01",
+       "abgeholt"
+      ],
+      [
+       "1003",
+       "50177",
+       "11",
+       "7",
+       "2026-12-01",
+       "storniert"
+      ],
+      [
+       "1004",
+       "50112",
+       "11",
+       "7",
+       "2026-12-02",
+       "abgeholt"
+      ],
+      [
+       "1005",
+       "50140",
+       "12",
+       "7",
+       "2026-12-02",
+       "offen"
+      ],
+      [
+       "1006",
+       "50190",
+       "11",
+       "7",
+       "2026-12-02",
+       "abgeholt"
+      ],
+      [
+       "1007",
+       "50177",
+       "12",
+       "7",
+       "2026-12-03",
+       "storniert"
+      ],
+      [
+       "1008",
+       "50112",
+       "13",
+       "7",
+       "2026-12-03",
+       "abgeholt"
+      ],
+      [
+       "1009",
+       "50201",
+       "11",
+       "7",
+       "2026-12-03",
+       "offen"
+      ],
+      [
+       "1010",
+       "50140",
+       "12",
+       "7",
+       "2026-12-04",
+       "abgeholt"
+      ],
+      [
+       "1011",
+       "30455",
+       "12",
+       "3",
+       "2026-12-04",
+       "abgeholt"
+      ],
+      [
+       "1012",
+       "50190",
+       "14",
+       "7",
+       "2026-11-27",
+       "abgeholt"
+      ],
+      [
+       "1013",
+       "50177",
+       "14",
+       "7",
+       "2026-10-29",
+       "storniert"
+      ],
+      [
+       "1014",
+       "50201",
+       "13",
+       "7",
+       "2026-10-30",
+       "storniert"
+      ],
+      [
+       "1015",
+       "30455",
+       "13",
+       "3",
+       "2026-10-30",
+       "storniert"
+      ],
+      [
+       "1016",
+       "50112",
+       "13",
+       "7",
+       "2026-11-02",
+       "storniert"
+      ]
+     ]
+    },
+    {
+     "nr": "8",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabellen Kantine und Gericht",
+     "spalten": [
+      "Tabelle",
+      "Schlüssel",
+      "Name bzw. Bezeichnung",
+      "Ort bzw. Grundpreis"
+     ],
+     "zeilen": [
+      [
+       "Kantine",
+       "3",
+       "Verwaltung Felsgrubenau",
+       "Felsgrubenau"
+      ],
+      [
+       "Kantine",
+       "7",
+       "Werk Nord",
+       "Moorlichtenau"
+      ],
+      [
+       "Kantine",
+       "9",
+       "Werk Süd",
+       "Moorlichtenau"
+      ],
+      [
+       "Gericht",
+       "11",
+       "Gemüsecurry",
+       "5.20"
+      ],
+      [
+       "Gericht",
+       "12",
+       "Schnitzel mit Kartoffelsalat",
+       "6.40"
+      ],
+      [
+       "Gericht",
+       "13",
+       "Linseneintopf",
+       "4.30"
+      ],
+      [
+       "Gericht",
+       "14",
+       "Ofenlachs mit Reis",
+       "6.90"
+      ]
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Nicht abgeholte Essen",
+     "punkte": 22,
+     "einleitung": [
+      "Einige Gäste holen vorbestellte Essen nicht ab. Die Kantinenleitungen möchten das je Kantine und Tag auswerten; die Klassen und Hinweise zum Pseudocode stehen in Anlage 1."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie in Pseudocode die Funktion nichtAbgeholt(bestellungen, kantinenNr, tag). Es gilt:",
+        "Betrachtet werden nur Bestellungen im Feld bestellungen mit der übergebenen Kantinennummer und dem übergebenen Abholtag.",
+        "Stornierte Bestellungen zählen nicht mit; alle anderen sind gültige Bestellungen. Nicht abgeholt ist eine gültige Bestellung mit dem Status \"offen\".",
+        "Die Funktion gibt die Zahl der nicht abgeholten Bestellungen zurück.",
+        "Ist der Anteil der nicht abgeholten an den gültigen Bestellungen größer als 10 %, gibt sie vorher „Hinweis: viele nicht abgeholte Essen“ aus. Gibt es keine gültige Bestellung, darf nicht durch 0 geteilt werden."
+       ],
+       "punkte": 13,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 16
+       },
+       "anlagen": [
+        "1"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "funktion nichtAbgeholt(bestellungen, kantinenNr, tag)",
+        "  gueltig ← 0",
+        "  offen ← 0",
+        "  für i von 0 bis länge(bestellungen) - 1",
+        "    b ← bestellungen[i]",
+        "    wenn b.getKantinenNr() = kantinenNr und b.getAbholtag() = tag dann",
+        "      wenn b.getStatus() ≠ \"storniert\" dann",
+        "        gueltig ← gueltig + 1",
+        "        wenn b.getStatus() = \"offen\" dann",
+        "          offen ← offen + 1",
+        "        ende wenn",
+        "      ende wenn",
+        "    ende wenn",
+        "  ende für",
+        "  wenn gueltig > 0 und offen / gueltig > 0.1 dann",
+        "    ausgabe(\"Hinweis: viele nicht abgeholte Essen\")",
+        "  ende wenn",
+        "  rückgabe offen",
+        "ende funktion"
+       ],
+       "hinweise": [
+        {
+         "text": "Zähler vor der Schleife mit 0 belegt",
+         "punkte": 1
+        },
+        {
+         "text": "Schleife über alle Elemente von 0 bis länge − 1",
+         "punkte": 2
+        },
+        {
+         "text": "Zugriff nur über get-Methoden des Elements",
+         "punkte": 1
+        },
+        {
+         "text": "Filter Kantine und Abholtag",
+         "punkte": 2
+        },
+        {
+         "text": "stornierte Bestellungen ausgeschlossen, gültige gezählt",
+         "punkte": 2
+        },
+        {
+         "text": "Status \"offen\" gezählt",
+         "punkte": 2
+        },
+        {
+         "text": "Anteil > 10 % nur bei gueltig > 0 geprüft, Hinweis ausgegeben",
+         "punkte": 2
+        },
+        {
+         "text": "Rückgabe der Zahl der nicht abgeholten nach der Schleife",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für das Feld aus Anlage 2 und den Aufruf nichtAbgeholt(bestellungen, 3, 02.12.2026) die folgenden Werte."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der gültigen Bestellungen",
+          "art": "zahl",
+          "loesung": [
+           "6"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Rückgabewert der Funktion",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Wird der Hinweis ausgegeben? (ja oder nein)",
+          "art": "text",
+          "loesung": [
+           "ja",
+           "j"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "gültig: Index 0, 1, 5, 6, 7, 9 = 6 (Index 2 und 8 andere Kantine, 3 storniert, 4 anderer Tag)",
+        "nicht abgeholt: Index 1 und 7 = 2",
+        "Anteil 2 ÷ 6 ≈ 33 % > 10 %, also ja"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Funktion die Attribute einer Bestellung nur über get-Methoden liest und nicht direkt darauf zugreift."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Die Attribute sind privat (Kapselung); nur die Klasse selbst darf sie lesen und ändern.",
+        "Ändert sich die interne Speicherung (z. B. Status als Zahl), bleibt die Methode gleich und die Funktion muss nicht geändert werden; außerdem kann niemand den Status unbemerkt von außen ändern."
+       ],
+       "hinweise": [
+        {
+         "text": "Kapselung bzw. private Attribute",
+         "punkte": 1
+        },
+        {
+         "text": "Vorteil: interne Änderung ohne Folgen für Aufrufer, kein unkontrolliertes Ändern",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Testfälle (Eingaben) für die Funktion nichtAbgeholt, die Randfälle abdecken."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "leeres Feld bestellungen",
+        "alle Bestellungen des Tages storniert (keine Division durch 0)",
+        "keine Bestellung der angegebenen Kantine",
+        "genau 10 % nicht abgeholt (kein Hinweis)",
+        "alle gültigen Bestellungen nicht abgeholt",
+        "Bestellungen derselben Kantine an einem anderen Tag"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Allergenprüfung",
+     "punkte": 24,
+     "einleitung": [
+      "Vor der Essensausgabe druckt jede Kantine eine Ausgabeliste. Für Gäste mit Allergieprofil prüft das System jedes vorbestellte Gericht mit der Funktion aus Anlage 3; die Regeln der Liste stehen in Anlage 4."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "korrigieren",
+       "text": [
+        "Die Funktion enthaeltAllergen in Anlage 3 enthält zwei Fehler: Beim Test bricht sie mit einem Zugriff außerhalb der Feldgrenzen ab. Korrigieren Sie die beiden Fehler, indem Sie jeweils die Zeilennummer und die berichtigte Zeile angeben."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "3"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "Zeile 6: solange i < n und gefunden = falsch",
+        "Zeile 7: für j von 0 bis m - 1"
+       ],
+       "hinweise": [
+        {
+         "text": "Fehler in Zeile 6 (Abbruchbedingung) erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Zeile 6 mit und statt oder berichtigt",
+         "punkte": 2
+        },
+        {
+         "text": "Fehler in Zeile 7 (Feldgrenze) erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Zeile 7 mit bis m - 1 berichtigt",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie im Baukasten ein Struktogramm (Nassi-Shneiderman) für die Prozedur ausgabeliste(bestellungen, tag) nach Anlage 4. Den Aufruf von enthaeltAllergen dürfen Sie als einfache Bedingung schreiben."
+       ],
+       "punkte": 12,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "struktogramm",
+        "muster": {
+         "art": "struktogramm",
+         "bloecke": [
+          {
+           "typ": "anweisung",
+           "text": "anzahl ← 0; rueckfragen ← 0"
+          },
+          {
+           "typ": "zaehlschleife",
+           "text": "für i von 0 bis länge(bestellungen) − 1",
+           "rumpf": [
+            {
+             "typ": "anweisung",
+             "text": "b ← bestellungen[i]"
+            },
+            {
+             "typ": "verzweigung",
+             "text": "b.getAbholtag() = tag und b.getStatus() ≠ \"storniert\" ?",
+             "ja": [
+              {
+               "typ": "anweisung",
+               "text": "Ausgabe b.getGericht().getBezeichnung(), b.getGast().getPersonalNr()"
+              },
+              {
+               "typ": "anweisung",
+               "text": "anzahl ← anzahl + 1"
+              },
+              {
+               "typ": "verzweigung",
+               "text": "enthaeltAllergen(b.getGericht().getAllergene(), b.getGast().getAllergene()) ?",
+               "ja": [
+                {
+                 "typ": "anweisung",
+                 "text": "Ausgabe „Rückfrage Allergen“"
+                },
+                {
+                 "typ": "anweisung",
+                 "text": "rueckfragen ← rueckfragen + 1"
+                }
+               ],
+               "nein": []
+              }
+             ],
+             "nein": []
+            }
+           ]
+          },
+          {
+           "typ": "anweisung",
+           "text": "Ausgabe anzahl, rueckfragen"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "3",
+        "4"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Anweisung: anzahl ← 0; rueckfragen ← 0",
+        "Zählschleife: für i von 0 bis länge(bestellungen) − 1",
+        "  Anweisung: b ← bestellungen[i]",
+        "  Verzweigung: b.getAbholtag() = tag und b.getStatus() ≠ \"storniert\" ?",
+        "    ja: Ausgabe b.getGericht().getBezeichnung(), b.getGast().getPersonalNr()",
+        "        anzahl ← anzahl + 1",
+        "        Verzweigung: enthaeltAllergen(b.getGericht().getAllergene(), b.getGast().getAllergene()) ?",
+        "          ja: Ausgabe „Rückfrage Allergen“; rueckfragen ← rueckfragen + 1",
+        "          nein: (leerer Block)",
+        "    nein: (leerer Block)",
+        "Ausgabe: anzahl, rueckfragen (nach der Schleife)"
+       ],
+       "hinweise": [
+        {
+         "text": "Zähler vor der Schleife mit 0 belegt",
+         "punkte": 1
+        },
+        {
+         "text": "Zählschleife über alle Bestellungen",
+         "punkte": 2
+        },
+        {
+         "text": "Verzweigung Abholtag und nicht storniert (auch als zwei Verzweigungen)",
+         "punkte": 2
+        },
+        {
+         "text": "Ausgabe von Bezeichnung und Personalnummer über get-Methoden, Zählen",
+         "punkte": 2
+        },
+        {
+         "text": "innere Verzweigung mit Aufruf von enthaeltAllergen",
+         "punkte": 2
+        },
+        {
+         "text": "Ausgabe „Rückfrage Allergen“ und Zählen der Rückfragen",
+         "punkte": 1
+        },
+        {
+         "text": "Ausgabe beider Zahlen nach der Schleife",
+         "punkte": 1
+        },
+        {
+         "text": "Strukturblöcke richtig gezeichnet und verschachtelt, leere Blöcke vorhanden",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, wann die berichtigte Funktion enthaeltAllergen mit weniger Vergleichen auskommt als eine Lösung mit zwei für-Schleifen, die immer alle Codes vergleicht."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "3"
+       ],
+       "loesung": [
+        "Die solange-Schleife endet, sobald ein gemeinsamer Code gefunden ist (gefunden = wahr).",
+        "Steht der gemeinsame Code früh im Feld gerichtCodes, werden die übrigen Codes des Gerichts nicht mehr verglichen; ohne Treffer ist die Zahl der Vergleiche gleich (n × m)."
+       ],
+       "hinweise": [
+        {
+         "text": "vorzeitiges Ende nach dem ersten Treffer",
+         "punkte": 2
+        },
+        {
+         "text": "Unterschied nur bei Treffer, ohne Treffer gleich viele Vergleiche",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Strukturblöcke, die in einem Struktogramm verwendet werden."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Anweisung (Folge)",
+        "einfache Verzweigung (wenn – dann – sonst)",
+        "Mehrfachverzweigung (Fallunterscheidung)",
+        "Zählschleife",
+        "kopfgesteuerte Schleife",
+        "fußgesteuerte Schleife",
+        "Aufruf eines Unterprogramms (Prozeduraufruf)"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Freigabe von Restportionen",
+     "punkte": 24,
+     "einleitung": [
+      "Ab dem Ende der Abholzeit verkauft die Ausgabe nicht abgeholte Portionen an Gäste ohne Vorbestellung. Anforderung: Eine Portion wird freigegeben, wenn ihre Vorbestellung storniert ist oder wenn sie offen ist und das Ende der Abholzeit erreicht ist; abgeholte Portionen nie. Die Umsetzung zeigt Anlage 5."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie für die Testfälle T2 bis T4 die Rückgabe der Funktion aus Anlage 5 und das Ergebnis, das nach der Anforderung richtig wäre (wahr oder falsch). T1 ist vorgegeben."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Testfall",
+         "Status",
+         "uhrzeit",
+         "Ende der Abholzeit",
+         "Rückgabe laut Anlage 5",
+         "richtig nach Anforderung"
+        ],
+        "zeilen": [
+         [
+          "T1",
+          "offen",
+          "14:10",
+          "14:00",
+          "wahr",
+          "wahr"
+         ],
+         [
+          "T2",
+          "offen",
+          "13:20",
+          "14:00",
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "T3",
+          "abgeholt",
+          "14:30",
+          "14:00",
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "T4",
+          "storniert",
+          "12:00",
+          "14:00",
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "wahr",
+            "true",
+            "w",
+            "ja",
+            "freigeben",
+            "frei"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "T2: offen, 13:20 < 14:00 → falsch; richtig: falsch",
+        "T3: Status nicht offen → falsch; richtig: falsch (abgeholt nie)",
+        "T4: Status nicht offen → falsch; richtig wäre wahr, denn stornierte Portionen werden freigegeben → Fehler gefunden"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Aussagen über die Überdeckung der Funktion aus Anlage 5 mit den Testfällen T1 bis T4 aus a) zutreffen."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "T1 allein führt jede Anweisung der Funktion mindestens einmal aus.",
+         "T1 allein durchläuft jeden Zweig der beiden wenn-Anweisungen.",
+         "T1, T2 und T3 zusammen erreichen eine vollständige Zweigüberdeckung.",
+         "T1 und T4 zusammen erreichen eine vollständige Zweigüberdeckung.",
+         "T1 und T2 zusammen erreichen eine vollständige Zweigüberdeckung.",
+         "Für eine vollständige Zweigüberdeckung sind mindestens drei Testfälle nötig."
+        ],
+        "richtig": [
+         0,
+         2,
+         5
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Zutreffend: T1 führt die Zeilen 2 bis 5 und 8 aus (Anweisungsüberdeckung); T1 (ja/ja), T2 (ja/nein) und T3 (nein) decken alle vier Zweige ab; ein Testfall mit Status nicht offen erreicht Zeile 4 nicht, darum braucht man für die beiden Zweige von Zeile 4 zwei weitere Testfälle mit offenem Status: mindestens drei.",
+        "Nicht zutreffend: T1 allein lässt die nein-Zweige aus; T1 und T4 lassen den nein-Zweig von Zeile 4 aus; T1 und T2 lassen den nein-Zweig von Zeile 3 aus."
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "zeichnen",
+       "text": [
+        "Zeichnen Sie auf Papier den Kontrollflussgraphen der Funktion aus Anlage 5 mit einem Knoten je Zeile 2, 3, 4, 5 und 8. Beschriften Sie die Kanten aus den Verzweigungen mit ja und nein."
+       ],
+       "punkte": 7,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 12
+       },
+       "anlagen": [
+        "5"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Knoten: 2, 3, 4, 5, 8",
+        "Kanten: 2 → 3; 3 → 4 (ja); 3 → 8 (nein); 4 → 5 (ja); 4 → 8 (nein); 5 → 8",
+        "Startknoten 2, Endknoten 8 (6 Kanten, zyklomatische Zahl 6 − 5 + 2 = 3)"
+       ],
+       "hinweise": [
+        {
+         "text": "fünf Knoten in der richtigen Reihenfolge",
+         "punkte": 1
+        },
+        {
+         "text": "Verzweigung in Knoten 3 mit ja nach 4 und nein nach 8",
+         "punkte": 2
+        },
+        {
+         "text": "Verzweigung in Knoten 4 mit ja nach 5 und nein nach 8",
+         "punkte": 2
+        },
+        {
+         "text": "Kanten 2 → 3 und 5 → 8",
+         "punkte": 1
+        },
+        {
+         "text": "Kanten mit ja und nein beschriftet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum ein Test, der nur eine vollständige Anweisungsüberdeckung verlangt, den Fehler der Funktion aus Anlage 5 nicht finden muss, eine Zweigüberdeckung ihn aber sichtbar machen kann."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Der Fehler liegt im leeren nein-Zweig von Zeile 3: Für stornierte Bestellungen fehlt die Freigabe.",
+        "Für die Anweisungsüberdeckung reicht T1, der diesen Zweig nie durchläuft. Die Zweigüberdeckung verlangt auch den nein-Zweig von Zeile 3; nimmt man dafür eine stornierte Bestellung (T4), weicht die Rückgabe von der Anforderung ab."
+       ],
+       "hinweise": [
+        {
+         "text": "Fehler im leeren nein-Zweig bzw. fehlende Anweisung erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "C0 durchläuft den Zweig nicht, C1 erzwingt ihn",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "korrigieren",
+       "text": [
+        "Korrigieren Sie die Funktion aus Anlage 5 so, dass sie die Anforderung erfüllt. Geben Sie die geänderten oder neuen Zeilen in Pseudocode an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "anlagen": [
+        "5"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "wenn bestellung.getStatus() = \"storniert\" dann",
+        "  frei ← wahr",
+        "sonst wenn bestellung.getStatus() = \"offen\" und uhrzeit >= bestellung.getAbholEnde() dann",
+        "  frei ← wahr",
+        "ende wenn",
+        "Gleichwertig: in Zeile 6/7 einen sonst-Zweig zu Zeile 3 mit wenn Status = \"storniert\" dann frei ← wahr ergänzen."
+       ],
+       "hinweise": [
+        {
+         "text": "Fall storniert führt zu frei ← wahr",
+         "punkte": 2
+        },
+        {
+         "text": "Fall offen mit Ende der Abholzeit bleibt erhalten, abgeholt bleibt falsch",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Auswertungen mit SQL",
+     "punkte": 30,
+     "einleitung": [
+      "Die Vorbestellungen aller Kantinen liegen in einer relationalen Datenbank (Tabellenmodell in Anlage 6, Beispieldaten in den Anlagen 7 und 8). Die Kantinenleitungen wünschen Auswertungen und Bereinigungen."
+     ],
+     "teile": [
+      {
+       "nr": "aa",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Abfrage, die für die Kantine mit der KantinenNr 7 je Gericht die Bezeichnung und die Zahl der nicht stornierten Vorbestellungen mit Abholtag im Dezember 2026 liefert. Es sollen nur Gerichte mit mindestens drei solchen Vorbestellungen erscheinen, das Gericht mit den meisten Vorbestellungen zuerst."
+       ],
+       "punkte": 8,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 8
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "SELECT g.Bezeichnung, COUNT(*) AS Anzahl",
+        "FROM Vorbestellung v",
+        "JOIN Gericht g ON v.GerichtNr = g.GerichtNr",
+        "WHERE v.KantinenNr = 7",
+        "  AND v.Status <> 'storniert'",
+        "  AND v.Abholtag BETWEEN '2026-12-01' AND '2026-12-31'",
+        "GROUP BY g.GerichtNr, g.Bezeichnung",
+        "HAVING COUNT(*) >= 3",
+        "ORDER BY Anzahl DESC;",
+        "Gleichwertig: YEAR(v.Abholtag) = 2026 AND MONTH(v.Abholtag) = 12; andere richtige Abfrage mit gleichem Ergebnis: volle Punkte."
+       ],
+       "hinweise": [
+        {
+         "text": "JOIN Vorbestellung und Gericht über GerichtNr",
+         "punkte": 2
+        },
+        {
+         "text": "WHERE Kantine 7, nicht storniert, Dezember 2026",
+         "punkte": 2
+        },
+        {
+         "text": "GROUP BY Gericht mit COUNT",
+         "punkte": 2
+        },
+        {
+         "text": "HAVING COUNT(*) >= 3",
+         "punkte": 1
+        },
+        {
+         "text": "ORDER BY Anzahl DESC",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "ab",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Abfrage, die je Allergen den Code, die Bezeichnung und die Zahl der Gerichte liefert, die dieses Allergen enthalten. Es sollen nur Allergene erscheinen, die in mehr als zwei Gerichten vorkommen."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "SELECT a.Code, a.Bezeichnung, COUNT(*) AS Gerichte",
+        "FROM Allergen a",
+        "JOIN Gericht_Allergen ga ON a.Code = ga.Code",
+        "GROUP BY a.Code, a.Bezeichnung",
+        "HAVING COUNT(*) > 2;"
+       ],
+       "hinweise": [
+        {
+         "text": "JOIN Allergen und Gericht_Allergen über Code",
+         "punkte": 2
+        },
+        {
+         "text": "GROUP BY Code und Bezeichnung mit COUNT",
+         "punkte": 2
+        },
+        {
+         "text": "HAVING COUNT(*) > 2",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Anweisung, die alle stornierten Vorbestellungen der Kantine „Werk Nord“ mit einem Abholtag vor dem 01.11.2026 löscht. Die KantinenNr darf nicht fest eingetragen werden."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "6",
+        "8"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "DELETE FROM Vorbestellung",
+        "WHERE Status = 'storniert'",
+        "  AND Abholtag < '2026-11-01'",
+        "  AND KantinenNr IN (SELECT KantinenNr FROM Kantine WHERE Name = 'Werk Nord');",
+        "Gleichwertig: KantinenNr = (SELECT …)."
+       ],
+       "hinweise": [
+        {
+         "text": "DELETE FROM Vorbestellung mit WHERE",
+         "punkte": 1
+        },
+        {
+         "text": "Status 'storniert' und Abholtag < '2026-11-01'",
+         "punkte": 2
+        },
+        {
+         "text": "Unterabfrage auf Kantine über den Namen",
+         "punkte": 2
+        },
+        {
+         "text": "Bedingungen mit AND verbunden, Anweisung lauffähig",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erstellen",
+       "text": [
+        "Der Grundpreis aller Gerichte, die das Allergen mit der Bezeichnung 'Schalenfrüchte' enthalten, steigt um 0,30 €. Erstellen Sie die SQL-Anweisung dazu, ohne GerichtNr oder Code fest einzutragen."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "UPDATE Gericht",
+        "SET Grundpreis = Grundpreis + 0.30",
+        "WHERE GerichtNr IN (SELECT ga.GerichtNr",
+        "                    FROM Gericht_Allergen ga",
+        "                    JOIN Allergen a ON ga.Code = a.Code",
+        "                    WHERE a.Bezeichnung = 'Schalenfrüchte');"
+       ],
+       "hinweise": [
+        {
+         "text": "UPDATE Gericht SET Grundpreis = Grundpreis + 0.30",
+         "punkte": 2
+        },
+        {
+         "text": "Unterabfrage über Gericht_Allergen",
+         "punkte": 2
+        },
+        {
+         "text": "Verknüpfung mit Allergen über die Bezeichnung",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, wie viele Zeilen die Abfrage aus aa und die Löschanweisung aus b auf den Vorbestellungen der Anlagen 7 und 8 betreffen, und die Anzahl in der ersten Ergebniszeile von aa."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der Zeilen, die die Abfrage aus aa liefert",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Anzahl in der ersten Zeile dieser Abfrage",
+          "art": "zahl",
+          "loesung": [
+           "4"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zahl der Zeilen, die die Anweisung aus b löscht",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "7",
+        "8"
+       ],
+       "loesung": [
+        "Kantine 7, Dezember, nicht storniert: Gericht 12 (1001, 1002, 1005, 1010) = 4, Gericht 11 (1004, 1006, 1009) = 3, Gericht 13 (1008) = 1",
+        "mindestens 3: zwei Zeilen, zuerst Schnitzel mit Kartoffelsalat mit 4",
+        "b löscht 1013 und 1014 (1015 andere Kantine, 1016 nach dem 01.11.2026) = 2 Zeilen"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, warum vor dem Ausführen der Anweisung aus b eine SELECT-Abfrage mit derselben WHERE-Bedingung ausgeführt werden sollte."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Gelöschte Zeilen lassen sich ohne Sicherung nicht zurückholen.",
+        "Das SELECT zeigt vorher genau die Zeilen, die gelöscht würden; so fällt eine falsche Bedingung (z. B. falscher Kantinenname oder falsches Datum) auf, bevor Daten verloren gehen."
+       ],
+       "hinweise": [
+        {
+         "text": "Löschen ist nicht umkehrbar",
+         "punkte": 1
+        },
+        {
+         "text": "SELECT zeigt vorher die betroffenen Zeilen, Fehler in der Bedingung fallen auf",
+         "punkte": 2
         }
        ]
       }

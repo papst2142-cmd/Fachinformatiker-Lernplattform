@@ -35,14 +35,22 @@ public class EchtW1BaukastenTests
         ("ae_b1_10", 1, "b", EchtZeichnung.UseCase),
     ];
 
-    private static EchtBestand App => EchtTestDatei.App();
+    /// <summary>
+    /// Stand dieser Welle: die ersten 62 Saetze der Datei (bis zu den fuenf Fassungen dieser Welle). Seit A 1.12.0 haengen dahinter
+    /// die Struktogramm-Fassungen (Weisung P12-390, eigene Tests in <see cref="EchtStruktogrammTests"/>); so prueft diese Welle
+    /// weiter genau ihren Stand.
+    /// </summary>
+    private static EchtBestand App => Bis(62);
 
     /// <summary>Die Datei ohne die neuen Fassungen (die ersten 57 Saetze): die alten Fassungen, wie sie A 1.7.0 lud.</summary>
-    private static EchtBestand OhneNeueFassungen()
+    private static EchtBestand OhneNeueFassungen() => Bis(57);
+
+    /// <summary>Die Datei mit nur den ersten <paramref name="anzahl"/> Saetzen (sonst unveraendert), geladen wie in der App.</summary>
+    internal static EchtBestand Bis(int anzahl)
     {
         var wurzel = JsonNode.Parse(File.ReadAllBytes(EchtTestDatei.Datei))!.AsObject();
         var liste = wurzel["saetze"]!.AsArray();
-        while (liste.Count > 57)
+        while (liste.Count > anzahl)
         {
             liste.RemoveAt(liste.Count - 1);
         }
@@ -96,10 +104,11 @@ public class EchtW1BaukastenTests
         klasse.Remove("fassung");
         Assert.Empty(EchtSaetze.Laden(Datei(4, klasse, Roh("ae_b2_07", 1))).Fehler);
         // neuere Formatnummer: klarer Fehler der ganzen Datei, nichts geladen
-        var fuenf = EchtSaetze.Laden(Datei(5, Roh("alle_ap1_01", 1)));
-        Assert.Empty(fuenf.Saetze);
-        Assert.Equal("Format 5 ist neuer als dieses Programm (kennt Format 4); bitte das Programm aktualisieren", Assert.Single(fuenf.Fehler).Meldung);
-        Assert.Equal(4, EchtSaetze.Format);
+        // (seit A 1.12.0 kennt das Programm Format 5, Weisung P12-390; die naechste Nummer bleibt ein klarer Fehler)
+        var sechs = EchtSaetze.Laden(Datei(6, Roh("alle_ap1_01", 1)));
+        Assert.Empty(sechs.Saetze);
+        Assert.Equal("Format 6 ist neuer als dieses Programm (kennt Format 5); bitte das Programm aktualisieren", Assert.Single(sechs.Fehler).Meldung);
+        Assert.Equal(5, EchtSaetze.Format);
     }
 
     [Fact]
@@ -148,7 +157,7 @@ public class EchtW1BaukastenTests
     public void FuenfFassungen_NurAngehaengt_AlteBytegleich_Format4()
     {
         var echt = File.ReadAllBytes(EchtTestDatei.Datei);
-        Assert.Equal(4, (int)JsonNode.Parse(echt)!["format"]!);
+        Assert.Equal(EchtSaetze.Format, (int)JsonNode.Parse(echt)!["format"]!);
         var roh = EchtTestDatei.AlsFormat(echt, 3);
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
@@ -157,8 +166,8 @@ public class EchtW1BaukastenTests
         roh[200] ^= 1;
         Assert.NotEqual(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
         var liste = JsonNode.Parse(echt)!["saetze"]!.AsArray();
-        Assert.Equal(62, liste.Count);
-        Assert.Equal(Neu.Select(n => n.Kennung), liste.Skip(57).Select(s => (string?)s!["kennung"]));
+        Assert.Equal(63, liste.Count); // seit A 1.12.0 eine Struktogramm-Fassung dahinter (ae_b2_08, P12-393; EchtStruktogrammTests)
+        Assert.Equal(Neu.Select(n => n.Kennung), liste.Skip(57).Take(5).Select(s => (string?)s!["kennung"]));
         Assert.All(liste.Skip(57), s => Assert.Equal(2, (int)s!["fassung"]!));
         Assert.All(liste.Take(57), s => Assert.Null(s!["fassung"]));
         // der Bestand: 57 Saetze wie vorher, die fuenf an ihrer alten Stelle mit Fassung 2

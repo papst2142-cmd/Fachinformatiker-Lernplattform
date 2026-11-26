@@ -44,6 +44,8 @@ public sealed class EchtFormatTeil
     private readonly DispatcherTimer _speichern = new() { Interval = TimeSpan.FromMilliseconds(1200) };
     private readonly Dictionary<string, TextBox> _felder = new(StringComparer.Ordinal);
     private readonly Dictionary<string, EchtBaukastenTeil> _baukaesten = new(StringComparer.Ordinal);
+    // A 1.12.0 (Weisung P12-390): Struktogramm-Baukaesten im Lauf (gleiche Antwort <aufgabe>.<nr>/bau)
+    private readonly Dictionary<string, EchtStruktogrammTeil> _struktogramme = new(StringComparer.Ordinal);
     private readonly HashSet<string> _bauOffen = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string?> _bauGewaehlt = new(StringComparer.Ordinal);
     private JsonObject? _bauZustand;
@@ -101,6 +103,7 @@ public sealed class EchtFormatTeil
         _speichern.Stop();
         _felder.Clear();
         _baukaesten.Clear();
+        _struktogramme.Clear();
         _uhr = _fortschritt = _summe = null;
         _inhalt = null;
         _reiterPillen = _umschalter = null;
@@ -340,6 +343,7 @@ public sealed class EchtFormatTeil
         _inhalt!.Children.Clear();
         _felder.Clear();
         _baukaesten.Clear();
+        _struktogramme.Clear();
         _zweiSpalten = ZweiSpalten;
         var aufgabeReiter = _reiter is not (Ausgang or Zeit);
         var mitAnlagen = aufgabeReiter && satz.Aufgaben[int.Parse(_reiter, CultureInfo.InvariantCulture) - 1].Teile.Any(t => t.Anlagen.Count > 0);
@@ -609,8 +613,7 @@ public sealed class EchtFormatTeil
         }
         var a = teil.Antwort;
         var schluessel = EchtBewertung.Feld(n, teil.Nr, EchtBaukasten.Feld);
-        var bau = EchtBaukasten.Laden(a.Diagramm, a.Vorgabe, EchtBewertung.Antwort(zustand, schluessel));
-        var teilBau = new EchtBaukastenTeil(bau, sofort =>
+        void Geaendert(bool sofort)
         {
             if (sofort)
             {
@@ -621,9 +624,26 @@ public sealed class EchtFormatTeil
                 _speichern.Stop();
                 _speichern.Start();
             }
-        }, _bauGewaehlt.GetValueOrDefault(schluessel), id => _bauGewaehlt[schluessel] = id);
-        _baukaesten[schluessel] = teilBau;
-        var offen = bau.Eigenes || bau.Unlesbar || _bauOffen.Contains(schluessel);
+        }
+        Control teilBau;
+        bool offen;
+        if (a.Struktogramm is not null)
+        {
+            // A 1.12.0 (Weisung P12-390): Struktogramm-Baukasten
+            var strukto = EchtStruktogramm.Laden(EchtBewertung.Antwort(zustand, schluessel));
+            var st = new EchtStruktogrammTeil(strukto, Geaendert, _bauGewaehlt.GetValueOrDefault(schluessel), id => _bauGewaehlt[schluessel] = id);
+            _struktogramme[schluessel] = st;
+            teilBau = st;
+            offen = strukto.Eigenes || strukto.Unlesbar || _bauOffen.Contains(schluessel);
+        }
+        else
+        {
+            var bau = EchtBaukasten.Laden(a.Diagramm, a.Vorgabe, EchtBewertung.Antwort(zustand, schluessel));
+            var bt = new EchtBaukastenTeil(bau, Geaendert, _bauGewaehlt.GetValueOrDefault(schluessel), id => _bauGewaehlt[schluessel] = id);
+            _baukaesten[schluessel] = bt;
+            teilBau = bt;
+            offen = bau.Eigenes || bau.Unlesbar || _bauOffen.Contains(schluessel);
+        }
         teilBau.IsVisible = offen;
         var knopf = LernTeile.Knopf(offen ? EchtTexte.BaukastenSchliessen : EchtTexte.BaukastenOeffnen);
         Avalonia.Automation.AutomationProperties.SetName(knopf, offen ? EchtTexte.BaukastenSchliessen : EchtTexte.BaukastenOeffnen);
@@ -729,7 +749,8 @@ public sealed class EchtFormatTeil
     private void Festhalten()
     {
         _speichern.Stop();
-        if (_a.Festhalten(_felder.Select(f => (f.Key, f.Value.Text)).Concat(_baukaesten.Select(b => (b.Key, (string?)b.Value.Json)))))
+        if (_a.Festhalten(_felder.Select(f => (f.Key, f.Value.Text)).Concat(_baukaesten.Select(b => (b.Key, (string?)b.Value.Json)))
+            .Concat(_struktogramme.Select(b => (b.Key, (string?)b.Value.Json)))))
         {
             FortschrittZeigen();
         }
@@ -831,6 +852,19 @@ public sealed class EchtFormatTeil
             foreach (var zeile in teil.Loesung)
             {
                 inhalt.Children.Add(new TabellenText(zeile, "Klein", FontWeight.Normal, "Pinsel.text_soft"));
+            }
+            if (teil.Antwort.Struktogramm is { } strukturMuster)
+            {
+                // A 1.12.0 (Weisung P12-390, Auflage F): eigene Zeichnung und Musterbild beschriftet untereinander
+                var eigen = EchtStruktogramm.Laden(EchtBewertung.Antwort(zustand, EchtBewertung.Feld(n, teil.Nr, EchtBaukasten.Feld)));
+                if (eigen.Eigenes)
+                {
+                    inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.EigeneZeichnungTitel), 8));
+                    inhalt.Children.Add(EchtBilder.Struktogramm(eigen.Bloecke, EchtTexte.EigeneZeichnung + ": " + EchtTexte.StruktogrammName, _alsText));
+                    inhalt.Children.Add(Abstand(Zaehlung(EchtStruktogramm.Zaehlen(eigen.Bloecke, strukturMuster)), 8));
+                }
+                inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.Musterbild), 8));
+                inhalt.Children.Add(EchtBilder.Struktogramm(strukturMuster, EchtTexte.Musterbild + ": " + EchtTexte.StruktogrammName, _alsText));
             }
             if (teil.Antwort.Muster is { } muster)
             {
@@ -1073,6 +1107,8 @@ public sealed class EchtFormatTeil
         // A 1.8.0 (Weisung P12-371): Klassen- und Use-Case-Baukasten in AE-Saetzen (Lauf mit gewaehltem Baustein, Bewertung)
         "pruefung/echt-ae-baukasten-klasse", "pruefung/echt-ae-baukasten-usecase", "pruefung/echt-ae-bewertung-klasse",
         "pruefung/echt-ae-bewertung-usecase",
+        // A 1.12.0 (Weisung P12-390): Struktogramm im Baukasten (Lauf mit gewaehlter Verzweigung, alle sieben Bausteine, Bewertung)
+        "pruefung/echt-ae-struktogramm-lauf", "pruefung/echt-ae-struktogramm-alle", "pruefung/echt-ae-struktogramm-bewertung",
     ];
 
     /// <summary>Erste Nummer der Ansichten der Welle 2 in <see cref="ProbeNamen"/>.</summary>
@@ -1095,6 +1131,12 @@ public sealed class EchtFormatTeil
     /// Use-Case im Lauf (ae_b1_06 Aufgabe 4), dann beide bewertet.
     /// </summary>
     internal const int W1Ab = 38;
+
+    /// <summary>
+    /// Erste Nummer der Ansichten der Welle W2 (A 1.12.0) in <see cref="ProbeNamen"/>: Struktogramm ae_b2_08 Aufgabe 2 im Lauf
+    /// (Verzweigung gewaehlt), Probezeichnung mit allen sieben Bausteinen (ae_b2_08 Aufgabe 2), ae_b2_08 bewertet.
+    /// </summary>
+    internal const int W2Ab = 42;
 
     /// <summary>
     /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung SI), 754 s gelaufen,
@@ -1238,6 +1280,9 @@ public sealed class EchtFormatTeil
             case BaukastenAb + 1:
                 UmlBaukastenZeigen();
                 break;
+            case >= W2Ab:
+                W2Zeigen(art - W2Ab);
+                break;
             case >= W1Ab:
                 W1Zeigen(art - W1Ab);
                 break;
@@ -1356,6 +1401,92 @@ public sealed class EchtFormatTeil
         LaufZeigen();
         var b = _baukaesten.Values.FirstOrDefault();
         b?.ProbeWaehlen(b.ProbeBau.Diagramm.Elemente.FirstOrDefault(e => e.Text == (klasse ? "Erinnerung" : "Abokunde"))?.Id);
+    }
+
+    private void W2Zeigen(int nr)
+    {
+        // ae_b2_08 2b: ae_b2_02 ist seit A 0.94.0 ausgeschlossen (ausschluss.json), die Probe zeigt nur angebotene Saetze
+        var alle = nr == 1;
+        var probe = ProbeZustand(bewertet: nr == 2, EchtSaetze.B2, "ae", "ae_b2_08");
+        var satz = _a.Bestand.Satz(Json.Text(probe["satz"]))!;
+        var teil = satz.Aufgaben[1].Teile.First(t => t.Antwort.Struktogramm is not null);
+        var (bau, wahl) = alle ? ProbeStruktogrammAlle() : ProbeStruktogramm();
+        ((JsonObject)probe["antworten"]!)[EchtBewertung.Feld(2, teil.Nr, EchtBaukasten.Feld)] = bau.Json();
+        _a.ProbeSetzen(probe);
+        (_reiter, _anlagen) = ("2", false);
+        if (nr == 2)
+        {
+            BewertungZeigen();
+            return;
+        }
+        LaufZeigen();
+        var b = _struktogramme.Values.FirstOrDefault();
+        b?.ProbeWaehlen(wahl);
+        b?.ProbeZiel(alle ? 0 : 3);
+    }
+
+    /// <summary>Probe: der Struktogramm-Baukasten im Lauf (erste Struktogramm-Aufgabe des Reiters).</summary>
+    internal EchtStruktogrammTeil? ProbeStruktogrammTeil => _struktogramme.Values.FirstOrDefault();
+
+    /// <summary>
+    /// A 1.12.0: Probezeichnung zu ae_b2_08 2b wie im Entwurf P12-250 Bild 01 (dort am Beispiel ae_b2_02): alles bis auf die
+    /// innere Verzweigung im Ja-Zweig (die Bewertung zeigt sie rot). Gewaehlt ist die aeussere Verzweigung; ihr Nein-Zweig ist
+    /// leer (∅) und kuerzer als der Ja-Zweig.
+    /// </summary>
+    /// <summary>Text der gewaehlten Verzweigung in <see cref="ProbeStruktogramm"/> (Start-Test: Text unveraendert, Auflage C).</summary>
+    internal const string ProbeBedingung = "b.getAbholtag() = tag und b.getStatus() ≠ \"storniert\" ?";
+
+    internal static (EchtStruktogramm Bau, string Gewaehlt) ProbeStruktogramm()
+    {
+        var bau = EchtStruktogramm.Neu();
+        string Neu(string typ, string? wo, int ziel, string text)
+        {
+            var p = bau.Einfuegen(typ, wo, ziel)!;
+            bau.Beschriften(p, text);
+            return p;
+        }
+        var start = Neu(EchtStruktogramm.Anweisung, null, 0, "anzahl ← 0; rueckfragen ← 0");
+        var schleife = Neu(EchtStruktogramm.Zaehlschleife, start, 0, "für i von 0 bis länge(bestellungen) − 1");
+        var b = Neu(EchtStruktogramm.Anweisung, schleife, 2, "b ← bestellungen[i]");
+        var wenn = Neu(EchtStruktogramm.Verzweigung, b, 0, ProbeBedingung);
+        var ja = Neu(EchtStruktogramm.Anweisung, wenn, 2, "Ausgabe b.getGericht().getBezeichnung(), b.getGast().getPersonalNr()");
+        Neu(EchtStruktogramm.Anweisung, ja, 0, "anzahl ← anzahl + 1");
+        Neu(EchtStruktogramm.Anweisung, schleife, 0, "Ausgabe anzahl, rueckfragen");
+        return (bau, wenn);
+    }
+
+    /// <summary>
+    /// A 1.12.0 (Auflage G): eigene Probezeichnung mit allen sieben Bausteinen (Fallauswahl mit drei Faellen und sonst, ein
+    /// leerer Zweig, ein kuerzerer Zweig mit Fuellraum). Gewaehlt ist der zweite Fall.
+    /// </summary>
+    internal static (EchtStruktogramm Bau, string Gewaehlt) ProbeStruktogrammAlle()
+    {
+        var bau = EchtStruktogramm.Neu();
+        string Neu(string typ, string? wo, int ziel, string text)
+        {
+            var p = bau.Einfuegen(typ, wo, ziel)!;
+            bau.Beschriften(p, text);
+            return p;
+        }
+        var start = Neu(EchtStruktogramm.Anweisung, null, 0, "summe ← 0; i ← 0");
+        var aufruf = Neu(EchtStruktogramm.Aufruf, start, 0, "ladeBestellungen(tag)");
+        var solange = Neu(EchtStruktogramm.Solange, aufruf, 0, "solange i < länge(bestellungen)");
+        var fall = Neu(EchtStruktogramm.Fallauswahl, solange, 2, "bestellungen[i].getStatus()");
+        bau.Beschriften(fall + ".0", "\"offen\"");
+        bau.Beschriften(fall + ".1", "\"abgeholt\"");
+        var dritter = bau.FallNeu(fall)!;
+        bau.Beschriften(dritter, "\"storniert\"");
+        Neu(EchtStruktogramm.Anweisung, fall, 2, "Ausgabe „offen“");
+        var abgeholt = Neu(EchtStruktogramm.Anweisung, fall, 3, "summe ← summe + 1");
+        Neu(EchtStruktogramm.Anweisung, abgeholt, 0, "Ausgabe „abgeholt“");
+        Neu(EchtStruktogramm.Anweisung, fall, 5, "Ausgabe „unbekannt“");
+        Neu(EchtStruktogramm.Anweisung, fall, 0, "i ← i + 1");
+        var zaehl = Neu(EchtStruktogramm.Zaehlschleife, solange, 0, "für k von 1 bis 3");
+        var wiederhole = Neu(EchtStruktogramm.Wiederhole, zaehl, 2, "solange antwort = \"nein\"");
+        Neu(EchtStruktogramm.Anweisung, wiederhole, 2, "antwort ← frage(k)");
+        var wenn = Neu(EchtStruktogramm.Verzweigung, zaehl, 0, "summe > 0");
+        Neu(EchtStruktogramm.Aufruf, wenn, 2, "druckeListe()");
+        return (bau, fall + ".1");
     }
 
     /// <summary>
