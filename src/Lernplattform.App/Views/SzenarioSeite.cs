@@ -164,6 +164,21 @@ public sealed class SzenarioSeite : UserControl
         }
     });
 
+    /// <summary>
+    /// Welle A 1.15.0 („Üben“ eines Pruefungsteils): nur die Szenarien dieses Teils zeigen (gespeicherte Position Nummer - 1,
+    /// wie <see cref="Oeffnen"/>) und das erste davon laden; „Alle zeigen“ hebt die Einschraenkung auf.
+    /// </summary>
+    public void NurTeil(IReadOnlyList<Lerninhalt> eintraege, string name) => Mit(() =>
+    {
+        var positionen = eintraege.Select(e => _a!.Position((int)(e.Nummer - 1))).Where(p => p >= 0).Distinct().Order().ToList();
+        if (positionen.Count == 0)
+        {
+            return;
+        }
+        _liste.Nur(positionen, name);
+        Laden(positionen[0]);
+    });
+
     /// <summary>Suchtreffer: das erste Szenario mit gleichem Titel (open_search_hit).</summary>
     public void Springen(string titel) => Mit(() =>
     {

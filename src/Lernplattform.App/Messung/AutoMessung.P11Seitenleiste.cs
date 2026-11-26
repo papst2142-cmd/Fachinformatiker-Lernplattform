@@ -1,20 +1,19 @@
 using Avalonia.Controls;
 using Lernplattform.Core.Texte;
+using Lernplattform.Programm;
 using Lernplattform.Views;
 
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// Welle A 0.38.0 (Sammelliste 207, Weisung P11-37, Antworten 1a bis 5a): Seitenleiste wie die untere Leiste am
-/// Handy und zuklappbare Gruppen der Optionen, bedient wie mit der Maus. Prueft: beim Programmstart alles zu;
-/// Klick auf Lernen klappt auf und zeigt die Uebersicht; Karteikarten klappt innerhalb von Lernen; erneuter Klick
-/// klappt zu; nur eine Gruppe offen; Seite ohne Gruppe klappt alles zu; Sprung (Suche, Kachel) oeffnet die Gruppe;
-/// Optionen: beim Oeffnen alle Gruppen zu, Kopf nennt die Karten, Sprung oeffnet die Gruppe, nur eine offen.
-/// Die Regeln selbst prueft SeitenleisteTests (mit Gegenproben). Speichert nichts.
+/// Welle A 1.15.0 (Weisungen P12-406/P12-407, Variante B; ersetzt die Gruppen von A 0.38.0): Seitenleiste wie das Entwurfsbild,
+/// bedient wie mit der Maus. Prueft: Zeilen genau wie <see cref="Pruefungsteile.Seitenleiste"/> der gewaehlten Fachrichtung;
+/// jeder Klick zeigt seine Seite und markiert genau diesen Eintrag; jeder Eintrag rollt mit dem Fokus (Tab) ganz ins Bild.
+/// Dazu wie bisher die zuklappbaren Gruppen der Optionen (Weisung P11-37). Speichert nichts.
 /// </summary>
 public static partial class AutoMessung
 {
-    private static async Task<int> P11SeitenleisteAsync(MainView ansicht, IReadOnlyList<string> beimStart)
+    private static async Task<int> P11SeitenleisteAsync(MainView ansicht)
     {
         var funde = 0;
         void Fehler(string text)
@@ -23,72 +22,41 @@ public static partial class AutoMessung
             funde++;
         }
         var leisten = ansicht.Leisten;
-        void Erwarte(string schritt, string[] offen)
-        {
-            var ist = leisten.OffeneGruppen;
-            Messwerte.Notiere("Seitenleiste " + schritt + ": offen [" + string.Join(", ", ist) + "]");
-            if (!ist.SequenceEqual(offen))
-            {
-                Fehler("Seitenleiste " + schritt + ": offen [" + string.Join(", ", ist) + "], erwartet [" + string.Join(", ", offen) + "]");
-            }
-            foreach (var gruppe in (string[])["learn", "cards", "game"])
-            {
-                if (leisten.Offen(gruppe) != ist.Contains(gruppe))
-                {
-                    Fehler("Seitenleiste " + schritt + ": Anzeige von " + gruppe + " passt nicht zum Zustand");
-                }
-            }
-        }
         async Task Klick(string id)
         {
             leisten.KlickFuerTests(id);
             await ansicht.BildFertigAsync();
         }
-        if (beimStart.Count > 0)
+        var soll = Pruefungsteile.Seitenleiste(Core.Pruefung.Fachrichtung.Nach(Zustand.Sicht));
+        var ist = leisten.ZeilenFuerTests;
+        if (!ist.SequenceEqual(soll))
         {
-            Fehler("Seitenleiste beim Programmstart nicht alles zu: " + string.Join(", ", beimStart));
+            Fehler("Seitenleiste: Zeilen [" + string.Join(" | ", ist.Select(z => z.Titel)) + "] statt [" + string.Join(" | ", soll.Select(z => z.Titel)) + "]");
         }
-        if (leisten.Titel("dashboard") != "Start" || leisten.Titel(Navigation.LernenId) != "Lernen")
+        Messwerte.Notiere("Seitenleiste " + Zustand.Sicht + ": " + string.Join(" | ", ist.Select(z => z.Art + ":" + z.Titel)));
+        foreach (var zeile in soll.Concat(Pruefungsteile.SeitenleisteUnten).Where(z => z.Id is not null))
         {
-            Fehler("Seitenleiste: erster Eintrag nicht \"Start\" oder Gruppe nicht \"Lernen\"");
+            await Klick(zeile.Id!);
+            if (ansicht.AktuelleSeite != zeile.Id)
+            {
+                Fehler("Seitenleiste: Klick auf " + zeile.Titel + " zeigt " + ansicht.AktuelleSeite);
+            }
+            var markiert = leisten.MarkiertFuerTests()["Knopf"];
+            if (!markiert.SequenceEqual([zeile.Id!]))
+            {
+                Fehler("Seitenleiste: nach Klick auf " + zeile.Titel + " markiert [" + string.Join(", ", markiert) + "]");
+            }
         }
-        await ansicht.ZeigeAsync(Seiten.Rechner);
-        await ansicht.ZeigeAsync(Seiten.Dashboard);
-        Erwarte("Start", []);
-        await Klick(Navigation.LernenId);
-        Erwarte("Klick Lernen", ["learn"]);
-        if (ansicht.AktuelleSeite != Seiten.Lernen)
+        // Hinweis Chat (Weisung P11-37): jeder Eintrag rollt mit dem Fokus (Tab) ganz ins Bild
+        foreach (var zeile in soll.Where(z => z.Id is not null))
         {
-            Fehler("Seitenleiste: Klick auf Lernen zeigt nicht die Lernen-Uebersicht, sondern " + ansicht.AktuelleSeite);
-        }
-        await Klick("cards");
-        Erwarte("Klick Karteikarten", ["cards", "learn"]);
-        // Hinweis Chat (Weisung P11-37): jeder Eintrag der offenen Gruppen rollt mit dem Fokus (Tab) ganz ins Bild
-        // (Avalonia rollt den Fokus selbst ins Bild; hier wird das fuer die Seitenleiste festgehalten)
-        foreach (var id in Navigation.PcLernen.Concat(Core.Inhalte.Fachbereiche.Alle).Concat(["calc", "game", "progress", "settings", "dashboard"]))
-        {
-            if (await leisten.FokusSichtbarFuerTestsAsync(id) is { } lage && (lage.Oben < -0.5 || lage.Unten > lage.Sichtbar + 0.5))
+            if (await leisten.FokusSichtbarFuerTestsAsync(zeile.Id!) is { } lage && (lage.Oben < -0.5 || lage.Unten > lage.Sichtbar + 0.5))
             {
                 Fehler(string.Create(System.Globalization.CultureInfo.InvariantCulture,
-                    $"Seitenleiste: {leisten.Titel(id)} mit Fokus nicht ganz sichtbar (oben {lage.Oben:F1}, unten {lage.Unten:F1}, sichtbar {lage.Sichtbar:F1})"));
+                    $"Seitenleiste: {zeile.Titel} mit Fokus nicht ganz sichtbar (oben {lage.Oben:F1}, unten {lage.Unten:F1}, sichtbar {lage.Sichtbar:F1})"));
             }
         }
         ansicht.Focus();
-        await Klick("quiz");
-        Erwarte("Klick Pruefungstrainer", ["cards", "learn"]);
-        await Klick(Navigation.LernenId);
-        Erwarte("Klick Lernen (offen)", []);
-        await Klick(Navigation.LernenId);
-        Erwarte("Klick Lernen (zu)", ["learn"]);
-        leisten.Umschalten("game");
-        await ansicht.BildFertigAsync();
-        Erwarte("Spiel aufklappen", ["game"]);
-        await Klick(Seiten.Rechner);
-        Erwarte("Klick Rechner", []);
-        await ansicht.ZeigeAsync(Seiten.Notizblock);
-        Erwarte("Sprung Notizblock", ["learn"]);
-        await ansicht.ZeigeAsync(Seiten.Fortschritt);
-        Erwarte("Sprung Fortschritt", []);
         await ansicht.ZeigeAsync(Seiten.Dashboard);
 
         // Optionen: beim Oeffnen alle Gruppen zu, Kopf mit Kartennamen, Sprung oeffnet die Gruppe, nur eine offen

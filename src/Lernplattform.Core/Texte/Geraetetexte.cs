@@ -19,12 +19,12 @@ public static class Geraetetexte
     // B6/B7 und N5 sind nur Abstand, Umbruch und Umbruchschutz: der Vergleich vereinheitlicht sie.
     public static readonly IReadOnlyList<GeraeteAusnahme> Ausnahmen =
     [
-        new("B1", "Navigation", "Daten wie Python (G9): Menuepunkt 1 \"Dashboard\" (NAV_ITEMS) / \"Start\" (NAV), Nico 20.10.; angezeigt wird seit A 0.38.0 auch in der Seitenleiste \"Start\" (Navigation.PcLeiste, Weisung P11-36)"),
+        new("B1", "Navigation", "Daten wie Python (G9): Menuepunkt 1 \"Dashboard\" (NAV_ITEMS) / \"Start\" (NAV), Nico 20.10.; angezeigt wird seit A 0.38.0 auch in der Seitenleiste \"Start\" (seit A 1.15.0 Pruefungsteile.Seitenleiste, Weisung P11-36)"),
         new("B3", "Tagesziel.Hinweis", "Erinnerung verhaelt sich verschieden (PC: Hinweis, solange das Programm geoeffnet ist; Handy: beim Oeffnen und Zurueckholen der App; gebaut seit A 0.32.0)"),
         new("B4", "Optionen.Bereiche", "\"Datenbank\" gibt es nur am PC"),
         new("B4", "Optionen.Abschnitte", "\"Hänger\" gibt es nur am PC (N3)"),
         new("B4", "Optionen.Suchwoerter", "Suchwoerter von \"Hänger\" nur am PC (N3)"),
-        new("B5", "Navigation", "Daten wie Python (G9): Seitenleiste wie NAV_ITEMS / untere Leiste mit 6 Punkten und Sammelseite \"Lernen\"; angezeigt wird seit A 0.38.0 am PC eine Seitenleiste mit denselben 6 Punkten plus Hilfe, Lernen und Spiel als klappbare Gruppen (Navigation.PcLeiste, PcLernen, PcLeisteUnten; Sammelliste 207/208)"),
+        new("B5", "Navigation", "Daten wie Python (G9): Seitenleiste wie NAV_ITEMS / untere Leiste mit 6 Punkten und Sammelseite \"Lernen\"; angezeigt wird seit A 1.15.0 am PC die Seitenleiste nach Pruefungsteilen wie das Deckblatt (Pruefungsteile.Seitenleiste, Gruppen ABSCHLUSSPRUEFUNG, LERNEN, SONSTIGES), am Handy die untere Leiste Start, Teil 1, Teil 2, Lernen, Spiel, Mehr (Weisungen P12-406/P12-407, Sollwert-Aenderung Nr. 26)"),
         new("B5", "Kopfzeilen", "Brotkrumen wie Python (VIEW_TITLES / crumbs): \"LERNEN > ÜBERSICHT\" nur in der Liste des Handys (der breite Aufbau nimmt sie seit A 0.38.0 von dort), Spiel-Seiten nur in der Liste des PCs (N7)"),
         new("B8", "Dashboard.Ring", "gleiches Wort; nur bei kaputten Daten (ueber 100 %) zeigt der PC die gekappte Zahl wie Python"),
         new("B9", "Diagnose.Knoepfe", "\"Ordner öffnen\" gibt es nur am PC"),

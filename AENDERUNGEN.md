@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 1.15.0
+Die Lernplattform ist jetzt so aufgebaut wie deine Abschlussprüfung: Teil 1, Teil 2 mit seinen Prüfungsbereichen und das Abschlussprojekt.
+
+- Die Seitenleiste am PC zeigt oben „ABSCHLUSSPRÜFUNG“ mit dem Kürzel deiner Fachrichtung. Darunter stehen Teil 1 und Teil 2 und die Bereiche von Teil 2 mit denselben Namen wie auf dem Deckblatt der echten Prüfung, dazu das Abschlussprojekt. Unter „LERNEN“ findest du Karteikarten, Notizblock und Rechner, unter „SONSTIGES“ das Spiel und deinen Fortschritt. Hilfe, Optionen und „Programm beenden“ stehen unten.
+- Am Handy hat die untere Leiste jetzt die Knöpfe Start, Teil 1, Teil 2, Lernen, Spiel und Mehr. Unter „Mehr“ findest du Fortschritt, Optionen, Hilfe und die ganze Liste der AP2-Szenarien.
+- Jeder Teil und jeder Bereich hat zwei Reiter. Unter „Üben“ übst du die Prüfungsfragen und Szenarien, die zu diesem Teil gehören, und siehst deinen Stand. Einzelne Aufgaben aus den Prüfungssätzen kannst du mit Musterlösung ansehen. Unter „Prüfen“ startest du die Probeklausur dieses Teils oder einen Satz im echten Format.
+- Teil 2 zeigt seine Bereiche als Karten mit Gewicht, jeweils mit „Üben“ und „Prüfen“. Die Karte des Projekts führt zu den Testprojekten und zu deinem eigenen Projekt.
+- Die Startseite zeigt statt der vier Ringe das Feld „Deine Abschlussprüfung“ mit Teil 1 und Teil 2. Ein Tipp auf „Öffnen“ bringt dich direkt hin.
+- Jede Seite, die es bisher gab, erreichst du mit höchstens zwei Klicks.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.14.0
 Die Fachrichtungen heißen jetzt mit denselben Kürzeln wie bei der IHK: FISI, FIAE, FIDP und FIDV.
 

@@ -92,11 +92,6 @@ public static partial class AutoMessung
         fenster.Height = Math.Min(LeisteFensterHoehe, hoechstH);
         await ansicht.ZeigeAsync(Seiten.Dashboard);
         var leisten = ansicht.Leisten;
-        var zu = ((string[])["cards", "game"]).Where(id => !leisten.Offen(id)).ToList();
-        foreach (var id in zu)
-        {
-            leisten.Umschalten(id);
-        }
         await ansicht.BildFertigAsync();
         await ansicht.BildFertigAsync();
         var senkrecht = Leisten(leisten.Seitenleiste, Avalonia.Layout.Orientation.Vertical);
@@ -106,10 +101,6 @@ public static partial class AutoMessung
             funde.Add("Scrollleiste: Seitenleiste ohne sichtbare Leiste");
         }
         funde.AddRange(Layoutpruefung.Pruefe(ansicht).Select(f => "seitenleiste/leiste: " + f));
-        foreach (var id in zu)
-        {
-            leisten.Umschalten(id);
-        }
 
         // 2. waagerechte Leiste: Rechner-Ansichten (Ergebniskasten mit langen IPv6-Zeilen) in der schmalen Groesse
         string? gefunden = null;

@@ -244,7 +244,17 @@ public sealed class EchtFormatTeil
         return Schrift.KopfKarte(EchtTexte.Ergebnisse, Beschriftungen.Einsetzen(PruefungTexte.Insgesamt, eigene.Count), inhalt);
     }
 
-    private async Task StartenAsync(IReadOnlyList<EchtSatz> saetze, string art, Pruefungsbereich bereich)
+    /// <summary>
+    /// Welle A 1.15.0 (Entwurf Variante B, Reiter „Prüfen“): Satz eines Teils starten, <paramref name="satz"/> = null der naechste
+    /// wie „Starten“ hier, sonst der gewaehlte („Satz wählen“). Gleiche Rueckfrage und gleicher Ablauf wie bisher.
+    /// </summary>
+    internal Task SatzStartenAsync(Fachrichtung fachrichtung, string rolle, EchtSatz? satz)
+    {
+        var saetze = (_probeBestand ?? Zustand.EchtBestand).Fuer(rolle, fachrichtung.Id);
+        return saetze.Count == 0 ? Task.CompletedTask : StartenAsync(saetze, EchtArten.Art(fachrichtung, rolle), fachrichtung.Bereich(rolle), satz);
+    }
+
+    private async Task StartenAsync(IReadOnlyList<EchtSatz> saetze, string art, Pruefungsbereich bereich, EchtSatz? gewaehlt = null)
     {
         if (_andereLaeuft())
         {
@@ -256,7 +266,7 @@ public sealed class EchtFormatTeil
             Zeigen();
             return;
         }
-        var satz = EchtAblauf.NaechsterSatz(saetze, art, Gesamtstand.Verlauf(Zustand.Lernstand))!;
+        var satz = gewaehlt ?? EchtAblauf.NaechsterSatz(saetze, art, Gesamtstand.Verlauf(Zustand.Lernstand))!;
         var frage = Beschriftungen.Einsetzen(EchtTexte.StartFrage, bereich.Name, satz.Firma, satz.Minuten);
         if (await Dialog.Zeigen(PruefungTexte.StartTitel, frage, TrainerTexte.Ja, TrainerTexte.Nein) != 0 || _andereLaeuft())
         {
@@ -434,6 +444,55 @@ public sealed class EchtFormatTeil
             }
         }
         FortschrittZeigen();
+    }
+
+    /// <summary>
+    /// Welle A 1.15.0 (Entwurf Variante B, „Einzelne Aufgabe im echten Format“): Aufgabe n eines Satzes zum Lesen, ohne Uhr
+    /// und ohne Note: Ausgangssituation, die Aufgabe mit ihren Teilen, mit <paramref name="loesung"/> unter jedem Teil die
+    /// Musterloesung (Text und Musterbild), danach die Anlagen der Aufgabe. Nichts wird gespeichert.
+    /// </summary>
+    internal static IEnumerable<Control> Einzelaufgabe(EchtSatz satz, int n, bool loesung)
+    {
+        var ausgang = new StackPanel { Spacing = 8 };
+        foreach (var zeile in satz.Ausgangssituation)
+        {
+            ausgang.Children.Add(new LernText(zeile, "Normal", FontWeight.Normal, "Pinsel.text_soft"));
+        }
+        yield return Schrift.KopfKarte(EchtTexte.Ausgangssituation, satz.Firma, ausgang);
+        var aufgabe = satz.Aufgaben[n - 1];
+        var inhalt = new StackPanel { Spacing = 6 };
+        foreach (var zeile in aufgabe.Einleitung)
+        {
+            inhalt.Children.Add(new TabellenText(zeile, "Normal", FontWeight.Normal, "Pinsel.text_soft"));
+        }
+        foreach (var teil in aufgabe.Teile)
+        {
+            inhalt.Children.Add(Abstand(Teilkopf(teil), 14));
+            if (!loesung)
+            {
+                continue;
+            }
+            inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.Loesung), 8));
+            foreach (var zeile in teil.Loesung)
+            {
+                inhalt.Children.Add(new TabellenText(zeile, "Klein", FontWeight.Normal, "Pinsel.text_soft"));
+            }
+            if (teil.Antwort.Struktogramm is { } struktur)
+            {
+                inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.Musterbild), 8));
+                inhalt.Children.Add(EchtBilder.Struktogramm(struktur, EchtTexte.Musterbild + ": " + EchtTexte.StruktogrammName));
+            }
+            if (teil.Antwort.Muster is { } muster)
+            {
+                inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.Musterbild), 8));
+                inhalt.Children.Add(EchtBilder.Diagramm(muster, EchtTexte.Musterbild + ": " + EchtZeichnung.Name(muster.Art)));
+            }
+        }
+        yield return Schrift.KopfKarte(Beschriftungen.Einsetzen(EchtTexte.AufgabeTitel, n, aufgabe.Titel), EchtTexte.PunkteText(aufgabe.Punkte), inhalt);
+        foreach (var anlage in AnlagenVon(satz, aufgabe))
+        {
+            yield return AnlageKarte(anlage, false);
+        }
     }
 
     /// <summary>Anlagen, auf die die Aufgabe verweist (alle, wenn sie auf keine verweist); Rechnung in <see cref="EchtAnlagenAnzeige.Von"/>.</summary>

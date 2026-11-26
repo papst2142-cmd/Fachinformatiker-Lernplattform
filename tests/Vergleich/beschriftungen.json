@@ -164,6 +164,333 @@
    "Version %s",
    "MENÜ",
    "LERNSTATUS"
+  ],
+  "zeilen": {
+   "si": [
+    [
+     "eintrag",
+     "dashboard",
+     "Start"
+    ],
+    [
+     "gruppe",
+     null,
+     "ABSCHLUSSPRÜFUNG FISI"
+    ],
+    [
+     "eintrag",
+     "teil1",
+     "Teil 1 · AP1"
+    ],
+    [
+     "eintrag",
+     "teil2",
+     "Teil 2 · AP2"
+    ],
+    [
+     "unter",
+     "b1",
+     "Konzeption und Administration"
+    ],
+    [
+     "unter",
+     "b2",
+     "Analyse und Entwicklung von Netzwerken"
+    ],
+    [
+     "unter",
+     "wiso",
+     "Wirtschafts- und Sozialkunde"
+    ],
+    [
+     "unter",
+     "abschluss",
+     "Abschlussprojekt"
+    ],
+    [
+     "gruppe",
+     null,
+     "LERNEN"
+    ],
+    [
+     "unter",
+     "cards",
+     "Karteikarten"
+    ],
+    [
+     "unter",
+     "notebook",
+     "Notizblock"
+    ],
+    [
+     "unter",
+     "calc",
+     "Rechner"
+    ],
+    [
+     "gruppe",
+     null,
+     "SONSTIGES"
+    ],
+    [
+     "eintrag",
+     "game",
+     "Spiel"
+    ],
+    [
+     "eintrag",
+     "progress",
+     "Fortschritt"
+    ]
+   ],
+   "ae": [
+    [
+     "eintrag",
+     "dashboard",
+     "Start"
+    ],
+    [
+     "gruppe",
+     null,
+     "ABSCHLUSSPRÜFUNG FIAE"
+    ],
+    [
+     "eintrag",
+     "teil1",
+     "Teil 1 · AP1"
+    ],
+    [
+     "eintrag",
+     "teil2",
+     "Teil 2 · AP2"
+    ],
+    [
+     "unter",
+     "b1",
+     "Planen eines Softwareproduktes"
+    ],
+    [
+     "unter",
+     "b2",
+     "Entwicklung und Umsetzung von Algorithmen"
+    ],
+    [
+     "unter",
+     "wiso",
+     "Wirtschafts- und Sozialkunde"
+    ],
+    [
+     "unter",
+     "abschluss",
+     "Abschlussprojekt"
+    ],
+    [
+     "gruppe",
+     null,
+     "LERNEN"
+    ],
+    [
+     "unter",
+     "cards",
+     "Karteikarten"
+    ],
+    [
+     "unter",
+     "notebook",
+     "Notizblock"
+    ],
+    [
+     "unter",
+     "calc",
+     "Rechner"
+    ],
+    [
+     "gruppe",
+     null,
+     "SONSTIGES"
+    ],
+    [
+     "eintrag",
+     "game",
+     "Spiel"
+    ],
+    [
+     "eintrag",
+     "progress",
+     "Fortschritt"
+    ]
+   ],
+   "dpa": [
+    [
+     "eintrag",
+     "dashboard",
+     "Start"
+    ],
+    [
+     "gruppe",
+     null,
+     "ABSCHLUSSPRÜFUNG FIDP"
+    ],
+    [
+     "eintrag",
+     "teil1",
+     "Teil 1 · AP1"
+    ],
+    [
+     "eintrag",
+     "teil2",
+     "Teil 2 · AP2"
+    ],
+    [
+     "unter",
+     "b1",
+     "Durchführen einer Prozessanalyse"
+    ],
+    [
+     "unter",
+     "b2",
+     "Sicherstellen der Datenqualität"
+    ],
+    [
+     "unter",
+     "wiso",
+     "Wirtschafts- und Sozialkunde"
+    ],
+    [
+     "unter",
+     "abschluss",
+     "Abschlussprojekt"
+    ],
+    [
+     "gruppe",
+     null,
+     "LERNEN"
+    ],
+    [
+     "unter",
+     "cards",
+     "Karteikarten"
+    ],
+    [
+     "unter",
+     "notebook",
+     "Notizblock"
+    ],
+    [
+     "unter",
+     "calc",
+     "Rechner"
+    ],
+    [
+     "gruppe",
+     null,
+     "SONSTIGES"
+    ],
+    [
+     "eintrag",
+     "game",
+     "Spiel"
+    ],
+    [
+     "eintrag",
+     "progress",
+     "Fortschritt"
+    ]
+   ],
+   "dv": [
+    [
+     "eintrag",
+     "dashboard",
+     "Start"
+    ],
+    [
+     "gruppe",
+     null,
+     "ABSCHLUSSPRÜFUNG FIDV"
+    ],
+    [
+     "eintrag",
+     "teil1",
+     "Teil 1 · AP1"
+    ],
+    [
+     "eintrag",
+     "teil2",
+     "Teil 2 · AP2"
+    ],
+    [
+     "unter",
+     "b1",
+     "Diagnose und Störungsbeseitigung in vernetzten Systemen"
+    ],
+    [
+     "unter",
+     "b2",
+     "Betrieb und Erweiterung von vernetzten Systemen"
+    ],
+    [
+     "unter",
+     "wiso",
+     "Wirtschafts- und Sozialkunde"
+    ],
+    [
+     "unter",
+     "abschluss",
+     "Abschlussprojekt"
+    ],
+    [
+     "gruppe",
+     null,
+     "LERNEN"
+    ],
+    [
+     "unter",
+     "cards",
+     "Karteikarten"
+    ],
+    [
+     "unter",
+     "notebook",
+     "Notizblock"
+    ],
+    [
+     "unter",
+     "calc",
+     "Rechner"
+    ],
+    [
+     "gruppe",
+     null,
+     "SONSTIGES"
+    ],
+    [
+     "eintrag",
+     "game",
+     "Spiel"
+    ],
+    [
+     "eintrag",
+     "progress",
+     "Fortschritt"
+    ]
+   ]
+  },
+  "unten": [
+   [
+    "eintrag",
+    "help",
+    "Hilfe"
+   ],
+   [
+    "eintrag",
+    "settings",
+    "Optionen"
+   ]
+  ],
+  "gruppen": [
+   "ABSCHLUSSPRÜFUNG %s",
+   "LERNEN",
+   "SONSTIGES"
   ]
  },
  "kopfleiste_pc": {
@@ -284,16 +611,22 @@
    "titel": "Start"
   },
   {
-   "id": "learn",
-   "symbol": "SCHOOL_OUTLINED",
-   "symbol_aktiv": "SCHOOL_ROUNDED",
-   "titel": "Lernen"
+   "id": "teil1",
+   "symbol": "ZIFFER_1",
+   "symbol_aktiv": "ZIFFER_1",
+   "titel": "Teil 1"
   },
   {
-   "id": "calc",
-   "symbol": "CALCULATE_OUTLINED",
-   "symbol_aktiv": "CALCULATE_ROUNDED",
-   "titel": "Rechner"
+   "id": "teil2",
+   "symbol": "ZIFFER_2",
+   "symbol_aktiv": "ZIFFER_2",
+   "titel": "Teil 2"
+  },
+  {
+   "id": "learn",
+   "symbol": "EDIT_NOTE_ROUNDED",
+   "symbol_aktiv": "EDIT_NOTE_ROUNDED",
+   "titel": "Lernen"
   },
   {
    "id": "game",
@@ -302,16 +635,10 @@
    "titel": "Spiel"
   },
   {
-   "id": "progress",
-   "symbol": "INSIGHTS_OUTLINED",
-   "symbol_aktiv": "INSIGHTS_ROUNDED",
-   "titel": "Fortschritt"
-  },
-  {
-   "id": "settings",
-   "symbol": "SETTINGS_OUTLINED",
-   "symbol_aktiv": "SETTINGS_ROUNDED",
-   "titel": "Optionen"
+   "id": "mehr",
+   "symbol": "MEHR",
+   "symbol_aktiv": "MEHR",
+   "titel": "Mehr"
   }
  ],
  "kopfleiste_handy": {
@@ -416,59 +743,6 @@
     ]
    },
    {
-    "id": "quiz",
-    "symbol": "TRACK_CHANGES_ROUNDED",
-    "titel": "Prüfungstrainer",
-    "muster": "%s Aufgaben, mit %s",
-    "text": "2.174 Aufgaben, mit Note (Orientierung)",
-    "farben": [
-     "primary"
-    ]
-   },
-   {
-    "id": "ap1scenarios",
-    "symbol": "LAYERS_ROUNDED",
-    "titel": "AP1-Szenarien",
-    "muster": "%d Aufgaben der Grundlagenprüfung",
-    "text": "265 Aufgaben der Grundlagenprüfung",
-    "farben": [
-     "#2563EB",
-     "#22D3EE"
-    ]
-   },
-   {
-    "id": "scenarios",
-    "symbol": "DIAMOND_ROUNDED",
-    "titel": "AP2-Szenarien",
-    "muster": "%d Aufgaben der Abschlussprüfung",
-    "text": "330 Aufgaben der Abschlussprüfung",
-    "farben": [
-     "#DB2777",
-     "#FB923C"
-    ]
-   },
-   {
-    "id": "testproject",
-    "symbol": "FLAG_ROUNDED",
-    "titel": "Testprojekt",
-    "muster": "%d Kundenaufträge zum Üben",
-    "text": "50 Kundenaufträge zum Üben",
-    "farben": [
-     "success"
-    ]
-   },
-   {
-    "id": "abschluss",
-    "symbol": "WORKSPACE_PREMIUM_ROUNDED",
-    "titel": "Abschlussprojekt",
-    "muster": "Dein IHK-Projekt vom Antrag bis zum Fachgespräch",
-    "text": "Dein IHK-Projekt vom Antrag bis zum Fachgespräch",
-    "farben": [
-     "#7C3AED",
-     "#22D3EE"
-    ]
-   },
-   {
     "id": "notebook",
     "symbol": "EDIT_NOTE_ROUNDED",
     "titel": "Notizblock",
@@ -477,6 +751,17 @@
     "farben": [
      "#DC2626",
      "#FBBF24"
+    ]
+   },
+   {
+    "id": "calc",
+    "symbol": "CALCULATE_ROUNDED",
+    "titel": "Rechner",
+    "muster": "Subnetting, Datenmengen, RAID und mehr, mit Trainer",
+    "text": "Subnetting, Datenmengen, RAID und mehr, mit Trainer",
+    "farben": [
+     "#2563EB",
+     "#22D3EE"
     ]
    }
   ],
@@ -488,6 +773,52 @@
    "ap1": 265,
    "ap2": 330,
    "testprojekte": 50
+  },
+  "mehr": {
+   "kopf": [
+    "MEHR",
+    "ÜBERSICHT"
+   ],
+   "eintraege": [
+    {
+     "id": "progress",
+     "symbol": "INSIGHTS_ROUNDED",
+     "titel": "Fortschritt",
+     "muster": "Rahmenplan, Prüfungen und Lerntage",
+     "farben": [
+      "#7C3AED",
+      "#22D3EE"
+     ]
+    },
+    {
+     "id": "settings",
+     "symbol": "SETTINGS_ROUNDED",
+     "titel": "Optionen",
+     "muster": "Aussehen, Fachrichtung, Sicherung und Updates",
+     "farben": [
+      "primary"
+     ]
+    },
+    {
+     "id": "help",
+     "symbol": "HELP_OUTLINE_ROUNDED",
+     "titel": "Hilfe",
+     "muster": "Erklärungen und Rundgang",
+     "farben": [
+      "success"
+     ]
+    },
+    {
+     "id": "scenarios",
+     "symbol": "DIAMOND_ROUNDED",
+     "titel": "AP2-Szenarien",
+     "muster": "%d Aufgaben aus allen Bereichen von Teil 2",
+     "farben": [
+      "#DB2777",
+      "#FB923C"
+     ]
+    }
+   ]
   }
  },
  "optionen": {

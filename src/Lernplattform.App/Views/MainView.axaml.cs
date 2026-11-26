@@ -428,7 +428,7 @@ public partial class MainView : UserControl
         foreach (var (id, seite) in _seiten.ToList())
         {
             if (seite is not (KarteikartenSeite or TrainerSeite or FortschrittSeite or SucheSeite
-                or SzenarioSeite or NotizblockSeite or DashboardSeite) && id != Seiten.Lernen)
+                or SzenarioSeite or NotizblockSeite or DashboardSeite or PruefungsteilSeite) && id != Seiten.Lernen)
             {
                 // Seiten mit Eingaben bleiben stehen und frischen nur ihre Sicht auf
                 (seite as OptionenSeite)?.SichtNeu();
@@ -449,12 +449,14 @@ public partial class MainView : UserControl
             }
             _seiten.Remove(id);
         }
+        // A 1.15.0: Seitenleiste mit den Namen der Teile der neuen Fachrichtung, Zahlen der Pruefungsteile neu
+        PruefungsteilDaten.Vergessen();
+        _leisten.ZeilenBauen(Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht));
         // die gezeigte Seite gleich mit der neuen Sicht bauen
         if (!_seiten.ContainsKey(AktuelleSeite))
         {
             Zeige(AktuelleSeite);
         }
-        _leisten.LernstatusLesen();
         NachladeanzeigeSetzen();
     }
 
@@ -642,7 +644,9 @@ public partial class MainView : UserControl
     private void Brotkrumen(string id)
     {
         var breit = _breit ?? true;
-        var titel = Core.Texte.Geraetetexte.Kopfzeilen(breit).FirstOrDefault(k => k.Id == id)
+        // A 1.15.0: neue Seiten der Pruefungsteile (die bisherigen behalten ihre Kopfzeile, G9)
+        var titel = Core.Texte.Pruefungsteile.Kopf(id, Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht), breit)
+            ?? Core.Texte.Geraetetexte.Kopfzeilen(breit).FirstOrDefault(k => k.Id == id)
             ?? Core.Texte.Geraetetexte.Kopfzeilen(!breit).FirstOrDefault(k => k.Id == id);
         _krumeBereich.Text = titel?.Bereich ?? "";
         _krumeSeite.Text = titel?.Seite ?? Seiten.Titel(id);
@@ -740,7 +744,7 @@ public partial class MainView : UserControl
         {
             seite = id switch
             {
-                Seiten.Dashboard => new DashboardSeite(() => _ = WiederholenAsync()),
+                Seiten.Dashboard => new DashboardSeite(() => _ = WiederholenAsync(), ziel => _ = ZeigeAsync(ziel)),
                 Seiten.Optionen => new OptionenSeite(BaueSicherung, () => _ = RundgangAsync(), () => _ = ZeigeAsync(Seiten.Hilfe), () => _ = KnoepfeAnordnenAsync()),
                 // Phase 4, W4: Hilfe
                 Seiten.Hilfe => new HilfeSeite(() => _ = RundgangAsync()),
@@ -760,6 +764,10 @@ public partial class MainView : UserControl
                 // Phase 7, W4: begehbare 3D-Stadt im Vollbild (W1 war die Stichprobe), "Spiel verlassen" fuehrt zurueck
                 Seiten.Spiel => new Lernplattform.Spiel.SpielSeite(Lernplattform.Spiel.SpielStart.Laden, () => _ = ZeigeAsync(_vorSpiel),
                     new Lernplattform.Spiel.Tafel.SpielWege((fach, thema) => _ = SpielKartenAsync(fach, thema), t => _ = TrefferOeffnenAsync(t, ""))),
+                // Welle A 1.15.0 (Weisungen P12-406/P12-407, Variante B): Seiten der Pruefungsteile und Sammelseite „Mehr“
+                Core.Texte.Pruefungsteile.Teil1 or Core.Texte.Pruefungsteile.Teil2 or Core.Texte.Pruefungsteile.B1 or Core.Texte.Pruefungsteile.B2
+                    or Core.Texte.Pruefungsteile.Wiso => new PruefungsteilSeite(id, PruefungsteilWege()),
+                Core.Texte.Pruefungsteile.Mehr => LernenSeite.Bauen(ziel => _ = ZeigeAsync(ziel), Programm.Zustand.Inhalte, Core.Texte.Pruefungsteile.MehrEintraege),
                 Seiten.Notizblock => new NotizblockSeite((quelle, schluessel, erste) => _ = NotizblockUebenAsync(quelle, schluessel, erste)),
                 // Unterpunkte der Karteikarten (ein Fachbereich): dieselbe Seite wie "Karteikarten"
                 _ when Core.Inhalte.Fachbereiche.Alle.Contains(id) => Seite(Seiten.Karteikarten),
@@ -800,6 +808,12 @@ public partial class MainView : UserControl
                 karten.Gezeigt();
             }
         }
+        if (gebaut && _seiten[id] is PruefungsteilSeite teil)
+        {
+            // aus Leiste, Startseite oder Brotkrumen immer zuerst „Üben“ (wie der Entwurf), so bleibt jede Seite in zwei Klicks
+            teil.Gezeigt(_reiterBeimZeigen ?? Core.Texte.Pruefungsteile.Ueben);
+        }
+        _reiterBeimZeigen = null;
         if (gebaut && _seiten[id] is TrainerSeite trainer)
         {
             trainer.Gezeigt();
@@ -833,15 +847,18 @@ public partial class MainView : UserControl
             suche.Fokus();
         }
         Brotkrumen(id);
-        _leisten.Markiere(id);
-        // Phase 8 W2b: Kasten LERNSTATUS im Hintergrund neu zaehlen (wie refresh nach dem Lernen in Python)
-        _leisten.LernstatusLesen();
+        // A 1.15.0: Uebung oder Pruefung aus einem Pruefungsteil markiert diesen Teil (sonst bleibt die Herkunft stehen,
+        // solange dieselbe Seite gezeigt wird)
+        if (id != _herkunftSeite)
+        {
+            _herkunft = null;
+        }
+        _leisten.Markiere(id, _herkunft);
         Core.Diagnose.Haenger.Seite(id);   // Phase 5 W2: Seite fuer die Haenger-Diagnose
     }
 
     private void NachAbgleich()
     {
-        _leisten.LernstatusLesen();
         if (!_seiten.TryGetValue(AktuelleSeite, out var seite))
         {
             return;
@@ -877,6 +894,61 @@ public partial class MainView : UserControl
                 spiel.NachAbgleich();
                 break;
         }
+    }
+
+    // -- Welle A 1.15.0: Wege der Pruefungsteile ---------------------------------------------------------
+
+    private string? _reiterBeimZeigen;
+    private string? _herkunft;
+    private string? _herkunftSeite;
+
+    /// <summary>Seite eines Pruefungsteils mit gewaehltem Reiter zeigen (Teil 2: Karten „Üben“ und „Prüfen“).</summary>
+    internal async Task ZeigeTeilAsync(string id, string? reiter)
+    {
+        _reiterBeimZeigen = reiter;
+        await ZeigeAsync(id);
+        if (reiter is not null && _seiten[id] is PruefungsteilSeite teil && teil.Reiter != reiter)
+        {
+            teil.Gezeigt(reiter);
+        }
+    }
+
+    /// <summary>Zielseite zeigen und dabei den Pruefungsteil merken, aus dem man kam (Markierung in den Leisten).</summary>
+    private async Task MitHerkunftAsync(string ziel, string herkunft)
+    {
+        _herkunft = herkunft;
+        _herkunftSeite = ziel;
+        await ZeigeAsync(ziel);
+    }
+
+    private PruefungsteilWege PruefungsteilWege() => new(
+        (seite, fragen) => _ = TeilFragenAsync(seite, fragen),
+        (seite, quelle, eintraege) => _ = TeilSzenarienAsync(seite, quelle, eintraege),
+        (seite, art) => _ = TeilPruefenAsync(seite, k => k.ArtStartenAsync(art)),
+        (seite, satz) => _ = TeilPruefenAsync(seite, k =>
+            k.Echt.SatzStartenAsync(Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht), Core.Texte.Pruefungsteile.Rolle(seite), satz)),
+        (ziel, reiter) => _ = ZeigeTeilAsync(ziel, reiter));
+
+    private async Task TeilFragenAsync(string seite, IReadOnlyList<string> fragen)
+    {
+        await MitHerkunftAsync(Seiten.Trainer, seite);
+        ((TrainerSeite)_seiten[Seiten.Trainer]).Ueben(fragen);
+    }
+
+    private async Task TeilSzenarienAsync(string seite, string quelle, IReadOnlyList<Core.Inhalte.Lerninhalt> eintraege)
+    {
+        var ziel = quelle == Core.Lernen.Quellen.Ap1 ? Seiten.Ap1Szenarien : Seiten.Ap2Szenarien;
+        await MitHerkunftAsync(ziel, seite);
+        var fr = Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht);
+        var name = seite == Core.Texte.Pruefungsteile.Teil1 ? Core.Texte.Pruefungsteile.Teil1Titel
+            : Core.Texte.Pruefungsteile.Deckblattname(fr, Core.Texte.Pruefungsteile.Rolle(seite));
+        ((SzenarioSeite)_seiten[ziel]).NurTeil(eintraege, name);
+    }
+
+    private async Task TeilPruefenAsync(string seite, Func<KlausurTeil, Task> starten)
+    {
+        await MitHerkunftAsync(Seiten.Trainer, seite);
+        ((TrainerSeite)_seiten[Seiten.Trainer]).Pruefen(starten);
     }
 
     public async Task ZeigeAsync(string id)

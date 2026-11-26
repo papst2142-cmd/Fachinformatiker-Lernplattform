@@ -9,7 +9,7 @@ namespace Lernplattform.Tests;
 /// <summary>
 /// Phase 8 W2b (Weisung P8-4, Sammelliste 114-116): Gruppen der Seitenleiste und der Optionen,
 /// Kurzzeilen der Optionen-Karten und der Kasten LERNSTATUS.
-/// Kontrollfehler: ein Eintrag fehlt in Navigation.PcLeiste/PcLernen -> JederEintragGenauEinmal rot;
+/// Seit A 1.15.0 Seitenleiste nach Pruefungsteilen (Pruefungsteile.Seitenleiste) und untere Leiste wie Variante B.
 /// Lernstatus zaehlt nur Karten -> LernstatusWieDashboard rot.
 /// </summary>
 public class SeitenleisteOptionenTests
@@ -19,22 +19,25 @@ public class SeitenleisteOptionenTests
     [Fact]
     public void JederEintragGenauEinmal()
     {
-        // A 0.38.0: oberste Ebene, Unterpunkte von "Lernen" und unten angeheftet decken jeden PC-Eintrag genau einmal ab
-        var ids = Navigation.PcLeiste.Where(id => id != Navigation.LernenId).Concat(Navigation.PcLernen).Concat(Navigation.PcLeisteUnten).ToList();
-        Assert.Equal(ids.Count, ids.Distinct().Count());
-        Assert.Equal(Navigation.Pc.Select(p => p.Id).Order(StringComparer.Ordinal), ids.Order(StringComparer.Ordinal));
+        // A 1.15.0 (Variante B): jede Kennung der Seitenleiste (oben und unten) genau einmal, je Fachrichtung
+        foreach (var fr in Core.Pruefung.Fachrichtung.Alle)
+        {
+            var ids = Pruefungsteile.Seitenleiste(fr).Concat(Pruefungsteile.SeitenleisteUnten).Where(z => z.Id is not null).Select(z => z.Id!).ToList();
+            Assert.Equal(ids.Count, ids.Distinct().Count());
+        }
     }
 
     [Fact]
-    public void GruppenWieNico()
+    public void UntereLeisteWieNico()
     {
-        // Nico 04.11.2026: Start = Dashboard, Lernen, Rechner, Spiel, Fortschritt, Optionen (wie die Leiste am Handy)
-        Assert.Equal(Navigation.Handy.Select(h => h.Id), Navigation.PcLeiste);
-        Assert.Equal(["Start", "Lernen", "Rechner", "Spiel", "Fortschritt", "Optionen"], Navigation.Handy.Select(h => h.Titel));
-        Assert.Equal(Navigation.LernenId, Navigation.Handy[1].Id);
-        // Lernen: Notizblock gehoert dazu, Reihenfolge wie die Sammelseite Lernen am Handy
-        Assert.Equal(Navigation.Lernen.Select(l => l.Id), Navigation.PcLernen);
-        Assert.Equal(["help"], Navigation.PcLeisteUnten);
+        // Weisung P12-406 (Nico 1a, Variante B): Start, Teil 1, Teil 2, Lernen, Spiel, Mehr
+        Assert.Equal(["Start", "Teil 1", "Teil 2", "Lernen", "Spiel", "Mehr"], Navigation.Handy.Select(h => h.Titel));
+        Assert.Equal(["dashboard", "teil1", "teil2", Navigation.LernenId, "game", Pruefungsteile.Mehr], Navigation.Handy.Select(h => h.Id));
+        // Lernen am Handy = Gruppe LERNEN der Seitenleiste
+        var fr = Core.Pruefung.Fachrichtung.Nach("si");
+        var leiste = Pruefungsteile.Seitenleiste(fr).ToList();
+        var ab = leiste.FindIndex(z => z.Titel == Pruefungsteile.GruppeLernen);
+        Assert.Equal(leiste.Skip(ab + 1).TakeWhile(z => z.Art != LeistenArt.Gruppe).Select(z => z.Id), Navigation.Lernen.Select(l => l.Id));
     }
 
     [Theory]

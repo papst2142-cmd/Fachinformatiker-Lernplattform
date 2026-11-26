@@ -26,12 +26,15 @@ public sealed class DashboardSeite : UserControl
     private readonly StackPanel _liste = new() { Spacing = 14, Margin = new Thickness(16, 4, 16, 24) };   // screen_list
 
     private readonly Action _wiederholen;
+    private readonly Action<string>? _oeffnen;
     private bool _gezeigt;
 
     /// <param name="wiederholen">"Jetzt wiederholen" (start_review), Phase 2 L4.</param>
-    public DashboardSeite(Action wiederholen)
+    /// <param name="oeffnen">A 1.15.0: Feld „Deine Abschlussprüfung“ oeffnet Teil 1 bzw. Teil 2.</param>
+    public DashboardSeite(Action wiederholen, Action<string>? oeffnen = null)
     {
         _wiederholen = wiederholen;
+        _oeffnen = oeffnen;
         DefektKarte();
         _liste.Children.Add(Schrift.Text(FarbenTexte.Laden, "Normal", FontWeight.Normal, "Pinsel.text_dim"));
         Content = new ScrollViewer { Content = _liste };
@@ -239,7 +242,8 @@ public sealed class DashboardSeite : UserControl
     public double Hoehe => _liste.Bounds.Height;
 
     /// <summary>
-    /// Start-Test: die Titel der fuenf Kacheln der ersten Reihe (vier Ringe und Erfolgsquote) in der breiten Anordnung.
+    /// Start-Test: die Titel der Kacheln der ersten Reihe in der breiten Anordnung (seit A 1.15.0 „Deine Abschlussprüfung“ und
+    /// Erfolgsquote, vorher vier Ringe und Erfolgsquote).
     /// </summary>
     public IReadOnlyList<TextBlock> KachelTitel()
     {
@@ -247,7 +251,7 @@ public sealed class DashboardSeite : UserControl
         {
             return [];
         }
-        var namen = w.Kennzahlen.Select(k => Beschriftungen.Gross(k.Titel)).Append(Beschriftungen.Gross(DashboardTexte.QuoteTitel)).ToList();
+        var namen = new[] { Beschriftungen.Gross(Pruefungsteile.StartTitel), Beschriftungen.Gross(DashboardTexte.QuoteTitel) };
         var bloecke = _liste.GetVisualDescendants().OfType<TextBlock>().ToList();
         return [.. namen.Select(n => bloecke.FirstOrDefault(b => b.Text == n)).OfType<TextBlock>()];
     }
@@ -264,6 +268,32 @@ public sealed class DashboardSeite : UserControl
             DefektKarte();
             Zeigen(w);
         }
+    }
+
+    /// <summary>A 1.15.0: Kachel eines Pruefungsteils im Feld „Deine Abschlussprüfung“ (Titel, Name, Knopf „Öffnen“).</summary>
+    private Border Teilkachel(string titel, string name, string ziel, string knopfName)
+    {
+        var knopf = LernTeile.Knopf(Pruefungsteile.StartOeffnen, true);
+        knopf.Margin = new Thickness(0);
+        knopf.HorizontalAlignment = HorizontalAlignment.Left;
+        AutomationProperties.SetName(knopf, Pruefungsteile.StartOeffnen + " " + knopfName);
+        knopf.Click += (_, _) => _oeffnen?.Invoke(ziel);
+        return new Border
+        {
+            Padding = new Thickness(14, 12),
+            CornerRadius = new CornerRadius(12),
+            BorderThickness = new Thickness(1),
+            Child = new StackPanel
+            {
+                Spacing = 8,
+                Children =
+                {
+                    Schrift.Text(titel, "Winzig", FontWeight.Bold, "Pinsel.cyan"),
+                    new LernText(name, "Normal", FontWeight.Bold, "Pinsel.text"),
+                    knopf,
+                },
+            },
+        }.Farbe(Border.BackgroundProperty, "Pinsel.card_alt").Farbe(Border.BorderBrushProperty, "Pinsel.border");
     }
 
     /// <summary>Zwei Karten nebeneinander im Verhaeltnis lg:rg (pair_rows wie Python am PC).</summary>
@@ -330,52 +360,16 @@ public sealed class DashboardSeite : UserControl
         }
         _liste.Children.Add(Schrift.KopfKarte(DashboardTexte.HeuteTitel, DashboardTexte.HeuteUnter, heuteInhalt, "Pinsel.green"));
 
-        // Vier Ringkarten, je zwei nebeneinander (ab 160 % untereinander)
-        var jeRing = breit ? w.Kennzahlen.Count : 2;
-        Grid? fuenf = null;
-        for (var i = 0; i < w.Kennzahlen.Count; i += jeRing)
-        {
-            var reihe = new Grid { ColumnSpacing = 12, RowSpacing = 12 };
-            fuenf = reihe;
-            for (var j = i; j < Math.Min(i + jeRing, w.Kennzahlen.Count); j++)
-            {
-                var k = w.Kennzahlen[j];
-                var (a, b) = RingFarben[j % RingFarben.Length];
-                var ring = VerlaufRing.MitText(k.Anteil, a, b, k.Gross, k.Unter, 112, 11);
-                var karte = Schrift.KopfKarte(k.Titel, null, new Viewbox
-                {
-                    Stretch = Stretch.Uniform,
-                    StretchDirection = StretchDirection.DownOnly,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Child = ring,
-                });
-                karte.Padding = new Thickness(14);
-                // ring_fit (Nacharbeit M1): Rand seitlich 14, hoechstens bis 6 enger, damit Ring und Titel
-                // in die Karte passen (bei 384 Punkten: Normal und Gross 14, Sehr gross 11)
-                karte.SizeChanged += (_, e) =>
-                {
-                    var innen = Math.Floor(e.NewSize.Width) - 2;
-                    var ringGroesse = Math.Max(40, Math.Min(Math.Round(112 * Schrift.Faktor), innen - 2 * 6));
-                    var seite = Math.Min(14, Math.Max(6, Math.Floor((innen - ringGroesse) / 2)));
-                    if (Math.Abs(karte.Padding.Left - seite) > 0.1)
-                    {
-                        karte.Padding = new Thickness(seite, 14);
-                    }
-                };
-                if (gross)
-                {
-                    reihe.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                    Grid.SetRow(karte, j - i);
-                }
-                else
-                {
-                    reihe.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
-                    Grid.SetColumn(karte, j - i);
-                }
-                reihe.Children.Add(karte);
-            }
-            _liste.Children.Add(reihe);
-        }
+        // Welle A 1.15.0 (Weisung P12-406, Nico 4a): Feld „Deine Abschlussprüfung“ mit Teil 1 und Teil 2 statt der vier Ringe
+        // (die Abdeckung je Bereich steht weiter unten wie bisher), daneben die Erfolgsquote
+        var fr = Core.Pruefung.Fachrichtung.Nach(Zustand.Sicht);
+        var teil1 = Teilkachel(Pruefungsteile.StartTeil1, Pruefungsteile.Deckblattname(fr, "ap1"), Pruefungsteile.Teil1, Pruefungsteile.Teil1Titel);
+        var teil2 = Teilkachel(Pruefungsteile.StartTeil2, Beschriftungen.Einsetzen(Pruefungsteile.StartTeil2Name,
+            Pruefungsteile.Deckblattname(fr, Pruefungsteile.B1), Pruefungsteile.Deckblattname(fr, Pruefungsteile.B2)), Pruefungsteile.Teil2,
+            Pruefungsteile.Teil2Titel);
+        Control teile = breit && !gross ? Paar(teil1, teil2) : new StackPanel { Spacing = 12, Children = { teil1, teil2 } };
+        var abschluss = Schrift.KopfKarte(Pruefungsteile.StartTitel, Beschriftungen.Einsetzen(Pruefungsteile.StartUntertitel,
+            FachrichtungTexte.KuerzelFuer(fr.Id)), teile, "Pinsel.cyan", oben: breit);
 
         // Erfolgsquote
         var quote = Schrift.KopfKarte(DashboardTexte.QuoteTitel, DashboardTexte.QuoteUntertitel, new StackPanel
@@ -383,16 +377,13 @@ public sealed class DashboardSeite : UserControl
             Spacing = 10,
             Children = { Schrift.Pt(w.Quote.Text, 34, FontWeight.Bold, "Pinsel.accent"), Schrift.Pt(w.Quote.Unter, 13, FontWeight.Normal, "Pinsel.muted") },
         }, "Pinsel.accent2", oben: breit);
-        if (breit && fuenf is not null)
+        if (breit)
         {
-            // Rand oben wie die Ringkarten (14), sonst sitzt die Ueberschrift 2 Punkte tiefer
-            quote.Padding = new Thickness(quote.Padding.Left, 14, quote.Padding.Right, quote.Padding.Bottom);
-            fuenf.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
-            Grid.SetColumn(quote, fuenf.ColumnDefinitions.Count - 1);
-            fuenf.Children.Add(quote);
+            _liste.Children.Add(Paar(abschluss, quote, 3, 1));
         }
         else
         {
+            _liste.Children.Add(abschluss);
             _liste.Children.Add(quote);
         }
 

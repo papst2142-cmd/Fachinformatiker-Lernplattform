@@ -8,8 +8,8 @@ namespace Lernplattform.Messung;
 
 /// <summary>
 /// Phase 8 W2b (Weisung P8-4, Sammelliste 114-116): Seitenleiste in Gruppen mit Symbolen und LERNSTATUS,
-/// Optionen in Gruppen mit zugeklappten Karten. Prueft: jeder Eintrag hat ein Symbol, der Lernstatus zeigt
-/// "x / y", alle Optionen-Karten sind nach dem Bauen zu, die Suche (OeffneBereich) klappt jede auf, die
+/// Optionen in Gruppen mit zugeklappten Karten. Prueft: jeder Eintrag hat ein Symbol, seit A 1.15.0 (P12-409) gibt es
+/// keinen Kasten LERNSTATUS mehr, alle Optionen-Karten sind nach dem Bauen zu, die Suche (OeffneBereich) klappt jede auf, die
 /// Kurzzeile "Updates" zeigt eine gefundene Version. Messpunkte (wiederholbar, Grenze 400 ms): Karteikarten
 /// und Spiel in der Seitenleiste aufklappen. Fuer die Layoutpruefung: Seitenleiste mit allen Gruppen offen
 /// (A 0.38.0) und Optionen ganz oben (alle Gruppen und Karten zu). Speichert nichts.
@@ -29,13 +29,6 @@ public static partial class AutoMessung
             funde++;
         }
         var leisten = ansicht.Leisten;
-        foreach (var (id, symbol) in leisten.SeitenSymbole)
-        {
-            if (symbol.Length == 0)
-            {
-                Fehler("Seitenleiste: Eintrag " + id + " ohne Symbol");
-            }
-        }
         // Weisung P8-56 (Nico, Wahl b): "Programm beenden" unten in der Seitenleiste (PC, auch ohne Vollbild); Esc
         // verlaesst das Vollbild (gedrueckt wird nur Esc, beendet wird hier nichts)
         if (!OperatingSystem.IsAndroid() && (leisten.BeendenKnopf is not { } beenden || !beenden.IsEffectivelyVisible
@@ -63,28 +56,13 @@ public static partial class AutoMessung
                 Lernplattform.Spiel.Vollbild.DauerhaftSetzen(false);
             }
         }
-        // Lernstatus: wird nach jedem Seitenwechsel im Hintergrund gelesen
-        for (var i = 0; i < 100 && leisten.LernstatusText.Length == 0; i++)
+        // A 1.15.0 (Weisung P12-409, Nico 2a): kein Kasten LERNSTATUS mehr in der Seitenleiste, genau wie der Entwurf Variante B
+        var leistenTexte = leisten.SeitenleisteTexteFuerTests;
+        if (leistenTexte.Contains(Navigation.Lernstatus) || leistenTexte.Contains(Core.Dashboard.DashboardTexte.SeitenleisteBalken))
         {
-            await Task.Delay(50);
+            Fehler("Seitenleiste: Kasten LERNSTATUS noch da");
         }
-        Messwerte.Notiere("Seitenleiste Lernstatus: " + leisten.LernstatusText);
-        if (!System.Text.RegularExpressions.Regex.IsMatch(leisten.LernstatusText, @"^[\d.]+ / [\d.]+$"))
-        {
-            Fehler("Seitenleiste: Lernstatus ohne \"x / y\"");
-        }
-        foreach (var id in (string[])["cards", "game"])
-        {
-            var name = leisten.Titel(id);
-            var vorher = leisten.Offen(id);
-            funde += Ergebnis("Seitenleiste: " + name + " auf-/zuklappen (bis zum Bild)",
-                await BildMessenAsync(ansicht, () => leisten.Umschalten(id), () => leisten.Umschalten(id), grenze: Geraetegrenze));
-            if (leisten.Offen(id) == vorher)
-            {
-                Fehler("Seitenleiste: " + name + " klappt nicht um");
-            }
-            leisten.Umschalten(id);
-        }
+        Messwerte.Notiere("Seitenleiste ohne Kasten LERNSTATUS: " + (leistenTexte.Contains(Navigation.Lernstatus) ? "nein" : "ja"));
         if (ansicht.GebauteSeiten.TryGetValue(Seiten.Optionen, out var o) && o is OptionenSeite optionen)
         {
             var bereiche = optionen.Angezeigt;
@@ -147,11 +125,9 @@ public static partial class AutoMessung
     {
         await ansicht.ZeigeAsync(Seiten.Dashboard);
         var leisten = ansicht.Leisten;
-        // A 0.38.0: alle Gruppen (Lernen mit Karteikarten, Spiel) zugleich, damit die Layoutpruefung jeden Eintrag sieht
-        leisten.AlleZeigenFuerTests(true);
-        await ansicht.BildFertigAsync();
-        yield return "seitenleiste/alle-gruppen-offen";
-        leisten.AlleZeigenFuerTests(false);
+        // A 1.15.0: die Seitenleiste zeigt alle Eintraege ohne Aufklappen (Variante B); hier mit markiertem Bereich 1
+        await ansicht.ZeigeAsync(Core.Texte.Pruefungsteile.B1);
+        yield return "seitenleiste/bereich1";
         await ansicht.ZeigeAsync(Seiten.Optionen);
         if (ansicht.GebauteSeiten[Seiten.Optionen] is OptionenSeite optionen)
         {

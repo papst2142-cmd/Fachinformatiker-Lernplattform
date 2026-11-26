@@ -79,6 +79,14 @@ public sealed class ListenTeil : StackPanel
         Children.Add(Ueberschrift(SzenarienTexte.Status).Fuer(_status));
         Children.Add(_status);
 
+        // Welle A 1.15.0: Einschraenkung auf einen Pruefungsteil (Üben aus Teil 1 bzw. einem Bereich), mit „Alle zeigen“
+        _nurText = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.accent");
+        _nurText.TextWrapping = TextWrapping.Wrap;
+        _nurText.VerticalAlignment = VerticalAlignment.Center;
+        var alle = LernTeile.Knopf(Pruefungsteile.AlleZeigen);
+        alle.Click += (_, _) => Nur(null, null);
+        _nurZeile = new NebenOderUnter(120, 10) { Children = { _nurText, alle }, Margin = new Thickness(0, 12, 0, 0), IsVisible = false };
+        Children.Add(_nurZeile);
         _zaehler.Margin = new Thickness(0, 12, 0, 2);
         Children.Add(_zaehler);
         Children.Add(_zeilen);
@@ -97,6 +105,22 @@ public sealed class ListenTeil : StackPanel
         blaettern.Children.Add(_weiter);
         Children.Add(blaettern);
     }
+
+    private readonly TextBlock _nurText;
+    private readonly NebenOderUnter _nurZeile;
+    private HashSet<int>? _nur;
+
+    /// <summary>Welle A 1.15.0: nur diese Positionen zeigen (null = alle); <paramref name="name"/> steht ueber der Liste.</summary>
+    public void Nur(IEnumerable<int>? positionen, string? name)
+    {
+        _nur = positionen is null ? null : [.. positionen];
+        _nurText.Text = name is null ? "" : Beschriftungen.Einsetzen(Pruefungsteile.NurTeil, name);
+        _nurZeile.IsVisible = _nur is not null;
+        Neu();
+    }
+
+    /// <summary>Welle A 1.15.0: eingeschraenkte Positionen (null = alle).</summary>
+    public IReadOnlyCollection<int>? NurPositionen => _nur;
 
     /// <summary>Positionen nach Suche und Filtern (self.filtered).</summary>
     public List<int> Gefiltert { get; private set; }
@@ -161,6 +185,10 @@ public sealed class ListenTeil : StackPanel
         Stati = _statiQuelle();
         Gefiltert = Listen.Positionen(_eintraege, _suche.Text, Fachbereich(), _gruppenFeld,
             (string?)_gruppe.SelectedItem ?? FragenStatus.Alle, Status, Stati);
+        if (_nur is { } nur)
+        {
+            Gefiltert = [.. Gefiltert.Where(nur.Contains)];
+        }
         if (!seiteBehalten)
         {
             Seite = 0;
@@ -182,6 +210,11 @@ public sealed class ListenTeil : StackPanel
         Stati = _statiQuelle();
         if (!Gefiltert.Contains(position))
         {
+            if (_nur is not null && !_nur.Contains(position))
+            {
+                _nur = null;
+                _nurZeile.IsVisible = false;
+            }
             _setzen = true;
             _suche.Text = "";
             if (_fachbereich is not null)
@@ -192,6 +225,10 @@ public sealed class ListenTeil : StackPanel
             _status.SelectedIndex = 0;
             _setzen = false;
             Gefiltert = Listen.Positionen(_eintraege, "", FragenStatus.Alle, _gruppenFeld, FragenStatus.Alle, FragenStatus.Alle, Stati);
+            if (_nur is { } nur)
+            {
+                Gefiltert = [.. Gefiltert.Where(nur.Contains)];
+            }
         }
         Seite = Gefiltert.IndexOf(position) / Listen.Seitengroesse;
         Zeichnen();

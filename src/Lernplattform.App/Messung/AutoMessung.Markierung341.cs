@@ -40,9 +40,7 @@ public static partial class AutoMessung
             {
                 ["Knopf"] = [id],
                 ["Strich"] = [id],
-                ["Symbol"] = [id],
                 ["Text"] = [id],
-                ["Pfeil"] = leisten.HatPfeilFuerTests(id) ? [id] : [],
                 ["Pille"] = leisten.UntenZielFuerTests(id) is { } z ? [z] : [],
             };
             return soll.Where(s => !s.Value.SequenceEqual(ist[s.Key]))

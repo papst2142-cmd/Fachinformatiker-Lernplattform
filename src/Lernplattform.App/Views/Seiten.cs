@@ -34,6 +34,10 @@ public static class Seiten
         return id switch
         {
             Lernen => Texte.NavigationHandy.First(p => p.Id == Lernen).Titel,
+            Pruefungsteile.Teil1 => Pruefungsteile.Teil1Titel,
+            Pruefungsteile.Teil2 => Pruefungsteile.Teil2Titel,
+            Pruefungsteile.B1 or Pruefungsteile.B2 or Pruefungsteile.Wiso => Pruefungsteile.BereichKurz(id),
+            Pruefungsteile.Mehr => Pruefungsteile.MehrTitel,
             Suche => Navigation.SucheHandy,
             Hilfe => Navigation.Hilfe,
             _ => id,

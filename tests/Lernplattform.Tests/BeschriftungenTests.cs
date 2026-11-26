@@ -77,7 +77,26 @@ public class BeschriftungenTests
         var kopf = G9.GetProperty("kopfleiste_pc");
         Gleich(S(kopf, "suche"), Navigation.SuchePc);
         Assert.Equal(Kopf(kopf), Navigation.KopfPc);
+        // Sollwert-Aenderung Nr. 26 (A 1.15.0, Variante B): Zeilen der Seitenleiste je Fachrichtung wie das Deckblatt
+        Assert.Equal(Liste(seite, "gruppen"), [Pruefungsteile.GruppeAbschluss, Pruefungsteile.GruppeLernen, Pruefungsteile.GruppeSonstiges]);
+        var zeilen = seite.GetProperty("zeilen");
+        Assert.Equal(Core.Inhalte.Fachrichtungen.Werte.Order(StringComparer.Ordinal),
+            zeilen.EnumerateObject().Select(z => z.Name).Order(StringComparer.Ordinal));
+        foreach (var fr in Core.Pruefung.Fachrichtung.Alle)
+        {
+            Assert.Equal(Zeilen(zeilen.GetProperty(fr.Id)), Pruefungsteile.Seitenleiste(fr));
+        }
+        Assert.Equal(Zeilen(seite.GetProperty("unten")), Pruefungsteile.SeitenleisteUnten);
     }
+
+    private static List<LeistenZeile> Zeilen(JsonElement liste) =>
+        [.. liste.EnumerateArray().Select(z => new LeistenZeile(z[0].GetString() switch
+        {
+            "eintrag" => LeistenArt.Eintrag,
+            "unter" => LeistenArt.Unter,
+            "gruppe" => LeistenArt.Gruppe,
+            var art => throw new InvalidDataException(art),
+        }, z[1].ValueKind == JsonValueKind.Null ? null : z[1].GetString(), z[2].GetString()!))];
 
     private static List<Kopftitel> Kopf(JsonElement kopf) =>
         [.. kopf.GetProperty("titel").EnumerateArray().Select(t => new Kopftitel(t[0].GetString()!, t[1].GetString()!, t[2].GetString()!))];
@@ -129,7 +148,8 @@ public class BeschriftungenTests
         Assert.Equal(anzahl.GetProperty("testprojekte").GetInt32(), inhalte.Testprojekte.Count);
 
         var soll = lernen.GetProperty("eintraege").EnumerateArray().ToList();
-        Assert.Equal(7, soll.Count);
+        // Sollwert-Aenderung Nr. 26: Karteikarten, Notizblock, Rechner (vorher 7 Eintraege wie Python)
+        Assert.Equal(3, soll.Count);
         Assert.Equal(soll.Count, Navigation.Lernen.Count);
         for (var i = 0; i < soll.Count; i++)
         {
@@ -140,6 +160,20 @@ public class BeschriftungenTests
             Gleich(S(soll[i], "muster"), ist.Muster);
             Assert.Equal(Liste(soll[i], "farben"), ist.Farben);
             Gleich(S(soll[i], "text"), Navigation.LernenUntertitel(ist, inhalte));
+        }
+        // Sollwert-Aenderung Nr. 26: Sammelseite „Mehr“ am Handy
+        var mehr = lernen.GetProperty("mehr");
+        Assert.Equal(Liste(mehr, "kopf"), [Pruefungsteile.MehrKopf.Bereich, Pruefungsteile.MehrKopf.Seite]);
+        var mehrSoll = mehr.GetProperty("eintraege").EnumerateArray().ToList();
+        Assert.Equal(mehrSoll.Count, Pruefungsteile.MehrEintraege.Count);
+        for (var i = 0; i < mehrSoll.Count; i++)
+        {
+            var ist = Pruefungsteile.MehrEintraege[i];
+            Gleich(S(mehrSoll[i], "id"), ist.Id);
+            Gleich(S(mehrSoll[i], "symbol"), ist.Symbol);
+            Gleich(S(mehrSoll[i], "titel"), ist.Titel);
+            Gleich(S(mehrSoll[i], "muster"), ist.Muster);
+            Assert.Equal(Liste(mehrSoll[i], "farben"), ist.Farben);
         }
     }
 
