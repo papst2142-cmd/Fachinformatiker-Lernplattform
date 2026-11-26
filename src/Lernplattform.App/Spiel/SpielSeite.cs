@@ -43,16 +43,10 @@ public sealed partial class SpielSeite : Grid
     internal TextBlock LeistungZeile => _leistungZeile;
     private readonly TextBlock _zeile;
     private readonly ScrollViewer _zeileRolle;
-    private readonly Button _klapp;
-    private readonly TextBlock _klappSymbol;
-    private readonly TextBlock _kurz;
     private readonly WrapPanel _knoepfe;
     // Phase 12 Welle 2: passen die Knoepfe auch mit gekuerztem Text nicht mehr ins Bild (riesige Schrift, niedriges
     // Fenster, viele Knoepfe), rollen sie in der Karte (Layoutpruefung: Knoepfe in einer Rolle erreicht man durch Rollen)
     private readonly ScrollViewer _knoepfeRolle;
-    private bool _hinweisZu = Core.Spiel.Probe.HinweisWahl.Zugeklappt(Programm.Zustand.Werte);
-    private string _letzteZeile = "";
-    private long _kurzBis;
     private readonly Border _unten;
     private readonly Border _kopf;
     private readonly Grid _mitte;
@@ -156,6 +150,8 @@ public sealed partial class SpielSeite : Grid
         var kopf = Schrift.Karte(new StackPanel { Spacing = 2, Children = { _kopfzeile, _probeZeile, _leistungZeile } });
         kopf.Padding = new Thickness(14, 8);
         kopf.HorizontalAlignment = HorizontalAlignment.Left;
+        // Welle A 1.13.0 (Sammelliste 464): oben, auch wenn die Zeile mit dem Hinweis daneben hoeher ist (ganzer Text offen)
+        kopf.VerticalAlignment = VerticalAlignment.Top;
         _kopf = kopf;
         // Welle A 0.81.0 (Sammelliste 350, Weisung P12-274, Nico „Spiel verlassen in die Leiste“): der Knopf steht nicht mehr
         // oben rechts, sondern in der unteren Leiste vor dem Klapp-Pfeil, immer zu sehen (auch zugeklappt); gleiches Verhalten
@@ -253,22 +249,9 @@ public sealed partial class SpielSeite : Grid
             };
             _knoepfe.Children.Add(karte);
         }
-        // Phase 8 W10 (Sammelliste 148, Nico 1b): Pfeil links vor den Knoepfen klappt das Hinweisfeld zu;
-        // zugeklappt bleibt nur der Pfeil, eine neue kurze Meldung steht 5 s daneben
-        _klappSymbol = Views.Symbole.Block("arrow_drop_down", 26, "Pinsel.text");
-        _klappSymbol.RenderTransformOrigin = RelativePoint.Center;
-        _klapp = Schrift.Knopf("");
-        _klapp.Content = _klappSymbol;
-        _klapp.VerticalAlignment = VerticalAlignment.Top;
-        // Sammelliste 399: rechts kein Rand (der Handy-Knopf links haelt mit seinem Rand 8 den Abstand), sonst stuenden die
-        // zwei Symbole 4 Punkte links der Mitte
-        _klapp.Margin = new Thickness(0, 0, 0, 8);
-        _klapp.Click += (_, _) => HinweisUmschalten();
-        _kurz = Schrift.Text("");
-        _kurz.TextWrapping = TextWrapping.Wrap;
-        _kurz.VerticalAlignment = VerticalAlignment.Center;
-        _kurz.Margin = new Thickness(4, 0, 8, 6);
-        _kurz.IsVisible = false;
+        // Phase 8 W10 (Sammelliste 148): bis A 1.12.0 klappte ein Pfeil (Dreieck) das Hinweisfeld zu. Welle A 1.13.0 (Sammelliste
+        // 464, Weisung P12-394, Nico 4a 5a): kein Dreieck mehr; mit der Handlung steht der Hinweis als Zeile oben
+        // (SpielSeite.HinweisOben.cs), beim Einrichten und ohne 3D bleibt die Tafel unten offen.
         // Welle A 0.99.0 (Sammelliste 399, Nico 20.11.2026: „die Symbole muessen in die Mitte verlegt werden und beim aufklappen
         // erweitern sie sich gleichmaessig nach links und rechts“): Handy-Knopf und Klapp-Pfeil stehen unten in der Mitte (zwei
         // gleich breite Spalten links und rechts, die Leiste steht mittig); aufgeklappt waechst die Leiste nach beiden Seiten
@@ -281,6 +264,10 @@ public sealed partial class SpielSeite : Grid
         var questKnopf = QuestKnopfBauen();
         Grid.SetRow(questKnopf, 2);
         Grid.SetColumn(questKnopf, 1);
+        // Welle A 1.13.0 (Sammelliste 464, B-6): ohne Pfeil steht der Handy-Knopf allein in der Mitte (beide mittigen Spalten)
+        Grid.SetColumnSpan(questKnopf, 2);
+        questKnopf.HorizontalAlignment = HorizontalAlignment.Center;
+        questKnopf.Margin = new Thickness(4, 0, 4, 6);
         klappZeile.Children.Add(questKnopf);
         Grid.SetRow(verlassenKnopf, 2);
         Grid.SetColumn(verlassenKnopf, 3);
@@ -293,14 +280,6 @@ public sealed partial class SpielSeite : Grid
         Grid.SetRow(_ichHuelle, 2);
         Grid.SetColumn(_ichHuelle, 0);
         klappZeile.Children.Add(_ichHuelle);
-        Grid.SetRow(_klapp, 2);
-        Grid.SetColumn(_klapp, 2);
-        klappZeile.Children.Add(_klapp);
-        Grid.SetRow(_kurz, 1);
-        Grid.SetColumnSpan(_kurz, 4);
-        _kurz.HorizontalAlignment = HorizontalAlignment.Center;
-        _kurz.TextAlignment = TextAlignment.Center;
-        klappZeile.Children.Add(_kurz);
         _knoepfe.HorizontalAlignment = HorizontalAlignment.Center;
         _knoepfeRolle = new ScrollViewer
         {
@@ -385,6 +364,8 @@ public sealed partial class SpielSeite : Grid
         DaumenKnoepfeAnlegen();
         // Welle A 1.6.0 (Sammelliste 444): Handlung statt Dreieck-Menue (X und Handy oben rechts, runde Knoepfe links)
         HandlungAnlegen(ebene);
+        // Welle A 1.13.0 (Sammelliste 464): Hinweis als Zeile oben neben der Uhr
+        HinweisObenAnlegen(ebene);
         // Nachtrag 1 zu P7-13 (Wunsch 2): die Kamera haelt die Figur zwischen Kopfzeile und Textkarte
         ebene.LayoutUpdated += (_, _) =>
         {
@@ -402,6 +383,7 @@ public sealed partial class SpielSeite : Grid
             }
             OeffnenMs ??= Stopwatch.GetElapsedTime(_angehaengt).TotalMilliseconds;
             SchilderSetzen();
+            HinweisObenBild();
             UmbauBlaseSetzen();
             StadtteilSchildTakt();
         };
@@ -838,7 +820,9 @@ public sealed partial class SpielSeite : Grid
         if (_kopf.TranslatePoint(new Point(0, _kopf.Bounds.Height), Flaeche) is { } oben
             && _unten.TranslatePoint(default, Flaeche) is { } unten && Flaeche.Bounds.Height > 1)
         {
-            Flaeche.Frei = (Math.Clamp(oben.Y, 0, Flaeche.Bounds.Height), _unten.IsVisible ? Math.Clamp(Flaeche.Bounds.Height - unten.Y, 0, Flaeche.Bounds.Height) : 0);
+            // Welle A 1.13.0 (Sammelliste 464): oben endet der freie Bereich unter Uhr und Hinweiszeile (die tiefere zaehlt)
+            var obenY = HinweisObenUnterkante() is { } h ? Math.Max(oben.Y, h) : oben.Y;
+            Flaeche.Frei = (Math.Clamp(obenY, 0, Flaeche.Bounds.Height), _unten.IsVisible ? Math.Clamp(Flaeche.Bounds.Height - unten.Y, 0, Flaeche.Bounds.Height) : 0);
             // Welle A 0.99.0 (Sammelliste 399): links und rechts neben der mittigen Leiste ist unten Platz fuer die Daumen
             Flaeche.LeisteX = _unten.IsVisible ? (unten.X, unten.X + _unten.Bounds.Width) : (0, 0);
         }
@@ -878,12 +862,6 @@ public sealed partial class SpielSeite : Grid
     /// immer mitkommt (Lehre Start-Test: Gegenprobe am PC einmal nicht erkannt).
     /// </summary>
     internal bool OrtslisteAltFuerTests { get; set; }
-
-    /// <summary>
-    /// Gegenprobe Sammelliste 371 (nur Start-Test, je Seite wie <see cref="OrtslisteAltFuerTests"/>: die Leiste setzt sich aus
-    /// Rueckrufen des Dispatchers neu): „Spiel verlassen“ bleibt zugeklappt sichtbar wie bis A 0.86.0.
-    /// </summary>
-    internal bool VerlassenZuAltFuerTests { get; set; }
 
     /// <summary>Patch A 0.75.1 (Start-Test 343): ist der Knopf „Orte“ zum Oeffnen und Schliessen der Ortsliste zu sehen?</summary>
     public bool OrteKnopfSichtbar => _orteKnopf.IsVisible;
@@ -947,6 +925,14 @@ public sealed partial class SpielSeite : Grid
         {
             // Welle A 1.6.0 (Sammelliste 444): F = Handlung hier, gehalten die Auswahl (frei belegbar)
             e.Handled = true;
+        }
+        else if (!e.Handled && e.Source is not TextBox && e.KeyModifiers == KeyModifiers.None && Tafel is not { IsVisible: true }
+            && Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) == Core.Spiel.Probe.Tastenbelegung.Hinweis
+            && HinweisObenAn)
+        {
+            // Welle A 1.13.0 (Sammelliste 464, Nico 3a): H zeigt den ganzen Hinweis oben und schliesst ihn wieder (frei belegbar)
+            e.Handled = true;
+            HinweisObenTippen();
         }
         else if (!e.Handled && e.Source is not TextBox && e.KeyModifiers == KeyModifiers.None
             && Core.Spiel.Probe.Tastenbelegung.Aktuell.AufgabeFuer(e.Key.ToString()) == Core.Spiel.Probe.Tastenbelegung.Auftraege
@@ -1389,54 +1375,26 @@ public sealed partial class SpielSeite : Grid
     /// <summary>Welle A 0.92.0: Start-Test: der Knopf „Ich-Sicht“ (Name, sichtbar, Klick).</summary>
     public Button IchKnopf => _ichKnopf;
 
-    /// <summary>Hinweisfeld zugeklappt (beim Einrichten immer offen, sonst fehlen Auswahl und Karton).</summary>
-    public bool HinweisZu => _hinweisZu && Spiel is not { Einrichten: true };
-
-    /// <summary>Kurze Meldung neben dem zugeklappten Pfeil (Start-Test, Fotos); leer = keine.</summary>
     /// <summary>Welle A 0.95.0 (Weisung P12-307): die Tafelzeile, wie sie gerade steht (Start-Test).</summary>
     public string TafelText => _zeile.Text ?? "";
-
-    public string KurzeMeldung => _kurz.IsVisible ? _kurz.Text ?? "" : "";
-
-    /// <summary>Pfeil gedrueckt: auf- oder zuklappen und den Zustand merken (nur ueber Einstellungen.Aendern).</summary>
-    public void HinweisUmschalten()
-    {
-        var neu = !_hinweisZu;
-        if (Programm.Zustand.Aendere(w => Core.Spiel.Probe.HinweisWahl.Wert(w, neu)))
-        {
-            _hinweisZu = neu;
-            _kurzBis = 0;
-            Beschriften();
-        }
-    }
 
     /// <summary>Weisung P12-307: Antippen gilt, wenn der Schalter an ist oder es keine 3D-Ansicht gibt (Ortsliste).</summary>
     private bool AntippenGilt => Core.Spiel.Gehbedienung.AntippenAn || _ersatz.IsVisible;
 
     private void HinweisfeldZeigen(StadtSpiel spiel)
     {
-        var zu = HinweisZu;
-        var zeile = spiel.Zeile ?? "";
-        var meldung = Core.Spiel.Probe.HinweisWahl.KurzeMeldung(zeile, SpielProbeTexte.HinweisFuer(Core.Spiel.Probe.Tastenbelegung.Aktuell));
-        if (zeile != _letzteZeile)
-        {
-            _letzteZeile = zeile;
-            _kurzBis = meldung.Length > 0
-                ? Stopwatch.GetTimestamp() + (long)(Core.Spiel.Probe.HinweisWahl.MeldungDauer.TotalSeconds * Stopwatch.Frequency)
-                : 0;
-        }
-        _zeileRolle.IsVisible = !zu;
-        _knoepfe.IsVisible = !zu;
-        // Sammelliste 371 (Nico 17.11.2026: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
-        // zugeklappt ist „Spiel verlassen“ mit den anderen Knoepfen weg, aufgeklappt wie seit A 0.81.0
-        VerlassenKnopf.IsVisible = !zu || VerlassenZuAltFuerTests;
-        _ichHuelle.IsVisible = !zu;
-        _kurz.Text = SpielProbeTexte.Tafelzeile(meldung, AntippenGilt);
-        _kurz.IsVisible = zu && meldung.Length > 0 && Stopwatch.GetTimestamp() < _kurzBis;
+        // Welle A 1.13.0 (Sammelliste 464): mit der Handlung steht der Text oben (nicht in der Karte unten); beim Einrichten, ohne
+        // 3D und mit dem alten Menue bleibt er offen in der Karte unten (Nico 4a). Gegenprobe HinweisfeldAltFuerTests: Text unten.
+        var oben = HinweisObenAn;
+        _zeileRolle.IsVisible = !oben;
+        _knoepfe.IsVisible = true;
+        // Nachbesserung A 1.13.0 (Weisung P12-398, Nico 26.11.2026): „Spiel verlassen“ unten entfaellt, das Spiel verlaesst man nur
+        // noch ueber das X oben rechts (in jeder Lage sichtbar); Gegenprobe VerlassenUntenAltFuerTests: Knopf unten wie bisher
+        VerlassenKnopf.IsVisible = VerlassenUntenAltFuerTests;
+        _ichHuelle.IsVisible = true;
+        HinweisObenTakt(spiel);
+        UntenSetzen();
         QuestZeileSetzen();
-        _klappSymbol.RenderTransform = new RotateTransform(zu ? 180 : 0);
-        Avalonia.Automation.AutomationProperties.SetName(_klapp, zu ? SpielProbeTexte.HinweisAusklappen : SpielProbeTexte.HinweisEinklappen);
-        _klapp.IsVisible = !spiel.Einrichten;
     }
 
     /// <summary>Knoepfe des Ortes (place_message) und beim Einrichten Auswahl und Karton (wie Python _home_editor).</summary>

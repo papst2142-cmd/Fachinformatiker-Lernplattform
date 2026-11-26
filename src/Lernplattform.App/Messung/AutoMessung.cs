@@ -374,6 +374,8 @@ public static partial class AutoMessung
         funde += await Handlung444Async(ansicht);
         Zeitplan("Anordnen450Async");
         funde += await Anordnen450Async(ansicht);
+        Zeitplan("Hinweis464Async");
+        funde += await Hinweis464Async(ansicht);   // A 1.13.0: Hinweis oben neben der Uhr (Sammelliste 464)
         return funde;
     }
 

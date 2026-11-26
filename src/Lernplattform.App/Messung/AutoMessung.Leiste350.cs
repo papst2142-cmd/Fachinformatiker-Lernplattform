@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Automation.Provider;
@@ -19,9 +20,10 @@ namespace Lernplattform.Messung;
 ///    verlassen“ immer zu sehen (auch zugeklappt), ohne 3D bleibt „Orte“. 2. Reiter „Übersicht“ im Handy zeigt dieselben Texte und
 ///    Werte wie die Seite der Spiel-Tafel (Gegenprobe: der Reiter „Offen“ liefert andere Texte; ohne Spielstand kein Reiter).
 /// 3. „Spiel verlassen“ aus der Leiste mit Maus, Finger, Eingabetaste und Screenreader (Name und Aufruf ueber die Automation).
-/// Seit A 0.87.0 (Sammelliste 371, Nico: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
-/// zugeklappt ist „Spiel verlassen“ weg, aufgeklappt da (Gegenprobe <see cref="SpielSeite.VerlassenZuAltFuerTests"/>); vor dem
-/// Verlassen wird darum erst aufgeklappt.
+/// Seit A 1.13.0 (Sammelliste 464, Nico 5a) gibt es das Dreieck zum Zuklappen nicht mehr (damit entfaellt auch das Verstecken von
+/// „Spiel verlassen“ aus A 0.87.0, Sammelliste 371): „Spiel verlassen“ und das Handy sind in jeder Lage zu sehen.
+/// Seit der Nachbesserung A 1.13.0 (Weisung P12-398, Nico 26.11.2026) gibt es „Spiel verlassen“ unten nicht mehr: das X oben rechts
+/// ist in jeder Lage der eine Weg aus dem Spiel (Pruefungen 1 und 3 jetzt am X, gleich streng: Maus, Finger, Taste, Screenreader).
 /// </summary>
 public static partial class AutoMessung
 {
@@ -52,12 +54,12 @@ public static partial class AutoMessung
         {
             var leiste = seite.LeisteKnoepfe;
             var doppelt = leiste.Where(t => t is StadtTexte.Uebersicht or KarteTexte.Karte).ToList();
-            // Sammelliste 371: „Spiel verlassen“ nur aufgeklappt zu sehen, zugeklappt mit den anderen Knoepfen weg
-            var verlassen = seite.VerlassenKnopf.IsEffectivelyVisible == !seite.HinweisZu;
+            // Weisung P12-398: genau ein Weg aus dem Spiel, das X oben rechts (kein zweiter Knopf unten)
+            var verlassen = seite.XKnopf is { IsEffectivelyVisible: true } && !seite.VerlassenKnopf.IsEffectivelyVisible;
             var orte = !gl || seite.Spiel?.ImInnenraum == true || !seite.OrteKnopfSichtbar;
             Pruefe(name, doppelt.Count == 0 && verlassen && orte,
                 "Leiste: " + string.Join(", ", leiste) + (doppelt.Count > 0 ? " (DOPPELT: " + string.Join(", ", doppelt) + ")" : "")
-                + (verlassen ? "" : seite.HinweisZu ? ", Spiel verlassen ZUGEKLAPPT DA" : ", Spiel verlassen FEHLT") + (orte ? "" : ", Orte mit 3D da"));
+                + (verlassen ? ", X oben rechts" : seite.VerlassenKnopf.IsEffectivelyVisible ? ", Spiel verlassen UNTEN (zweiter Weg)" : ", X FEHLT") + (orte ? "" : ", Orte mit 3D da"));
         }
         var vorher = seite.Spiel;
         try
@@ -71,32 +73,12 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             Lage("draussen" + (gl ? "" : " ohne 3D"));
             Pruefe("ohne 3D Orte", gl || seite.OrteKnopfSichtbar, gl ? "mit 3D (kein Knopf Orte)" : seite.OrteKnopfSichtbar ? "Knopf Orte da" : "Knopf Orte FEHLT");
-            var zuVorher = seite.HinweisZu;
-            seite.HinweisUmschalten();
-            await ansicht.BildFertigAsync();
-            var zu = seite.HinweisZu ? "zugeklappt" : "aufgeklappt";
-            var verlassenSoll = !seite.HinweisZu;
-            Pruefe("Handy und Spiel verlassen " + zu, seite.VerlassenKnopf.IsEffectivelyVisible == verlassenSoll && seite.QuestKnopf?.IsEffectivelyVisible == true,
-                (seite.VerlassenKnopf.IsEffectivelyVisible ? "Spiel verlassen da" : "Spiel verlassen weg") + (verlassenSoll ? " (soll da)" : " (soll weg, 371)")
-                + (seite.QuestKnopf?.IsEffectivelyVisible == true ? ", Handy da" : ", Handy FEHLT"));
-            Lage(zu);
-            if (seite.HinweisZu)
-            {
-                // Gegenprobe 371: mit dem alten Verhalten bleibt der Knopf zugeklappt da, die Pruefung oben erkennt das
-                seite.VerlassenZuAltFuerTests = true;
-                seite.Beschriften();
-                await ansicht.BildFertigAsync();
-                var altDa = seite.VerlassenKnopf.IsEffectivelyVisible;
-                seite.VerlassenZuAltFuerTests = false;
-                seite.Beschriften();
-                await ansicht.BildFertigAsync();
-                Pruefe("Gegenprobe 371 zugeklappt alt", altDa && !seite.VerlassenKnopf.IsEffectivelyVisible,
-                    (altDa ? "alt: Knopf da (erkannt)" : "alt: Knopf WEG (Gegenprobe wirkt nicht)") + (seite.VerlassenKnopf.IsEffectivelyVisible ? ", neu: Knopf DA" : ", neu: Knopf weg"));
-            }
-            seite.HinweisUmschalten();
-            await ansicht.BildFertigAsync();
-            Pruefe("Pfeil zurueck", seite.HinweisZu == zuVorher, seite.HinweisZu == zuVorher ? "wie vorher" : "Zustand NICHT zurueck");
-            // nach einem schmalen Fenster steht „Spiel verlassen“ am PC wieder neben dem Pfeil (die Leiste klemmt nicht)
+            // seit A 1.13.0 (Sammelliste 464, Nico 5a): kein Dreieck mehr, das Handy ist immer zu sehen; seit P12-398 das X statt
+            // „Spiel verlassen“ unten
+            var xDa = seite.XKnopf?.IsEffectivelyVisible == true;
+            Pruefe("Handy und X ohne Dreieck", xDa && !seite.VerlassenKnopf.IsEffectivelyVisible && seite.QuestKnopf?.IsEffectivelyVisible == true,
+                (xDa ? "X da" : "X FEHLT") + (seite.VerlassenKnopf.IsEffectivelyVisible ? ", Spiel verlassen UNTEN" : "") + (seite.QuestKnopf?.IsEffectivelyVisible == true ? ", Handy da" : ", Handy FEHLT"));
+            // nach einem schmalen Fenster steht das X am PC wieder oben rechts in der Ecke (die Leiste klemmt nicht)
             if (TopLevel.GetTopLevel(ansicht) is Window fenster)
             {
                 var (breiteVorher, hoeheVorher) = (fenster.Width, fenster.Height);
@@ -111,8 +93,10 @@ public static partial class AutoMessung
                         await ansicht.BildFertigAsync();
                         if (groesse == "pc")
                         {
-                            Pruefe("pc nach schmal", !seite.VerlassenUnten && !seite.KnoepfeUnten,
-                                (seite.VerlassenUnten ? "Spiel verlassen UNTEN" : "Spiel verlassen neben dem Pfeil") + (seite.KnoepfeUnten ? ", Knoepfe UNTER dem Handy" : ", Knoepfe in der Zeile"));
+                            var xr = seite.XKnopf is { IsEffectivelyVisible: true } xk && xk.TranslatePoint(default, seite) is { } xp ? new Rect(xp, xk.Bounds.Size) : (Rect?)null;
+                            var ecke = xr is { } e && e.Right <= seite.Bounds.Width + 0.5 && e.Right >= seite.Bounds.Width - 24 && e.Top <= 24;
+                            Pruefe("pc nach schmal", ecke && !seite.KnoepfeUnten,
+                                (ecke ? "X oben rechts" : xr is null ? "X FEHLT" : "X NICHT in der Ecke") + (seite.KnoepfeUnten ? ", Knoepfe UNTER dem Handy" : ", Knoepfe in der Zeile"));
                         }
                     }
                 }
@@ -217,10 +201,9 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
         }
 
-        // 3. Spiel verlassen aus der Leiste
-        var name = AutomationProperties.GetName(seite.VerlassenKnopf);
-        Pruefe("Spiel verlassen Name", seite.VerlassenKnopf.Content is TextBlock { Text: StadtTexte.Verlassen } || seite.VerlassenKnopf.Content is StadtTexte.Verlassen || name == StadtTexte.Verlassen,
-            "Name „" + (string.IsNullOrEmpty(name) ? StadtTexte.Verlassen + "“ (aus dem Text)" : name + "“"));
+        // 3. Spiel verlassen ueber das X oben rechts (seit P12-398 der einzige Weg, auch im alten Menue nach Frisch)
+        var name = seite.XKnopf is { } xn ? AutomationProperties.GetName(xn) : null;
+        Pruefe("Spiel verlassen Name", name == StadtTexte.Verlassen, "Name „" + name + "“");
         foreach (var art in new[] { "Maus", "Finger", "Eingabetaste", "Screenreader" })
         {
             var s = await SpielSeiteAsync(ansicht);
@@ -231,13 +214,11 @@ public static partial class AutoMessung
             }
             Frisch(s);
             await ansicht.BildFertigAsync();
-            // Sammelliste 371: zugeklappt erst aufklappen (der Weg zum Verlassen bleibt: Pfeil, dann der Knopf)
-            if (s.HinweisZu)
+            if (s.XKnopf is not { IsEffectivelyVisible: true } knopf)
             {
-                s.HinweisUmschalten();
-                await ansicht.BildFertigAsync();
+                Pruefe("Spiel verlassen " + art, false, "X nicht zu sehen");
+                continue;
             }
-            var knopf = s.VerlassenKnopf;
             switch (art)
             {
                 case "Maus":

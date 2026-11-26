@@ -13,10 +13,10 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// Phase 8 W10 (Weisung P8-34): Hinweisfeld zuklappbar (Nico 1b), Uhr steht um 23 Uhr (2c), Tag und Nacht mit 30
+/// Phase 8 W10 (Weisung P8-34): Hinweisfeld zuklappbar (Nico 1b; seit A 1.13.0 ersetzt durch den Hinweis oben, Sammelliste 464), Uhr steht um 23 Uhr (2c), Tag und Nacht mit 30
 /// Laternen (3b), Dashboard breit (4a/5a). Spielteil: Stadt um 07:00, 12:00, 19:00 und 21:00 (Dreiecke und
 /// Zeichenaufrufe zu jeder Uhrzeit gleich, Grenzen der Gesamtansicht auch nachts im Winter mit Weihnachten), Laternen
-/// im Netz der Stadt, Hinweisfeld zu und mit kurzer Meldung. Lernteil: Dashboard breit bei PC-Groesse, schmal am
+/// im Netz der Stadt, Hinweis oben (ganz und aufgeklappt). Lernteil: Dashboard breit bei PC-Groesse, schmal am
 /// Handy, die Ueberschriften der fuenf Kacheln auf einer Hoehe.
 /// </summary>
 public static partial class AutoMessung
@@ -53,21 +53,15 @@ public static partial class AutoMessung
         var mitGl = false;
         try
         {
-            // Hinweisfeld (1b): zuklappen, gemerkt, kurze Meldung neben dem Pfeil, wieder auf
+            // seit A 1.13.0 (Sammelliste 464, Nico 5a) gibt es das Zuklappen nicht mehr: der alte gemerkte Wert bleibt, wie er war
             var spiel = Frisch(seite);
+            var gemerktVorher = Programm.Zustand.Werte[Core.Spiel.Probe.HinweisWahl.Schluessel]?.ToString() ?? "-";
             await ansicht.BildFertigAsync();
-            seite.HinweisUmschalten();
-            await ansicht.BildFertigAsync();
-            Pruefe("Hinweisfeld zu", seite.HinweisZu && Core.Spiel.Probe.HinweisWahl.Zugeklappt(Programm.Zustand.Werte) && seite.KurzeMeldung.Length == 0,
-                $"zu {seite.HinweisZu}, gemerkt {Programm.Zustand.Werte[Core.Spiel.Probe.HinweisWahl.Schluessel]?.ToString() ?? "-"}, Meldung \"{seite.KurzeMeldung}\"");
             spiel.GeheZu("moebelhaus");
             spiel.SofortAnkommen();
             await ansicht.BildFertigAsync();
-            Pruefe("Hinweisfeld zu mit Meldung", seite.KurzeMeldung == spiel.Zeile && spiel.Zeile.Length > 0, "\"" + seite.KurzeMeldung.Replace('\n', ' ') + "\"");
-            seite.HinweisUmschalten();
-            await ansicht.BildFertigAsync();
-            Pruefe("Hinweisfeld wieder offen", !seite.HinweisZu && !Core.Spiel.Probe.HinweisWahl.Zugeklappt(Programm.Zustand.Werte) && seite.KurzeMeldung.Length == 0,
-                $"zu {seite.HinweisZu}");
+            var gemerktNachher = Programm.Zustand.Werte[Core.Spiel.Probe.HinweisWahl.Schluessel]?.ToString() ?? "-";
+            Pruefe("Hinweis: alter Wert unberuehrt", gemerktVorher == gemerktNachher, $"vorher {gemerktVorher}, nachher {gemerktNachher}");
 
             mitGl = await GlAbwartenAsync(seite);
             if (!mitGl)
@@ -118,10 +112,6 @@ public static partial class AutoMessung
             Tageslicht.FesteUhr = null;
             Jahreszeiten.ProbeEnde();
             Festzeit.ProbeEnde();
-            if (seite.HinweisZu)
-            {
-                seite.HinweisUmschalten();
-            }
             seite.SpielSetzen(vorher);
             seite.Flaeche.KameraAufFigur();
             // ohne GL (macOS in der CI) zeichnet die Flaeche nie ein Bild: dann nur auf die Oberflaeche warten
@@ -137,7 +127,7 @@ public static partial class AutoMessung
         return funde;
     }
 
-    /// <summary>Spielansichten fuer die Layoutpruefung: Hinweis zu, zu mit Meldung, Nacht 21:00, Uhr steht (23:00).</summary>
+    /// <summary>Spielansichten fuer die Layoutpruefung: Hinweis oben, oben aufgeklappt, Nacht 21:00, Uhr steht (23:00).</summary>
     private static async IAsyncEnumerable<string> P8W10Ansichten(MainView ansicht)
     {
         var seite = await SpielSeiteAsync(ansicht);
@@ -148,16 +138,22 @@ public static partial class AutoMessung
         }
         var vorher = seite.Spiel;
         var spiel = Frisch(seite);
-        seite.HinweisUmschalten();
-        await ansicht.BildFertigAsync();
-        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/hinweis/zu"));
-        yield return "spiel/hinweis/zu";
+        // seit A 1.13.0 (Sammelliste 464): der Hinweis oben neben der Uhr (Spiel mit Handlungen), ganz und aufgeklappt
+        seite.MenueAltFuerTests = false;
+        seite.HinweisZeitFuerTests = TimeSpan.Zero;
         spiel.GeheZu("moebelhaus");
         spiel.SofortAnkommen();
         await ansicht.BildFertigAsync();
-        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/hinweis/zu-meldung"));
-        yield return "spiel/hinweis/zu-meldung";
-        seite.HinweisUmschalten();
+        await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/hinweis/oben"));
+        yield return "spiel/hinweis/oben";
+        seite.HinweisObenTippen();
+        await ansicht.BildFertigAsync();
+        P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/hinweis/oben-offen"));
+        yield return "spiel/hinweis/oben-offen";
+        seite.HinweisZeitFuerTests = null;
+        seite.MenueAltFuerTests = true;
+        seite.Beschriften();
         Tageslicht.FesteUhr = 1260;
         await ansicht.BildFertigAsync();
         P7W1AnsichtFehler.AddRange(KnoepfeImBild(seite, "spiel/nacht"));

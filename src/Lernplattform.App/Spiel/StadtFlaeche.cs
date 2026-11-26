@@ -478,6 +478,47 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
     /// <inheritdoc cref="LetzteSichtProj"/>
     public float LetzterAbstand { get; private set; }
 
+    /// <summary>
+    /// Welle A 1.13.0 (Start-Test 464): Lage der Figur im letzten Bild (Modell in Einheiten, mal Lage); null = keine Figur gezeichnet
+    /// (im Bus). Zusammen mit <see cref="LetzteSichtProj"/> ergibt sie die Stelle der Figur auf dem Bild.
+    /// </summary>
+    public Matrix4x4? LetzteFigurLage { get; private set; }
+
+    /// <summary>
+    /// Welle A 1.13.0 (Sammelliste 464): Rechteck der Figur auf dem letzten Bild in Punkten der Flaeche (Kasten des Modells, Breite
+    /// 0,6 und Hoehe 1,05 Einheiten, mit <see cref="LetzteFigurLage"/> und <see cref="LetzteSichtProj"/>); null ohne Figur.
+    /// </summary>
+    public Rect? FigurAufBild()
+    {
+        if (LetzteFigurLage is not { } lage || Bounds.Width < 1 || Bounds.Height < 1)
+        {
+            return null;
+        }
+        var m = lage * LetzteSichtProj;
+        double x1 = double.MaxValue, y1 = double.MaxValue, x2 = double.MinValue, y2 = double.MinValue;
+        foreach (var x in FigurKastenXZ)
+        {
+            foreach (var y in FigurKastenY)
+            {
+                foreach (var z in FigurKastenXZ)
+                {
+                    var v = Vector4.Transform(new Vector4(x, y, z, 1), m);
+                    if (v.W <= 1e-4f)
+                    {
+                        return null;
+                    }
+                    var px = ((v.X / v.W) + 1) / 2 * Bounds.Width;
+                    var py = (1 - (v.Y / v.W)) / 2 * Bounds.Height;
+                    (x1, y1, x2, y2) = (Math.Min(x1, px), Math.Min(y1, py), Math.Max(x2, px), Math.Max(y2, py));
+                }
+            }
+        }
+        return x2 - x1 > 1 && y2 - y1 > 1 ? new Rect(x1, y1, x2 - x1, y2 - y1) : null;
+    }
+
+    private static readonly float[] FigurKastenXZ = [-0.3f, 0.3f];
+    private static readonly float[] FigurKastenY = [0f, 1.05f];
+
     private int _festAufrufe;
     private long _festDreiecke;
 
@@ -1195,6 +1236,7 @@ public sealed partial class StadtFlaeche : OpenGlControlBase, ICustomHitTest
                 figurLage = Matrix4x4.CreateScale(groesse) * wiegen * Matrix4x4.CreateRotationY(IchSicht.FigurDrehung(kamera, _spiel) * MathF.PI / 180f)
                     * Matrix4x4.CreateTranslation(_spiel.FigurX, (innen is null ? FigurHoehe(_spiel) : 0f) + (_spiel.SprungHoehe * groesse), _spiel.FigurZ);
             }
+            LetzteFigurLage = _busMitFigur ? null : figurLage;
             if (!_busMitFigur)
             {
                 // Welle A 0.67.0 (Sammelliste 302): im Bus sitzt die Figur im Bus der Linie (siehe Autos), sie selbst nicht

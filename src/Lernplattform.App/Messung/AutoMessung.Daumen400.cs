@@ -54,8 +54,6 @@ public static partial class AutoMessung
         var vorher = seite.Spiel;
         var (breiteVorher, hoeheVorher) = (fenster.Width, fenster.Height);
         var tafelVorher = seite.Tafel?.IsVisible ?? false;
-        // der Zustand „zugeklappt“ ist eine Einstellung: danach wie vorher (sonst fehlen spaeteren Pruefungen die Knoepfe)
-        var zuVorher = seite.HinweisZu;
         var (springen, haltung, liegen) = seite.DaumenKnoepfe;
         string Name(Control c) => Avalonia.Automation.AutomationProperties.GetName(c) ?? "";
         void Tippen(DaumenKnopf k) => (ControlAutomationPeer.CreatePeerForElement(k) as IInvokeProvider)?.Invoke();
@@ -98,10 +96,6 @@ public static partial class AutoMessung
             {
                 fenster.Width = Math.Min(b, hoechstB);
                 fenster.Height = Math.Min(h, hoechstH);
-                if (!seite.HinweisZu)
-                {
-                    seite.HinweisUmschalten();
-                }
                 if (seite.Tafel is { IsVisible: true } t)
                 {
                     t.IsVisible = false;
@@ -196,10 +190,6 @@ public static partial class AutoMessung
             // PC (Nico 4a): drei kleine Symbole unten rechts mit ihrer Taste darunter, mit der Maus antippbar; keine Menue-Eintraege
             seite.DaumenKnoepfeFuerTests = false;
             seite.SpielSetzen(spiel);
-            if (seite.HinweisZu)
-            {
-                seite.HinweisUmschalten();
-            }
             fenster.Width = Math.Min(1280, hoechstB);
             fenster.Height = Math.Min(800, hoechstH);
             await Warten();
@@ -233,10 +223,6 @@ public static partial class AutoMessung
             seite.DaumenKnoepfeFuerTests = null;
             fenster.Width = breiteVorher;
             fenster.Height = hoeheVorher;
-            if (seite.HinweisZu != zuVorher)
-            {
-                seite.HinweisUmschalten();
-            }
             seite.SpielSetzen(vorher);
             if (seite.Tafel is { } t1)
             {

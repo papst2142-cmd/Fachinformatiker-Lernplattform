@@ -57,7 +57,6 @@ public static partial class AutoMessung
         }
         var vorher = seite.Spiel;
         var (breiteVorher, hoeheVorher) = (fenster.Width, fenster.Height);
-        var zuVorher = seite.HinweisZu;
         string Name(Control c) => Avalonia.Automation.AutomationProperties.GetName(c) ?? "";
         void Tippen(DaumenKnopf k) => (ControlAutomationPeer.CreatePeerForElement(k) as IInvokeProvider)?.Invoke();
         void Taste(Key taste, bool runter) => seite.RaiseEvent(new KeyEventArgs
@@ -96,10 +95,6 @@ public static partial class AutoMessung
             var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
             fenster.Width = Math.Min(1360, hoechstB);
             fenster.Height = Math.Min(880, hoechstH);
-            if (seite.HinweisZu)
-            {
-                seite.HinweisUmschalten();
-            }
             // am Ausgang: „F: Zur Stadt“, oben rechts nur das X, unten links Ich-Sicht und Handy, keine Knoepfe des Orts unten
             spiel.Ansehen(innen, innen.StartX, innen.StartZ, 0f);
             await Warten();
@@ -261,8 +256,9 @@ public static partial class AutoMessung
             seite.MenueAltFuerTests = true;
             seite.Beschriften();
             await Warten();
-            Pruefe("Gegenprobe Menue alt", seite.FAnzeige is not { IsEffectivelyVisible: true } && !x.IsEffectivelyVisible && !ich.IsVisible && !handy.IsVisible
-                && seite.VerlassenKnopf.IsEffectivelyVisible,
+            // seit P12-398 (Nachbesserung A 1.13.0): auch im alten Menue ist das X oben rechts der einzige Weg aus dem Spiel
+            Pruefe("Gegenprobe Menue alt", seite.FAnzeige is not { IsEffectivelyVisible: true } && x.IsEffectivelyVisible && !ich.IsVisible && !handy.IsVisible
+                && !seite.VerlassenKnopf.IsEffectivelyVisible,
                 $"F-Anzeige {seite.FAnzeige?.IsEffectivelyVisible}, X {x.IsEffectivelyVisible}, Ich-Symbol {ich.IsVisible}, Handy-Symbol {handy.IsVisible}, Spiel verlassen unten {seite.VerlassenKnopf.IsEffectivelyVisible}");
         }
         finally
@@ -273,10 +269,6 @@ public static partial class AutoMessung
             seite.AuswahlZeigen(false);
             fenster.Width = breiteVorher;
             fenster.Height = hoeheVorher;
-            if (seite.HinweisZu != zuVorher)
-            {
-                seite.HinweisUmschalten();
-            }
             seite.SpielSetzen(vorher);
             await ansicht.BildFertigAsync();
         }

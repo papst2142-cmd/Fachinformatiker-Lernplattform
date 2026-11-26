@@ -48,6 +48,12 @@ public sealed partial class SpielSeite
     private readonly StackPanel _auswahlListe = new() { Spacing = 6 };
     private string _auswahlSchluessel = "";
     private Klickflaeche? _xKnopf;
+
+    /// <summary>
+    /// Gegenprobe zur Nachbesserung A 1.13.0 (Weisung P12-398, nur Start-Test): „Spiel verlassen“ unten in der Karte und das X nur
+    /// mit der Handlung wie bis a0f9e08.
+    /// </summary>
+    internal bool VerlassenUntenAltFuerTests { get; set; }
     private TextBlock? _xSymbol;
     private string _xSymbolFarbe = "";
     private DaumenKnopf? _handyRund;
@@ -358,8 +364,16 @@ public sealed partial class SpielSeite
             _ortKnoepfe.IsVisible = true;
             _knoepfeRolle.IsVisible = true;
         }
-        _xKnopf.IsVisible = modus;
-        if (modus)
+        // Nachbesserung A 1.13.0 (Weisung P12-398): das X oben rechts ist der einzige Weg aus dem Spiel und darum in jeder Lage zu
+        // sehen (auch beim Einrichten, ohne 3D und mit dem alten Menue); Gegenprobe VerlassenUntenAltFuerTests: nur mit der Handlung
+        var xAn = modus || !VerlassenUntenAltFuerTests;
+        if (_xKnopf.IsVisible != xAn)
+        {
+            _xKnopf.IsVisible = xAn;
+            // Welle A 1.13.0: der Platz fuer die Hinweiszeile neben der Uhr haengt am X
+            HinweisObenLegen();
+        }
+        if (xAn)
         {
             // Symbol des X schwarz oder weiss, je nachdem, was auf der Farbe des Programms mehr Kontrast hat
             var farbe = Symbolfarbe.Auf(AkzentHex());
@@ -387,6 +401,8 @@ public sealed partial class SpielSeite
             }
             Avalonia.Automation.AutomationProperties.SetName(_fAnzeige, text);
         }
+        UntenSetzen();
+        HinweisObenZeigen();
         if (_auswahl is { IsVisible: true })
         {
             if (!modus || spiel is null || spiel.Handlungen.Count == 0)
@@ -567,5 +583,19 @@ public sealed partial class SpielSeite
         Canvas.SetLeft(_auswahl, links);
         Canvas.SetTop(_auswahl, oben);
         _auswahl.Arrange(new Rect(links, oben, ds.Width, ds.Height));
+    }
+
+    /// <summary>
+    /// Welle A 1.13.0 (Sammelliste 464): mit der Handlung steht der Hinweis oben; die Karte unten gibt es dann nur noch fuer die
+    /// Anzeige „F: …“ am PC, den Text der Gegenprobe (und die Knoepfe der Probe-APK), sonst ist unten nichts mehr im Weg.
+    /// Nur bei einer Aenderung (Lehre A 1.6.0); auch nach jedem neuen Hinweisfeld gerufen.
+    /// </summary>
+    private void UntenSetzen()
+    {
+        var untenDa = !HandlungModus || (_fAnzeige?.IsVisible ?? false) || _zeileRolle.IsVisible || (_knoepfeRolle.IsVisible && _knoepfe.Children.Any(c => c.IsVisible));
+        if (_unten.IsVisible != untenDa)
+        {
+            _unten.IsVisible = untenDa;
+        }
     }
 }

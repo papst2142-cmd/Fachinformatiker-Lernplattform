@@ -46,10 +46,6 @@ public static partial class AutoMessung
                 return;
             }
             var spiel = Frisch(seite);
-            if (!seite.HinweisZu)
-            {
-                seite.HinweisUmschalten();
-            }
             var fl = seite.Flaeche;
             // Querformat und Vollbild abwarten (die Seite dreht den Bildschirm), dann die Lage festlegen
             for (var i = 0; i < 40; i++)

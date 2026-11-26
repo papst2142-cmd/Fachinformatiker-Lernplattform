@@ -133,7 +133,6 @@ public static partial class AutoMessung
         var vorher = seite.Spiel;
         var (breiteVorher, hoeheVorher) = (fenster.Width, fenster.Height);
         var schriftVorher = Zustand.SchriftFaktor(Einstellungen.Schriftgroesse(Zustand.Werte));
-        var zuVorher = seite.HinweisZu;
         // die Leiste liegt in der Ebene ueber der Flaeche; solange die Tafel (Spielmenue) offen ist, ist sie verdeckt
         var tafelVorher = seite.Tafel?.IsVisible ?? false;
         // Lage messen: Mitten, Symbole unter dem Daumen, Seite des Sticks
@@ -174,30 +173,33 @@ public static partial class AutoMessung
                 {
                     fenster.Width = Math.Min(b, hoechstB);
                     fenster.Height = Math.Min(h, hoechstH);
-                    double? symboleZu = null;
-                    foreach (var zu in new[] { true, false })
+                    // seit A 1.13.0 (Sammelliste 464, Nico 5a) gibt es nur noch die offene Leiste (kein Dreieck zum Zuklappen)
+                    foreach (var zu in new[] { false })
                     {
-                        if (seite.HinweisZu != zu)
-                        {
-                            seite.HinweisUmschalten();
-                        }
                         var punkt = string.Create(inv, $"{groesse} {fenster.Width:0}x{fenster.Height:0} Schrift {faktor * 100:0} % {(zu ? "zugeklappt" : "aufgeklappt")}");
                         if (await MessenAsync() is not { } m)
                         {
                             Pruefe(punkt, false, $"Leiste nicht gemessen (Ebene sichtbar {seite.Ebene.IsEffectivelyVisible}, Tafel {seite.Tafel?.IsVisible})");
                             continue;
                         }
-                        symboleZu ??= m.Symbole;
-                        // zugeklappt ist links unten immer der Stick; aufgeklappt darf das Menue (am schmalen Bild ueber die ganze
-                        // Breite) dort liegen, aber nie ein Symbol unter dem Daumen
-                        var ok = Math.Abs(m.Symbole - m.Seite) <= 2 && Math.Abs(m.Leiste - m.Seite) <= 2 && Math.Abs(m.Symbole - symboleZu.Value) <= 2
-                            && !m.UnterDaumen && (!zu || m.Stick == Sticks.Seite.Links);
+                        // das Menue darf (am schmalen Bild ueber die ganze Breite) links unten liegen, aber nie ein Symbol unter dem Daumen
+                        var ok = Math.Abs(m.Symbole - m.Seite) <= 2 && Math.Abs(m.Leiste - m.Seite) <= 2 && !m.UnterDaumen;
                         Pruefe(punkt, ok, string.Create(inv,
-                            $"Mitte Symbole {m.Symbole:0.0}, Leiste {m.Leiste:0.0}, Bild {m.Seite:0.0} (±2), zugeklappt {symboleZu:0.0}; Daumen links unten: {(m.UnterDaumen ? "SYMBOL" : "kein Symbol")}, {(m.Stick is { } s ? "Stick " + s : "KEIN Stick")}"));
+                            $"Mitte Symbole {m.Symbole:0.0}, Leiste {m.Leiste:0.0}, Bild {m.Seite:0.0} (±2); Daumen links unten: {(m.UnterDaumen ? "SYMBOL" : "kein Symbol")}, {(m.Stick is { } s ? "Stick " + s : "KEIN Stick")}"));
                         if (!zu && !seite.Flaeche.GlBereit)
                         {
                             // ohne 3D gibt es keine Ich-Sicht (Knopf nur mit 3D, Welle A 0.92.0): nichts zu pruefen (Teil Nachladen am Mac)
                             Messwerte.Notiere("Spiel: Leiste 399 " + punkt + " Ich-Sicht links (402): ohne 3D kein Knopf Ich-Sicht, nicht geprueft");
+                        }
+                        else if (!zu && !seite.VerlassenKnopf.IsVisible)
+                        {
+                            // Nachbesserung A 1.13.0 (Weisung P12-398): ohne „Spiel verlassen“ unten steht „Ich-Sicht“ allein links neben
+                            // dem Handy-Knopf (ganz links der Mitte der Symbole, innerhalb der Leiste)
+                            var il = seite.IchKnopfLage();
+                            var links = il is { } q && q.Ich.Right <= q.Mitte && seite.LeisteRechteck() is { } lr && q.Ich.X >= lr.X - 0.5 && q.Ich.Right <= lr.Right + 0.5;
+                            Pruefe(punkt + " Ich-Sicht links (402)", links, il is { } q3
+                                ? string.Create(inv, $"Ich-Sicht {q3.Ich.X:0.0}..{q3.Ich.Right:0.0}, Mitte {q3.Mitte:0.0}, Leiste {(seite.LeisteRechteck() is { } l3 ? $"{l3.X:0.0}..{l3.Right:0.0}" : "-")}")
+                                : "Ich-Sicht nicht gemessen");
                         }
                         else if (!zu)
                         {
@@ -217,14 +219,10 @@ public static partial class AutoMessung
                     }
                 }
             }
-            // Gegenprobe: alte Lage links unten (Handy quer, zugeklappt) liegt unter dem Daumen
+            // Gegenprobe: alte Lage links unten (Handy quer) liegt nicht in der Mitte oder unter dem Daumen
             Schrift.Anwenden(1.0);
             fenster.Width = Math.Min(832, hoechstB);
             fenster.Height = Math.Min(384, hoechstH);
-            if (!seite.HinweisZu)
-            {
-                seite.HinweisUmschalten();
-            }
             seite.LeisteLinksAltFuerTests = true;
             seite.Beschriften();
             var alt = await MessenAsync();
@@ -241,10 +239,6 @@ public static partial class AutoMessung
             Schrift.Anwenden(schriftVorher);
             fenster.Width = breiteVorher;
             fenster.Height = hoeheVorher;
-            if (seite.HinweisZu != zuVorher)
-            {
-                seite.HinweisUmschalten();
-            }
             seite.SpielSetzen(vorher);
             if (seite.Tafel is { } t1)
             {

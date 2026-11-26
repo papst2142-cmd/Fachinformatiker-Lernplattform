@@ -67,6 +67,12 @@ public sealed class Tastenbelegung
     /// </summary>
     public const string Handeln = "handeln";
 
+    /// <summary>
+    /// Welle A 1.13.0 (Sammelliste 464, Weisung P12-394 Antwort 3a: „am PC auch eine Taste“): den ganzen Hinweis oben zeigen und
+    /// wieder schliessen (wie Tippen auf die Zeile oben). Standardtaste „H“.
+    /// </summary>
+    public const string Hinweis = "hinweis";
+
     /// <summary>Die vier Gehtasten (werden gehalten, nicht nur gedrueckt).</summary>
     public static readonly IReadOnlySet<string> Gehen = new HashSet<string>(StringComparer.Ordinal) { GehVor, GehZurueck, GehLinks, GehRechts };
 
@@ -75,7 +81,7 @@ public sealed class Tastenbelegung
     /// behaelt diese eigene Wahl beim Lesen Vorrang (nie still verloren); die neue Aufgabe hat dann keine Taste, bis man ihr in
     /// den Optionen eine gibt (<see cref="OhneTaste"/>).
     /// </summary>
-    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher, IchSicht, Springen, Ducken, Kriechen, GehVor, GehZurueck, GehLinks, GehRechts, Handeln };
+    public static readonly IReadOnlySet<string> NeuAb080 = new HashSet<string>(StringComparer.Ordinal) { Steiler, Flacher, IchSicht, Springen, Ducken, Kriechen, GehVor, GehZurueck, GehLinks, GehRechts, Handeln, Hinweis };
 
     /// <summary>Gespeicherter Wert „keine Taste“ (nur fuer die Aufgaben aus <see cref="NeuAb080"/> nach einem Zusammenstoss).</summary>
     public const string OhneTaste = "";
@@ -105,6 +111,7 @@ public sealed class Tastenbelegung
         (GehLinks, "Gehen: nach links", ["A"]),
         (GehRechts, "Gehen: nach rechts", ["D"]),
         (Handeln, "Handlung hier (Tür, Bus, Gegenstand)", ["F"]),
+        (Hinweis, "Hinweis ganz zeigen und schließen", ["H"]),
     ];
 
     /// <summary>Bleiben dem Programm (Esc bricht ab, die anderen braucht die Bedienung).</summary>

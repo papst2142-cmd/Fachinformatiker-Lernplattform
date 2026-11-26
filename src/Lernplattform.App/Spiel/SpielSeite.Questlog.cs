@@ -289,6 +289,14 @@ public sealed partial class SpielSeite
     }
 
     /// <summary>
+    /// Start-Test (Weisung P12-398): Rechteck von „Ich-Sicht“ in Punkten der Seite und die Mitte der Symbole (null, solange nicht zu
+    /// sehen oder nicht angeordnet). Seit „Spiel verlassen“ unten entfaellt, steht „Ich-Sicht“ allein links neben dem Handy-Knopf.
+    /// </summary>
+    public (Rect Ich, double Mitte)? IchKnopfLage() =>
+        _ichKnopf.IsEffectivelyVisible && LeisteMitten() is { } m && _ichKnopf.TranslatePoint(default, this) is { } i
+            ? (new Rect(i, _ichKnopf.Bounds.Size), m.Symbole) : null;
+
+    /// <summary>
     /// Gegenprobe Sammelliste 399 (Start-Test, je Seite wie <see cref="OrtslisteAltFuerTests"/>): Leiste links wie bis A 0.98.0
     /// (Handy-Knopf am linken Rand, dort wo der linke Daumen liegt).
     /// </summary>
@@ -308,7 +316,9 @@ public sealed partial class SpielSeite
         }
         _unten.HorizontalAlignment = LeisteLinksAltFuerTests ? HorizontalAlignment.Left : HorizontalAlignment.Center;
         var hoechstens = Math.Min(_unten.MaxWidth, Ebene.Bounds.Width);
-        var breite = HinweisZu || hoechstens <= 0 ? double.NaN : hoechstens;
+        // Welle A 1.13.0 (Sammelliste 464): ohne Pfeil gibt es kein Zuklappen mehr; mit der Handlung (Text oben) ist die Karte nur so
+        // breit wie ihr Inhalt (Anzeige „F: …“), sonst so breit wie moeglich wie bisher aufgeklappt
+        var breite = HinweisObenAn || hoechstens <= 0 ? double.NaN : hoechstens;
         if (!(double.IsNaN(breite) && double.IsNaN(_unten.Width)) && breite != _unten.Width)
         {
             _unten.Width = breite;
@@ -318,7 +328,13 @@ public sealed partial class SpielSeite
             return;
         }
         var skala = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
-        var mitte = (_questKnopf.IsVisible ? _questKnopf.DesiredSize.Width : 0) + (_klapp.IsVisible ? _klapp.DesiredSize.Width : 0);
+        // Welle A 1.13.0: ohne Pfeil ist der Handy-Knopf die einzige Breite in der Mitte; eben erst sichtbar geworden ist er noch
+        // nicht gemessen (DesiredSize 0, „Spiel verlassen“ stand ohne 3D am schmalen Handy daneben und ragte aus der Karte)
+        if (_questKnopf.IsVisible && _questKnopf.DesiredSize.Width <= 0)
+        {
+            _questKnopf.Measure(Size.Infinity);
+        }
+        var mitte = _questKnopf.IsVisible ? _questKnopf.DesiredSize.Width : 0;
         var innen = hoechstens - _unten.Padding.Left - _unten.Padding.Right - _unten.BorderThickness.Left - _unten.BorderThickness.Right
             - zeile.Margin.Left - zeile.Margin.Right;
         // Breite ohne den eigenen Rand (der wechselt mit der Lage) auf Bildpunkte gerundet, plus Rand in der Zeile (4)
@@ -362,12 +378,12 @@ public sealed partial class SpielSeite
     }
 
     /// <summary>
-    /// Start-Test (Sammelliste 399): Mitte der zwei Symbole (Handy und Pfeil) und Mitte der Leiste, waagerecht in Punkten der
-    /// Seite; null, solange nicht angeordnet.
+    /// Start-Test (Sammelliste 399): Mitte der Symbole (seit A 1.13.0 nur noch der Handy-Knopf, ohne Pfeil) und Mitte der Leiste,
+    /// waagerecht in Punkten der Seite; null, solange nicht angeordnet.
     /// </summary>
     public (double Symbole, double Leiste, double Seite)? LeisteMitten()
     {
-        if (_questKnopf is not { } q || q.TranslatePoint(default, this) is not { } a || _klapp.TranslatePoint(new Point(_klapp.Bounds.Width, 0), this) is not { } e
+        if (_questKnopf is not { } q || q.TranslatePoint(default, this) is not { } a || q.TranslatePoint(new Point(q.Bounds.Width, 0), this) is not { } e
             || _unten.TranslatePoint(default, this) is not { } u || Bounds.Width <= 0)
         {
             return null;
