@@ -101,6 +101,7 @@ public static partial class AutoMessung
         funde += await EchtDpaAsync(ansicht, k, e, bestand, MesspunktW2);
         funde += await EchtDvAsync(ansicht, k, e, bestand, MesspunktW2);
         funde += await EchtW1Async(ansicht, k, e, MesspunktW2);
+        funde += await EchtW2Async(ansicht, k, e, MesspunktW2);    // A 1.12.0: Struktogramm im Baukasten (Weisung P12-390)
         funde += await Baukasten456Async(ansicht, k, e);     // A 1.11.0: Baukasten in voller Breite (Sammelliste 456)
         k.Probe(-1);
         trainer.ArtWaehlen(TrainerTexte.Uebung);

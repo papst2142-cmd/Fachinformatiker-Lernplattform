@@ -260,7 +260,7 @@
   }
  },
  "pruefungssaetze": {
-  "format": 4,
+  "format": 5,
   "fehler": [],
   "saetze": {
    "alle_ap1_01": {
@@ -1353,8 +1353,8 @@
      "luecke": 4,
      "rechnen": 3,
      "tabelle": 2,
-     "zeichnen": 1,
-     "zeilen": 12
+     "zeichnen": 2,
+     "zeilen": 11
     },
     "operatoren": {
      "begruenden": 2,
@@ -1367,7 +1367,8 @@
      "nennen": 3
     },
     "punkte_selbst": 68,
-    "punkte_programm": 32
+    "punkte_programm": 32,
+    "fassung": 2
    },
    "ae_b2_03": {
     "fachrichtung": "ae",
@@ -2835,7 +2836,8 @@
      "auswahl": 1,
      "luecke": 2,
      "tabelle": 1,
-     "zeilen": 13
+     "zeichnen": 1,
+     "zeilen": 12
     },
     "operatoren": {
      "begruenden": 1,
@@ -2850,6 +2852,7 @@
     },
     "punkte_selbst": 84,
     "punkte_programm": 16,
+    "fassung": 2,
     "aufbau": "paar",
     "gebiete": {
      "diagramm": 19,

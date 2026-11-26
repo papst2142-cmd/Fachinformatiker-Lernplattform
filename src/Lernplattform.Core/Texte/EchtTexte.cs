@@ -210,6 +210,51 @@ public static class EchtTexte
     public const string Anwendungsfaelle = "Anwendungsfälle";
     public const string ZaehlOhneText = "Ohne Text: %s";
 
+    // -- A 1.12.0: Struktogramm im Baukasten (Weisung P12-390, Plan P12-250) ---------------------------------
+    public const string StruktogrammAnleitung = "Wähle einen Strukturblock: er kommt an die Stelle, die „Neuer Block kommt …“ "
+        + "nennt. Tippe auf einen Block oder einen Zweig, um ihn zu wählen. Ohne Maus geht alles über die Liste „Deine Zeichnung“ "
+        + "und die Knöpfe beim gewählten Block.";
+    public const string StruktogrammName = "Struktogramm";
+    public const string StruktogrammFlaeche = "Zeichenfläche: Struktogramm";
+    public const string StruktogrammUnlesbar = "Deine gespeicherte Zeichnung ließ sich nicht lesen. Der Baukasten beginnt wieder leer.";
+    public const string StruktogrammLeer = "Noch kein Block gesetzt.";
+    public const string StruktogrammVoll = "Mehr Blöcke oder tiefere Verschachtelung gehen nicht.";
+    public const string NichtsGewaehltBlock = "Kein Block gewählt. Ein neuer Block kommt ans Ende. Tippe auf einen Block oder wähle ihn in der Liste.";
+    public const string NeuerBlockKommt = "Neuer Block kommt";
+    public const string KommtNach = "nach diesem Block";
+    public const string KommtVor = "vor diesem Block";
+    public const string KommtInZweig = "in %s (ans Ende)";
+    public const string KommtZweigEnde = "in diesen Zweig (ans Ende)";
+    public const string KommtZweigAnfang = "in diesen Zweig (an den Anfang)";
+    public const string KommtEnde = "ans Ende";
+    public const string KommtAnfang = "an den Anfang";
+    public const string Heraus = "Heraus";
+    public const string HerausName = "Heraus (eine Ebene nach außen)";
+    public const string EntfernenFrage = "%s mit allem, was darin steht (%d Blöcke), entfernen?";
+    public const string EntfernenFrageTitel = "Block entfernen";
+    public const string FallNeu = "Fall hinzufügen";
+    public const string FallEntfernen = "Fall entfernen";
+    public const string FeldAnweisung = "Anweisung";
+    public const string FeldBedingung = "Bedingung";
+    public const string FeldAusdruck = "Ausdruck";
+    public const string FeldKopf = "Schleifenkopf";
+    public const string FeldUnterprogramm = "Unterprogramm";
+    public const string FeldFall = "Wert des Falls";
+    public const string LeerZeichen = "∅";
+    public const string LeerText = "∅ (leer)";
+    public const string Oben = "auf oberster Ebene";
+    public const string ImZweig = "im %s von %s";
+    public const string BloeckeIn = "%s: %d Blöcke";
+    public const string BlockIn = "%s: 1 Block";
+    public const string ZweigLeer = "%s: leer";
+    public const string BlockNr = "Block %s";
+    public const string ZweigVon = "%s von %s";
+    public const string ZaehlLeer = "Leere Zweige (∅): %d, im Musterbild %d";
+    public const string ZaehlTiefe = "Tiefste Verschachtelung: Ebene %d, im Musterbild %d";
+    public const string ZaehlFaelle = "Fälle der Fallauswahl (ohne sonst): %d, im Musterbild %d";
+    public const string ZaehlOrt = "%s %s: %d, im Musterbild %d";
+    public const string StruktogrammKopf = "Struktogramm (von oben nach unten):";
+
     public const string ErgebnisAufgaben = "Nach Aufgaben";
     public const string ErgebnisAufgabenUntertitel = "Unter 50 Prozent rot";
     public const string AufgabePunkte = "%d von %d";

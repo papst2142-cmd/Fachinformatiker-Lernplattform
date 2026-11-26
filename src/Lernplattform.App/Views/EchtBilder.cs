@@ -1166,6 +1166,10 @@ public static class EchtBilder
     public static StackPanel Diagramm(EchtDiagramm diagramm, string titel, bool alsText = false) =>
         MitText(new DiagrammBild(diagramm), titel, [], EchtZeichnung.Textfassung(diagramm), [], alsText);
 
+    /// <summary>A 1.12.0 (Weisung P12-390): Struktogramm samt Textfassung.</summary>
+    public static StackPanel Struktogramm(IReadOnlyList<EchtBlock> bloecke, string titel, bool alsText = false) =>
+        MitText(new StruktogrammBild(bloecke), titel, [], EchtStruktogramm.Textfassung(bloecke), [], alsText);
+
     private static StackPanel MitText(EchtBild bild, string titel, IReadOnlyList<string> legende, IReadOnlyList<string> textfassung,
         IReadOnlyList<string> zusatz, bool alsText)
     {

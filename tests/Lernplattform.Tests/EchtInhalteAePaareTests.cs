@@ -105,8 +105,9 @@ public class EchtInhalteAePaareTests
     public void AE_NurAngehaengt_DateiDavorBytegleich_Format3()
     {
         var echt = File.ReadAllBytes(EchtTestDatei.Datei);
-        // A 1.8.0 (Weisung P12-372): die Datei traegt Format 4 (neue Fassungen); geprueft wird weiter der Teil bis A 0.93.0
-        Assert.Equal(4, (int)JsonNode.Parse(echt)!["format"]!);
+        // A 1.8.0 (Weisung P12-372): die Datei traegt Format 4 (neue Fassungen), seit A 1.12.0 Format 5 (Struktogramm, P12-390);
+        // geprueft wird weiter der Teil bis A 0.93.0
+        Assert.Equal(5, (int)JsonNode.Parse(echt)!["format"]!);
         var roh = EchtTestDatei.AlsFormat2(echt);
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
@@ -115,7 +116,7 @@ public class EchtInhalteAePaareTests
         roh[100] ^= 1;
         Assert.NotEqual(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
         var anders = (byte[])echt.Clone();
-        anders[13] = (byte)'5';
+        anders[13] = (byte)'6';
         Assert.ThrowsAny<Exception>(() => EchtTestDatei.AlsFormat2(anders));
     }
 
@@ -280,9 +281,10 @@ public class EchtInhalteAePaareTests
                 if (t.Antwort.Form == EchtSaetze.FormZeichnen)
                 {
                     // A 1.8.0 (Weisung P12-372): Klassen- und Use-Case-Diagramm nur in den neuen Fassungen und nur dort, wo die
-                    // neue Fassung den Teil geaendert hat (EchtW1BaukastenTests prueft die fuenf Teile einzeln)
+                    // neue Fassung den Teil geaendert hat (EchtW1BaukastenTests prueft die fuenf Teile einzeln); A 1.12.0 (P12-390)
+                    // ebenso das Struktogramm (EchtStruktogrammTests prueft die zwei Teile einzeln)
                     Assert.Contains(t.Antwort.Diagramm, t.Fassung >= 2
-                        ? new[] { EchtZeichnung.Klasse, EchtZeichnung.UseCase } : new[] { EchtZeichnung.Uml, EchtZeichnung.Er });
+                        ? new[] { EchtZeichnung.Klasse, EchtZeichnung.UseCase, EchtStruktogramm.Art } : new[] { EchtZeichnung.Uml, EchtZeichnung.Er });
                 }
                 if (t.Operator is "erstellen" or "zeichnen" && t.Antwort.Form != EchtSaetze.FormZeichnen
                     && (text.Contains("diagramm", StringComparison.OrdinalIgnoreCase) || text.Contains("Skizze", StringComparison.Ordinal)

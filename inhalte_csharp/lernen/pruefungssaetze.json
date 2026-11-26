@@ -1,5 +1,5 @@
 {
- "format": 4,
+ "format": 5,
  "saetze": [
   {
    "kennung": "alle_ap1_01",
@@ -89076,6 +89076,3060 @@
         {
          "text": "passende Gegenmaßnahme",
          "punkte": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "ae_b2_02",
+   "fassung": 2,
+   "fachrichtung": "ae",
+   "bereich": "b2",
+   "firma": "Weinkellerei Rebenhang eG",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Weinkellerei Rebenhang eG ist eine Genossenschaft von 85 Winzerfamilien mit 52 Beschäftigten. Kelterhaus, Keller und Verwaltung liegen in Rebenhang, ein zweites Lager mit Abfüllanlage in Steinbrunn.",
+    "In beiden Kellern gibt es zusammen 4 000 Fasspositionen für Barriques, Holzfässer und Edelstahltanks. Die Lagersoftware wird in der eigenen IT-Abteilung mit vier Personen weiterentwickelt.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Anwendungsentwicklung in dieser IT-Abteilung.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Sortieren der Füllmengen",
+    "2. Monatliche Bestandsprüfung",
+    "3. Datenmodell der Lagerdatenbank",
+    "4. Änderungen in der Lagerdatenbank mit SQL"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "code",
+     "titel": "Pseudocode der Sortierung (Feldindex beginnt bei 0)",
+     "zeilen": [
+      " 1  prozedur sortiere(liste, n)",
+      " 2    grenze ← n − 1",
+      " 3    getauscht ← wahr",
+      " 4    solange getauscht und grenze > 0",
+      " 5      getauscht ← falsch",
+      " 6      fuer i von 0 bis grenze − 1",
+      " 7        wenn liste[i] > liste[i + 1] dann",
+      " 8          hilf ← liste[i]",
+      " 9          liste[i] ← liste[i + 1]",
+      "10          liste[i + 1] ← hilf",
+      "11          getauscht ← wahr",
+      "12        ende wenn",
+      "13      ende fuer",
+      "14      grenze ← grenze − 1",
+      "15    ende solange",
+      "16  ende prozedur"
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "text",
+     "titel": "Regeln der monatlichen Bestandsprüfung",
+     "zeilen": [
+      "Für jede der n Fasspositionen liegen im Feld position[] die Positionsnummer, im Feld soll[] der gebuchte Bestand und im Feld ist[] der gemessene Bestand in Litern vor. Der Feldindex beginnt bei 0.",
+      "Für jede Position wird die Differenz ist minus soll gebildet.",
+      "Ist die Differenz größer als 0, fehlt eine Buchung: Das Programm gibt „Buchung fehlt“ mit der Positionsnummer aus und zählt diese Fälle.",
+      "Sonst ist der Betrag der Differenz der Schwund dieser Position; er wird für alle Positionen aufsummiert. Liegt der Schwund dieser Position über 2 % ihres Soll-Bestands, kommt die Position auf die Prüfliste, und das Programm zählt diese Fälle.",
+      "Nach allen Positionen gibt das Programm die Zahl der Positionen auf der Prüfliste, die Zahl der fehlenden Buchungen und die Summe des Schwunds aus."
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "tabelle",
+     "titel": "Messwerte der Bestandsprüfung im Oktober (Auszug, Liter)",
+     "spalten": [
+      "Position",
+      "Behälter",
+      "Soll",
+      "Ist"
+     ],
+     "zeilen": [
+      [
+       "P-0107",
+       "Barrique",
+       "225",
+       "221"
+      ],
+      [
+       "P-0214",
+       "Edelstahltank",
+       "12 000",
+       "11 730"
+      ],
+      [
+       "P-0333",
+       "Holzfass",
+       "1 200",
+       "1 200"
+      ],
+      [
+       "P-0458",
+       "Barrique",
+       "225",
+       "214"
+      ],
+      [
+       "P-0512",
+       "Edelstahltank",
+       "8 500",
+       "8 560"
+      ],
+      [
+       "P-0620",
+       "Holzfass",
+       "2 400",
+       "2 371"
+      ]
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "text",
+     "titel": "Anforderungen an die Lagerdatenbank",
+     "zeilen": [
+      "Zu jedem Wein werden Weinnummer, Bezeichnung, Rebsorte und Jahrgang gespeichert.",
+      "Zu jedem Fass werden Fassnummer, Art (Barrique, Holzfass oder Tank) und Fassungsvermögen in Litern gespeichert. Ein Fass enthält genau einen Wein; ein Wein kann in vielen Fässern liegen.",
+      "Ein Lagerort hat eine Lagerplatznummer, eine Halle und eine Reihe. Jedes Fass steht an genau einem Lagerort, und an einem Lagerort steht höchstens ein Fass.",
+      "Zu jeder Abfüllung werden Abfüllnummer, Datum und Zahl der Flaschen gespeichert. Für eine Abfüllung wird Wein aus mehreren Fässern entnommen, und aus einem Fass kann für mehrere Abfüllungen entnommen werden.",
+      "Für jede Entnahme wird die Menge in Litern gespeichert."
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle Entnahme",
+     "spalten": [
+      "Fassnummer",
+      "Abfuellnummer",
+      "Menge"
+     ],
+     "zeilen": [
+      [
+       "207",
+       "11",
+       "300"
+      ],
+      [
+       "223",
+       "11",
+       "450"
+      ],
+      [
+       "230",
+       "11",
+       "500"
+      ],
+      [
+       "215",
+       "12",
+       "225"
+      ],
+      [
+       "207",
+       "12",
+       "180"
+      ],
+      [
+       "223",
+       "12",
+       "410"
+      ],
+      [
+       "212",
+       "13",
+       "600"
+      ],
+      [
+       "230",
+       "13",
+       "900"
+      ]
+     ]
+    },
+    {
+     "nr": "6",
+     "art": "code",
+     "titel": "Tabellenmodell der Lagerdatenbank (PK = Primärschlüssel, FK = Fremdschlüssel)",
+     "zeilen": [
+      "Wein (Weinnummer PK, Bezeichnung, Rebsorte, Jahrgang)",
+      "Fass (Fassnummer PK, Art, Fassungsvermoegen, Fuellmenge, Weinnummer FK → Wein, Lagerplatznummer FK → Lagerort, eindeutig)",
+      "Lagerort (Lagerplatznummer PK, Halle, Reihe)",
+      "Abfuellung (Abfuellnummer PK, Datum, Flaschen)",
+      "Entnahme (Fassnummer PK, FK → Fass; Abfuellnummer PK, FK → Abfuellung; Menge)"
+     ]
+    },
+    {
+     "nr": "7",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle Wein",
+     "spalten": [
+      "Weinnummer",
+      "Bezeichnung",
+      "Rebsorte",
+      "Jahrgang"
+     ],
+     "zeilen": [
+      [
+       "301",
+       "Hangkante",
+       "Riesling",
+       "2022"
+      ],
+      [
+       "302",
+       "Rotlinde",
+       "Spätburgunder",
+       "2023"
+      ],
+      [
+       "303",
+       "Kalkstein",
+       "Silvaner",
+       "2023"
+      ],
+      [
+       "304",
+       "Morgentau",
+       "Müller-Thurgau",
+       "2024"
+      ],
+      [
+       "305",
+       "Sonnenrain",
+       "Riesling",
+       "2023"
+      ]
+     ]
+    },
+    {
+     "nr": "8",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle Fass (Mengen in Litern)",
+     "spalten": [
+      "Fassnummer",
+      "Art",
+      "Fassungsvermoegen",
+      "Fuellmenge",
+      "Weinnummer",
+      "Lagerplatznummer"
+     ],
+     "zeilen": [
+      [
+       "201",
+       "Barrique",
+       "225",
+       "210",
+       "302",
+       "A-01-03"
+      ],
+      [
+       "207",
+       "Holzfass",
+       "1200",
+       "640",
+       "301",
+       "A-02-01"
+      ],
+      [
+       "212",
+       "Tank",
+       "8500",
+       "7900",
+       "305",
+       "B-01-01"
+      ],
+      [
+       "215",
+       "Barrique",
+       "225",
+       "225",
+       "302",
+       "A-01-04"
+      ],
+      [
+       "218",
+       "Tank",
+       "5000",
+       "4100",
+       "303",
+       "B-01-02"
+      ],
+      [
+       "223",
+       "Holzfass",
+       "2400",
+       "1950",
+       "303",
+       "A-03-02"
+      ],
+      [
+       "230",
+       "Tank",
+       "12000",
+       "9100",
+       "304",
+       "B-02-01"
+      ]
+     ]
+    },
+    {
+     "nr": "9",
+     "art": "englisch",
+     "titel": "Excerpt from the documentation of the database system",
+     "zeilen": [
+      "A foreign key links a column to the primary key of another table.",
+      "By default, a row cannot be deleted while rows in another table still refer to it through a foreign key.",
+      "If ON DELETE CASCADE is set for the foreign key, the referring rows are deleted together with the row.",
+      "Several statements can be grouped into a transaction that starts with START TRANSACTION and ends with COMMIT.",
+      "If an error occurs before COMMIT, ROLLBACK undoes all changes of the transaction."
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Sortieren der Füllmengen",
+     "punkte": 25,
+     "einleitung": [
+      "Die Lagersoftware sortiert die Fässer einer Reihe nach ihrer Füllmenge, damit beim Abfüllen zuerst die fast leeren Fässer geleert werden. Den Pseudocode zeigt Anlage 1; die Reihe enthält Fässer mit 640, 215, 980, 120, 455 und 730 Litern (n = 6)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie für den Aufruf sortiere([640, 215, 980, 120, 455, 730], 6) die Liste nach jedem Durchlauf der solange-Schleife und die Zahl der Tauschvorgänge in diesem Durchlauf. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "nach Durchlauf",
+         "Liste",
+         "Tauschvorgänge"
+        ],
+        "zeilen": [
+         [
+          "1",
+          "215, 640, 120, 455, 730, 980",
+          "4"
+         ],
+         [
+          "2",
+          {
+           "loesung": [
+            "215, 120, 455, 640, 730, 980",
+            "215,120,455,640,730,980",
+            "215; 120; 455; 640; 730; 980",
+            "215;120;455;640;730;980",
+            "215 120 455 640 730 980",
+            "[215, 120, 455, 640, 730, 980]",
+            "[215,120,455,640,730,980]",
+            "[215; 120; 455; 640; 730; 980]",
+            "[215;120;455;640;730;980]",
+            "[215 120 455 640 730 980]"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "2"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "3",
+          {
+           "loesung": [
+            "120, 215, 455, 640, 730, 980",
+            "120,215,455,640,730,980",
+            "120; 215; 455; 640; 730; 980",
+            "120;215;455;640;730;980",
+            "120 215 455 640 730 980",
+            "[120, 215, 455, 640, 730, 980]",
+            "[120,215,455,640,730,980]",
+            "[120; 215; 455; 640; 730; 980]",
+            "[120;215;455;640;730;980]",
+            "[120 215 455 640 730 980]"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "1"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "4",
+          {
+           "loesung": [
+            "120, 215, 455, 640, 730, 980",
+            "120,215,455,640,730,980",
+            "120; 215; 455; 640; 730; 980",
+            "120;215;455;640;730;980",
+            "120 215 455 640 730 980",
+            "[120, 215, 455, 640, 730, 980]",
+            "[120,215,455,640,730,980]",
+            "[120; 215; 455; 640; 730; 980]",
+            "[120;215;455;640;730;980]",
+            "[120 215 455 640 730 980]"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "0"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Durchlauf 2: 215, 120, 455, 640, 730, 980 (2 Tauschvorgänge)",
+        "Durchlauf 3: 120, 215, 455, 640, 730, 980 (1 Tauschvorgang)",
+        "Durchlauf 4: Liste unverändert (0 Tauschvorgänge), getauscht bleibt falsch, die Schleife endet."
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für denselben Aufruf die Zahl der Vergleiche in Zeile 7, die Zahl aller Tauschvorgänge und die Zahl der Durchläufe der solange-Schleife."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Vergleiche in Zeile 7",
+          "art": "zahl",
+          "loesung": [
+           "14"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Tauschvorgänge insgesamt",
+          "art": "zahl",
+          "loesung": [
+           "7"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Durchläufe der solange-Schleife",
+          "art": "zahl",
+          "loesung": [
+           "4"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Vergleiche: 5 + 4 + 3 + 2 = 14",
+        "Tauschvorgänge: 4 + 2 + 1 + 0 = 7",
+        "Durchläufe: 4"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie die Aufgabe der Variable getauscht (Zeilen 3, 5 und 11) und ihre Wirkung beim Aufruf aus a)."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "getauscht merkt sich, ob in einem Durchlauf mindestens einmal getauscht wurde; ist das nicht der Fall, ist die Liste sortiert und die Schleife endet vorzeitig.",
+        "Beim Aufruf aus a) endet die Schleife nach dem 4. Durchlauf; der 5. Durchlauf mit einem Vergleich entfällt (14 statt 15 Vergleiche)."
+       ],
+       "hinweise": [
+        {
+         "text": "vorzeitiges Ende, wenn kein Tausch mehr nötig ist",
+         "punkte": 2
+        },
+        {
+         "text": "Wirkung beim Aufruf: ein Durchlauf bzw. ein Vergleich weniger",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "berechnen",
+       "text": [
+        "Im Lager gibt es 4 000 Fasspositionen. Berechnen Sie, wie viele Vergleiche das Verfahren aus Anlage 1 im ungünstigsten Fall für alle 4 000 Füllmengen braucht. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Vergleiche",
+        "ergebnis": 7998000,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Im ungünstigsten Fall (absteigend sortiert) wird in jedem Durchlauf getauscht, es gibt n − 1 Durchläufe.",
+        "Vergleiche: (n − 1) + (n − 2) + … + 1 = n × (n − 1) ÷ 2",
+        "4 000 × 3 999 ÷ 2 = 7 998 000"
+       ],
+       "hinweise": [
+        {
+         "text": "Summe (n − 1) + … + 1 bzw. n × (n − 1) ÷ 2 angesetzt",
+         "punkte": 1
+        },
+        {
+         "text": "Zahl der Durchläufe n − 1 = 3 999 erkannt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "berechnen",
+       "text": [
+        "Ein schnelleres Sortierverfahren braucht für die 4 000 Füllmengen rund 48 000 Vergleiche. Berechnen Sie, wie viel Mal so viele Vergleiche das Verfahren aus Anlage 1 im ungünstigsten Fall braucht. Runden Sie auf eine ganze Zahl."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "-fach",
+        "ergebnis": 167,
+        "toleranz": 0.5,
+        "ersatz_ergebnis": 125,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "1"
+       ],
+       "ersatzwert": {
+        "bezug": "1d",
+        "text": "Falls Sie d) nicht lösen konnten, rechnen Sie mit 6 000 000 Vergleichen."
+       },
+       "loesung": [
+        "7 998 000 ÷ 48 000 ≈ 166,6, also rund das 167-Fache",
+        "Mit dem Ersatzwert: 6 000 000 ÷ 48 000 = 125"
+       ],
+       "hinweise": [
+        {
+         "text": "Verhältnis der beiden Vergleichszahlen gebildet",
+         "punkte": 1
+        },
+        {
+         "text": "richtig gerundet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Sortierverfahren, die im Mittel mit deutlich weniger Vergleichen auskommen als das Verfahren aus Anlage 1."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Quicksort",
+        "Mergesort (Sortieren durch Mischen)",
+        "Heapsort"
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, was ein stabiles Sortierverfahren ist, und geben Sie an, ob das Verfahren aus Anlage 1 stabil ist."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Stabil: Elemente mit gleichem Sortierwert behalten ihre Reihenfolge aus der Eingabe.",
+        "Das Verfahren aus Anlage 1 ist stabil, weil es nur bei „größer als“ (Zeile 7) tauscht; gleiche Füllmengen werden nie vertauscht."
+       ],
+       "hinweise": [
+        {
+         "text": "Begriff stabil beschrieben",
+         "punkte": 2
+        },
+        {
+         "text": "stabil, mit Bezug auf den Vergleich „>“ in Zeile 7",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Monatliche Bestandsprüfung",
+     "punkte": 24,
+     "einleitung": [
+      "Einmal im Monat werden die Füllstände aller Fässer gemessen und mit den gebuchten Beständen verglichen. Die Regeln für das Prüfprogramm stehen in Anlage 2."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie im Baukasten ein Struktogramm (Nassi-Shneiderman) für die Bestandsprüfung nach Anlage 2."
+       ],
+       "punkte": 9,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "struktogramm",
+        "muster": {
+         "art": "struktogramm",
+         "bloecke": [
+          {
+           "typ": "anweisung",
+           "text": "anzahlPruefen ← 0; anzahlBuchung ← 0; summeSchwund ← 0"
+          },
+          {
+           "typ": "zaehlschleife",
+           "text": "für i von 0 bis n − 1",
+           "rumpf": [
+            {
+             "typ": "anweisung",
+             "text": "differenz ← ist[i] − soll[i]"
+            },
+            {
+             "typ": "verzweigung",
+             "text": "differenz > 0 ?",
+             "ja": [
+              {
+               "typ": "anweisung",
+               "text": "Ausgabe „Buchung fehlt“, position[i]"
+              },
+              {
+               "typ": "anweisung",
+               "text": "anzahlBuchung ← anzahlBuchung + 1"
+              }
+             ],
+             "nein": [
+              {
+               "typ": "anweisung",
+               "text": "summeSchwund ← summeSchwund − differenz"
+              },
+              {
+               "typ": "verzweigung",
+               "text": "−differenz > soll[i] × 0,02 ?",
+               "ja": [
+                {
+                 "typ": "anweisung",
+                 "text": "position[i] in die Prüfliste aufnehmen"
+                },
+                {
+                 "typ": "anweisung",
+                 "text": "anzahlPruefen ← anzahlPruefen + 1"
+                }
+               ],
+               "nein": []
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "typ": "anweisung",
+           "text": "Ausgabe anzahlPruefen, anzahlBuchung, summeSchwund"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Anweisung: anzahlPruefen ← 0; anzahlBuchung ← 0; summeSchwund ← 0",
+        "Zählschleife: für i von 0 bis n − 1",
+        "  Anweisung: differenz ← ist[i] − soll[i]",
+        "  Verzweigung: differenz > 0 ?",
+        "    ja: Ausgabe „Buchung fehlt“, position[i]; anzahlBuchung ← anzahlBuchung + 1",
+        "    nein: summeSchwund ← summeSchwund − differenz",
+        "          Verzweigung: −differenz > soll[i] × 0,02 ?",
+        "            ja: position[i] in die Prüfliste aufnehmen; anzahlPruefen ← anzahlPruefen + 1",
+        "            nein: (leerer Block)",
+        "Ausgabe: anzahlPruefen, anzahlBuchung, summeSchwund (nach der Schleife)"
+       ],
+       "hinweise": [
+        {
+         "text": "Zähler und Summe vor der Schleife mit 0 belegt",
+         "punkte": 1
+        },
+        {
+         "text": "Zählschleife über alle Positionen von 0 bis n − 1",
+         "punkte": 2
+        },
+        {
+         "text": "Differenz ist − soll in der Schleife berechnet",
+         "punkte": 1
+        },
+        {
+         "text": "Verzweigung differenz > 0 mit Ausgabe „Buchung fehlt“ und Zählen",
+         "punkte": 2
+        },
+        {
+         "text": "Schwund im Nein-Zweig aufsummiert (Betrag)",
+         "punkte": 1
+        },
+        {
+         "text": "innere Verzweigung 2 % des Soll mit Prüfliste und Zählen",
+         "punkte": 1
+        },
+        {
+         "text": "Ausgabe der drei Ergebnisse nach der Schleife, Symbole richtig verschachtelt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie die Ausgaben des Prüfprogramms für die Messwerte aus Anlage 3."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Positionen auf der Prüfliste",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "fehlende Buchungen",
+          "art": "zahl",
+          "loesung": [
+           "1"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Summe des Schwunds in Litern",
+          "art": "zahl",
+          "loesung": [
+           "314"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2",
+        "3"
+       ],
+       "loesung": [
+        "Prüfliste: P-0214 (270 l > 240 l) und P-0458 (11 l > 4,5 l) = 2",
+        "Buchung fehlt: P-0512 = 1",
+        "Schwund: 4 + 270 + 0 + 11 + 29 = 314 Liter"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie für zwei Positionen aus Anlage 3 die Differenz ist minus soll und das Ergebnis der Prüfung (normal, Prüfliste oder Buchung fehlt). Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Position",
+         "Differenz in Litern",
+         "Ergebnis"
+        ],
+        "zeilen": [
+         [
+          "P-0107",
+          "−4",
+          "normal"
+         ],
+         [
+          "P-0214",
+          {
+           "loesung": [
+            "-270",
+            "-270 l",
+            "-270l",
+            "-270 Liter",
+            "−270",
+            "−270 l",
+            "−270l",
+            "−270 Liter",
+            "- 270",
+            "- 270 l",
+            "- 270l",
+            "- 270 Liter",
+            "− 270",
+            "− 270 l",
+            "− 270l",
+            "− 270 Liter"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "Prüfliste",
+            "Pruefliste",
+            "prüfen",
+            "pruefen",
+            "auf Prüfliste",
+            "auf die Prüfliste",
+            "auf Pruefliste",
+            "auf die Pruefliste"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "P-0512",
+          {
+           "loesung": [
+            "60",
+            "60 l",
+            "60l",
+            "60 Liter",
+            "+60",
+            "+60 l",
+            "+60l",
+            "+60 Liter",
+            "+ 60",
+            "+ 60 l",
+            "+ 60l",
+            "+ 60 Liter"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "Buchung fehlt",
+            "fehlende Buchung"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "2",
+        "3"
+       ],
+       "loesung": [
+        "P-0214: −270 Liter, Schwund 2,25 % > 2 % → Prüfliste",
+        "P-0512: +60 Liter → Buchung fehlt"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, warum die Grenze für den Schwund in Prozent des Soll-Bestands und nicht als feste Literzahl festgelegt ist."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "3"
+       ],
+       "loesung": [
+        "Die Behälter sind sehr verschieden groß (Barrique 225 l, Tank 12 000 l).",
+        "Eine feste Literzahl wäre für kleine Fässer zu groß und für große Tanks zu klein.",
+        "Der normale Schwund (Verdunstung) wächst etwa mit der Menge, darum passt ein Anteil."
+       ],
+       "hinweise": [
+        {
+         "text": "unterschiedliche Behältergrößen mit Beispiel aus Anlage 3",
+         "punkte": 1
+        },
+        {
+         "text": "Folge einer festen Grenze für kleine und große Behälter",
+         "punkte": 1
+        },
+        {
+         "text": "Schwund wächst mit der Menge",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Vorteile eines Struktogramms gegenüber einem Programmablaufplan."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "erlaubt nur strukturierte Abläufe, keine beliebigen Sprünge",
+        "kompakt, Verschachtelung auf einen Blick erkennbar",
+        "lässt sich direkt in Kontrollstrukturen einer Programmiersprache übertragen",
+        "unabhängig von einer Programmiersprache und gut zu ändern"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum für das Durchlaufen aller Positionen eine Zählschleife besser passt als eine fußgesteuerte Schleife."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Die Zahl der Durchläufe (n Positionen) steht vor Beginn fest; die Zählschleife führt den Index selbst und kann ihn nicht vergessen.",
+        "Eine fußgesteuerte Schleife läuft mindestens einmal; bei n = 0 würde sie auf ein Feld ohne Elemente zugreifen."
+       ],
+       "hinweise": [
+        {
+         "text": "Zahl der Durchläufe steht vorher fest, Index wird von der Schleife geführt",
+         "punkte": 2
+        },
+        {
+         "text": "Nachteil der fußgesteuerten Schleife bei n = 0",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Datenmodell der Lagerdatenbank",
+     "punkte": 26,
+     "einleitung": [
+      "Die Fässer und Abfüllungen werden bisher in Listen geführt. Für eine neue Lagerdatenbank sollen Sie das Datenmodell entwerfen; die Anforderungen stehen in Anlage 4."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie ein ER-Modell in Chen-Notation mit allen Entitäten, Beziehungen, Attributen und Kardinalitäten aus Anlage 4.",
+        "Wein mit zwei Attributen, die Beziehung „enthält“ und Fass mit seinem Schlüssel sind vorgegeben. Kennzeichnen Sie Schlüsselattribute."
+       ],
+       "punkte": 9,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "er",
+        "vorgabe": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "wnr",
+           "typ": "attribut",
+           "text": "Weinnummer",
+           "x": 0,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "bez",
+           "typ": "attribut",
+           "text": "Bezeichnung",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "wein",
+           "typ": "entitaet",
+           "text": "Wein",
+           "x": 1,
+           "y": 1
+          },
+          {
+           "id": "enth",
+           "typ": "beziehung",
+           "text": "enthält",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "fnr",
+           "typ": "attribut",
+           "text": "Fassnummer",
+           "x": 4,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "fass",
+           "typ": "entitaet",
+           "text": "Fass",
+           "x": 5,
+           "y": 1
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "wein",
+           "nach": "wnr"
+          },
+          {
+           "von": "wein",
+           "nach": "bez"
+          },
+          {
+           "von": "enth",
+           "nach": "fass"
+          },
+          {
+           "von": "enth",
+           "nach": "wein"
+          },
+          {
+           "von": "fass",
+           "nach": "fnr"
+          }
+         ]
+        },
+        "muster": {
+         "art": "er",
+         "elemente": [
+          {
+           "id": "wnr",
+           "typ": "attribut",
+           "text": "Weinnummer",
+           "x": 0,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "bez",
+           "typ": "attribut",
+           "text": "Bezeichnung",
+           "x": 1,
+           "y": 0
+          },
+          {
+           "id": "rebs",
+           "typ": "attribut",
+           "text": "Rebsorte",
+           "x": 2,
+           "y": 0
+          },
+          {
+           "id": "jg",
+           "typ": "attribut",
+           "text": "Jahrgang",
+           "x": 0,
+           "y": 2
+          },
+          {
+           "id": "wein",
+           "typ": "entitaet",
+           "text": "Wein",
+           "x": 1,
+           "y": 1
+          },
+          {
+           "id": "enth",
+           "typ": "beziehung",
+           "text": "enthält",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "fnr",
+           "typ": "attribut",
+           "text": "Fassnummer",
+           "x": 4,
+           "y": 0,
+           "schluessel": true
+          },
+          {
+           "id": "art",
+           "typ": "attribut",
+           "text": "Art",
+           "x": 5,
+           "y": 0
+          },
+          {
+           "id": "fv",
+           "typ": "attribut",
+           "text": "Fassungsvermögen",
+           "x": 6,
+           "y": 0
+          },
+          {
+           "id": "fass",
+           "typ": "entitaet",
+           "text": "Fass",
+           "x": 5,
+           "y": 1
+          },
+          {
+           "id": "steht",
+           "typ": "beziehung",
+           "text": "steht an",
+           "x": 5,
+           "y": 3
+          },
+          {
+           "id": "lager",
+           "typ": "entitaet",
+           "text": "Lagerort",
+           "x": 5,
+           "y": 5
+          },
+          {
+           "id": "lnr",
+           "typ": "attribut",
+           "text": "Lagerplatznummer",
+           "x": 4,
+           "y": 6,
+           "schluessel": true
+          },
+          {
+           "id": "halle",
+           "typ": "attribut",
+           "text": "Halle",
+           "x": 5,
+           "y": 6
+          },
+          {
+           "id": "reihe",
+           "typ": "attribut",
+           "text": "Reihe",
+           "x": 6,
+           "y": 6
+          },
+          {
+           "id": "entn",
+           "typ": "beziehung",
+           "text": "entnommen für",
+           "x": 3,
+           "y": 3
+          },
+          {
+           "id": "menge",
+           "typ": "attribut",
+           "text": "Menge",
+           "x": 3,
+           "y": 4
+          },
+          {
+           "id": "abf",
+           "typ": "entitaet",
+           "text": "Abfüllung",
+           "x": 1,
+           "y": 5
+          },
+          {
+           "id": "anr",
+           "typ": "attribut",
+           "text": "Abfüllnummer",
+           "x": 0,
+           "y": 6,
+           "schluessel": true
+          },
+          {
+           "id": "dat",
+           "typ": "attribut",
+           "text": "Datum",
+           "x": 1,
+           "y": 6
+          },
+          {
+           "id": "fl",
+           "typ": "attribut",
+           "text": "Zahl der Flaschen",
+           "x": 2,
+           "y": 6
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "wein",
+           "nach": "wnr"
+          },
+          {
+           "von": "wein",
+           "nach": "bez"
+          },
+          {
+           "von": "wein",
+           "nach": "rebs"
+          },
+          {
+           "von": "wein",
+           "nach": "jg"
+          },
+          {
+           "von": "enth",
+           "nach": "fass",
+           "kard": "n"
+          },
+          {
+           "von": "enth",
+           "nach": "wein",
+           "kard": "1"
+          },
+          {
+           "von": "fass",
+           "nach": "fnr"
+          },
+          {
+           "von": "fass",
+           "nach": "art"
+          },
+          {
+           "von": "fass",
+           "nach": "fv"
+          },
+          {
+           "von": "steht",
+           "nach": "fass",
+           "kard": "1"
+          },
+          {
+           "von": "steht",
+           "nach": "lager",
+           "kard": "1"
+          },
+          {
+           "von": "lager",
+           "nach": "lnr"
+          },
+          {
+           "von": "lager",
+           "nach": "halle"
+          },
+          {
+           "von": "lager",
+           "nach": "reihe"
+          },
+          {
+           "von": "entn",
+           "nach": "fass",
+           "kard": "n"
+          },
+          {
+           "von": "entn",
+           "nach": "abf",
+           "kard": "m"
+          },
+          {
+           "von": "entn",
+           "nach": "menge"
+          },
+          {
+           "von": "abf",
+           "nach": "anr"
+          },
+          {
+           "von": "abf",
+           "nach": "dat"
+          },
+          {
+           "von": "abf",
+           "nach": "fl"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Wein: Weinnummer (Schlüssel), Bezeichnung, Rebsorte, Jahrgang; Fass: Fassnummer (Schlüssel), Art, Fassungsvermögen",
+        "„enthält“: Fass n : 1 Wein",
+        "Lagerort: Lagerplatznummer (Schlüssel), Halle, Reihe; „steht an“: Fass 1 : 1 Lagerort",
+        "Abfüllung: Abfüllnummer (Schlüssel), Datum, Zahl der Flaschen; „entnommen für“: Fass n : m Abfüllung mit dem Attribut Menge"
+       ],
+       "hinweise": [
+        {
+         "text": "übrige Attribute Rebsorte, Jahrgang, Art und Fassungsvermögen",
+         "punkte": 1
+        },
+        {
+         "text": "Kardinalität n:1 bei „enthält“ (n am Fass, 1 am Wein)",
+         "punkte": 1
+        },
+        {
+         "text": "Entität Lagerort mit Schlüssel Lagerplatznummer, Halle und Reihe",
+         "punkte": 2
+        },
+        {
+         "text": "Beziehung „steht an“ mit 1:1",
+         "punkte": 1
+        },
+        {
+         "text": "Entität Abfüllung mit Schlüssel Abfüllnummer, Datum und Zahl der Flaschen",
+         "punkte": 1
+        },
+        {
+         "text": "Beziehung zwischen Fass und Abfüllung mit n:m",
+         "punkte": 2
+        },
+        {
+         "text": "Attribut Menge an dieser Beziehung",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie aus den Beispieldaten in Anlage 5 die folgenden Werte."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der Fässer bei Abfüllung 12",
+          "art": "zahl",
+          "loesung": [
+           "3"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "bei Abfüllung 12 entnommene Menge in Litern",
+          "art": "zahl",
+          "loesung": [
+           "815"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zahl der Abfüllungen, für die aus Fass 207 entnommen wurde",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Nummer der Abfüllung mit der größten entnommenen Gesamtmenge",
+          "art": "zahl",
+          "loesung": [
+           "13"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Abfüllung 12: Fässer 215, 207, 223 = 3",
+        "Menge: 225 + 180 + 410 = 815 Liter",
+        "Fass 207: Abfüllungen 11 und 12 = 2",
+        "Gesamtmengen: 11 = 1 250 l, 12 = 815 l, 13 = 1 500 l, also Abfüllung 13"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, wie die Datenbank sicherstellen kann, dass an einem Lagerort höchstens ein Fass steht."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "In der Tabelle Fass steht die Lagerplatznummer als Fremdschlüssel auf Lagerort.",
+        "Zusätzlich bekommt diese Spalte eine Eindeutigkeitsbedingung (UNIQUE); dann kann keine zweite Zeile dieselbe Lagerplatznummer tragen."
+       ],
+       "hinweise": [
+        {
+         "text": "Fremdschlüssel Lagerplatznummer in Fass",
+         "punkte": 1
+        },
+        {
+         "text": "Eindeutigkeit (UNIQUE) der Spalte verhindert ein zweites Fass",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, warum die Menge ein Attribut der Beziehung zwischen Fass und Abfüllung ist und nicht der Entität Abfüllung."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Zu einer Abfüllung gehören mehrere Fässer, aus denen jeweils eine andere Menge entnommen wird.",
+        "Die Menge hängt also von Fass und Abfüllung gemeinsam ab.",
+        "Als Attribut der Abfüllung könnte nur eine Menge je Abfüllung gespeichert werden."
+       ],
+       "hinweise": [
+        {
+         "text": "mehrere Fässer je Abfüllung mit verschiedenen Mengen",
+         "punkte": 1
+        },
+        {
+         "text": "Menge hängt von beiden Entitäten ab",
+         "punkte": 1
+        },
+        {
+         "text": "Folge bei Attribut der Abfüllung",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Prüfregeln (CHECK-Bedingungen), die für die Tabelle Fass sinnvoll sind."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Fassungsvermoegen > 0",
+        "Fuellmenge >= 0",
+        "Fuellmenge <= Fassungsvermoegen",
+        "Art IN ('Barrique', 'Holzfass', 'Tank')"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "berechnen",
+       "text": [
+        "Bei der Abfüllung 12 gehen 2 % der entnommenen Menge verloren (Filter, Leitungen). Berechnen Sie, wie viele volle 0,75-Liter-Flaschen abgefüllt werden. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Flaschen",
+        "ergebnis": 1064,
+        "toleranz": 0,
+        "ersatz_ergebnis": 1176,
+        "punkte_ergebnis": 2
+       },
+       "ersatzwert": {
+        "bezug": "3b",
+        "text": "Falls Sie die entnommene Menge in b) nicht ermitteln konnten, rechnen Sie mit 900 Litern."
+       },
+       "loesung": [
+        "815 l × 0,98 = 798,7 l",
+        "798,7 l ÷ 0,75 l ≈ 1 064,9, also 1 064 volle Flaschen (abrunden)",
+        "Mit dem Ersatzwert: 900 l × 0,98 = 882 l, 882 l ÷ 0,75 l = 1 176 Flaschen"
+       ],
+       "hinweise": [
+        {
+         "text": "Verlust von 2 % abgezogen",
+         "punkte": 1
+        },
+        {
+         "text": "durch 0,75 l geteilt und auf volle Flaschen abgerundet",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Änderungen in der Lagerdatenbank mit SQL",
+     "punkte": 25,
+     "einleitung": [
+      "Die Lagerdatenbank ist eingerichtet (Tabellenmodell in Anlage 6, Beispieldaten in den Anlagen 5, 7 und 8). Sie sollen Änderungen mit SQL vornehmen."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die beiden Anweisungen für folgende Änderungen:",
+        "1. Neuer Wein mit der Weinnummer 306, Bezeichnung Steinriegel, Rebsorte Riesling, Jahrgang 2025: INSERT INTO Wein …",
+        "2. Aus Fass 207 wurden 40 Liter für eine Probe entnommen: UPDATE Fass …"
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "6"
+       ],
+       "loesung": [
+        "INSERT INTO Wein (Weinnummer, Bezeichnung, Rebsorte, Jahrgang) VALUES (306, 'Steinriegel', 'Riesling', 2025);",
+        "UPDATE Fass SET Fuellmenge = Fuellmenge - 40 WHERE Fassnummer = 207;"
+       ],
+       "hinweise": [
+        {
+         "text": "INSERT mit passenden Werten in richtiger Reihenfolge, Texte in Hochkommas",
+         "punkte": 2
+        },
+        {
+         "text": "UPDATE mit SET Fuellmenge = Fuellmenge − 40 und WHERE Fassnummer = 207 (ohne WHERE: 0 Punkte für diese Anweisung)",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ergaenzen",
+       "text": [
+        "Alle Entnahmen von Fässern mit dem Wein „Morgentau“ wurden falsch erfasst. Ergänzen Sie die Anweisung DELETE FROM Entnahme WHERE … so, dass sie diese Zeilen mit Unterabfragen löscht. Die Weinnummer darf nicht fest eingetragen werden."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "6"
+       ],
+       "loesung": [
+        "DELETE FROM Entnahme WHERE Fassnummer IN (SELECT Fassnummer FROM Fass WHERE Weinnummer = (SELECT Weinnummer FROM Wein WHERE Bezeichnung = 'Morgentau'));",
+        "Gleichwertig: … WHERE Weinnummer IN (SELECT Weinnummer FROM Wein WHERE Bezeichnung = 'Morgentau') …; andere richtige Anweisung mit gleichem Ergebnis: volle Punkte."
+       ],
+       "hinweise": [
+        {
+         "text": "Fassnummer IN (Unterabfrage auf Fass)",
+         "punkte": 2
+        },
+        {
+         "text": "innere Unterabfrage auf Wein über die Bezeichnung",
+         "punkte": 1
+        },
+        {
+         "text": "Spalten richtig verknüpft, Anweisung lauffähig",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Abfrage SELECT Fassnummer, Fuellmenge FROM Fass WHERE … so, dass sie alle Fässer mit Wein des Jahrgangs 2023 liefert, deren Füllmenge über der durchschnittlichen Füllmenge aller Fässer liegt."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "6"
+       ],
+       "loesung": [
+        "SELECT Fassnummer, Fuellmenge FROM Fass",
+        "WHERE Weinnummer IN (SELECT Weinnummer FROM Wein WHERE Jahrgang = 2023)",
+        "AND Fuellmenge > (SELECT AVG(Fuellmenge) FROM Fass);",
+        "Andere richtige Abfrage mit gleichem Ergebnis: volle Punkte."
+       ],
+       "hinweise": [
+        {
+         "text": "Unterabfrage auf Wein mit IN",
+         "punkte": 2
+        },
+        {
+         "text": "Bedingung Jahrgang = 2023",
+         "punkte": 1
+        },
+        {
+         "text": "Unterabfrage mit AVG(Fuellmenge)",
+         "punkte": 1
+        },
+        {
+         "text": "beide Bedingungen mit AND verbunden",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie mit den Beispieldaten aus den Anlagen 5, 7 und 8 (Stand vor den Änderungen aus a) und b)) die folgenden Werte. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zeilen, die die Anweisung aus b) löscht",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zeilen, die die Abfrage aus c) liefert",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Summe der Füllmengen dieser Zeilen in Litern",
+          "art": "zahl",
+          "loesung": [
+           "12000"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "5",
+        "7",
+        "8"
+       ],
+       "loesung": [
+        "„Morgentau“ = Wein 304 in Fass 230; Fass 230 hat zwei Entnahmen (Abfüllungen 11 und 13) → 2 Zeilen",
+        "Durchschnitt aller Füllmengen: 24 125 ÷ 7 ≈ 3 446,4 l; Jahrgang 2023: Weine 302, 303, 305 → Fässer 201, 212, 215, 218, 223; darüber: 212 (7 900) und 218 (4 100) → 2 Zeilen",
+        "Summe: 7 900 + 4 100 = 12 000 Liter"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "erlaeutern",
+       "text": [
+        "Die Anweisung DELETE FROM Wein WHERE Weinnummer = 304; wird von der Datenbank abgewiesen. Erläutern Sie den Grund mit Anlage 8 und Anlage 9."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "8",
+        "9"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Fass 230 verweist mit seinem Fremdschlüssel Weinnummer noch auf den Wein 304.",
+        "Nach Anlage 9 darf eine Zeile ohne ON DELETE CASCADE nicht gelöscht werden, solange eine andere Tabelle auf sie verweist (referentielle Integrität)."
+       ],
+       "hinweise": [
+        {
+         "text": "Verweis von Fass 230 auf Wein 304 erkannt",
+         "punkte": 2
+        },
+        {
+         "text": "Regel der referentiellen Integrität aus Anlage 9",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, was Anlage 9 über Fremdschlüssel, das Löschen verwiesener Zeilen und Transaktionen aussagt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Mit ON DELETE CASCADE werden die verweisenden Zeilen beim Löschen mitgelöscht.",
+         "Ohne besondere Einstellung löscht das System verweisende Zeilen automatisch.",
+         "ROLLBACK macht alle Änderungen einer Transaktion rückgängig, wenn vor COMMIT ein Fehler auftritt.",
+         "Ein Fremdschlüssel verbindet eine Spalte mit dem Primärschlüssel einer anderen Tabelle.",
+         "Eine Transaktion endet mit START TRANSACTION."
+        ],
+        "richtig": [
+         0,
+         2,
+         3
+        ]
+       },
+       "anlagen": [
+        "9"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Zutreffend: CASCADE löscht mit; ROLLBACK macht die Transaktion rückgängig; ein Fremdschlüssel verweist auf den Primärschlüssel einer anderen Tabelle.",
+        "Nicht zutreffend: ohne Einstellung wird das Löschen abgewiesen; START TRANSACTION beginnt die Transaktion, COMMIT beendet sie."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "beschreiben",
+       "text": [
+        "Aus Fass 218 sollen 400 Liter in Fass 223 umgefüllt werden; dazu sind zwei UPDATE-Anweisungen nötig. Beschreiben Sie mit Anlage 9, wie Sie verhindern, dass nach einem Fehler nur eine der beiden Änderungen gespeichert ist."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "8",
+        "9"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Beide Anweisungen in eine Transaktion legen:",
+        "START TRANSACTION; UPDATE Fass SET Fuellmenge = Fuellmenge - 400 WHERE Fassnummer = 218; UPDATE Fass SET Fuellmenge = Fuellmenge + 400 WHERE Fassnummer = 223; COMMIT;",
+        "Tritt vor COMMIT ein Fehler auf, macht ROLLBACK beide Änderungen rückgängig (alles oder nichts)."
+       ],
+       "hinweise": [
+        {
+         "text": "beide UPDATE-Anweisungen in einer Transaktion (START TRANSACTION … COMMIT)",
+         "punkte": 2
+        },
+        {
+         "text": "ROLLBACK bei Fehler, alles oder nichts",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "ae_b2_08",
+   "fassung": 2,
+   "fachrichtung": "ae",
+   "bereich": "b2",
+   "aufbau": "paar",
+   "firma": "Kantinenservice Sonnhalde GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Kantinenservice Sonnhalde GmbH betreibt im Auftrag von Industrie- und Verwaltungsbetrieben 12 Betriebskantinen im Raum Felsgrubenau und beschäftigt 280 Mitarbeiterinnen und Mitarbeiter. Verwaltung, Zentralküche und die IT-Abteilung haben ihren Sitz in Sonnhalde.",
+    "Das in Bereich 1 geplante Vorbestell-System mit Allergenangaben wird jetzt umgesetzt: Gäste bestellen ihre Gerichte vor, das System warnt bei Allergenen aus ihrem Allergieprofil, und die Daten gehen an die Kassen der Kantinen.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Anwendungsentwicklung in der IT-Abteilung und entwickeln Teile des Systems.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Nicht abgeholte Essen",
+    "2. Allergenprüfung",
+    "3. Freigabe von Restportionen",
+    "4. Auswertungen mit SQL"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "code",
+     "titel": "Klassen des Vorbestell-Systems und Hinweise zum Pseudocode",
+     "zeilen": [
+      "Klasse Bestellung: - kantinenNr: int; - abholtag: Datum; - status: String; - gast: Gast; - gericht: Gericht",
+      "  + getKantinenNr(): int; + getAbholtag(): Datum; + getStatus(): String; + getGast(): Gast; + getGericht(): Gericht",
+      "  status ist \"offen\" (noch nicht abgeholt), \"abgeholt\" oder \"storniert\"",
+      "Klasse Gast: - personalNr: int; - allergene: String[]",
+      "  + getPersonalNr(): int; + getAllergene(): String[] (Codes des Allergieprofils, leeres Feld ohne Profil)",
+      "Klasse Gericht: - bezeichnung: String; - allergene: String[]",
+      "  + getBezeichnung(): String; + getAllergene(): String[]",
+      "Pseudocode: Felder beginnen beim Index 0; länge(feld) liefert die Zahl der Elemente; ausgabe(...) gibt einen Text aus;",
+      "  Zuweisung mit ←, Vergleich mit = und ≠, Schleifen: für i von 0 bis n - 1 … ende für, solange … ende solange"
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "tabelle",
+     "titel": "Beispieldaten im Feld bestellungen (Auszug)",
+     "spalten": [
+      "Index",
+      "getKantinenNr()",
+      "getAbholtag()",
+      "getStatus()"
+     ],
+     "zeilen": [
+      [
+       "0",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "1",
+       "3",
+       "02.12.2026",
+       "offen"
+      ],
+      [
+       "2",
+       "7",
+       "02.12.2026",
+       "offen"
+      ],
+      [
+       "3",
+       "3",
+       "02.12.2026",
+       "storniert"
+      ],
+      [
+       "4",
+       "3",
+       "01.12.2026",
+       "offen"
+      ],
+      [
+       "5",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "6",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "7",
+       "3",
+       "02.12.2026",
+       "offen"
+      ],
+      [
+       "8",
+       "9",
+       "02.12.2026",
+       "abgeholt"
+      ],
+      [
+       "9",
+       "3",
+       "02.12.2026",
+       "abgeholt"
+      ]
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "code",
+     "titel": "Pseudocode der Allergenprüfung (fehlerhaft)",
+     "zeilen": [
+      " 1  funktion enthaeltAllergen(gerichtCodes, profilCodes)",
+      " 2    n ← länge(gerichtCodes)",
+      " 3    m ← länge(profilCodes)",
+      " 4    gefunden ← falsch",
+      " 5    i ← 0",
+      " 6    solange i < n oder gefunden = falsch",
+      " 7      für j von 0 bis m",
+      " 8        wenn gerichtCodes[i] = profilCodes[j] dann",
+      " 9          gefunden ← wahr",
+      "10        ende wenn",
+      "11      ende für",
+      "12      i ← i + 1",
+      "13    ende solange",
+      "14    rückgabe gefunden",
+      "15  ende funktion"
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "text",
+     "titel": "Regeln für die Ausgabeliste eines Tages",
+     "zeilen": [
+      "Die Prozedur ausgabeliste(bestellungen, tag) geht alle Bestellungen im Feld bestellungen der Reihe nach durch.",
+      "Bestellungen mit einem anderen Abholtag und stornierte Bestellungen werden übersprungen.",
+      "Für jede andere Bestellung werden die Bezeichnung des Gerichts und die Personalnummer des Gastes ausgegeben, und die Bestellung wird gezählt.",
+      "Liefert enthaeltAllergen (Anlage 3, ohne Fehler) für die Allergene des Gerichts und des Gastes wahr, wird zusätzlich „Rückfrage Allergen“ ausgegeben und gezählt.",
+      "Nach allen Bestellungen werden die Zahl der ausgegebenen Bestellungen und die Zahl der Rückfragen ausgegeben."
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "code",
+     "titel": "Pseudocode der Freigabe einer Restportion",
+     "zeilen": [
+      "// uhrzeit und getAbholEnde() sind Uhrzeiten (hh:mm), die sich vergleichen lassen",
+      " 1  funktion freigeben(bestellung, uhrzeit)",
+      " 2    frei ← falsch",
+      " 3    wenn bestellung.getStatus() = \"offen\" dann",
+      " 4      wenn uhrzeit >= bestellung.getAbholEnde() dann",
+      " 5        frei ← wahr",
+      " 6      ende wenn",
+      " 7    ende wenn",
+      " 8    rückgabe frei",
+      " 9  ende funktion"
+     ]
+    },
+    {
+     "nr": "6",
+     "art": "code",
+     "titel": "Tabellenmodell der Vorbestell-Datenbank (PK = Primärschlüssel, FK = Fremdschlüssel)",
+     "zeilen": [
+      "Kantine (KantinenNr PK, Name, Ort)",
+      "Gericht (GerichtNr PK, Bezeichnung, Grundpreis)",
+      "Allergen (Code PK, Bezeichnung)",
+      "Gericht_Allergen (GerichtNr PK, FK → Gericht; Code PK, FK → Allergen)",
+      "Gast (Personalnummer PK, KantinenNr FK → Kantine)",
+      "Vorbestellung (BestellNr PK, Personalnummer FK → Gast, GerichtNr FK → Gericht, KantinenNr FK → Kantine, Abholtag, Status)",
+      "Abholtag hat den Typ DATE (Schreibweise '2026-12-01'); Status ist 'offen', 'abgeholt' oder 'storniert'."
+     ]
+    },
+    {
+     "nr": "7",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle Vorbestellung",
+     "spalten": [
+      "BestellNr",
+      "Personalnummer",
+      "GerichtNr",
+      "KantinenNr",
+      "Abholtag",
+      "Status"
+     ],
+     "zeilen": [
+      [
+       "1001",
+       "50112",
+       "12",
+       "7",
+       "2026-12-01",
+       "abgeholt"
+      ],
+      [
+       "1002",
+       "50140",
+       "12",
+       "7",
+       "2026-12-01",
+       "abgeholt"
+      ],
+      [
+       "1003",
+       "50177",
+       "11",
+       "7",
+       "2026-12-01",
+       "storniert"
+      ],
+      [
+       "1004",
+       "50112",
+       "11",
+       "7",
+       "2026-12-02",
+       "abgeholt"
+      ],
+      [
+       "1005",
+       "50140",
+       "12",
+       "7",
+       "2026-12-02",
+       "offen"
+      ],
+      [
+       "1006",
+       "50190",
+       "11",
+       "7",
+       "2026-12-02",
+       "abgeholt"
+      ],
+      [
+       "1007",
+       "50177",
+       "12",
+       "7",
+       "2026-12-03",
+       "storniert"
+      ],
+      [
+       "1008",
+       "50112",
+       "13",
+       "7",
+       "2026-12-03",
+       "abgeholt"
+      ],
+      [
+       "1009",
+       "50201",
+       "11",
+       "7",
+       "2026-12-03",
+       "offen"
+      ],
+      [
+       "1010",
+       "50140",
+       "12",
+       "7",
+       "2026-12-04",
+       "abgeholt"
+      ],
+      [
+       "1011",
+       "30455",
+       "12",
+       "3",
+       "2026-12-04",
+       "abgeholt"
+      ],
+      [
+       "1012",
+       "50190",
+       "14",
+       "7",
+       "2026-11-27",
+       "abgeholt"
+      ],
+      [
+       "1013",
+       "50177",
+       "14",
+       "7",
+       "2026-10-29",
+       "storniert"
+      ],
+      [
+       "1014",
+       "50201",
+       "13",
+       "7",
+       "2026-10-30",
+       "storniert"
+      ],
+      [
+       "1015",
+       "30455",
+       "13",
+       "3",
+       "2026-10-30",
+       "storniert"
+      ],
+      [
+       "1016",
+       "50112",
+       "13",
+       "7",
+       "2026-11-02",
+       "storniert"
+      ]
+     ]
+    },
+    {
+     "nr": "8",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabellen Kantine und Gericht",
+     "spalten": [
+      "Tabelle",
+      "Schlüssel",
+      "Name bzw. Bezeichnung",
+      "Ort bzw. Grundpreis"
+     ],
+     "zeilen": [
+      [
+       "Kantine",
+       "3",
+       "Verwaltung Felsgrubenau",
+       "Felsgrubenau"
+      ],
+      [
+       "Kantine",
+       "7",
+       "Werk Nord",
+       "Moorlichtenau"
+      ],
+      [
+       "Kantine",
+       "9",
+       "Werk Süd",
+       "Moorlichtenau"
+      ],
+      [
+       "Gericht",
+       "11",
+       "Gemüsecurry",
+       "5.20"
+      ],
+      [
+       "Gericht",
+       "12",
+       "Schnitzel mit Kartoffelsalat",
+       "6.40"
+      ],
+      [
+       "Gericht",
+       "13",
+       "Linseneintopf",
+       "4.30"
+      ],
+      [
+       "Gericht",
+       "14",
+       "Ofenlachs mit Reis",
+       "6.90"
+      ]
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Nicht abgeholte Essen",
+     "punkte": 22,
+     "einleitung": [
+      "Einige Gäste holen vorbestellte Essen nicht ab. Die Kantinenleitungen möchten das je Kantine und Tag auswerten; die Klassen und Hinweise zum Pseudocode stehen in Anlage 1."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie in Pseudocode die Funktion nichtAbgeholt(bestellungen, kantinenNr, tag). Es gilt:",
+        "Betrachtet werden nur Bestellungen im Feld bestellungen mit der übergebenen Kantinennummer und dem übergebenen Abholtag.",
+        "Stornierte Bestellungen zählen nicht mit; alle anderen sind gültige Bestellungen. Nicht abgeholt ist eine gültige Bestellung mit dem Status \"offen\".",
+        "Die Funktion gibt die Zahl der nicht abgeholten Bestellungen zurück.",
+        "Ist der Anteil der nicht abgeholten an den gültigen Bestellungen größer als 10 %, gibt sie vorher „Hinweis: viele nicht abgeholte Essen“ aus. Gibt es keine gültige Bestellung, darf nicht durch 0 geteilt werden."
+       ],
+       "punkte": 13,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 16
+       },
+       "anlagen": [
+        "1"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "funktion nichtAbgeholt(bestellungen, kantinenNr, tag)",
+        "  gueltig ← 0",
+        "  offen ← 0",
+        "  für i von 0 bis länge(bestellungen) - 1",
+        "    b ← bestellungen[i]",
+        "    wenn b.getKantinenNr() = kantinenNr und b.getAbholtag() = tag dann",
+        "      wenn b.getStatus() ≠ \"storniert\" dann",
+        "        gueltig ← gueltig + 1",
+        "        wenn b.getStatus() = \"offen\" dann",
+        "          offen ← offen + 1",
+        "        ende wenn",
+        "      ende wenn",
+        "    ende wenn",
+        "  ende für",
+        "  wenn gueltig > 0 und offen / gueltig > 0.1 dann",
+        "    ausgabe(\"Hinweis: viele nicht abgeholte Essen\")",
+        "  ende wenn",
+        "  rückgabe offen",
+        "ende funktion"
+       ],
+       "hinweise": [
+        {
+         "text": "Zähler vor der Schleife mit 0 belegt",
+         "punkte": 1
+        },
+        {
+         "text": "Schleife über alle Elemente von 0 bis länge − 1",
+         "punkte": 2
+        },
+        {
+         "text": "Zugriff nur über get-Methoden des Elements",
+         "punkte": 1
+        },
+        {
+         "text": "Filter Kantine und Abholtag",
+         "punkte": 2
+        },
+        {
+         "text": "stornierte Bestellungen ausgeschlossen, gültige gezählt",
+         "punkte": 2
+        },
+        {
+         "text": "Status \"offen\" gezählt",
+         "punkte": 2
+        },
+        {
+         "text": "Anteil > 10 % nur bei gueltig > 0 geprüft, Hinweis ausgegeben",
+         "punkte": 2
+        },
+        {
+         "text": "Rückgabe der Zahl der nicht abgeholten nach der Schleife",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für das Feld aus Anlage 2 und den Aufruf nichtAbgeholt(bestellungen, 3, 02.12.2026) die folgenden Werte."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der gültigen Bestellungen",
+          "art": "zahl",
+          "loesung": [
+           "6"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Rückgabewert der Funktion",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Wird der Hinweis ausgegeben? (ja oder nein)",
+          "art": "text",
+          "loesung": [
+           "ja",
+           "j"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "gültig: Index 0, 1, 5, 6, 7, 9 = 6 (Index 2 und 8 andere Kantine, 3 storniert, 4 anderer Tag)",
+        "nicht abgeholt: Index 1 und 7 = 2",
+        "Anteil 2 ÷ 6 ≈ 33 % > 10 %, also ja"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Funktion die Attribute einer Bestellung nur über get-Methoden liest und nicht direkt darauf zugreift."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Die Attribute sind privat (Kapselung); nur die Klasse selbst darf sie lesen und ändern.",
+        "Ändert sich die interne Speicherung (z. B. Status als Zahl), bleibt die Methode gleich und die Funktion muss nicht geändert werden; außerdem kann niemand den Status unbemerkt von außen ändern."
+       ],
+       "hinweise": [
+        {
+         "text": "Kapselung bzw. private Attribute",
+         "punkte": 1
+        },
+        {
+         "text": "Vorteil: interne Änderung ohne Folgen für Aufrufer, kein unkontrolliertes Ändern",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Testfälle (Eingaben) für die Funktion nichtAbgeholt, die Randfälle abdecken."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "leeres Feld bestellungen",
+        "alle Bestellungen des Tages storniert (keine Division durch 0)",
+        "keine Bestellung der angegebenen Kantine",
+        "genau 10 % nicht abgeholt (kein Hinweis)",
+        "alle gültigen Bestellungen nicht abgeholt",
+        "Bestellungen derselben Kantine an einem anderen Tag"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Allergenprüfung",
+     "punkte": 24,
+     "einleitung": [
+      "Vor der Essensausgabe druckt jede Kantine eine Ausgabeliste. Für Gäste mit Allergieprofil prüft das System jedes vorbestellte Gericht mit der Funktion aus Anlage 3; die Regeln der Liste stehen in Anlage 4."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "korrigieren",
+       "text": [
+        "Die Funktion enthaeltAllergen in Anlage 3 enthält zwei Fehler: Beim Test bricht sie mit einem Zugriff außerhalb der Feldgrenzen ab. Korrigieren Sie die beiden Fehler, indem Sie jeweils die Zeilennummer und die berichtigte Zeile angeben."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "3"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "Zeile 6: solange i < n und gefunden = falsch",
+        "Zeile 7: für j von 0 bis m - 1"
+       ],
+       "hinweise": [
+        {
+         "text": "Fehler in Zeile 6 (Abbruchbedingung) erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Zeile 6 mit und statt oder berichtigt",
+         "punkte": 2
+        },
+        {
+         "text": "Fehler in Zeile 7 (Feldgrenze) erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Zeile 7 mit bis m - 1 berichtigt",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie im Baukasten ein Struktogramm (Nassi-Shneiderman) für die Prozedur ausgabeliste(bestellungen, tag) nach Anlage 4. Den Aufruf von enthaeltAllergen dürfen Sie als einfache Bedingung schreiben."
+       ],
+       "punkte": 12,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "struktogramm",
+        "muster": {
+         "art": "struktogramm",
+         "bloecke": [
+          {
+           "typ": "anweisung",
+           "text": "anzahl ← 0; rueckfragen ← 0"
+          },
+          {
+           "typ": "zaehlschleife",
+           "text": "für i von 0 bis länge(bestellungen) − 1",
+           "rumpf": [
+            {
+             "typ": "anweisung",
+             "text": "b ← bestellungen[i]"
+            },
+            {
+             "typ": "verzweigung",
+             "text": "b.getAbholtag() = tag und b.getStatus() ≠ \"storniert\" ?",
+             "ja": [
+              {
+               "typ": "anweisung",
+               "text": "Ausgabe b.getGericht().getBezeichnung(), b.getGast().getPersonalNr()"
+              },
+              {
+               "typ": "anweisung",
+               "text": "anzahl ← anzahl + 1"
+              },
+              {
+               "typ": "verzweigung",
+               "text": "enthaeltAllergen(b.getGericht().getAllergene(), b.getGast().getAllergene()) ?",
+               "ja": [
+                {
+                 "typ": "anweisung",
+                 "text": "Ausgabe „Rückfrage Allergen“"
+                },
+                {
+                 "typ": "anweisung",
+                 "text": "rueckfragen ← rueckfragen + 1"
+                }
+               ],
+               "nein": []
+              }
+             ],
+             "nein": []
+            }
+           ]
+          },
+          {
+           "typ": "anweisung",
+           "text": "Ausgabe anzahl, rueckfragen"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "3",
+        "4"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Anweisung: anzahl ← 0; rueckfragen ← 0",
+        "Zählschleife: für i von 0 bis länge(bestellungen) − 1",
+        "  Anweisung: b ← bestellungen[i]",
+        "  Verzweigung: b.getAbholtag() = tag und b.getStatus() ≠ \"storniert\" ?",
+        "    ja: Ausgabe b.getGericht().getBezeichnung(), b.getGast().getPersonalNr()",
+        "        anzahl ← anzahl + 1",
+        "        Verzweigung: enthaeltAllergen(b.getGericht().getAllergene(), b.getGast().getAllergene()) ?",
+        "          ja: Ausgabe „Rückfrage Allergen“; rueckfragen ← rueckfragen + 1",
+        "          nein: (leerer Block)",
+        "    nein: (leerer Block)",
+        "Ausgabe: anzahl, rueckfragen (nach der Schleife)"
+       ],
+       "hinweise": [
+        {
+         "text": "Zähler vor der Schleife mit 0 belegt",
+         "punkte": 1
+        },
+        {
+         "text": "Zählschleife über alle Bestellungen",
+         "punkte": 2
+        },
+        {
+         "text": "Verzweigung Abholtag und nicht storniert (auch als zwei Verzweigungen)",
+         "punkte": 2
+        },
+        {
+         "text": "Ausgabe von Bezeichnung und Personalnummer über get-Methoden, Zählen",
+         "punkte": 2
+        },
+        {
+         "text": "innere Verzweigung mit Aufruf von enthaeltAllergen",
+         "punkte": 2
+        },
+        {
+         "text": "Ausgabe „Rückfrage Allergen“ und Zählen der Rückfragen",
+         "punkte": 1
+        },
+        {
+         "text": "Ausgabe beider Zahlen nach der Schleife",
+         "punkte": 1
+        },
+        {
+         "text": "Strukturblöcke richtig gezeichnet und verschachtelt, leere Blöcke vorhanden",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, wann die berichtigte Funktion enthaeltAllergen mit weniger Vergleichen auskommt als eine Lösung mit zwei für-Schleifen, die immer alle Codes vergleicht."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "3"
+       ],
+       "loesung": [
+        "Die solange-Schleife endet, sobald ein gemeinsamer Code gefunden ist (gefunden = wahr).",
+        "Steht der gemeinsame Code früh im Feld gerichtCodes, werden die übrigen Codes des Gerichts nicht mehr verglichen; ohne Treffer ist die Zahl der Vergleiche gleich (n × m)."
+       ],
+       "hinweise": [
+        {
+         "text": "vorzeitiges Ende nach dem ersten Treffer",
+         "punkte": 2
+        },
+        {
+         "text": "Unterschied nur bei Treffer, ohne Treffer gleich viele Vergleiche",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Strukturblöcke, die in einem Struktogramm verwendet werden."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Anweisung (Folge)",
+        "einfache Verzweigung (wenn – dann – sonst)",
+        "Mehrfachverzweigung (Fallunterscheidung)",
+        "Zählschleife",
+        "kopfgesteuerte Schleife",
+        "fußgesteuerte Schleife",
+        "Aufruf eines Unterprogramms (Prozeduraufruf)"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Freigabe von Restportionen",
+     "punkte": 24,
+     "einleitung": [
+      "Ab dem Ende der Abholzeit verkauft die Ausgabe nicht abgeholte Portionen an Gäste ohne Vorbestellung. Anforderung: Eine Portion wird freigegeben, wenn ihre Vorbestellung storniert ist oder wenn sie offen ist und das Ende der Abholzeit erreicht ist; abgeholte Portionen nie. Die Umsetzung zeigt Anlage 5."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie für die Testfälle T2 bis T4 die Rückgabe der Funktion aus Anlage 5 und das Ergebnis, das nach der Anforderung richtig wäre (wahr oder falsch). T1 ist vorgegeben."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Testfall",
+         "Status",
+         "uhrzeit",
+         "Ende der Abholzeit",
+         "Rückgabe laut Anlage 5",
+         "richtig nach Anforderung"
+        ],
+        "zeilen": [
+         [
+          "T1",
+          "offen",
+          "14:10",
+          "14:00",
+          "wahr",
+          "wahr"
+         ],
+         [
+          "T2",
+          "offen",
+          "13:20",
+          "14:00",
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "T3",
+          "abgeholt",
+          "14:30",
+          "14:00",
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "T4",
+          "storniert",
+          "12:00",
+          "14:00",
+          {
+           "loesung": [
+            "falsch",
+            "false",
+            "f",
+            "nein",
+            "nicht freigeben",
+            "nicht frei"
+           ],
+           "punkte": 1
+          },
+          {
+           "loesung": [
+            "wahr",
+            "true",
+            "w",
+            "ja",
+            "freigeben",
+            "frei"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "T2: offen, 13:20 < 14:00 → falsch; richtig: falsch",
+        "T3: Status nicht offen → falsch; richtig: falsch (abgeholt nie)",
+        "T4: Status nicht offen → falsch; richtig wäre wahr, denn stornierte Portionen werden freigegeben → Fehler gefunden"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Aussagen über die Überdeckung der Funktion aus Anlage 5 mit den Testfällen T1 bis T4 aus a) zutreffen."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "T1 allein führt jede Anweisung der Funktion mindestens einmal aus.",
+         "T1 allein durchläuft jeden Zweig der beiden wenn-Anweisungen.",
+         "T1, T2 und T3 zusammen erreichen eine vollständige Zweigüberdeckung.",
+         "T1 und T4 zusammen erreichen eine vollständige Zweigüberdeckung.",
+         "T1 und T2 zusammen erreichen eine vollständige Zweigüberdeckung.",
+         "Für eine vollständige Zweigüberdeckung sind mindestens drei Testfälle nötig."
+        ],
+        "richtig": [
+         0,
+         2,
+         5
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Zutreffend: T1 führt die Zeilen 2 bis 5 und 8 aus (Anweisungsüberdeckung); T1 (ja/ja), T2 (ja/nein) und T3 (nein) decken alle vier Zweige ab; ein Testfall mit Status nicht offen erreicht Zeile 4 nicht, darum braucht man für die beiden Zweige von Zeile 4 zwei weitere Testfälle mit offenem Status: mindestens drei.",
+        "Nicht zutreffend: T1 allein lässt die nein-Zweige aus; T1 und T4 lassen den nein-Zweig von Zeile 4 aus; T1 und T2 lassen den nein-Zweig von Zeile 3 aus."
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "zeichnen",
+       "text": [
+        "Zeichnen Sie auf Papier den Kontrollflussgraphen der Funktion aus Anlage 5 mit einem Knoten je Zeile 2, 3, 4, 5 und 8. Beschriften Sie die Kanten aus den Verzweigungen mit ja und nein."
+       ],
+       "punkte": 7,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 12
+       },
+       "anlagen": [
+        "5"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Knoten: 2, 3, 4, 5, 8",
+        "Kanten: 2 → 3; 3 → 4 (ja); 3 → 8 (nein); 4 → 5 (ja); 4 → 8 (nein); 5 → 8",
+        "Startknoten 2, Endknoten 8 (6 Kanten, zyklomatische Zahl 6 − 5 + 2 = 3)"
+       ],
+       "hinweise": [
+        {
+         "text": "fünf Knoten in der richtigen Reihenfolge",
+         "punkte": 1
+        },
+        {
+         "text": "Verzweigung in Knoten 3 mit ja nach 4 und nein nach 8",
+         "punkte": 2
+        },
+        {
+         "text": "Verzweigung in Knoten 4 mit ja nach 5 und nein nach 8",
+         "punkte": 2
+        },
+        {
+         "text": "Kanten 2 → 3 und 5 → 8",
+         "punkte": 1
+        },
+        {
+         "text": "Kanten mit ja und nein beschriftet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum ein Test, der nur eine vollständige Anweisungsüberdeckung verlangt, den Fehler der Funktion aus Anlage 5 nicht finden muss, eine Zweigüberdeckung ihn aber sichtbar machen kann."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "Der Fehler liegt im leeren nein-Zweig von Zeile 3: Für stornierte Bestellungen fehlt die Freigabe.",
+        "Für die Anweisungsüberdeckung reicht T1, der diesen Zweig nie durchläuft. Die Zweigüberdeckung verlangt auch den nein-Zweig von Zeile 3; nimmt man dafür eine stornierte Bestellung (T4), weicht die Rückgabe von der Anforderung ab."
+       ],
+       "hinweise": [
+        {
+         "text": "Fehler im leeren nein-Zweig bzw. fehlende Anweisung erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "C0 durchläuft den Zweig nicht, C1 erzwingt ihn",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "korrigieren",
+       "text": [
+        "Korrigieren Sie die Funktion aus Anlage 5 so, dass sie die Anforderung erfüllt. Geben Sie die geänderten oder neuen Zeilen in Pseudocode an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "anlagen": [
+        "5"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "wenn bestellung.getStatus() = \"storniert\" dann",
+        "  frei ← wahr",
+        "sonst wenn bestellung.getStatus() = \"offen\" und uhrzeit >= bestellung.getAbholEnde() dann",
+        "  frei ← wahr",
+        "ende wenn",
+        "Gleichwertig: in Zeile 6/7 einen sonst-Zweig zu Zeile 3 mit wenn Status = \"storniert\" dann frei ← wahr ergänzen."
+       ],
+       "hinweise": [
+        {
+         "text": "Fall storniert führt zu frei ← wahr",
+         "punkte": 2
+        },
+        {
+         "text": "Fall offen mit Ende der Abholzeit bleibt erhalten, abgeholt bleibt falsch",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Auswertungen mit SQL",
+     "punkte": 30,
+     "einleitung": [
+      "Die Vorbestellungen aller Kantinen liegen in einer relationalen Datenbank (Tabellenmodell in Anlage 6, Beispieldaten in den Anlagen 7 und 8). Die Kantinenleitungen wünschen Auswertungen und Bereinigungen."
+     ],
+     "teile": [
+      {
+       "nr": "aa",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Abfrage, die für die Kantine mit der KantinenNr 7 je Gericht die Bezeichnung und die Zahl der nicht stornierten Vorbestellungen mit Abholtag im Dezember 2026 liefert. Es sollen nur Gerichte mit mindestens drei solchen Vorbestellungen erscheinen, das Gericht mit den meisten Vorbestellungen zuerst."
+       ],
+       "punkte": 8,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 8
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "SELECT g.Bezeichnung, COUNT(*) AS Anzahl",
+        "FROM Vorbestellung v",
+        "JOIN Gericht g ON v.GerichtNr = g.GerichtNr",
+        "WHERE v.KantinenNr = 7",
+        "  AND v.Status <> 'storniert'",
+        "  AND v.Abholtag BETWEEN '2026-12-01' AND '2026-12-31'",
+        "GROUP BY g.GerichtNr, g.Bezeichnung",
+        "HAVING COUNT(*) >= 3",
+        "ORDER BY Anzahl DESC;",
+        "Gleichwertig: YEAR(v.Abholtag) = 2026 AND MONTH(v.Abholtag) = 12; andere richtige Abfrage mit gleichem Ergebnis: volle Punkte."
+       ],
+       "hinweise": [
+        {
+         "text": "JOIN Vorbestellung und Gericht über GerichtNr",
+         "punkte": 2
+        },
+        {
+         "text": "WHERE Kantine 7, nicht storniert, Dezember 2026",
+         "punkte": 2
+        },
+        {
+         "text": "GROUP BY Gericht mit COUNT",
+         "punkte": 2
+        },
+        {
+         "text": "HAVING COUNT(*) >= 3",
+         "punkte": 1
+        },
+        {
+         "text": "ORDER BY Anzahl DESC",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "ab",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Abfrage, die je Allergen den Code, die Bezeichnung und die Zahl der Gerichte liefert, die dieses Allergen enthalten. Es sollen nur Allergene erscheinen, die in mehr als zwei Gerichten vorkommen."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "SELECT a.Code, a.Bezeichnung, COUNT(*) AS Gerichte",
+        "FROM Allergen a",
+        "JOIN Gericht_Allergen ga ON a.Code = ga.Code",
+        "GROUP BY a.Code, a.Bezeichnung",
+        "HAVING COUNT(*) > 2;"
+       ],
+       "hinweise": [
+        {
+         "text": "JOIN Allergen und Gericht_Allergen über Code",
+         "punkte": 2
+        },
+        {
+         "text": "GROUP BY Code und Bezeichnung mit COUNT",
+         "punkte": 2
+        },
+        {
+         "text": "HAVING COUNT(*) > 2",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Anweisung, die alle stornierten Vorbestellungen der Kantine „Werk Nord“ mit einem Abholtag vor dem 01.11.2026 löscht. Die KantinenNr darf nicht fest eingetragen werden."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "6",
+        "8"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "DELETE FROM Vorbestellung",
+        "WHERE Status = 'storniert'",
+        "  AND Abholtag < '2026-11-01'",
+        "  AND KantinenNr IN (SELECT KantinenNr FROM Kantine WHERE Name = 'Werk Nord');",
+        "Gleichwertig: KantinenNr = (SELECT …)."
+       ],
+       "hinweise": [
+        {
+         "text": "DELETE FROM Vorbestellung mit WHERE",
+         "punkte": 1
+        },
+        {
+         "text": "Status 'storniert' und Abholtag < '2026-11-01'",
+         "punkte": 2
+        },
+        {
+         "text": "Unterabfrage auf Kantine über den Namen",
+         "punkte": 2
+        },
+        {
+         "text": "Bedingungen mit AND verbunden, Anweisung lauffähig",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erstellen",
+       "text": [
+        "Der Grundpreis aller Gerichte, die das Allergen mit der Bezeichnung 'Schalenfrüchte' enthalten, steigt um 0,30 €. Erstellen Sie die SQL-Anweisung dazu, ohne GerichtNr oder Code fest einzutragen."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "6"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "UPDATE Gericht",
+        "SET Grundpreis = Grundpreis + 0.30",
+        "WHERE GerichtNr IN (SELECT ga.GerichtNr",
+        "                    FROM Gericht_Allergen ga",
+        "                    JOIN Allergen a ON ga.Code = a.Code",
+        "                    WHERE a.Bezeichnung = 'Schalenfrüchte');"
+       ],
+       "hinweise": [
+        {
+         "text": "UPDATE Gericht SET Grundpreis = Grundpreis + 0.30",
+         "punkte": 2
+        },
+        {
+         "text": "Unterabfrage über Gericht_Allergen",
+         "punkte": 2
+        },
+        {
+         "text": "Verknüpfung mit Allergen über die Bezeichnung",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, wie viele Zeilen die Abfrage aus aa und die Löschanweisung aus b auf den Vorbestellungen der Anlagen 7 und 8 betreffen, und die Anzahl in der ersten Ergebniszeile von aa."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der Zeilen, die die Abfrage aus aa liefert",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Anzahl in der ersten Zeile dieser Abfrage",
+          "art": "zahl",
+          "loesung": [
+           "4"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zahl der Zeilen, die die Anweisung aus b löscht",
+          "art": "zahl",
+          "loesung": [
+           "2"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "7",
+        "8"
+       ],
+       "loesung": [
+        "Kantine 7, Dezember, nicht storniert: Gericht 12 (1001, 1002, 1005, 1010) = 4, Gericht 11 (1004, 1006, 1009) = 3, Gericht 13 (1008) = 1",
+        "mindestens 3: zwei Zeilen, zuerst Schnitzel mit Kartoffelsalat mit 4",
+        "b löscht 1013 und 1014 (1015 andere Kantine, 1016 nach dem 01.11.2026) = 2 Zeilen"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, warum vor dem Ausführen der Anweisung aus b eine SELECT-Abfrage mit derselben WHERE-Bedingung ausgeführt werden sollte."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Gelöschte Zeilen lassen sich ohne Sicherung nicht zurückholen.",
+        "Das SELECT zeigt vorher genau die Zeilen, die gelöscht würden; so fällt eine falsche Bedingung (z. B. falscher Kantinenname oder falsches Datum) auf, bevor Daten verloren gehen."
+       ],
+       "hinweise": [
+        {
+         "text": "Löschen ist nicht umkehrbar",
+         "punkte": 1
+        },
+        {
+         "text": "SELECT zeigt vorher die betroffenen Zeilen, Fehler in der Bedingung fallen auf",
+         "punkte": 2
         }
        ]
       }

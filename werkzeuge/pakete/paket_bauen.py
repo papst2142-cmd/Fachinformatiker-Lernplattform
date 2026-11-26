@@ -44,7 +44,8 @@ LERNEN_ORDNER = os.path.join("inhalte_csharp", "lernen")
 # Welle A 1.5.0 (Weisung P12-358, Nico 3a): die echten Pakete Stand 1 brauchen A 1.5.0 (die erste App ohne eigene Inhalte AE/DPA/DV)
 # A 1.8.0 (Weisung P12-372): Stand und braucht_app je Fachrichtung; AE Stand 2 mit den neuen Fassungen (Saetze Format 4)
 # braucht A 1.8.0. Die Testdatei des vorigen Stands bleibt als echte Testdatei liegen (nie loeschen).
-LERNEN_TESTDATEIEN = {"ae": (2, "A 1.8.0"), "dpa": (1, "A 1.5.0"), "dv": (1, "A 1.5.0")}
+# A 1.12.0 (Weisung P12-390): AE Stand 3 mit den Struktogramm-Fassungen (Saetze Format 5) braucht A 1.12.0.
+LERNEN_TESTDATEIEN = {"ae": (3, "A 1.12.0"), "dpa": (1, "A 1.5.0"), "dv": (1, "A 1.5.0")}
 
 
 def lernen_testdatei(fr):
@@ -56,8 +57,11 @@ def _satz_format(quelle_format, eigene):
     """Format der Saetze im Paket: 4 nur mit neuer Fassung oder Klassen-/Use-Case-Diagramm, 3 nur mit Satzpaar, sonst 2
     (aeltere Apps lesen ein Paket ohne diese Felder weiter)."""
     roh = [json.dumps(e["satz"], ensure_ascii=False) for e in eigene]
-    if any("fassung" in e["satz"] for e in eigene) or any('"diagramm": "klasse"' in r or '"diagramm": "usecase"' in r for r in roh):
+    # A 1.12.0: Struktogramm (Format 5) nur, wenn ein Satz eins hat; sonst hoechstens 4 (Apps ab A 1.8.0 lesen es weiter)
+    if any('"diagramm": "struktogramm"' in r for r in roh):
         return quelle_format
+    if any("fassung" in e["satz"] for e in eigene) or any('"diagramm": "klasse"' in r or '"diagramm": "usecase"' in r for r in roh):
+        return min(quelle_format, 4)
     if any("aufbau" in e["satz"] for e in eigene):
         return min(quelle_format, 3)
     return min(quelle_format, 2)
@@ -256,6 +260,9 @@ def lernen_selbsttest(repo):
                         funde.append("Testdatei " + os.path.basename(echt) + " weicht vom Bau ab (neu bauen: paket_bauen.py lernen " + fr + " "
                                      + "tests/Lernplattform.Tests/Testdaten/pakete_echt --stand %d --braucht-app \"%s\")" % (stand, braucht))
         # A 1.8.0: Satz-Format je Inhalt (Gegenproben: Fassung oder Klassendiagramm -> 4, Satzpaar -> 3, sonst 2)
+        # A 1.12.0: Struktogramm -> 5, Fassung ohne Struktogramm bleibt 4
+        if _satz_format(5, [{"satz": {"a": {"diagramm": "struktogramm"}}}]) != 5 or _satz_format(5, [{"satz": {"fassung": 2}}]) != 4:
+            funde.append("Satz-Format Struktogramm/Fassung bei Quelle 5 falsch")
         for eigene, soll in (([{"satz": {"fassung": 2}}], 4), ([{"satz": {"a": {"diagramm": "klasse"}}}], 4),
                              ([{"satz": {"aufbau": "paar"}}], 3), ([{"satz": {"kennung": "x"}}], 2)):
             if _satz_format(4, eigene) != soll:

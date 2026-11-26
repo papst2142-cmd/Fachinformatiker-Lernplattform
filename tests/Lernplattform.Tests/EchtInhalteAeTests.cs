@@ -100,11 +100,13 @@ public class EchtInhalteAeTests
             Assert.Empty(PapierFunde(s));
             foreach (var t in s.Aufgaben.SelectMany(a => a.Teile).Where(t => t.Antwort.Form == EchtSaetze.FormZeichnen))
             {
-                Assert.Contains(t.Antwort.Diagramm, new[] { EchtZeichnung.Uml, EchtZeichnung.Er });
+                // A 1.12.0 (Weisung P12-390): das Struktogramm nur in einem Teil einer neuen Fassung (EchtStruktogrammTests)
+                Assert.Contains(t.Antwort.Diagramm, t.Fassung >= 2 ? new[] { EchtStruktogramm.Art } : new[] { EchtZeichnung.Uml, EchtZeichnung.Er });
             }
         }
         Assert.True(AeSaetze.Count(s => s.Aufgaben.SelectMany(a => a.Teile).Any(t => t.Antwort.Form == EchtSaetze.FormZeichnen)) >= 4);
-        Assert.True(AeSaetze.Count(s => s.Aufgaben.SelectMany(a => a.Teile).Any(Papier)) >= 3);
+        // A 1.12.0 (P12-390): ae_b2_02 2a ist in Fassung 2 ein Struktogramm im Baukasten; mitgezaehlt wird darum Papier oder Struktogramm
+        Assert.True(AeSaetze.Count(s => s.Aufgaben.SelectMany(a => a.Teile).Any(t => Papier(t) || t.Antwort.Struktogramm is not null)) >= 3);
         // Gegenprobe
         var satz = AeSaetze.First(s => s.Aufgaben.SelectMany(a => a.Teile).Any(Papier));
         var a = satz.Aufgaben.First(x => x.Teile.Any(Papier));

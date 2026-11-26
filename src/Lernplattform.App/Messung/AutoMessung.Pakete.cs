@@ -399,9 +399,9 @@ public static partial class AutoMessung
             await Task.WhenAny(frage, Task.Delay(3000));
             OptionenSeite.PaketMobilFuerTests = false;
             // Welle A 0.91.0: Zeile eines Fachrichtungs-Pakets mit neuem Stand, Sperre beim offenen Pruefungssatz, Rueckfrage
-            if (quelle is not null && File.Exists(Path.Combine(EchtOrdner, "lernen_ae_2.fipaket")))
+            if (quelle is not null && File.Exists(Path.Combine(EchtOrdner, "lernen_ae_3.fipaket")))
             {
-                File.Copy(Path.Combine(EchtOrdner, "lernen_ae_2.fipaket"), Path.Combine(quelle, "lernen_ae_2.fipaket"), true);
+                File.Copy(Path.Combine(EchtOrdner, "lernen_ae_3.fipaket"), Path.Combine(quelle, "lernen_ae_3.fipaket"), true);
                 await PaketDienst.Verwaltung.SuchenAsync();
                 optionen.PaketeNeu();
                 await ansicht.BildFertigAsync();

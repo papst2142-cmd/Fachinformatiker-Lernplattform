@@ -13,7 +13,7 @@ namespace Lernplattform.Messung;
 
 /// <summary>
 /// Welle A 0.91.0 (Weisung P12-300 Punkte 1, 3, 5, 6; Nico 3a 4a): Fachrichtungs-Pakete im Start-Test mit der Testquelle und den
-/// echten Testdateien <c>lernen_ae_2</c> (A 1.8.0, vorher <c>lernen_ae_1</c>), <c>lernen_dpa_1</c>, <c>lernen_dv_1</c>. Seit A 1.5.0 (Weisung P12-358) bringt die App
+/// echten Testdateien <c>lernen_ae_3</c> (A 1.12.0, vorher <c>lernen_ae_2</c> und <c>lernen_ae_1</c>), <c>lernen_dpa_1</c>, <c>lernen_dv_1</c>. Seit A 1.5.0 (Weisung P12-358) bringt die App
 /// AE, DPA und DV nicht mehr mit: je Fachrichtung Sperre beim offenen Pruefungssatz, Entfernen (danach fehlen die Inhalte, auf der
 /// Startseite genau eine Karte mit „Laden“), der Messpunkt „Fachrichtungs-Paket einsetzen &lt;FR&gt;“ (Pruefen bis die
 /// Sicht steht, ohne Download, einmalig und streng 400 ms), danach dieselben Inhalte wie vorher (das Paket ist der Stand von
@@ -206,10 +206,10 @@ public static partial class AutoMessung
     }
 
     /// <summary>
-    /// A 1.8.0 (Weisung P12-372): Stand der echten Testdatei je Fachrichtungs-Paket, gleich paket_bauen.LERNEN_TESTDATEIEN (AE Stand 2
+    /// A 1.8.0 (Weisung P12-372): Stand der echten Testdatei je Fachrichtungs-Paket, gleich paket_bauen.LERNEN_TESTDATEIEN (AE Stand 3 seit A 1.12.0, Stand 2
     /// mit den neuen Fassungen der Pruefungssaetze, DPA und DV Stand 1); Test A1_EchteTestdateien_JeFachrichtung_Gut prueft beides.
     /// </summary>
-    internal static long EchtStand(string kennungOderFr) => kennungOderFr is "ae" or "lernen_ae" ? 2 : 1;
+    internal static long EchtStand(string kennungOderFr) => kennungOderFr is "ae" or "lernen_ae" ? 3 : 1;
 
     /// <summary>Echte Testdatei einsetzen (ohne Download); null = gut, sonst der Grund.</summary>
     private static string? EinsetzenAus(PaketAblage ablage, string kennung)

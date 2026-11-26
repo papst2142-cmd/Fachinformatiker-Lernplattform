@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 1.12.0
+In der Prüfung im echten Format zeichnest du Struktogramme jetzt selbst im Baukasten.
+
+- In der Anwendungsentwicklung (Prüfungsbereich 2) gibt es eine Aufgabe, in der du ein Struktogramm zeichnest. Bisher war das eine Aufgabe auf Papier, jetzt zeichnest du es direkt im Programm.
+- Du hast sieben Bausteine: Anweisung, Verzweigung, Fallauswahl, Zählschleife, Schleife mit Prüfung am Anfang (solange), Schleife mit Prüfung am Ende (wiederhole) und Aufruf. Tippe einen Baustein an, und er kommt an die Stelle, die unter „Neuer Block kommt“ steht: nach oder vor dem gewählten Block oder in einen Zweig.
+- Du tippst einen Block im Bild oder in der Liste darunter an und schreibst seinen Text. Mit „Nach oben“, „Nach unten“ und „Heraus“ verschiebst du ihn, mit „Entfernen“ nimmst du ihn weg; hat er Inhalt, fragt das Programm vorher nach. Bei der Fallauswahl fügst du Fälle hinzu oder nimmst sie weg, „sonst“ steht immer am Ende.
+- Das Bild folgt der üblichen Norm: Ein leerer Zweig zeigt „∅“, ein Aufruf hat doppelte Seitenlinien. Dein Text steht genau so da, wie du ihn eingibst.
+- Nach dem Abgeben siehst du deine Zeichnung neben dem Musterbild, dazu eine Zählung der Bausteine, damit du selbst vergleichen kannst.
+- Mit der Tastatur wählst du Blöcke mit den Pfeiltasten und öffnest das Textfeld mit der Eingabetaste; der Screenreader liest jeden Block vor.
+- Die Aufgabe hat dafür eine neue Fassung bekommen. Dein Lernstand, die anderen Lerninhalte und Prüfungssätze und deine Spielstände bleiben genau gleich.
+
 ## A 1.11.0
 In der Prüfung im echten Format hat der Baukasten am breiten Bildschirm jetzt die ganze Breite zum Zeichnen.
 
