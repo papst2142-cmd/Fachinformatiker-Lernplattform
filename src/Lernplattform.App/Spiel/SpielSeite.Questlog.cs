@@ -289,6 +289,14 @@ public sealed partial class SpielSeite
     }
 
     /// <summary>
+    /// Start-Test (Weisung P12-398): Rechteck von „Ich-Sicht“ in Punkten der Seite und die Mitte der Symbole (null, solange nicht zu
+    /// sehen oder nicht angeordnet). Seit „Spiel verlassen“ unten entfaellt, steht „Ich-Sicht“ allein links neben dem Handy-Knopf.
+    /// </summary>
+    public (Rect Ich, double Mitte)? IchKnopfLage() =>
+        _ichKnopf.IsEffectivelyVisible && LeisteMitten() is { } m && _ichKnopf.TranslatePoint(default, this) is { } i
+            ? (new Rect(i, _ichKnopf.Bounds.Size), m.Symbole) : null;
+
+    /// <summary>
     /// Gegenprobe Sammelliste 399 (Start-Test, je Seite wie <see cref="OrtslisteAltFuerTests"/>): Leiste links wie bis A 0.98.0
     /// (Handy-Knopf am linken Rand, dort wo der linke Daumen liegt).
     /// </summary>

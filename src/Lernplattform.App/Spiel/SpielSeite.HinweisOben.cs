@@ -27,6 +27,19 @@ public sealed partial class SpielSeite
     /// <summary>Gegenprobe (Start-Test 464, je Seite): der Hinweis steht wie bis A 1.12.0 offen in der Karte unten.</summary>
     internal bool HinweisfeldAltFuerTests { get; set; }
 
+    /// <summary>Gegenprobe zur Nachbesserung A 1.13.0 (Weisung P12-398, nur Start-Test): Leiste oben immer bis vor das X wie a0f9e08.</summary>
+    internal bool HinweisObenBreitAltFuerTests
+    {
+        get => _obenBreitAlt;
+        set
+        {
+            _obenBreitAlt = value;
+            HinweisObenLegen();
+        }
+    }
+
+    private bool _obenBreitAlt;
+
     /// <summary>Start-Test 464: feste Zeit des Ablaufs statt der Uhr (null = Uhr), um die 6 s nicht abwarten zu muessen.</summary>
     internal TimeSpan? HinweisZeitFuerTests { get; set; }
 
@@ -69,6 +82,12 @@ public sealed partial class SpielSeite
     public Rect? HinweisObenRechteck() =>
         _obenFeld is { IsEffectivelyVisible: true } f && f.TranslatePoint(default, this) is { } p ? new Rect(p, f.Bounds.Size) : null;
 
+    /// <summary>
+    /// Start-Test (Weisung P12-398): Platz in der Leiste oben rechts neben ihrem Inhalt in Punkten (0 = die Leiste endet am Text;
+    /// gross = sie geht ueber die ganze Breite wie bis a0f9e08); null = nicht zu sehen.
+    /// </summary>
+    public double? HinweisObenRest() => _obenFeld is { IsEffectivelyVisible: true } f ? f.Bounds.Width - f.DesiredSize.Width + f.Margin.Left + f.Margin.Right : null;
+
     /// <summary>Start-Test 464: gilt Antippen (Text der Tafelzeile wie in der Zeile oben)?</summary>
     public bool AntippenGiltJetzt => AntippenGilt;
 
@@ -110,7 +129,9 @@ public sealed partial class SpielSeite
             Padding = new Thickness(14, 6, 10, 6),
             CornerRadius = new CornerRadius(16),
             BorderThickness = new Thickness(1),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
+            // Nachbesserung A 1.13.0 (Weisung P12-398, Nico 26.11.2026): die Leiste ist nur so breit wie ihr Text (kurzer Text =
+            // kurze Leiste), hoechstens bis vor das X; darueber „…“ bzw. Umbruch wie bisher
+            HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top,
             Cursor = new Cursor(StandardCursorType.Hand),
             Focusable = true,
@@ -265,6 +286,11 @@ public sealed partial class SpielSeite
         if (feld.Margin != rand)
         {
             feld.Margin = rand;
+        }
+        var ausrichtung = HinweisObenBreitAltFuerTests ? HorizontalAlignment.Stretch : HorizontalAlignment.Left;
+        if (feld.HorizontalAlignment != ausrichtung)
+        {
+            feld.HorizontalAlignment = ausrichtung;
         }
         var spalten = daneben ? 1 : 2;
         if (Grid.GetColumnSpan(feld) != spalten)

@@ -256,8 +256,9 @@ public static partial class AutoMessung
             seite.MenueAltFuerTests = true;
             seite.Beschriften();
             await Warten();
-            Pruefe("Gegenprobe Menue alt", seite.FAnzeige is not { IsEffectivelyVisible: true } && !x.IsEffectivelyVisible && !ich.IsVisible && !handy.IsVisible
-                && seite.VerlassenKnopf.IsEffectivelyVisible,
+            // seit P12-398 (Nachbesserung A 1.13.0): auch im alten Menue ist das X oben rechts der einzige Weg aus dem Spiel
+            Pruefe("Gegenprobe Menue alt", seite.FAnzeige is not { IsEffectivelyVisible: true } && x.IsEffectivelyVisible && !ich.IsVisible && !handy.IsVisible
+                && !seite.VerlassenKnopf.IsEffectivelyVisible,
                 $"F-Anzeige {seite.FAnzeige?.IsEffectivelyVisible}, X {x.IsEffectivelyVisible}, Ich-Symbol {ich.IsVisible}, Handy-Symbol {handy.IsVisible}, Spiel verlassen unten {seite.VerlassenKnopf.IsEffectivelyVisible}");
         }
         finally

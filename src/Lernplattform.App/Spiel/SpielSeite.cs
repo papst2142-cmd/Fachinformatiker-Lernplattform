@@ -1388,7 +1388,9 @@ public sealed partial class SpielSeite : Grid
         var oben = HinweisObenAn;
         _zeileRolle.IsVisible = !oben;
         _knoepfe.IsVisible = true;
-        VerlassenKnopf.IsVisible = true;
+        // Nachbesserung A 1.13.0 (Weisung P12-398, Nico 26.11.2026): „Spiel verlassen“ unten entfaellt, das Spiel verlaesst man nur
+        // noch ueber das X oben rechts (in jeder Lage sichtbar); Gegenprobe VerlassenUntenAltFuerTests: Knopf unten wie bisher
+        VerlassenKnopf.IsVisible = VerlassenUntenAltFuerTests;
         _ichHuelle.IsVisible = true;
         HinweisObenTakt(spiel);
         UntenSetzen();

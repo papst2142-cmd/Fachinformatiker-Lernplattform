@@ -113,6 +113,20 @@ public static partial class AutoMessung
                     || Avalonia.Automation.AutomationProperties.GetName(c) is SpielProbeTexte.HinweisEinklappen or SpielProbeTexte.HinweisAusklappen)).ToList();
             return string.Join(", ", treffer.Select(c => c.GetType().Name));
         }
+        // Weisung P12-398: genau ein Weg zum Verlassen, das X oben rechts in der Ecke (Name „Spiel verlassen“), kein Knopf unten
+        bool VerlassenNurX(out string wert)
+        {
+            var x = seite.XKnopf;
+            var xr = x is { IsEffectivelyVisible: true } && x.TranslatePoint(default, seite) is { } xp ? new Rect(xp, x.Bounds.Size) : (Rect?)null;
+            var name = x is null ? "" : Avalonia.Automation.AutomationProperties.GetName(x) ?? "";
+            var ecke = xr is { } e && e.Right <= seite.Bounds.Width + 0.5 && e.Right >= seite.Bounds.Width - 24 && e.Top <= 24;
+            var unten = seite.VerlassenKnopf.IsEffectivelyVisible;
+            var hinweis = seite.HinweisObenRechteck();
+            var frei = xr is not { } xr2 || hinweis is not { } hr || !Schneidet(xr2, hr);
+            wert = $"X {(xr is null ? "FEHLT" : R(xr) + (ecke ? " oben rechts" : " NICHT in der Ecke"))}, Name \"{name}\", Spiel verlassen unten {(unten ? "DA (zweiter Weg)" : "weg")}"
+                + (frei ? "" : ", X UEBER DEM HINWEIS " + R(hinweis));
+            return ecke && name == StadtTexte.Verlassen && !unten && frei;
+        }
         void Tippen(Control c) => (ControlAutomationPeer.CreatePeerForElement(c) as IInvokeProvider)?.Invoke();
         void Taste(Key taste) => seite.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = taste, Source = fl });
         try
@@ -232,6 +246,10 @@ public static partial class AutoMessung
                             HinweisOben.Stufe.Offen => seite.HinweisObenText.Replace("\n", "", StringComparison.Ordinal) == zeile.Replace("\n", "", StringComparison.Ordinal),
                             _ => seite.HinweisObenText.StartsWith(HinweisOben.Teile(zeile).Titel, StringComparison.Ordinal),
                         };
+                        // Weisung P12-398 Punkt 2: die Leiste endet am Text (kein Platz rechts daneben), am staerksten beim kurzen Titel
+                        var rest = seite.HinweisObenRest();
+                        Pruefe(punkt + " " + stufe + " Breite nach Text", rest is <= 1,
+                            string.Create(inv, $"Leiste {R(text)}, Platz rechts neben dem Text {(rest is { } rr ? rr.ToString("0", inv) : "-")}"));
                         Pruefe(punkt + " " + stufe, ist == stufe && ueber.Length == 0 && deckOk && inhaltOk && !seite.HinweisUntenSichtbar,
                             $"Stufe {ist}, Zeile {R(text)} {(seite.HinweisObenDaneben ? "neben der Uhr" : "unter der Uhr")}, Figur {R(fig)}, Weg {R(weg)}, "
                             + $"Knoepfe {knoepfe.Count}{(ueber.Length > 0 ? ", UEBERSCHNEIDET " + ueber : ", keine Ueberschneidung")}"
@@ -251,6 +269,44 @@ public static partial class AutoMessung
                     await Warten();
                     Pruefe(punkt + " Weitergehen schliesst", seite.HinweisObenStufe == HinweisOben.Stufe.Aus, $"Stufe {seite.HinweisObenStufe}");
                     spiel.HinstellenFuerTests(stelle.X, stelle.Y);
+                    // Weisung P12-398 Punkt 1: in jeder Lage genau ein Weg aus dem Spiel, das X oben rechts (mit Handlung, altes Menue,
+                    // Einrichten, ohne 3D); kein Knopf „Spiel verlassen“ unten
+                    foreach (var lage in new[] { "Handlung", "altes Menue", "Einrichten", "ohne 3D" })
+                    {
+                        if (lage == "altes Menue")
+                        {
+                            seite.MenueAltFuerTests = true;
+                        }
+                        else if (lage == "Einrichten")
+                        {
+                            spiel.EinrichtenUmschalten();
+                        }
+                        else if (lage == "ohne 3D")
+                        {
+                            seite.ErsatzVorfuehren(true);
+                        }
+                        seite.Beschriften();
+                        if (seite.Tafel is { IsVisible: true } tv)
+                        {
+                            tv.IsVisible = false;
+                        }
+                        await Warten();
+                        Pruefe(punkt + " Verlassen " + lage, VerlassenNurX(out var wert), wert);
+                        if (lage == "altes Menue")
+                        {
+                            seite.MenueAltFuerTests = false;
+                        }
+                        else if (lage == "Einrichten" && spiel.Einrichten)
+                        {
+                            spiel.EinrichtenUmschalten();
+                        }
+                        else if (lage == "ohne 3D")
+                        {
+                            seite.ErsatzVorfuehren(false);
+                        }
+                    }
+                    seite.Beschriften();
+                    await Warten();
                 }
             }
             Schrift.Anwenden(1.0);
@@ -271,6 +327,30 @@ public static partial class AutoMessung
             seite.Beschriften();
             await NeuerText();
             Pruefe("Gegenprobe Hinweisfeld unten (alt)", altRot, $"alt: Karte {R(altKarte)}, Figur {R(altFigur)} -> {(altRot ? "auf Figur oder Weg (erkannt)" : "FREI (Gegenprobe wirkt nicht)")}, Seite {seite.Bounds.Width:0}x{seite.Bounds.Height:0}, Text unten {seite.HinweisUntenSichtbar} ({altZustand})");
+
+            // Gegenprobe P12-398 Punkt 1: wie a0f9e08 (altes Menue: „Spiel verlassen“ unten, kein X) faellt die Pruefung durch
+            seite.MenueAltFuerTests = true;
+            seite.VerlassenUntenAltFuerTests = true;
+            seite.Beschriften();
+            await Warten();
+            var altVerlassen = VerlassenNurX(out var altVerlassenWert);
+            seite.VerlassenUntenAltFuerTests = false;
+            seite.MenueAltFuerTests = false;
+            seite.Beschriften();
+            await Warten();
+            Pruefe("Gegenprobe Spiel verlassen unten (alt)", !altVerlassen, altVerlassenWert + (altVerlassen ? " -> NICHT erkannt (Gegenprobe wirkt nicht)" : " -> erkannt"));
+            // Gegenprobe P12-398 Punkt 2: die Leiste ueber die ganze Breite wie a0f9e08 hat beim kurzen Titel viel Platz neben dem Text
+            seite.HinweisObenBreitAltFuerTests = true;
+            seite.HinweisZeitFuerTests = TimeSpan.Zero;
+            await NeuerText();
+            seite.HinweisZeitFuerTests = HinweisOben.VollDauer + TimeSpan.FromSeconds(1);
+            await Warten();
+            var altRest = seite.HinweisObenRest();
+            seite.HinweisObenBreitAltFuerTests = false;
+            await Warten();
+            var neuRest = seite.HinweisObenRest();
+            Pruefe("Gegenprobe Leiste ganze Breite (alt)", altRest is > 50 && neuRest is <= 1,
+                string.Create(inv, $"Titel \"{seite.HinweisObenText}\": Platz neben dem Text alt {altRest:0}, neu {neuRest:0} -> {(altRest is > 50 ? "erkannt" : "NICHT erkannt")}"));
 
             // B-3: oeffnen mit Maus, Finger, Taste H und Screenreader; Tippen schliesst zurueck zum Titel
             foreach (var art in new[] { "Maus", "Finger", "Taste H", "Screenreader" })
@@ -347,6 +427,9 @@ public static partial class AutoMessung
             seite.DaumenKnoepfeFuerTests = null;
             seite.HinweisfeldAltFuerTests = false;
             seite.HinweisZeitFuerTests = null;
+            seite.VerlassenUntenAltFuerTests = false;
+            seite.HinweisObenBreitAltFuerTests = false;
+            seite.ErsatzVorfuehren(false);
             seite.MenueAltFuerTests = true;
             Schrift.Anwenden(schriftVorher);
             fenster.Width = breiteVorher;

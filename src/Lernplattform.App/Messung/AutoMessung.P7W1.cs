@@ -712,8 +712,9 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
         }
 
-        // "Spiel verlassen" fuehrt zurueck zur Seite davor, Kopfleiste und Navigation sind wieder da
-        seite.VerlassenKnopf.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+        // "Spiel verlassen" fuehrt zurueck zur Seite davor, Kopfleiste und Navigation sind wieder da; seit P12-398 (Nachbesserung
+        // A 1.13.0) ist das X oben rechts der einzige Weg aus dem Spiel
+        seite.XKnopf?.Klick?.Invoke();
         for (var i = 0; i < 20 && ansicht.AktuelleSeite == Seiten.Spiel; i++)
         {
             await ansicht.BildFertigAsync();

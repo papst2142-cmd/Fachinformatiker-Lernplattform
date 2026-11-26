@@ -191,6 +191,16 @@ public static partial class AutoMessung
                             // ohne 3D gibt es keine Ich-Sicht (Knopf nur mit 3D, Welle A 0.92.0): nichts zu pruefen (Teil Nachladen am Mac)
                             Messwerte.Notiere("Spiel: Leiste 399 " + punkt + " Ich-Sicht links (402): ohne 3D kein Knopf Ich-Sicht, nicht geprueft");
                         }
+                        else if (!zu && !seite.VerlassenKnopf.IsVisible)
+                        {
+                            // Nachbesserung A 1.13.0 (Weisung P12-398): ohne „Spiel verlassen“ unten steht „Ich-Sicht“ allein links neben
+                            // dem Handy-Knopf (ganz links der Mitte der Symbole, innerhalb der Leiste)
+                            var il = seite.IchKnopfLage();
+                            var links = il is { } q && q.Ich.Right <= q.Mitte && seite.LeisteRechteck() is { } lr && q.Ich.X >= lr.X - 0.5 && q.Ich.Right <= lr.Right + 0.5;
+                            Pruefe(punkt + " Ich-Sicht links (402)", links, il is { } q3
+                                ? string.Create(inv, $"Ich-Sicht {q3.Ich.X:0.0}..{q3.Ich.Right:0.0}, Mitte {q3.Mitte:0.0}, Leiste {(seite.LeisteRechteck() is { } l3 ? $"{l3.X:0.0}..{l3.Right:0.0}" : "-")}")
+                                : "Ich-Sicht nicht gemessen");
+                        }
                         else if (!zu)
                         {
                             // Welle A 1.0.0 (Sammelliste 402): „Ich-Sicht“ links und „Spiel verlassen“ rechts gleich breit und gleich weit

@@ -48,6 +48,12 @@ public sealed partial class SpielSeite
     private readonly StackPanel _auswahlListe = new() { Spacing = 6 };
     private string _auswahlSchluessel = "";
     private Klickflaeche? _xKnopf;
+
+    /// <summary>
+    /// Gegenprobe zur Nachbesserung A 1.13.0 (Weisung P12-398, nur Start-Test): „Spiel verlassen“ unten in der Karte und das X nur
+    /// mit der Handlung wie bis a0f9e08.
+    /// </summary>
+    internal bool VerlassenUntenAltFuerTests { get; set; }
     private TextBlock? _xSymbol;
     private string _xSymbolFarbe = "";
     private DaumenKnopf? _handyRund;
@@ -358,13 +364,16 @@ public sealed partial class SpielSeite
             _ortKnoepfe.IsVisible = true;
             _knoepfeRolle.IsVisible = true;
         }
-        if (_xKnopf.IsVisible != modus)
+        // Nachbesserung A 1.13.0 (Weisung P12-398): das X oben rechts ist der einzige Weg aus dem Spiel und darum in jeder Lage zu
+        // sehen (auch beim Einrichten, ohne 3D und mit dem alten Menue); Gegenprobe VerlassenUntenAltFuerTests: nur mit der Handlung
+        var xAn = modus || !VerlassenUntenAltFuerTests;
+        if (_xKnopf.IsVisible != xAn)
         {
-            _xKnopf.IsVisible = modus;
+            _xKnopf.IsVisible = xAn;
             // Welle A 1.13.0: der Platz fuer die Hinweiszeile neben der Uhr haengt am X
             HinweisObenLegen();
         }
-        if (modus)
+        if (xAn)
         {
             // Symbol des X schwarz oder weiss, je nachdem, was auf der Farbe des Programms mehr Kontrast hat
             var farbe = Symbolfarbe.Auf(AkzentHex());
