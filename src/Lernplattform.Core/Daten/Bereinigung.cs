@@ -10,9 +10,9 @@ namespace Lernplattform.Core.Daten;
 
 /// <summary>
 /// Phase 11 FW5b (Sammelliste 186, Nico 02.11.2026 Antwort b): bis A 0.32.0 hat der Abschluss einer
-/// AE-, DPA- oder DV-Klausur die Aufgaben als scenario_events mit der Stelle in der Liste der Fachrichtung
+/// FIAE-, FIDP- oder FIDV-Klausur die Aufgaben als scenario_events mit der Stelle in der Liste der Fachrichtung
 /// gebucht (Abschluss.cs, Sammelliste 172). Der Lernstand der Szenarien liest diese Zahl als Stelle in der
-/// ganzen Liste, die Zeile traf also ein SI-Szenario. Diese Zeilen werden hier berichtigt: die Zahl wird auf
+/// ganzen Liste, die Zeile traf also ein FISI-Szenario. Diese Zeilen werden hier berichtigt: die Zahl wird auf
 /// die richtige Stelle gesetzt (Nummer - 1, wie Abschluss seit A 0.32.0 bucht). Titel, Thema, Zeit, Ergebnis
 /// und Kennung (uid) bleiben; so bringt ein Abgleich die alte Fassung nicht zurueck (gleiche uid wird nicht
 /// noch einmal eingefuegt).
@@ -20,7 +20,7 @@ namespace Lernplattform.Core.Daten;
 /// Nur eindeutig belegbare Zeilen: zu einer Klausurzeile in pruefungen, deren Daten eine Aufgabe mit Quelle
 /// ap2_ae, ap2_dpa oder ap2_dv nennen, gehoert eine Zeile in scenario_events mit genau derselben Zeit und
 /// demselben Abstand zu UTC (eine Buchung), der falschen Stelle (Index der Aufgabe) sowie Titel und Thema
-/// genau dieses Szenarios. Traegt das SI-Szenario an der falschen Stelle denselben Titel, bleibt die Zeile
+/// genau dieses Szenarios. Traegt das FISI-Szenario an der falschen Stelle denselben Titel, bleibt die Zeile
 /// (im Zweifel nichts aendern). Andere Zeilen werden nie angefasst.
 /// </para>
 /// <para>
@@ -70,7 +70,7 @@ public static class Bereinigung
                 var szenario = liste[index];
                 var titel = szenario.Titel ?? "";
                 var neu = szenario.Nummer - 1;
-                // im Zweifel nichts aendern: dieselbe Stelle oder das getroffene SI-Szenario heisst genauso
+                // im Zweifel nichts aendern: dieselbe Stelle oder das getroffene FISI-Szenario heisst genauso
                 if (neu == index || (index < si.Count && (si[index].Titel ?? "") == titel))
                 {
                     continue;
@@ -144,15 +144,15 @@ public static class Bereinigung
     public static class Texte
     {
         public static string Berichtigt(int anzahl, string kopie) =>
-            $"Lernstand bereinigt: {anzahl} alte Einträge aus Klausuren von AE, DPA oder DV zeigten auf ein Szenario der "
+            $"Lernstand bereinigt: {anzahl} alte Einträge aus Klausuren von FIAE, FIDP oder FIDV zeigten auf ein Szenario der "
             + $"Systemintegration und zeigen jetzt auf das richtige Szenario. Kopie vorher: {kopie}";
 
         public static string NichtGespeichert(int anzahl, string kopie) =>
-            $"Lernstand nicht bereinigt: {anzahl} alte Einträge aus Klausuren von AE, DPA oder DV konnten nicht gespeichert "
+            $"Lernstand nicht bereinigt: {anzahl} alte Einträge aus Klausuren von FIAE, FIDP oder FIDV konnten nicht gespeichert "
             + $"werden, der Lernstand ist unverändert. Kopie: {kopie}";
 
         public static string KopieFehlt(int anzahl) =>
-            $"Lernstand nicht bereinigt: {anzahl} alte Einträge aus Klausuren von AE, DPA oder DV gefunden, aber die Kopie "
+            $"Lernstand nicht bereinigt: {anzahl} alte Einträge aus Klausuren von FIAE, FIDP oder FIDV gefunden, aber die Kopie "
             + "vorher ist gescheitert. Ohne Kopie wird nichts geändert.";
     }
 

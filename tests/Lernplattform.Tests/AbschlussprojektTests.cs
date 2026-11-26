@@ -206,7 +206,7 @@ public class AbschlussprojektTests
             }
         }
         Gleich(G34["grenze"], ist, "grenze");
-        // Die Grenze kommt aus der Ausbildung (G36): AE 80, sonst 40
+        // Die Grenze kommt aus der Ausbildung (G36): FIAE 80, sonst 40
         Assert.Equal([40, 80, 40, 40], Ausbildung.Werte.Select(Abschlussprojekt.MaxStunden));
     }
 

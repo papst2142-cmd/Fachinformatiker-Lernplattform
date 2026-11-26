@@ -1,25 +1,22 @@
-Im Spiel stehen die Hinweise nicht mehr unten auf dem Weg deiner Figur, sondern als schmale Zeile oben neben der Uhr.
+Die Fachrichtungen heißen jetzt mit denselben Kürzeln wie bei der IHK: FISI, FIAE, FIDP und FIDV.
 
-- Kommt deine Figur an ein Möbelstück, eine Tür oder eine Haltestelle, steht der Hinweis oben: fett der Name, dahinter der Text, so weit er in die Zeile passt. Die Zeile ist nur so breit wie ihr Text: ein kurzer Hinweis bekommt eine kurze Zeile. Am schmalen Handy im Hochformat steht die Zeile unter der Uhr.
-- Nach 6 Sekunden bleibt nur noch der Name stehen, blass. Gehst du weiter, verschwindet die Zeile ganz. Unten bleibt der Weg vor deiner Figur frei, dort stehen nur noch die Knöpfe zum Steuern.
-- Tippst du auf die Zeile (am PC auch mit der Maus oder der Taste H), siehst du den ganzen Text oben. Noch einmal Tippen zeigt wieder nur den Namen, Weitergehen schließt ihn. Die Taste kannst du in den Optionen unter der Tastenbelegung ändern.
-- Das Dreieck zum Ein- und Ausklappen des Hinweisfelds gibt es nicht mehr. Der Knopf für das Handy steht unten in der Mitte.
-- Das Spiel verlässt du jetzt immer über das X oben rechts. Es ist überall zu sehen, auch beim Einrichten und ohne 3D. Den zweiten Knopf „Spiel verlassen“ unten gibt es nicht mehr.
-- Beim Einrichten der Wohnung bleibt die Tafel unten wie bisher, nur ohne Dreieck.
-- Der Screenreader liest jeden neuen Hinweis vor wie bisher.
-- Dein Lernstand, die Lerninhalte und deine Spielstände bleiben genau gleich.
+- FISI steht für Systemintegration, FIAE für Anwendungsentwicklung, FIDP für Daten- und Prozessanalyse und FIDV für Digitale Vernetzung. So stehen die Kürzel auch unten auf den Seiten der echten Prüfung.
+- Du siehst die neuen Kürzel bei der Wahl der Fachrichtung (in den Optionen unter „Ausbildung“ und bei der Frage beim ersten Start), bei den Fachrichtungs-Paketen (zum Beispiel „Fachrichtungs-Paket FIDP“) und in den Hinweisen, wenn ein Paket fehlt oder neue Inhalte da sind.
+- Die Suche in den Optionen findet die Fachrichtungs-Wahl auch über die Kürzel, etwa mit „FIDP“.
+- Die langen Namen der Fachrichtungen bleiben, wie sie sind.
+- Deine gewählte Fachrichtung, dein Lernstand, deine geladenen Pakete und deine Spielstände bleiben genau gleich. Du musst nichts neu wählen oder laden.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.13.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.14.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.13.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.13.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.13.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.13.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.14.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.14.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.14.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.14.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

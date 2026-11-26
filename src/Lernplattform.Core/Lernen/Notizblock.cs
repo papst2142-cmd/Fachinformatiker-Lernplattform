@@ -23,7 +23,7 @@ public sealed class Notizblock(Lerninhalte inhalte)
     {
         Quellen.Karte => inhalte.Karteikarten.Select(k => ((object)(k.Frage ?? ""), k)),
         Quellen.Quiz => inhalte.Quizfragen.Select(q => ((object)(q.Frage ?? ""), q)),
-        // Phase 9 W2: Schluessel = Position in der ganzen Liste (Nummer - 1), bei SI gleich der Position
+        // Phase 9 W2: Schluessel = Position in der ganzen Liste (Nummer - 1), bei FISI gleich der Position
         Quellen.Ap1 => inhalte.Ap1Szenarien.Select(e => ((object)(long)(e.Nummer - 1), e)),
         Quellen.Ap2 => inhalte.Ap2Szenarien.Select(e => ((object)(long)(e.Nummer - 1), e)),
         _ => inhalte.Testprojekte.Select(e => ((object)(long)(e.Nummer - 1), e)),
@@ -33,7 +33,7 @@ public sealed class Notizblock(Lerninhalte inhalte)
 
     /// <summary>
     /// Phase 11 W1 (Sammelliste 171): Nummer eines Szenarios oder Testprojekts wie in der Liste der Seite,
-    /// also die Stelle in der Sicht der gewaehlten Fachrichtung ab 1 (bei SI gleich Schluessel + 1).
+    /// also die Stelle in der Sicht der gewaehlten Fachrichtung ab 1 (bei FISI gleich Schluessel + 1).
     /// </summary>
     public int Nummer(string quelle, object schluessel)
     {

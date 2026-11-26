@@ -1095,16 +1095,16 @@ public sealed class EchtFormatTeil
         "pruefung/echt-b1-bewertung-aufgabe3", "pruefung/echt-b1-anlagen2-text", "pruefung/echt-diagramm-uml",
         // A 0.78.0: Zeichen-Baukasten (ER im Probesatz, UML ohne Satz, Bewertung mit Zaehlung)
         "pruefung/echt-b1-baukasten-er", "pruefung/echt-baukasten-uml", "pruefung/echt-b1-bewertung-baukasten",
-        // A 0.84.0 (Weisung P12-285): erster Satz der Fachrichtung AE je Bereich (Lauf, Anlagen, Bewertung)
+        // A 0.84.0 (Weisung P12-285): erster Satz der Fachrichtung FIAE je Bereich (Lauf, Anlagen, Bewertung)
         "pruefung/echt-ae-b1-lauf-aufgabe1", "pruefung/echt-ae-b1-anlagen1", "pruefung/echt-ae-b1-bewertung-aufgabe1",
         "pruefung/echt-ae-b2-lauf-aufgabe1", "pruefung/echt-ae-b2-anlagen1", "pruefung/echt-ae-b2-bewertung-aufgabe1",
-        // A 0.85.0 (Weisung P12-291): erster Satz der Fachrichtung DPA je Bereich (Lauf, Anlagen, Bewertung)
+        // A 0.85.0 (Weisung P12-291): erster Satz der Fachrichtung FIDP je Bereich (Lauf, Anlagen, Bewertung)
         "pruefung/echt-dpa-b1-lauf-aufgabe1", "pruefung/echt-dpa-b1-anlagen1", "pruefung/echt-dpa-b1-bewertung-aufgabe1",
         "pruefung/echt-dpa-b2-lauf-aufgabe1", "pruefung/echt-dpa-b2-anlagen1", "pruefung/echt-dpa-b2-bewertung-aufgabe1",
-        // A 0.86.0 (Weisung P12-292): erster Satz der Fachrichtung DV je Bereich (Lauf, Anlagen, Bewertung)
+        // A 0.86.0 (Weisung P12-292): erster Satz der Fachrichtung FIDV je Bereich (Lauf, Anlagen, Bewertung)
         "pruefung/echt-dv-b1-lauf-aufgabe1", "pruefung/echt-dv-b1-anlagen1", "pruefung/echt-dv-b1-bewertung-aufgabe1",
         "pruefung/echt-dv-b2-lauf-aufgabe1", "pruefung/echt-dv-b2-anlagen1", "pruefung/echt-dv-b2-bewertung-aufgabe1",
-        // A 1.8.0 (Weisung P12-371): Klassen- und Use-Case-Baukasten in AE-Saetzen (Lauf mit gewaehltem Baustein, Bewertung)
+        // A 1.8.0 (Weisung P12-371): Klassen- und Use-Case-Baukasten in FIAE-Saetzen (Lauf mit gewaehltem Baustein, Bewertung)
         "pruefung/echt-ae-baukasten-klasse", "pruefung/echt-ae-baukasten-usecase", "pruefung/echt-ae-bewertung-klasse",
         "pruefung/echt-ae-bewertung-usecase",
         // A 1.12.0 (Weisung P12-390): Struktogramm im Baukasten (Lauf mit gewaehlter Verzweigung, alle sieben Bausteine, Bewertung)
@@ -1117,13 +1117,13 @@ public sealed class EchtFormatTeil
     /// <summary>Erste Nummer der Ansichten des Baukastens (A 0.78.0) in <see cref="ProbeNamen"/>.</summary>
     internal const int BaukastenAb = 17;
 
-    /// <summary>Erste Nummer der Ansichten der Fachrichtung AE (A 0.84.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
+    /// <summary>Erste Nummer der Ansichten der Fachrichtung FIAE (A 0.84.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
     internal const int AeAb = 20;
 
-    /// <summary>Erste Nummer der Ansichten der Fachrichtung DPA (A 0.85.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
+    /// <summary>Erste Nummer der Ansichten der Fachrichtung FIDP (A 0.85.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
     internal const int DpaAb = 26;
 
-    /// <summary>Erste Nummer der Ansichten der Fachrichtung DV (A 0.86.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
+    /// <summary>Erste Nummer der Ansichten der Fachrichtung FIDV (A 0.86.0) in <see cref="ProbeNamen"/>: je Bereich drei.</summary>
     internal const int DvAb = 32;
 
     /// <summary>
@@ -1139,7 +1139,7 @@ public sealed class EchtFormatTeil
     internal const int W2Ab = 42;
 
     /// <summary>
-    /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung SI), 754 s gelaufen,
+    /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung FISI), 754 s gelaufen,
     /// Antworten teils richtig, teils falsch, teils leer.
     /// </summary>
     internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1, string? fachrichtung = null, string? kennung = null)
@@ -1287,8 +1287,8 @@ public sealed class EchtFormatTeil
                 W1Zeigen(art - W1Ab);
                 break;
             case >= AeAb:
-                // A 0.84.0: erster AE-Satz des Bereichs (0-2 Bereich 1, 3-5 Bereich 2), Aufgabe 1 im Lauf, mit Anlagen, bewertet;
-                // A 0.85.0: ab DpaAb dasselbe fuer DPA, A 0.86.0: ab DvAb fuer DV
+                // A 0.84.0: erster FIAE-Satz des Bereichs (0-2 Bereich 1, 3-5 Bereich 2), Aufgabe 1 im Lauf, mit Anlagen, bewertet;
+                // A 0.85.0: ab DpaAb dasselbe fuer FIDP, A 0.86.0: ab DvAb fuer FIDV
                 var (fr, erste) = art >= DvAb ? ("dv", DvAb) : art >= DpaAb ? ("dpa", DpaAb) : ("ae", AeAb);
                 var aeArt = (art - erste) % 3;
                 _a.ProbeSetzen(ProbeZustand(bewertet: aeArt == 2, art - erste < 3 ? EchtSaetze.B1 : EchtSaetze.B2, fr));

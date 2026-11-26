@@ -11,13 +11,13 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// A 1.8.0 "Pruefung echt W1" (Weisung P12-371): Klassen- und Use-Case-Diagramm im Baukasten der AE-Saetze. Der Start-Test misst
+/// A 1.8.0 "Pruefung echt W1" (Weisung P12-371): Klassen- und Use-Case-Diagramm im Baukasten der FIAE-Saetze. Der Start-Test misst
 /// die vier Ansichten ab <see cref="EchtFormatTeil.W1Ab"/> (Grenze 400 ms), prueft ihre Bilder (gezeichnet, mit Namen) und bedient
 /// sie auf allen Wegen: Maus und Finger ("Attribut hinzufügen" an der gewaehlten Klasse, "Klasse setzen", "Verbinden …" und
 /// Ziel antippen = Assoziation; Use-Case: neuer Anwendungsfall innerhalb, neuer Akteur ausserhalb der Systemgrenze), Tastatur
 /// ("Verbinden mit" und "Art der Beziehung" mit der Pfeiltaste, "Verbinden" mit der Eingabetaste = Aggregation in der gewaehlten
 /// Richtung) und Screenreader (Liste "Deine Zeichnung" nennt Beziehungen mit Art und Multiplizitaet, Knopf per Automation
-/// aufrufen). In der Bewertung zaehlt das Programm (gruene und rote Zeilen) und der Kopf nennt den AE-Bereich.
+/// aufrufen). In der Bewertung zaehlt das Programm (gruene und rote Zeilen) und der Kopf nennt den FIAE-Bereich.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -204,7 +204,7 @@ public static partial class AutoMessung
             }
         }
 
-        // Bewertung: Zaehlung gruen und rot, Kopf mit dem AE-Bereich
+        // Bewertung: Zaehlung gruen und rot, Kopf mit dem FIAE-Bereich
         var aeName = EchtArten.Namen(EchtArten.Art(Fachrichtung.Alle.Single(f => f.Id == "ae"), EchtSaetze.B1))!.Value.Name;
         foreach (var art in new[] { ab + 2, ab + 3 })
         {

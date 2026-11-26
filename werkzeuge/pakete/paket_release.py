@@ -17,7 +17,7 @@ des echten Ladens (python3.12 -I). Nichts hier laedt hoch, legt einen Tag an ode
 Welle A 1.5.0 (Weisung P12-358, Sammelliste 386): die drei Fachrichtungs-Pakete lernen_ae, lernen_dpa, lernen_dv haben
 keinen Ordner unter pakete/: sie werden mit paket_bauen.py lernen aus inhalte_csharp/lernen/ geschnitten (eine Quelle).
 Stand und braucht_app des Releases stehen an genau einer Stelle (paket_bauen.LERNEN_TESTDATEIEN je Fachrichtung, seit A 1.8.0;
-AE Stand 2), und die gebaute Datei muss
+FIAE Stand 2), und die gebaute Datei muss
 Byte fuer Byte gleich der echten Testdatei tests/Lernplattform.Tests/Testdaten/pakete_echt/lernen_<fr>_<stand>.fipaket sein.
   paket_release.py lernen-kopf <lernen_fr>
       gibt KENNUNG=, STAND=, TAG=, DATEI=, NAME=, ART=lernen, FR= aus.

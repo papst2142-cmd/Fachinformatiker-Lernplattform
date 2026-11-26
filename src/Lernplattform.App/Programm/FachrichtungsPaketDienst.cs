@@ -7,7 +7,7 @@ namespace Lernplattform.Programm;
 /// <summary>
 /// Welle A 0.91.0 (Weisung P12-300, Nico 1b 2c 3a, Zusatz a): Ablaeufe der Fachrichtungs-Pakete ausserhalb der Karte
 /// „Inhaltspakete“: Laden aus dem Hinweis oben in der Lernansicht und aus der Rueckfrage, wenn einer Fachrichtung alle Inhalte
-/// fehlen (Vorbereitung 386; die App 0.91.0 bringt AE, DPA und DV noch selbst mit), und der Hinweis nach einem Abgleich. Nichts
+/// fehlen (Vorbereitung 386; die App 0.91.0 bringt FIAE, FIDP und FIDV noch selbst mit), und der Hinweis nach einem Abgleich. Nichts
 /// laedt von allein; am Handy ohne WLAN zuerst die Rueckfrage mit der Groesse. Der Lernstand wird nie geaendert.
 /// </summary>
 public static class FachrichtungsPaketDienst
@@ -67,7 +67,7 @@ public static class FachrichtungsPaketDienst
     }
 
     /// <summary>
-    /// Rueckfrage, wenn der Fachrichtung alle Inhalte fehlen (Weisung P12-300 Punkt 4, wortgleich): „Für AE fehlt das
+    /// Rueckfrage, wenn der Fachrichtung alle Inhalte fehlen (Weisung P12-300 Punkt 4, wortgleich): „Für FIAE fehlt das
     /// Fachrichtungs-Paket (1,2 MB). Jetzt laden?“ mit „Laden“ und „Später“. Ohne Verbindung ein Hinweis. Nie ein Absturz.
     /// </summary>
     public static async Task FehltAsync(string fachrichtung)

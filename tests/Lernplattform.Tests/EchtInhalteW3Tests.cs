@@ -6,7 +6,7 @@ using Lernplattform.Core.Pruefung.Echt;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// A 0.79.0, Welle W3 "Inhalte SI" (Weisung P12-267 mit P12-262, Nicos Antwort 3c): 15 neue Pruefungssaetze, nur
+/// A 0.79.0, Welle W3 "Inhalte FISI" (Weisung P12-267 mit P12-262, Nicos Antwort 3c): 15 neue Pruefungssaetze, nur
 /// angehaengt. Prueft Nicos Ziele (je Bereich fuenf neue Saetze, jeder mit eigener erfundener Firma, die Probesaetze
 /// bleiben gleich), die Grenzen aus P12-265/P12-266 Abschnitt 2 (keine Aufgabenkette der Originale im gleichen
 /// Zuschnitt) und den Vergleich mit der unabhaengigen Pruefung G52 (Sollwert-Aenderung Nr. 18). Jede Regel mit Gegenprobe.
@@ -51,9 +51,9 @@ public class EchtInhalteW3Tests
     {
         var bestand = Bestand;
         Assert.Empty(bestand.Fehler);
-        // ab A 0.84.0 folgen die AE-Saetze (EchtInhalteAeTests); die Saetze der W3 stehen unveraendert davor
+        // ab A 0.84.0 folgen die FIAE-Saetze (EchtInhalteAeTests); die Saetze der W3 stehen unveraendert davor
         Assert.Equal(["alle_ap1_01", "si_b1_01", .. Neu], bestand.Saetze.Take(2 + Neu.Length).Select(s => s.Kennung));
-        // Antwort 3c: 5 neue Saetze je Bereich (der Probesatz zaehlt nicht mit); 4a: AP1 fuer alle, AP2 der W3 nur SI
+        // Antwort 3c: 5 neue Saetze je Bereich (der Probesatz zaehlt nicht mit); 4a: AP1 fuer alle, AP2 der W3 nur FISI
         foreach (var f in Fachrichtung.Alle)
         {
             Assert.Equal(6, bestand.Fuer(EchtSaetze.Ap1, f.Id).Count);

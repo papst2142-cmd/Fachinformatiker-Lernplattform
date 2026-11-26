@@ -10,18 +10,18 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// A 0.84.0 (Weisung P12-285 Punkt 1 und 6): die Fachrichtung AE hat in beiden AP2-Bereichen eigene Saetze. Der Start-Test
-/// prueft die Auswahl (AE zeigt je Bereich eine Startzeile mit 5 Saetzen), misst Lauf und
-/// Bewertung eines AE-Satzes je Bereich (Grenze 400 ms) und bedient sie mit Maus und Finger: Reiter, Anlagen, Haekchen.
+/// A 0.84.0 (Weisung P12-285 Punkt 1 und 6): die Fachrichtung FIAE hat in beiden AP2-Bereichen eigene Saetze. Der Start-Test
+/// prueft die Auswahl (FIAE zeigt je Bereich eine Startzeile mit 5 Saetzen), misst Lauf und
+/// Bewertung eines FIAE-Satzes je Bereich (Grenze 400 ms) und bedient sie mit Maus und Finger: Reiter, Anlagen, Haekchen.
 /// Die Ansichten selbst prueft die Layoutpruefung in jeder Groesse ueber <see cref="EchtFormatTeil.ProbeNamen"/> ab
-/// <see cref="EchtFormatTeil.AeAb"/>. A 0.85.0 (Weisung P12-291): dieselbe Pruefung fuer DPA (Ansichten ab
+/// <see cref="EchtFormatTeil.AeAb"/>. A 0.85.0 (Weisung P12-291): dieselbe Pruefung fuer FIDP (Ansichten ab
 /// <see cref="EchtFormatTeil.DpaAb"/>, Auswahl ueber <see cref="KlausurTeil.ProbeAuswahl"/>). A 0.86.0 (Weisung P12-292): dasselbe
-/// fuer DV (Ansichten ab <see cref="EchtFormatTeil.DvAb"/>); danach zeigt keine Fachrichtung mehr den Platzhalter. Gegenprobe:
-/// die Ansicht <see cref="KlausurTeil.EchtAb"/> nimmt die DV-Saetze heraus und zeigt weiter Platzhalter und Meldung ohne Startknopf.
+/// fuer FIDV (Ansichten ab <see cref="EchtFormatTeil.DvAb"/>); danach zeigt keine Fachrichtung mehr den Platzhalter. Gegenprobe:
+/// die Ansicht <see cref="KlausurTeil.EchtAb"/> nimmt die FIDV-Saetze heraus und zeigt weiter Platzhalter und Meldung ohne Startknopf.
 /// </summary>
 public static partial class AutoMessung
 {
-    /// <summary>Fachrichtungen, die heute eigene AP2-Saetze haben (ausser SI); alle anderen zeigen den Platzhalter.</summary>
+    /// <summary>Fachrichtungen, die heute eigene AP2-Saetze haben (ausser FISI); alle anderen zeigen den Platzhalter.</summary>
     private static readonly string[] EchtMitSaetzen = ["ae", "dpa", "dv"];
 
     private static Task<int> EchtAeAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, EchtBestand bestand,
@@ -63,7 +63,7 @@ public static partial class AutoMessung
             }
         }
 
-        // Auswahl: die Fachrichtung mit Startknopf je Bereich, DV in der Probe mit Meldungen (ohne DV-Saetze, Gegenprobe
+        // Auswahl: die Fachrichtung mit Startknopf je Bereich, FIDV in der Probe mit Meldungen (ohne FIDV-Saetze, Gegenprobe
         // Platzhalter) ohne Startknopf fuer b1/b2. Die heutige Klausur hat
         // Knoepfe mit derselben Aufschrift ("Softwareprodukt starten"); gezaehlt wird darum nur ein Knopf, der neben der
         // Angabe des echten Formats steht ("... · Sätze: n, davon bearbeitet: m").

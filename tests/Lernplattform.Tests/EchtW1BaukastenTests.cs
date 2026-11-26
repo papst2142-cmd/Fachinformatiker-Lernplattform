@@ -9,10 +9,10 @@ namespace Lernplattform.Tests;
 
 /// <summary>
 /// A 1.8.0 "Pruefung echt W1" (Weisungen P12-371 und P12-372, Plan P12-232, Nico 1a-5a): Klassen- und Use-Case-Diagramm im
-/// Baukasten, Format 4 mit neuer Fassung eines Satzes, fuenf neue AE-Fassungen. Abnahmesaetze: (1) Klassendiagramm mit allen
+/// Baukasten, Format 4 mit neuer Fassung eines Satzes, fuenf neue FIAE-Fassungen. Abnahmesaetze: (1) Klassendiagramm mit allen
 /// vier Beziehungen, Multiplizitaeten, Attributen und Methoden; (2) Use-Case-Diagramm mit «include», «extend» und
 /// Generalisierung in richtiger Pfeilrichtung, Systemgrenze vorgegeben; (3) das Programm vergleicht gruen/rot mit Klartext, die
-/// Punkte bleiben Haekchen; der Bewertungskopf nennt bei AE den AE-Bereich; (4) fuenf neue Fassungen nur angehaengt, die alten
+/// Punkte bleiben Haekchen; der Bewertungskopf nennt bei FIAE den FIAE-Bereich; (4) fuenf neue Fassungen nur angehaengt, die alten
 /// bytegleich, kein Pruefungsthema verschwindet, Gewichte in den Grenzen; (5) Format 3 bleibt ladbar, neuere Nummer = klarer
 /// Fehler, Kennung doppelt ohne hoehere Fassung = Fehler; ein offener Lauf behaelt seine alte Antwort gespeichert. Jede Regel
 /// mit Gegenprobe.
@@ -413,7 +413,7 @@ public class EchtW1BaukastenTests
         Assert.Equal(1, geschrieben);
     }
 
-    // ---- (3) Bewertungskopf mit AE-Bereich -----------------------------------------------------------------------------------
+    // ---- (3) Bewertungskopf mit FIAE-Bereich -----------------------------------------------------------------------------------
 
     [Fact]
     public void Bewertungskopf_AeSatz_NenntAeBereich()
@@ -425,7 +425,7 @@ public class EchtW1BaukastenTests
             var name = EchtArten.Namen(EchtArten.Art(ae, satz.Bereich))!.Value.Name;
             Assert.Equal("AP2 · Planen eines Softwareproduktes" + EchtTexte.NameZusatz, name);
         }
-        // Gegenprobe: die SI-Art nennt den SI-Bereich, nie den AE-Bereich
+        // Gegenprobe: die FISI-Art nennt den FISI-Bereich, nie den FIAE-Bereich
         var si = Fachrichtung.Alle.Single(f => f.Id == "si");
         Assert.DoesNotContain("Softwareproduktes", EchtArten.Namen(EchtArten.Art(si, EchtSaetze.B1))!.Value.Name, StringComparison.Ordinal);
     }

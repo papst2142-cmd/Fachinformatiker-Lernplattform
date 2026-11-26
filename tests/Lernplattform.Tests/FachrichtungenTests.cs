@@ -12,7 +12,7 @@ namespace Lernplattform.Tests;
 /// <summary>
 /// Phase 4, W2: Fachrichtungen und Klausur-Rechnungen gegen G36 (tests/Vergleich/fachrichtungen.json,
 /// unabhaengiges Skript werkzeuge/vergleich/erzeuge_fachrichtungen.py nur aus der Spezifikation P4-5).
-/// SI muss dabei gleich G32 sein (KlausurTests und der CI-Schritt "Vergleich"). Dazu die
+/// FISI muss dabei gleich G32 sein (KlausurTests und der CI-Schritt "Vergleich"). Dazu die
 /// Kontrollfehler aus Abschnitt 7 der Spezifikation: jeder falsche Nachbau muss hier auffallen.
 /// </summary>
 public partial class FachrichtungenTests
@@ -321,7 +321,7 @@ public partial class FachrichtungenTests
     {
         var ae = Fachrichtung.Nach("ae");
         Assert.NotEqual(Py(G36["fachrichtungen"]!["ae"]), Py(Konfiguration(ae with { ProjektStunden = 40 })));
-        // DV mit falschen Bereichsnamen (b1 und b2 vertauscht, wie im ersten Entwurf R1)
+        // FIDV mit falschen Bereichsnamen (b1 und b2 vertauscht, wie im ersten Entwurf R1)
         var dv = Fachrichtung.Nach("dv");
         var vertauscht = dv with
         {

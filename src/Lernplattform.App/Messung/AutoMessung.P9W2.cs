@@ -14,11 +14,11 @@ namespace Lernplattform.Messung;
 /// <summary>
 /// Phase 9 W2 (Weisung P9-5 Punkt 5, Plan Phase 9 Abschnitt 12.4 Antwort 3a): Messpunkte "Inhalte laden" (alle
 /// Ordner, kalt, einmalig und streng 400 ms), "Fachrichtung wechseln" (si -> ae bis die Inhalte, das Dashboard und
-/// das Bild fertig sind; wiederholbar, 400 ms) und "Klausurauswahl AE" (erste Auswahl der Klausursimulation in der
-/// Sicht AE, streng 400 ms). Dazu die Zahlen der Sicht AE (gemeinsame Inhalte nach einteilung_bisher.json und ab W3
-/// die eigenen AE-Inhalte), ab W3 (Weisung P9-8) das erste Oeffnen von Karteikarten und Pruefungstrainer bei AE (streng
-/// 400 ms) und die Layoutpruefung der Seiten, die AE anders zeigt (Klausurauswahl, AP2-Szenarien, Testprojekte ohne
-/// Aufgaben, Optionen "Lerninhalte"). Nichts wird gespeichert: die Sicht wird nur angezeigt, am Ende wieder SI.
+/// das Bild fertig sind; wiederholbar, 400 ms) und "Klausurauswahl FIAE" (erste Auswahl der Klausursimulation in der
+/// Sicht FIAE, streng 400 ms). Dazu die Zahlen der Sicht FIAE (gemeinsame Inhalte nach einteilung_bisher.json und ab W3
+/// die eigenen FIAE-Inhalte), ab W3 (Weisung P9-8) das erste Oeffnen von Karteikarten und Pruefungstrainer bei FIAE (streng
+/// 400 ms) und die Layoutpruefung der Seiten, die FIAE anders zeigt (Klausurauswahl, AP2-Szenarien, Testprojekte ohne
+/// Aufgaben, Optionen "Lerninhalte"). Nichts wird gespeichert: die Sicht wird nur angezeigt, am Ende wieder FISI.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -36,7 +36,7 @@ public static partial class AutoMessung
         // Phase 10 W1 (Weisung P9-13, Nico 5): beim Start nur die bisherigen Inhalte und die gewaehlte Fachrichtung
         funde += Ergebnis("Inhalte laden (bisherige + gewaehlte Fachrichtung, kalt, einmalig)", Messwiederholung.Einmal(Zustand.InhalteLadenMs, Geraetegrenze),
             Zustand.InhalteLadenTeile);
-        // Welle A 0.97.0 (Weisung P12-312 Punkt 5, Nico 3a): dasselbe mit AE, eigener kalter Programmstart (SI bleibt unveraendert)
+        // Welle A 0.97.0 (Weisung P12-312 Punkt 5, Nico 3a): dasselbe mit FIAE, eigener kalter Programmstart (FISI bleibt unveraendert)
         funde += await InhalteLadenAeAsync();
 
         var gebaut = ansicht.GebauteSeiten.Keys.ToList();
@@ -55,7 +55,7 @@ public static partial class AutoMessung
             return uhr.Elapsed.TotalMilliseconds;
         }
 
-        // 2. bis 5. je Fachrichtung mit eigenen Inhalten: AE (W3), DPA (W4, Weisung P9-10)
+        // 2. bis 5. je Fachrichtung mit eigenen Inhalten: FIAE (W3), FIDP (W4, Weisung P9-10)
         async Task<TrainerSeite?> SichtPruefen(string fr, string name)
         {
             // 2. Fachrichtung wechseln (Sicht si -> fr), zurueck = Sicht si (nicht gemessen)
@@ -79,8 +79,8 @@ public static partial class AutoMessung
                 return null;
             }
 
-            // 3. Zahlen der Sicht AE: die gemeinsamen bisherigen Inhalte (einteilung_bisher.json) und die eigenen
-            //    AE-Inhalte (W3, Weisung P9-8); Phase 10 W2 (Weisung P10-1): dazu die eigenen Testprojekte und Fragen
+            // 3. Zahlen der Sicht FIAE: die gemeinsamen bisherigen Inhalte (einteilung_bisher.json) und die eigenen
+            //    FIAE-Inhalte (W3, Weisung P9-8); Phase 10 W2 (Weisung P10-1): dazu die eigenen Testprojekte und Fragen
             //    fuers Fachgespraech (die bisherigen Testprojekte sind alle si, vom Fachgespraech sind 42 gemeinsam)
             var einteilung = ae.Einteilung;
             var eigene = (Karten: ae.Karteikarten.Count(e => e.Zugehoerigkeit == fr), Quiz: ae.Quizfragen.Count(e => e.Zugehoerigkeit == fr),
@@ -102,7 +102,7 @@ public static partial class AutoMessung
             }
 
             // 3a. Karteikarten und Pruefungstrainer der Fachrichtung: erstes Oeffnen in der neuen Sicht bis zum Bild (streng);
-            //     Phase 10 W2 (Weisung P10-1): ebenso die Testprojekte (Liste der Sicht, AE mit eigenen Projekten)
+            //     Phase 10 W2 (Weisung P10-1): ebenso die Testprojekte (Liste der Sicht, FIAE mit eigenen Projekten)
             foreach (var (id, seite) in new[] { (Seiten.Karteikarten, "Karteikarten"), (Seiten.Trainer, "Pruefungstrainer"), (Seiten.Testprojekt, "Testprojekte") })
             {
                 if (ansicht.GebauteSeiten.ContainsKey(id))
@@ -150,7 +150,7 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             funde += Ergebnis("Klausurauswahl " + name + " (Wechsel zu \"Prüfung\", bis zum Bild)",
                 await BildMessenAsync(ansicht, () => trainer.ArtWaehlen(TrainerTexte.Pruefung), grenze: Geraetegrenze));
-            // W3/W4/W5: AE, DPA und DV haben eigene Aufgaben, der Hinweis darf nicht mehr zu sehen sein
+            // W3/W4/W5: FIAE, FIDP und FIDV haben eigene Aufgaben, der Hinweis darf nicht mehr zu sehen sein
             if (Textbaum(ansicht).Contains(FachrichtungTexte.KlausurOhneAufgaben))
             {
                 Fund("Klausurauswahl " + name + ": Hinweis \"" + FachrichtungTexte.KlausurOhneAufgaben + "\" noch zu sehen");
@@ -224,7 +224,7 @@ public static partial class AutoMessung
             t.ArtWaehlen(TrainerTexte.Uebung);
         }
 
-        // 6. zurueck auf SI (wie gespeichert) und die vorher gebauten Seiten wieder bauen
+        // 6. zurueck auf FISI (wie gespeichert) und die vorher gebauten Seiten wieder bauen
         await Wechsel("si");
         foreach (var id in gebaut.Where(id => !ansicht.GebauteSeiten.ContainsKey(id)))
         {

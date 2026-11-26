@@ -201,12 +201,12 @@ public static partial class AutoMessung
         {
             Zustand.Aendere(w => Core.Spiel.Probe.Grafikstufen.Wert(w, Core.Spiel.Probe.Grafikstufe.Mittel));
         }
-        // Welle A 0.97.0 (Weisung P12-312 Punkt 5): zweiter Programmstart des Start-Tests, misst nur „Inhalte laden“ mit AE
+        // Welle A 0.97.0 (Weisung P12-312 Punkt 5): zweiter Programmstart des Start-Tests, misst nur „Inhalte laden“ mit FIAE
         if (Teil == TeilInhalteAe)
         {
             return await InhalteAeTeilAsync();
         }
-        // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV nur noch als Paket; der Start-Test setzt die drei echten Pakete ein
+        // Welle A 1.5.0 (Weisung P12-358): FIAE, FIDP und FIDV nur noch als Paket; der Start-Test setzt die drei echten Pakete ein
         funde += await FachrichtungsPaketeVorabAsync();
         // Phase 7 W1: eigener kurzer Lauf ohne OpenGL (CI-Schritt mit --software)
         if (Environment.GetEnvironmentVariable("LERNPLATTFORM_MESSUNG_TEIL") == TeilErsatz)
@@ -472,7 +472,7 @@ public static partial class AutoMessung
         funde += await LizenzenMesspunkteAsync(ansicht);   // Phase 8 W2: Knopf "Lizenzen"
         funde += RingVerlaufPruefen();   // Phase 8 W2 Nachtrag (P8-3b): Farbverlauf der Fortschrittsringe
         Zeitplan("P9W2MesspunkteAsync");
-        funde += await P9W2MesspunkteAsync(ansicht);   // Phase 9 W2: Inhalte laden, Fachrichtung wechseln, Klausurauswahl AE
+        funde += await P9W2MesspunkteAsync(ansicht);   // Phase 9 W2: Inhalte laden, Fachrichtung wechseln, Klausurauswahl FIAE
         // A 0.91.0: Fachrichtungs-Pakete, Messpunkt „einsetzen <FR>“ (wechselt die Sicht und baut Seiten neu, darum zuletzt)
         Zeitplan("FachrichtungsPaketeAsync");
         funde += await FachrichtungsPaketeAsync(ansicht);

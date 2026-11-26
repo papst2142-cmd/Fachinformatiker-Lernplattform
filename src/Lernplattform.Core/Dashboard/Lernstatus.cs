@@ -27,7 +27,7 @@ public static class Lernstatus
                 DefaultTimeout = Lernstand.Wartezeit,
             }.ToString());
             verbindung.Open();
-            // Phase 9 W2: bei AE, DPA und DV nur Fragen der Sicht (wie die Kachel im Dashboard), SI wie Python
+            // Phase 9 W2: bei FIAE, FIDP und FIDV nur Fragen der Sicht (wie die Kachel im Dashboard), FISI wie Python
             return (Anzahl(verbindung, "card_events", inhalte.SichtKarten)
                 + Anzahl(verbindung, "quiz_answers", inhalte.SichtFragen), inhalte.Summe);
         }

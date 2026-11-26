@@ -18,7 +18,7 @@ namespace Lernplattform.Tests;
 /// Phase 9 W2 (Weisung P9-5, Plan Phase 9 Abschnitte 5 und 12.1): Ordner inhalte_csharp/lernen mit
 /// Ladepruefung (Meldungen gleich dem unabhaengigen Skript werkzeuge/vergleich/pruefe_lerninhalte.py,
 /// Vergleichswerte G52), Einteilung der bisherigen Inhalte (einteilung_bisher.json), Sicht je
-/// Fachrichtung, Klausur b1/b2 fuer AE mit Probe-Inhalten, "SI unveraendert", "Wechsel ohne Verlust"
+/// Fachrichtung, Klausur b1/b2 fuer FIAE mit Probe-Inhalten, "FISI unveraendert", "Wechsel ohne Verlust"
 /// und Abgleich zweier Geraete mit verschiedener Wahl. Nur Testdaten (A3).
 /// </summary>
 public class LerninhalteTests
@@ -184,7 +184,7 @@ public class LerninhalteTests
             Assert.Equal(liste.Distinct().Count(), e.Anzahl(art, "si") + e.Anzahl(art, "gemeinsam"));
             Assert.Equal(e.Schluessel(art).Count, e.Anzahl(art, "si") + e.Anzahl(art, "gemeinsam"));
         }
-        // AP2-Szenarien und Testprojekte nie gemeinsam: die SI-Klausur nimmt Ap2SzenarienFuer("si"), ihre gespeicherten
+        // AP2-Szenarien und Testprojekte nie gemeinsam: die FISI-Klausur nimmt Ap2SzenarienFuer("si"), ihre gespeicherten
         // Indizes (aufgaben[].index) blieben sonst nicht stabil (Gegenpruefung W2)
         Assert.Equal(0, e.Anzahl(Einteilung.Ap2, Fachrichtungen.Gemeinsam));
         Assert.Equal(0, e.Anzahl(Einteilung.Projekte, Fachrichtungen.Gemeinsam));
@@ -204,7 +204,7 @@ public class LerninhalteTests
         Assert.DoesNotContain("\r", text);
     }
 
-    // -- SI: bisherige Inhalte unveraendert, neue nur angehaengt (seit A 0.53.0, Weisung P12-97) ---------------------
+    // -- FISI: bisherige Inhalte unveraendert, neue nur angehaengt (seit A 0.53.0, Weisung P12-97) ---------------------
 
     [Fact]
     public void SiBisherigeUnveraendert_NeueSiInhalteNurAngehaengt()
@@ -229,7 +229,7 @@ public class LerninhalteTests
             Assert.True(JsonNode.DeepEquals(vorher.Rahmenplan, si.Rahmenplan));
             Assert.Equal(vorher.Ap2SzenarienJeBlock(), si.Ap2SzenarienJeBlock());
         }
-        // Gegenprobe: die Probe-Inhalte (AE, DPA, DV ohne neue SI-Eintraege) aendern an SI nichts
+        // Gegenprobe: die Probe-Inhalte (FIAE, FIDP, FIDV ohne neue FISI-Eintraege) aendern an FISI nichts
         var probeSi = MitProbe().Fuer("si");
         Assert.Equal(Schluessel(vorher.Karteikarten), Schluessel(probeSi.Karteikarten));
         Assert.Equal(Schluessel(vorher.Quizfragen), Schluessel(probeSi.Quizfragen));
@@ -254,8 +254,8 @@ public class LerninhalteTests
         string Lies(Lerninhalte inhalte) => JsonSerializer.Serialize(
             DashboardWerte.Lesen(pfad, heute, new DashboardInhalte(inhalte), ziel, null, Path.Combine(ordner.Pfad, "fehler.log")));
         var alle = Echt();
-        // SI wie Python mit den bisherigen Inhalten (die Probe-Inhalte haben keine neuen SI-Eintraege); seit A 0.53.0
-        // (Weisung P12-97) zaehlt die echte SI-Sicht die angehaengten SI-Inhalte mit (Gegenprobe: mehr Inhalte)
+        // FISI wie Python mit den bisherigen Inhalten (die Probe-Inhalte haben keine neuen FISI-Eintraege); seit A 0.53.0
+        // (Weisung P12-97) zaehlt die echte FISI-Sicht die angehaengten FISI-Inhalte mit (Gegenprobe: mehr Inhalte)
         Assert.Equal(Lies(Lerninhalte.Laden(Pfade.Inhalte)), Lies(MitProbe().Fuer("si")));
         long Gesamt(Lerninhalte inhalte) => DashboardWerte.Lesen(pfad, heute, new DashboardInhalte(inhalte), ziel, null, Path.Combine(ordner.Pfad, "fehler.log")).InhalteGesamt;
         Assert.Equal(Gesamt(Lerninhalte.Laden(Pfade.Inhalte)) + 1019 + 1561, Gesamt(alle.Fuer("si")));
@@ -271,7 +271,7 @@ public class LerninhalteTests
         Assert.Contains(werte.Kennzahlen, k => k.Gesamt == ae.Karteikarten.Count);
     }
 
-    // -- Runde 1 AE (W3, Weisung P9-8), DPA (W4, Weisung P9-10) und DV (W5, Weisung P9-11) ------
+    // -- Runde 1 FIAE (W3, Weisung P9-8), FIDP (W4, Weisung P9-10) und FIDV (W5, Weisung P9-11) ------
 
     [Theory]
     [InlineData("ae")]
@@ -281,7 +281,7 @@ public class LerninhalteTests
     {
         var alle = Echt();
         // Runde 1 = die ersten 900 Karten und 1 110 Fragen in inhalte_csharp/lernen/ (je Fachrichtung 300 und 370);
-        // AE Runden 2 bis 4 (Phase 10 W2) haengen dahinter an und zaehlen hier nicht
+        // FIAE Runden 2 bis 4 (Phase 10 W2) haengen dahinter an und zaehlen hier nicht
         Assert.Equal(300, NeueEintraege(alle.Karteikarten).Take(900).Count(e => e.Zugehoerigkeit == eigen));
         Assert.Equal(370, QuizDatei(alle, 0, 1110).Count(e => e.Zugehoerigkeit == eigen) + (eigen == "ae" ? Ausgeschlossen(alle, 0, 1110) : 0));
         Assert.Equal(330, alle.Ap2Szenarien.Count(e => e.Zugehoerigkeit == eigen));
@@ -312,7 +312,7 @@ public class LerninhalteTests
     [Fact]
     public void Runde1Dpa_AeBleibtWieW3()
     {
-        // W4 (Weisung P9-10): die Sicht AE zaehlte nach W3 1 084 + 300 Karten, 1 615 + 370 Fragen, 330 AP2; seit
+        // W4 (Weisung P9-10): die Sicht FIAE zaehlte nach W3 1 084 + 300 Karten, 1 615 + 370 Fragen, 330 AP2; seit
         // Phase 10 W2 (Weisung P10-1) kommen genau 1 200 Karten und 1 750 Fragen dazu, die AP2-Szenarien bleiben
         var ae = Echt().Fuer("ae");
         Assert.Equal(1384 + 1200, ae.Karteikarten.Count);
@@ -324,9 +324,9 @@ public class LerninhalteTests
     [Fact]
     public void Runde1Dv_AeUndDpaBleibenWieW4()
     {
-        // W5 (Weisung P9-11): die Sichten DPA und DV zaehlen genau wie nach W4/W5 (1 084 + 300 Karten,
-        // 1 615 + 370 Fragen, 330 eigene AP2); AE dazu mit den Runden 2 bis 4 (Phase 10 W2: +1 200 / +1 750),
-        // DPA ebenso (Phase 10 W3), DV ebenso (Phase 10 W4)
+        // W5 (Weisung P9-11): die Sichten FIDP und FIDV zaehlen genau wie nach W4/W5 (1 084 + 300 Karten,
+        // 1 615 + 370 Fragen, 330 eigene AP2); FIAE dazu mit den Runden 2 bis 4 (Phase 10 W2: +1 200 / +1 750),
+        // FIDP ebenso (Phase 10 W3), FIDV ebenso (Phase 10 W4)
         var alle = Echt();
         foreach (var fr in new[] { "ae", "dpa", "dv" })
         {
@@ -340,14 +340,14 @@ public class LerninhalteTests
         }
     }
 
-    // -- AE Runden 2 bis 4 (Phase 10 W2, Weisung P10-1) -------------------------------------------
+    // -- FIAE Runden 2 bis 4 (Phase 10 W2, Weisung P10-1) -------------------------------------------
 
     [Fact]
     public void AeRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
     {
         var alle = Echt();
-        // die neuen Eintraege haengen hinter Runde 1 an (900 Karten, 1 110 Fragen) und gehoeren alle zu AE
-        // (Phase 10 W3 haengt DPA dahinter an)
+        // die neuen Eintraege haengen hinter Runde 1 an (900 Karten, 1 110 Fragen) und gehoeren alle zu FIAE
+        // (Phase 10 W3 haengt FIDP dahinter an)
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(900).Take(1200).Count());
         Assert.All(NeueEintraege(alle.Karteikarten).Skip(900).Take(1200), e => Assert.Equal("ae", e.Zugehoerigkeit));
         Assert.Equal(1750, QuizDatei(alle, 1110, 1750).Count() + Ausgeschlossen(alle, 1110, 1750));
@@ -355,14 +355,14 @@ public class LerninhalteTests
         Assert.Equal(50, alle.Testprojekte.Count(e => e.Zugehoerigkeit == "ae"));
         Assert.Equal(18, alle.NeueFachfragen.Take(18).Count());
         Assert.All(alle.NeueFachfragen.Take(18), f => Assert.Equal("ae", f.Zugehoerigkeit));
-        // Sicht AE: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
+        // Sicht FIAE: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
         var ae = alle.Fuer("ae");
         Assert.Equal(2584, ae.Karteikarten.Count);
         Assert.Equal(3735, ae.Quizfragen.Count);
         Assert.Equal(50, ae.Testprojekte.Count);
         Assert.All(ae.Testprojekte, e => Assert.Equal("ae", e.Zugehoerigkeit));
         Assert.Equal(60, Fachfragen(alle, "ae"));
-        // SI, DPA und DV sehen nichts davon; SI zaehlt wie vor der Welle (DPA siehe Phase 10 W3, DV Phase 10 W4)
+        // FISI, FIDP und FIDV sehen nichts davon; FISI zaehlt wie vor der Welle (FIDP siehe Phase 10 W3, FIDV Phase 10 W4)
         var si = alle.Fuer("si");
         Assert.Equal((1565, 2174, 50, 60), SiOhneAuffuellen(alle));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "ae");
@@ -372,14 +372,14 @@ public class LerninhalteTests
         Assert.DoesNotContain(alle.Fuer("dpa").Testprojekte, e => e.Zugehoerigkeit == "ae");
     }
 
-    // -- DPA Runden 2 bis 4 (Phase 10 W3, Weisung P10-2) ------------------------------------------
+    // -- FIDP Runden 2 bis 4 (Phase 10 W3, Weisung P10-2) ------------------------------------------
 
     [Fact]
     public void DpaRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
     {
         var alle = Echt();
-        // die neuen Eintraege haengen hinter AE Runden 2 bis 4 an (2 100 Karten, 2 860 Fragen) und gehoeren alle zu DPA
-        // (Phase 10 W4 haengt DV dahinter an)
+        // die neuen Eintraege haengen hinter FIAE Runden 2 bis 4 an (2 100 Karten, 2 860 Fragen) und gehoeren alle zu FIDP
+        // (Phase 10 W4 haengt FIDV dahinter an)
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(2100).Take(1200).Count());
         Assert.All(NeueEintraege(alle.Karteikarten).Skip(2100).Take(1200), e => Assert.Equal("dpa", e.Zugehoerigkeit));
         Assert.Equal(1750, QuizDatei(alle, 2860, 1750).Count() + Ausgeschlossen(alle, 2860, 1750));
@@ -388,14 +388,14 @@ public class LerninhalteTests
         Assert.Equal(18, alle.NeueFachfragen.Skip(18).Take(18).Count());
         Assert.All(alle.NeueFachfragen.Skip(18).Take(18), f => Assert.Equal("dpa", f.Zugehoerigkeit));
         Assert.Equal(Enumerable.Range(1, 18).Select(i => "dpa" + i.ToString("00", System.Globalization.CultureInfo.InvariantCulture)), alle.NeueFachfragen.Skip(18).Take(18).Select(f => f.Frage.Id));
-        // Sicht DPA: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
+        // Sicht FIDP: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
         var dpa = alle.Fuer("dpa");
         Assert.Equal(2584, dpa.Karteikarten.Count);
         Assert.Equal(3735, dpa.Quizfragen.Count);
         Assert.Equal(50, dpa.Testprojekte.Count);
         Assert.All(dpa.Testprojekte, e => Assert.Equal("dpa", e.Zugehoerigkeit));
         Assert.Equal(60, Fachfragen(alle, "dpa"));
-        // SI, AE und DV sehen nichts davon; SI und AE zaehlen wie vor der Welle (DV siehe Phase 10 W4)
+        // FISI, FIAE und FIDV sehen nichts davon; FISI und FIAE zaehlen wie vor der Welle (FIDV siehe Phase 10 W4)
         var si = alle.Fuer("si");
         Assert.Equal((1565, 2174, 50, 60), SiOhneAuffuellen(alle));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "dpa");
@@ -407,12 +407,12 @@ public class LerninhalteTests
         Assert.DoesNotContain(alle.Fuer("dv").Testprojekte, e => e.Zugehoerigkeit == "dpa");
     }
 
-    // -- DV Runden 2 bis 4 (Phase 10 W4, Weisung P10-6) -------------------------------------------
+    // -- FIDV Runden 2 bis 4 (Phase 10 W4, Weisung P10-6) -------------------------------------------
 
     /// <summary>
     /// Weisung P10-9: Kein Testprojekt nennt mehr Projektumfang, als die Ausbildungsverordnung seiner Fachrichtung erlaubt
     /// (Grenze aus <see cref="Fachrichtung.ProjektStunden"/>: si, dpa, dv 40, ae 80). Geprueft werden alle Texte eines Projekts,
-    /// die "Projektumfang" mit einer Stundenzahl nennen; die SI-Projekte aus inhalte/ gehoeren zu si.
+    /// die "Projektumfang" mit einer Stundenzahl nennen; die FISI-Projekte aus inhalte/ gehoeren zu si.
     /// </summary>
     [Fact]
     public void Testprojekte_ProjektumfangHoechstensWieFachrichtung()
@@ -439,7 +439,7 @@ public class LerninhalteTests
                 }
             }
         }
-        // die Pruefung muss die Angaben wirklich finden (sonst waere sie still gruen): alle 50 DPA- und alle DV-Projekte nennen einen Umfang
+        // die Pruefung muss die Angaben wirklich finden (sonst waere sie still gruen): alle 50 FIDP- und alle FIDV-Projekte nennen einen Umfang
         Assert.Equal(50, gefunden.GetValueOrDefault("dpa"));
         Assert.True(gefunden.GetValueOrDefault("dv") >= 50, "dv: " + gefunden.GetValueOrDefault("dv"));
     }
@@ -448,7 +448,7 @@ public class LerninhalteTests
     public void DvRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
     {
         var alle = Echt();
-        // die neuen Eintraege haengen hinter DPA Runden 2 bis 4 an (3 300 Karten, 4 610 Fragen) und gehoeren alle zu DV
+        // die neuen Eintraege haengen hinter FIDP Runden 2 bis 4 an (3 300 Karten, 4 610 Fragen) und gehoeren alle zu FIDV
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(3300).Count());
         Assert.All(NeueEintraege(alle.Karteikarten).Skip(3300), e => Assert.Equal("dv", e.Zugehoerigkeit));
         Assert.Equal(1750, QuizDatei(alle, 4610, 1750).Count() + Ausgeschlossen(alle, 4610, 1750));
@@ -457,14 +457,14 @@ public class LerninhalteTests
         Assert.Equal(54, alle.NeueFachfragen.Count);
         Assert.All(alle.NeueFachfragen.Skip(36), f => Assert.Equal("dv", f.Zugehoerigkeit));
         Assert.Equal(Enumerable.Range(1, 18).Select(i => "dv" + i.ToString("00", System.Globalization.CultureInfo.InvariantCulture)), alle.NeueFachfragen.Skip(36).Select(f => f.Frage.Id));
-        // Sicht DV: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
+        // Sicht FIDV: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 42 + 18 Fachgespraech-Fragen
         var dv = alle.Fuer("dv");
         Assert.Equal(2584, dv.Karteikarten.Count);
         Assert.Equal(3735, dv.Quizfragen.Count);
         Assert.Equal(50, dv.Testprojekte.Count);
         Assert.All(dv.Testprojekte, e => Assert.Equal("dv", e.Zugehoerigkeit));
         Assert.Equal(60, Fachfragen(alle, "dv"));
-        // SI, AE und DPA sehen nichts davon und zaehlen wie vor der Welle
+        // FISI, FIAE und FIDP sehen nichts davon und zaehlen wie vor der Welle
         var si = alle.Fuer("si");
         Assert.Equal((1565, 2174, 50, 60), SiOhneAuffuellen(alle));
         Assert.DoesNotContain(si.Testprojekte, e => e.Zugehoerigkeit == "dv");
@@ -478,12 +478,12 @@ public class LerninhalteTests
         }
     }
 
-    // -- SI auffuellen (Weisung P12-97, Nico 08.11.2026 20:54 MEZ, Sammelliste 243) -------------
+    // -- FISI auffuellen (Weisung P12-97, Nico 08.11.2026 20:54 MEZ, Sammelliste 243) -------------
 
     /// <summary>
-    /// Weisung P12-97: Systemintegration bekommt so viele Karteikarten und Pruefungsfragen wie AE, DPA und DV. Die neuen
-    /// SI-Eintraege haengen hinter DV an (4 500 Karten, 6 361 Fragen in der Datei) und gehoeren alle zu si; in der Sicht SI
-    /// ist danach jede Art genau so gross wie bei AE, DPA und DV. AE, DPA und DV sehen nichts davon und bleiben gleich.
+    /// Weisung P12-97: Systemintegration bekommt so viele Karteikarten und Pruefungsfragen wie FIAE, FIDP und FIDV. Die neuen
+    /// FISI-Eintraege haengen hinter FIDV an (4 500 Karten, 6 361 Fragen in der Datei) und gehoeren alle zu si; in der Sicht FISI
+    /// ist danach jede Art genau so gross wie bei FIAE, FIDP und FIDV. FIAE, FIDP und FIDV sehen nichts davon und bleiben gleich.
     /// </summary>
     [Fact]
     public void SiAuffuellen_ZahlenJeArt_AndereBleibenGleich()
@@ -495,7 +495,7 @@ public class LerninhalteTests
         Assert.Equal(1561, QuizDatei(alle, 6361, 1561).Count() + Ausgeschlossen(alle, 6361, 1561));
         Assert.Equal(1561, NeueSi(alle.Quizfragen, alle.Bisher.Quizfragen.Count).Count());
         Assert.All(QuizDatei(alle, 6361, 1561), e => Assert.Equal("si", e.Zugehoerigkeit));
-        // Sicht SI: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 60 Fachgespraech-Fragen, wie jede andere Fachrichtung
+        // Sicht FISI: 2 584 Karten, 3 735 Fragen, 50 Testprojekte, 60 Fachgespraech-Fragen, wie jede andere Fachrichtung
         var si = alle.Fuer("si");
         Assert.Equal((2584, 3735, 50, 60), (si.Karteikarten.Count, si.Quizfragen.Count, si.Testprojekte.Count, Fachfragen(alle, "si")));
         Assert.True(JedeArtGleichGross(alle), Groessen(alle));
@@ -506,12 +506,12 @@ public class LerninhalteTests
             Assert.DoesNotContain(sicht.Karteikarten, e => e.Zugehoerigkeit == "si");
             Assert.DoesNotContain(sicht.Quizfragen, e => e.Zugehoerigkeit == "si");
         }
-        // die neuen SI-Eintraege nutzen nur bisherige Themen der Sicht SI (keine neuen Themen noetig)
+        // die neuen FISI-Eintraege nutzen nur bisherige Themen der Sicht FISI (keine neuen Themen noetig)
         Assert.All(NeueSi(alle.Karteikarten, alle.Bisher.Karteikarten.Count).Concat(NeueSi(alle.Quizfragen, alle.Bisher.Quizfragen.Count)),
             e => Assert.Contains(si.Themen[e.Fachbereich!], t => t.Id == e.Thema));
     }
 
-    /// <summary>Gegenprobe zu <see cref="SiAuffuellen_ZahlenJeArt_AndereBleibenGleich"/>: fehlt der Sicht SI ein Eintrag, ist sie nicht mehr gleich gross.</summary>
+    /// <summary>Gegenprobe zu <see cref="SiAuffuellen_ZahlenJeArt_AndereBleibenGleich"/>: fehlt der Sicht FISI ein Eintrag, ist sie nicht mehr gleich gross.</summary>
     [Theory]
     [InlineData("karteikarten")]
     [InlineData("quizfragen")]
@@ -591,7 +591,7 @@ public class LerninhalteTests
     /// <summary>
     /// Sammelliste 248: keine Antwort-Option einer Fachrichtung (bisherige Inhalte und inhalte_csharp/lernen, ohne die
     /// ausgeschlossenen alten Fassungen) traegt eine Verneinung in Grossschrift; ausgenommen nur die 8 festen
-    /// Logik-Optionen (DPA, DV und eine Pseudocode-Option der bisherigen Inhalte), und die stehen wirklich so da.
+    /// Logik-Optionen (FIDP, FIDV und eine Pseudocode-Option der bisherigen Inhalte), und die stehen wirklich so da.
     /// </summary>
     [Fact]
     public void Optionen_OhneGrossschriftVerneinung()
@@ -668,7 +668,7 @@ public class LerninhalteTests
     private static readonly (string Datei, int Stelle, int Option)[] Umformuliert248 = [("quizfragen", 7963, 3), ("quizfragen", 7976, 2)];
 
     /// <summary>
-    /// Weisung P12-106 (Sammelliste 248): 127 SI-Eintraege (47 Karten, 80 Fragen) haben eine neue Fassung am Ende der
+    /// Weisung P12-106 (Sammelliste 248): 127 FISI-Eintraege (47 Karten, 80 Fragen) haben eine neue Fassung am Ende der
     /// Datei, die alte steht in ausschluss.json. Die neue Fassung gleicht der alten bis auf die Gross-/Kleinschreibung
     /// der Optionen (und damit von "a") und die zwei Optionen in <see cref="Umformuliert248"/>; die Zahlen je
     /// Fachrichtung bleiben gleich (+127 angehaengt, -127 ausgeschlossen).
@@ -722,7 +722,7 @@ public class LerninhalteTests
 
     /// <summary>
     /// Gegenprobe zu <see cref="Grossschrift248_NeueFassungAngehaengt_AlteAusgeschlossen_ZahlenGleich"/>: ohne die
-    /// Ausschluesse zaehlt SI 127 Eintraege mehr (alte und neue Fassung) und ist nicht mehr gleich gross wie AE, DPA und DV.
+    /// Ausschluesse zaehlt FISI 127 Eintraege mehr (alte und neue Fassung) und ist nicht mehr gleich gross wie FIAE, FIDP und FIDV.
     /// </summary>
     [Fact]
     public void Grossschrift248_OhneAusschluss_SiZuGross()
@@ -733,7 +733,7 @@ public class LerninhalteTests
         Assert.Equal((2584, 3735), (ohne.Fuer("ae").Karteikarten.Count, ohne.Fuer("ae").Quizfragen.Count));
     }
 
-    /// <summary>Weisung P12-97: hat die Sicht SI bei jeder Art genau so viele Inhalte wie AE, DPA und DV?</summary>
+    /// <summary>Weisung P12-97: hat die Sicht FISI bei jeder Art genau so viele Inhalte wie FIAE, FIDP und FIDV?</summary>
     private static bool JedeArtGleichGross(Lerninhalte alle) =>
         Fachrichtungen.Werte.Select(fr => Groesse(alle, fr)).Distinct().Count() == 1;
 
@@ -746,13 +746,13 @@ public class LerninhalteTests
     private static string Groessen(Lerninhalte alle) =>
         string.Join("; ", Fachrichtungen.Werte.Select(fr => fr + " " + Groesse(alle, fr)));
 
-    /// <summary>Weisung P12-97: die neuen SI-Eintraege aus inhalte_csharp/lernen (hinter den bisherigen Inhalten).</summary>
+    /// <summary>Weisung P12-97: die neuen FISI-Eintraege aus inhalte_csharp/lernen (hinter den bisherigen Inhalten).</summary>
     private static IEnumerable<Lerninhalt> NeueSi(IEnumerable<Lerninhalt> liste, int bisher) =>
         liste.Where(e => e.Zugehoerigkeit == "si" && e.Nummer > bisher);
 
     /// <summary>
-    /// Sicht SI ohne die Eintraege aus Weisung P12-97 (Karten, Fragen, Testprojekte, Fachgespraech): so zaehlten die
-    /// Wellen davor, die SI unveraendert lassen mussten.
+    /// Sicht FISI ohne die Eintraege aus Weisung P12-97 (Karten, Fragen, Testprojekte, Fachgespraech): so zaehlten die
+    /// Wellen davor, die FISI unveraendert lassen mussten.
     /// </summary>
     private static (int, int, int, int) SiOhneAuffuellen(Lerninhalte alle)
     {
@@ -769,7 +769,7 @@ public class LerninhalteTests
     /// </summary>
     private static IEnumerable<Lerninhalt> QuizDatei(Lerninhalte alle, int von, int anzahl)
     {
-        // Weisung P12-97: seit SI aus inhalte_csharp/lernen angehaengt wird, zaehlt die Basis nur die bisherigen Fragen
+        // Weisung P12-97: seit FISI aus inhalte_csharp/lernen angehaengt wird, zaehlt die Basis nur die bisherigen Fragen
         var basis = alle.Bisher.Quizfragen.Count;
         return alle.Quizfragen.Where(e => e.Nummer - 1 - basis >= von && e.Nummer - 1 - basis - von < anzahl);
     }
@@ -782,12 +782,12 @@ public class LerninhalteTests
     private static IEnumerable<Lerninhalt> NeueEintraege(IEnumerable<Lerninhalt> liste) =>
         liste.Where(e => e.Zugehoerigkeit is "ae" or "dpa" or "dv");
 
-    // -- Klausur AE mit Probe-Inhalten ---------------------------------------------------------
+    // -- Klausur FIAE mit Probe-Inhalten ---------------------------------------------------------
 
     [Fact]
     public void KlausurAeDpaDv_EchtSpielbar_MitProbeVierAufgaben()
     {
-        // W3 (Weisung P9-8) AE, W4 (Weisung P9-10) DPA, W5 (Weisung P9-11) DV: eigene AP2-Szenarien, alle spielbar
+        // W3 (Weisung P9-8) FIAE, W4 (Weisung P9-10) FIDP, W5 (Weisung P9-11) FIDV: eigene AP2-Szenarien, alle spielbar
         // (der Hinweis "noch keine Aufgaben" kommt bei keiner Fachrichtung mehr)
         foreach (var fr in new[] { "ae", "dpa", "dv" })
         {
@@ -829,7 +829,7 @@ public class LerninhalteTests
                 Assert.NotNull(Klausur.Details(probe, zustand, n));
             }
         }
-        // SI-Klausur bleibt wie heute
+        // FISI-Klausur bleibt wie heute
         Assert.True(new KlausurInhalte(MitProbe().Fuer("si"), Umbenennungen).Spielbar(Klausur.Konzeption));
         Assert.Equal("ap2", Klausur.Art(Klausur.Konzeption)!.Quelle);
     }
@@ -849,8 +849,8 @@ public class LerninhalteTests
         var ae = alle.Fuer("ae");
         var ablaufAe = new Szenarioablauf(Quellen.Ap2, ae.Ap2Szenarien, () => new StatusBuch(new Antwortbuch()), null);
         Assert.Equal(8, ae.Ap2Szenarien.Count);
-        Assert.Equal(-1, ablaufAe.Position(0));                       // SI-Szenario: in der Sicht AE nicht zu sehen
-        Assert.Equal(0, ablaufAe.Position(si.Ap2Szenarien.Count));     // erstes angehaengtes = erstes der Sicht AE
+        Assert.Equal(-1, ablaufAe.Position(0));                       // FISI-Szenario: in der Sicht FIAE nicht zu sehen
+        Assert.Equal(0, ablaufAe.Position(si.Ap2Szenarien.Count));     // erstes angehaengtes = erstes der Sicht FIAE
         Assert.Equal(si.Ap2Szenarien.Count + 1, ae.Ap2Szenarien[0].Nummer);
     }
 
@@ -3298,7 +3298,7 @@ public class LerninhalteTests
             "bd88767b151cf9cc", "5ccf9f319d94ca2c", "3897a75864bbd37d", "49ed0951fa4345e9", "48f92e8255b3a651", "165a2407d1a60b4f",
             "e7f7e3c48fbabc01", "a64dd6eab27ba4f2", "30163df24638dcee", "9e7521fd8e32d830", "b8c56a83702caf13", "8c7565dc8f95980b",
         ],
-        // Weisung P10-9 (Nico 02.11.2026, einmalige Ausnahme von "nur anhaengen"): die 50 DPA-Testprojekte (Eintraege 51 bis 100)
+        // Weisung P10-9 (Nico 02.11.2026, einmalige Ausnahme von "nur anhaengen"): die 50 FIDP-Testprojekte (Eintraege 51 bis 100)
         // nennen jetzt 40 statt 80 Stunden Projektumfang; nur ihre Hashes wurden ersetzt, alle anderen bleiben.
         ["projektarbeiten"] =
         [
@@ -3459,7 +3459,7 @@ public class LerninhalteTests
         public void Dispose() => _ordner.Dispose();
     }
 
-    /// <summary>Lernt je eine SI-Karte, eine gemeinsame Frage, ein SI-Szenario und ein angehaengtes AE-Szenario.</summary>
+    /// <summary>Lernt je eine FISI-Karte, eine gemeinsame Frage, ein FISI-Szenario und ein angehaengtes FIAE-Szenario.</summary>
     private static void Lernen_(Geraet g, Lerninhalte alle)
     {
         var siKarte = alle.Karteikarten.First(k => k.Zugehoerigkeit == "si");
@@ -3490,7 +3490,7 @@ public class LerninhalteTests
             g.Jetzt = g.Jetzt.AddSeconds(1);
             Assert.Equal(fr, Ausbildung.Aktuell(g.Schreiber));
             Assert.Equal(vorher, g.Lerndaten());
-            // die Sicht liest nur: SI sieht das SI-Szenario, AE das angehaengte AE-Szenario
+            // die Sicht liest nur: FISI sieht das FISI-Szenario, FIAE das angehaengte FIAE-Szenario
             var sicht = alle.Fuer(fr);
             var ablauf = new Szenarioablauf(Quellen.Ap2, sicht.Ap2Szenarien, () => new StatusBuch(Antwortbuch.Lesen(g.Lernstand)), g.Schreiber);
             Assert.Single(ablauf.Stati());

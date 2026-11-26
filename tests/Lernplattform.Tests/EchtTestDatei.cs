@@ -5,7 +5,7 @@ namespace Lernplattform.Tests;
 
 /// <summary>
 /// A 0.94.0 (Weisung P12-304): gemeinsame Hilfen fuer die Tests der eingebauten Pruefungssaetze. Die Datei traegt seit
-/// A 0.94.0 Format 3 (AE-Satzpaare), seit A 1.8.0 Format 4 (neue Fassungen, Klassen- und Use-Case-Diagramm, Weisung P12-372),
+/// A 0.94.0 Format 3 (FIAE-Satzpaare), seit A 1.8.0 Format 4 (neue Fassungen, Klassen- und Use-Case-Diagramm, Weisung P12-372),
 /// seit A 1.12.0 Format 5 (Struktogramm, Weisung P12-390);
 /// vor den neuen Saetzen ist sie sonst bytegleich mit dem Stand davor.
 /// </summary>
@@ -39,7 +39,7 @@ internal static class EchtTestDatei
             .AusgeschlosseneSaetze();
 
     /// <summary>
-    /// Jeder Satz hat eine eigene Firma; nur die zwei Saetze eines AE-Satzpaars (aufbau "paar", gleiche Nummer) teilen sie.
+    /// Jeder Satz hat eine eigene Firma; nur die zwei Saetze eines FIAE-Satzpaars (aufbau "paar", gleiche Nummer) teilen sie.
     /// Gegenprobe in <see cref="EchtInhalteAePaareTests"/>.
     /// </summary>
     public static void FirmaJeSatzOderPaar(IReadOnlyList<EchtSatz> alle)

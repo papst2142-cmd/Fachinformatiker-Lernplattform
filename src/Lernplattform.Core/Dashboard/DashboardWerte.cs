@@ -250,8 +250,8 @@ public sealed class DashboardInhalte
                 }
             }
         }
-        // Phase 9 W2 (Plan Phase 9 Abschnitt 4): AE, DPA und DV zaehlen "x von y" nur ueber ihre Inhalte;
-        // SI zaehlt wie Python (jede gespeicherte Frage, auch unbekannte)
+        // Phase 9 W2 (Plan Phase 9 Abschnitt 4): FIAE, FIDP und FIDV zaehlen "x von y" nur ueber ihre Inhalte;
+        // FISI zaehlt wie Python (jede gespeicherte Frage, auch unbekannte)
         if (inhalte.Sicht is { } sicht && sicht != Fachrichtungen.Systemintegration)
         {
             SichtKarten = inhalte.Karteikarten.Select(k => k.Frage ?? "").ToHashSet(StringComparer.Ordinal);
@@ -283,7 +283,7 @@ public sealed class DashboardInhalte
 
     internal int WissenFenster { get; }
 
-    /// <summary>Phase 9 W2: sichtbare Inhalte bei AE, DPA und DV (null bei SI, dann zaehlt alles wie in Python).</summary>
+    /// <summary>Phase 9 W2: sichtbare Inhalte bei FIAE, FIDP und FIDV (null bei FISI, dann zaehlt alles wie in Python).</summary>
     internal HashSet<string>? SichtKarten { get; }
 
     internal HashSet<string>? SichtFragen { get; }
@@ -292,10 +292,10 @@ public sealed class DashboardInhalte
 
     internal HashSet<long>? SichtAp2 { get; }
 
-    /// <summary>Phase 11 FW5b (Sammelliste 169): Testprojekte der Sicht (Lernverlauf), null bei SI.</summary>
+    /// <summary>Phase 11 FW5b (Sammelliste 169): Testprojekte der Sicht (Lernverlauf), null bei FISI.</summary>
     internal HashSet<long>? SichtProjekte { get; }
 
-    /// <summary>Themenbloecke der AP2 auf dem Dashboard (SI wie Python, sonst die Themen von b1/b2 der Fachrichtung).</summary>
+    /// <summary>Themenbloecke der AP2 auf dem Dashboard (FISI wie Python, sonst die Themen von b1/b2 der Fachrichtung).</summary>
     internal IReadOnlyList<string> Ap2Themen { get; } = Fachbereiche.Ap2Themen;
 
     internal int WissenMindest { get; }
@@ -506,8 +506,8 @@ public sealed record DashboardWerte(
 
     private static (double Rate, double Richtig, long Gesamt) Erfolgsquote(Leser db, HashSet<string>? sichtFragen)
     {
-        // Phase 11 FW5b (Sammelliste 169, Nico 02.11.2026 Antwort b): AE, DPA und DV zaehlen nur die Antworten
-        // auf Fragen ihrer Sicht (wie COUNT(*) und SUM(correct), nur gefiltert); SI wie Python
+        // Phase 11 FW5b (Sammelliste 169, Nico 02.11.2026 Antwort b): FIAE, FIDP und FIDV zaehlen nur die Antworten
+        // auf Fragen ihrer Sicht (wie COUNT(*) und SUM(correct), nur gefiltert); FISI wie Python
         var zeilen = sichtFragen is null ? db.Abfrage("SELECT COUNT(*), SUM(correct) FROM quiz_answers")
             : Gefiltert(db.Abfrage("SELECT question, correct FROM quiz_answers"), sichtFragen);
         if (zeilen is not { Count: > 0 } || zeilen[0][0] is not long gesamt || gesamt == 0)
@@ -677,7 +677,7 @@ public sealed record DashboardWerte(
         var gesehen = new Dictionary<string, long>(StringComparer.Ordinal);
         if (inhalte.SichtKarten is { } karten && inhalte.SichtFragen is { } fragen)
         {
-            // Phase 9 W2: AE, DPA und DV zaehlen nur ihre Inhalte
+            // Phase 9 W2: FIAE, FIDP und FIDV zaehlen nur ihre Inhalte
             foreach (var zeile in db.Abfrage(
                 "SELECT category, question FROM quiz_answers"
                 + "  UNION"
@@ -832,7 +832,7 @@ public sealed record DashboardWerte(
         var erledigt = new Dictionary<string, long>(StringComparer.Ordinal);
         if (sichtbar is not null)
         {
-            // Phase 9 W2: AE, DPA und DV zaehlen nur ihre Szenarien
+            // Phase 9 W2: FIAE, FIDP und FIDV zaehlen nur ihre Szenarien
             foreach (var zeile in db.Abfrage($"SELECT DISTINCT theme, scenario_index FROM {tabelle}") ?? [])
             {
                 if (zeile[0] is string thema && zeile[1] is long index && sichtbar.Contains(index))

@@ -9,16 +9,16 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// Welle A 0.97.0 (Weisung P12-312 Punkt 5, Nico 3a): neuer Messpunkt „Inhalte laden AE“, einmalig und streng 400 ms wie
-/// „Inhalte laden“ (SI, unveraendert). Gemessen wird ein eigener, kalter Programmstart mit der Fachrichtung AE im Lernstand: der
-/// Start-Test startet dasselbe Programm noch einmal mit frischem Datenordner (Lernstand mit AE, wie nach der Wahl in den
+/// Welle A 0.97.0 (Weisung P12-312 Punkt 5, Nico 3a): neuer Messpunkt „Inhalte laden FIAE“, einmalig und streng 400 ms wie
+/// „Inhalte laden“ (FISI, unveraendert). Gemessen wird ein eigener, kalter Programmstart mit der Fachrichtung FIAE im Lernstand: der
+/// Start-Test startet dasselbe Programm noch einmal mit frischem Datenordner (Lernstand mit FIAE, wie nach der Wahl in den
 /// Optionen) und dem Teil <see cref="TeilInhalteAe"/>; dieser misst nur „Inhalte laden“ (derselbe Weg wie beim echten Start)
-/// und endet. So misst der Punkt den ersten Start eines AE-Nutzers, nicht ein zweites Laden im schon warmen Prozess (das waere
+/// und endet. So misst der Punkt den ersten Start eines FIAE-Nutzers, nicht ein zweites Laden im schon warmen Prozess (das waere
 /// rund die Haelfte und damit eine Lockerung).
 /// </summary>
 public static partial class AutoMessung
 {
-    /// <summary>Wert von LERNPLATTFORM_MESSUNG_TEIL fuer den Programmstart, der nur „Inhalte laden“ mit AE misst.</summary>
+    /// <summary>Wert von LERNPLATTFORM_MESSUNG_TEIL fuer den Programmstart, der nur „Inhalte laden“ mit FIAE misst.</summary>
     public const string TeilInhalteAe = "inhalte_ae";
 
     private const string InhalteAeZeile = "INHALTE_AE ";
@@ -33,13 +33,13 @@ public static partial class AutoMessung
         var ms = Zustand.InhalteLadenMs;
         var inv = CultureInfo.InvariantCulture;
         Messwerte.Notiere(string.Create(inv, $"{InhalteAeZeile}{ms ?? -1:F3}|{Zustand.Sicht}|{Zustand.Eingebaut.MitTeilen}|{Zustand.InhalteLadenTeile}"));
-        // Welle A 1.5.0: AE kommt aus dem Paket im Datenordner (die App selbst traegt nur Platzhalter)
+        // Welle A 1.5.0: FIAE kommt aus dem Paket im Datenordner (die App selbst traegt nur Platzhalter)
         var gut = ms is not null && inhalte is not null && Zustand.Sicht == "ae" && !Zustand.Aktuell.Fehlt("ae");
         Messwerte.Notiere(gut ? "URTEIL: gruen" : "URTEIL: rot (Inhalte laden AE)");
         return gut ? 0 : 1;
     }
 
-    /// <summary>Im Start-Test (Lernteil): den zweiten Programmstart mit AE ausfuehren und den Messpunkt werten.</summary>
+    /// <summary>Im Start-Test (Lernteil): den zweiten Programmstart mit FIAE ausfuehren und den Messpunkt werten.</summary>
     private static async Task<int> InhalteLadenAeAsync()
     {
         const string titel = "Inhalte laden AE (bisherige + AE, kalt, einmalig, eigener Programmstart)";
@@ -55,14 +55,14 @@ public static partial class AutoMessung
         }
         var ordner = Directory.CreateTempSubdirectory("lernplattform_inhalte_ae_").FullName;
         var datei = Path.Combine(ordner, "messung_inhalte_ae.txt");
-        // Lernstand mit Fachrichtung AE (gespeichert wie die Wahl in den Optionen)
+        // Lernstand mit Fachrichtung FIAE (gespeichert wie die Wahl in den Optionen)
         var gewaehlt = Core.Pruefung.Ausbildung.Waehlen(new LernstandSchreiber(new Lernstand(Path.Combine(ordner, Lernstand.DateiName))), "ae");
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (!gewaehlt)
         {
             return Fund("Fachrichtung AE im Lernstand nicht gespeichert");
         }
-        // Welle A 1.5.0 (Weisung P12-358): AE kommt nur als Paket; der Datenordner traegt es wie bei einem Nutzer nach „Laden“
+        // Welle A 1.5.0 (Weisung P12-358): FIAE kommt nur als Paket; der Datenordner traegt es wie bei einem Nutzer nach „Laden“
         // (eingesetzt wie dort ueber die Ablage mit der Kennung dieses Programms, also ganz geprueft und gemerkt)
         if (EinsetzenAus(new Core.Pakete.PaketAblage(ordner, Zustand.Eingebaut, PaketDienst.PruefKennung), Core.Pakete.FachrichtungsPaket.Kennung("ae")) is { } grund)
         {

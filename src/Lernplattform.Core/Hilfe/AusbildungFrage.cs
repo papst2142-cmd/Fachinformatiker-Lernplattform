@@ -27,7 +27,7 @@ public static class AusbildungFrage
     public const string GefragtSchluessel = "ausbildung_gefragt";
     public const string ZuletztSchluessel = "ausbildung_zuletzt";
 
-    /// <summary>Abschnitt des Rahmenplans je Fachrichtung (B fuer AE, D fuer DPA, E fuer DV), sonst null.</summary>
+    /// <summary>Abschnitt des Rahmenplans je Fachrichtung (B fuer FIAE, D fuer FIDP, E fuer FIDV), sonst null.</summary>
     public static string? Abschnitt(string? fachrichtung) => fachrichtung switch
     {
         "ae" => "B",
@@ -44,7 +44,7 @@ public static class AusbildungFrage
     public static bool Faellig(bool gewaehlt, JsonObject werte, bool lesbar) =>
         lesbar && !gewaehlt && !Einstellungen.PythonBool(werte[GefragtSchluessel]);
 
-    /// <summary>Warnhinweis noetig: AE, DPA oder DV und deren Abschnitt ist auf diesem Geraet aus.</summary>
+    /// <summary>Warnhinweis noetig: FIAE, FIDP oder FIDV und deren Abschnitt ist auf diesem Geraet aus.</summary>
     public static bool WarnungNoetig(string? fachrichtung, JsonObject werte) =>
         Schluessel(fachrichtung) is { } s && !Einstellungen.PythonBool(werte[s]);
 
@@ -91,7 +91,7 @@ public static class AusbildungFrage
     /// <summary>
     /// Antwort auf die Frage (Knopf 0 = "Speichern", 1 = "Überspringen", -1 = Esc/Zurueck-Geste): nur
     /// "Speichern" mit einer Wahl speichert die Fachrichtung; sonst bleibt der Lernstand unberuehrt (es gilt
-    /// weiter SI). Merker ist die Aenderung fuer einstellungen.json (gefragt, bei Erfolg auch zuletzt; misslingt
+    /// weiter FISI). Merker ist die Aenderung fuer einstellungen.json (gefragt, bei Erfolg auch zuletzt; misslingt
     /// das Speichern, aendert sie nichts).
     /// Gewaehlt = die gespeicherte Fachrichtung (dann folgt der Warnhinweis), Fehler = Speichern ging nicht (N9).
     /// </summary>
@@ -103,7 +103,7 @@ public static class AusbildungFrage
             return (null, false, w => Beantwortet(w, null, heute));
         }
         // Misslingt das Speichern, bleibt auch der Merker weg: die Frage kommt beim naechsten Start wieder
-        // (sonst gaelte still SI, Gegenpruefung W4 F4)
+        // (sonst gaelte still FISI, Gegenpruefung W4 F4)
         return Pruefung.Ausbildung.Waehlen(schreiber, wahl) ? (wahl, false, w => Beantwortet(w, wahl, heute)) : (null, true, _ => { });
     }
 

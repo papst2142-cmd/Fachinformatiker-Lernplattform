@@ -21,7 +21,7 @@ public static class AusbildungTeil
 
     /// <summary>
     /// Die Frage (N3/N4) ohne Vorwahl; "Speichern" erst nach einer Wahl. "Überspringen", Esc und die
-    /// Zurueck-Geste setzen nur den Merker (es gilt weiter SI). Danach der Warnhinweis, wenn noetig.
+    /// Zurueck-Geste setzen nur den Merker (es gilt weiter FISI). Danach der Warnhinweis, wenn noetig.
     /// </summary>
     public static async Task FrageAsync()
     {

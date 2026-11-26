@@ -51,8 +51,8 @@ public sealed class Szenarioablauf
 
     /// <summary>
     /// position_statuses der Quelle, nach Position in <see cref="Eintraege"/>. Phase 9 W2: der Lernstand
-    /// speichert die Position in der ganzen Liste (<see cref="Lerninhalt.Nummer"/> - 1); bei SI ist das
-    /// dieselbe Zahl, bei AE, DPA und DV zeigt die Liste nur einen Teil.
+    /// speichert die Position in der ganzen Liste (<see cref="Lerninhalt.Nummer"/> - 1); bei FISI ist das
+    /// dieselbe Zahl, bei FIAE, FIDP und FIDV zeigt die Liste nur einen Teil.
     /// </summary>
     public Dictionary<int, (string Status, string Stufe)> Stati()
     {

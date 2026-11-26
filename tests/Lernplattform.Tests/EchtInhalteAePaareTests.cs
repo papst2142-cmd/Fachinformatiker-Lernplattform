@@ -11,10 +11,10 @@ using Lernplattform.Core.Texte;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// A 0.94.0, Weisung P12-304: neue AE-Pruefungssaetze im berichtigten Format (Strukturblatt AP2 Abschnitt 7, gilt fuer AE vor
+/// A 0.94.0, Weisung P12-304: neue FIAE-Pruefungssaetze im berichtigten Format (Strukturblatt AP2 Abschnitt 7, gilt fuer FIAE vor
 /// den Abschnitten 1 und 2). Abnahmesaetze in eigenen Worten, je einer oder mehrere Tests:
-/// (1) Wer AE gewaehlt hat, bekommt je Bereich fuenf neue Saetze (fuenf Paare); die alten zehn AE-Saetze bietet die App nicht
-///     mehr an, SI, DPA, DV und AP1 bleiben genau gleich, die Datei ist vor den neuen Saetzen bytegleich (nur angehaengt).
+/// (1) Wer FIAE gewaehlt hat, bekommt je Bereich fuenf neue Saetze (fuenf Paare); die alten zehn FIAE-Saetze bietet die App nicht
+///     mehr an, FISI, FIDP, FIDV und AP1 bleiben genau gleich, die Datei ist vor den neuen Saetzen bytegleich (nur angehaengt).
 /// (2) Ein Paar = Bereich 1 und Bereich 2 derselben Firma, Bereich 2 fuehrt das Projekt fort.
 /// (3) Die Grenzen aus Abschnitt 7 gelten fest in der Ladepruefung und in diesem Test (nicht nur im Skript): Aufgaben 20 bis 30
 ///     Punkte, 3 bis 6 Teilaufgaben mit 2 bis 14 Punkten, je Bereich 2 bis 3 grosse Teilaufgaben, hoechstens ein Rechenteil,
@@ -79,7 +79,7 @@ public class EchtInhalteAePaareTests
         // die alten bleiben fuer offene Laeufe und alte Ergebnisse geladen
         Assert.All(EchtInhalteAeTests.Ae, k => Assert.NotNull(bestand.Satz(k)));
         Assert.All(EchtInhalteAeTests.Ae, k => Assert.True(bestand.IstAusgeschlossen(k)));
-        // Gegenprobe: ohne Ausschluss boete die App alle zehn AE-Saetze je Bereich an
+        // Gegenprobe: ohne Ausschluss boete die App alle zehn FIAE-Saetze je Bereich an
         var ohne = EchtSaetze.Laden(File.ReadAllBytes(EchtTestDatei.Datei));
         Assert.Equal(10, ohne.Fuer(EchtSaetze.B1, "ae").Count);
         Assert.Empty(ohne.Ausgeschlossen);

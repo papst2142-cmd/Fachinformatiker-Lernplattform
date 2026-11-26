@@ -5,10 +5,10 @@ using Lernplattform.Core.Pruefung.Echt;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// A 0.85.0, Weisung P12-291: Pruefung im echten Format fuer DPA. Zehn neue Saetze (je AP2-Bereich fuenf), nur angehaengt.
-/// Prueft Nicos Ziele: wer DPA gewaehlt hat, bekommt in beiden Bereichen (Prozessanalyse, Datenqualitaet) fuenf Saetze
-/// statt des Platzhalters (DV hat seit A 0.86.0 eigene Saetze, EchtInhalteDvTests); AP1, SI und AE bleiben genau gleich (die Datei vor den
-/// DPA-Saetzen ist bytegleich). Dazu der heutige Stand der App: Prozesse nur als UML-Aktivitaet im Baukasten, Daten im
+/// A 0.85.0, Weisung P12-291: Pruefung im echten Format fuer FIDP. Zehn neue Saetze (je AP2-Bereich fuenf), nur angehaengt.
+/// Prueft Nicos Ziele: wer FIDP gewaehlt hat, bekommt in beiden Bereichen (Prozessanalyse, Datenqualitaet) fuenf Saetze
+/// statt des Platzhalters (FIDV hat seit A 0.86.0 eigene Saetze, EchtInhalteDvTests); AP1, FISI und FIAE bleiben genau gleich (die Datei vor den
+/// FIDP-Saetzen ist bytegleich). Dazu der heutige Stand der App: Prozesse nur als UML-Aktivitaet im Baukasten, Daten im
 /// Baukasten nur als ER, keine Zeichnung ohne Baukasten, Diagramme mit Achsen nur als Tabelle (Luecke 2). Jede Regel mit Gegenprobe.
 /// </summary>
 public class EchtInhalteDpaTests
@@ -33,14 +33,14 @@ public class EchtInhalteDpaTests
     [Fact]
     public void DPA_ZehnSaetze_JeBereichFuenf_SiAeUndAp1Gleich()
     {
-        // A 0.94.0: wie in der App (die alten AE-Saetze schliesst ausschluss.json aus, die AE-Satzpaare stehen an ihrer Stelle)
+        // A 0.94.0: wie in der App (die alten FIAE-Saetze schliesst ausschluss.json aus, die FIAE-Satzpaare stehen an ihrer Stelle)
         var bestand = EchtTestDatei.App();
         Assert.Empty(bestand.Fehler);
-        // ab A 0.86.0 folgen die DV-Saetze (EchtInhalteDvTests); die DPA-Saetze stehen unveraendert an Platz 27 bis 36
+        // ab A 0.86.0 folgen die FIDV-Saetze (EchtInhalteDvTests); die FIDP-Saetze stehen unveraendert an Platz 27 bis 36
         Assert.Equal(Dpa, bestand.Saetze.Skip(27).Take(Dpa.Length).Select(s => s.Kennung));
         foreach (var f in Fachrichtung.Alle)
         {
-            // AP1 gilt fuer alle (unveraendert 6), AP2: SI 6/5, AE 5/5 wie bisher, DPA neu 5/5 (DV: eigener Test, 5/5)
+            // AP1 gilt fuer alle (unveraendert 6), AP2: FISI 6/5, FIAE 5/5 wie bisher, FIDP neu 5/5 (FIDV: eigener Test, 5/5)
             Assert.Equal(6, bestand.Fuer(EchtSaetze.Ap1, f.Id).Count);
             Assert.Equal(f.Id switch { "si" => 6, "ae" or "dpa" or "dv" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B1, f.Id).Count);
             Assert.Equal(f.Id switch { "si" => 5, "ae" or "dpa" or "dv" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B2, f.Id).Count);
@@ -49,7 +49,7 @@ public class EchtInhalteDpaTests
         }
         Assert.All(bestand.Fuer(EchtSaetze.B1, "dpa"), s => Assert.StartsWith("dpa_b1_", s.Kennung, StringComparison.Ordinal));
         Assert.All(bestand.Fuer(EchtSaetze.B2, "dpa"), s => Assert.StartsWith("dpa_b2_", s.Kennung, StringComparison.Ordinal));
-        // Gegenprobe: ohne die DPA-Saetze hat DPA wieder den Platzhalter (keine Saetze, keine Meldung)
+        // Gegenprobe: ohne die FIDP-Saetze hat FIDP wieder den Platzhalter (keine Saetze, keine Meldung)
         var ohne = new EchtBestand([.. bestand.Saetze.Where(s => !Dpa.Contains(s.Kennung))], []);
         Assert.Empty(ohne.Fuer(EchtSaetze.B1, "dpa"));
         Assert.Empty(ohne.Fuer(EchtSaetze.B2, "dpa"));
@@ -62,7 +62,7 @@ public class EchtInhalteDpaTests
         var roh = EchtTestDatei.AlsFormat2(File.ReadAllBytes(Datei));
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
-        // direkt danach beginnt der erste DPA-Satz
+        // direkt danach beginnt der erste FIDP-Satz
         var danach = System.Text.Encoding.UTF8.GetString(roh, VorherLaenge, 40);
         Assert.StartsWith(",\n  {", danach, StringComparison.Ordinal);
         // Gegenprobe: ein geaendertes Zeichen vorn faellt auf
@@ -94,7 +94,7 @@ public class EchtInhalteDpaTests
 
     /// <summary>
     /// Heutiger Stand der App (kein Umbau): Prozesse nur als UML-Aktivitaet im Baukasten (Plan: dpa_b1_01, dpa_b1_04), ER nur
-    /// in der Datenqualitaet (Plan: dpa_b2_03); keine Zeichnung ohne Baukasten ("auf Papier" wie bei AE waere ein Fund, wenn es
+    /// in der Datenqualitaet (Plan: dpa_b2_03); keine Zeichnung ohne Baukasten ("auf Papier" wie bei FIAE waere ein Fund, wenn es
     /// fehlte). Gegenprobe: ein Papier-Teil ohne "Papier" im Text waere ein Fund.
     /// </summary>
     [Fact]

@@ -30,7 +30,7 @@ public static partial class AutoMessung
         }
         // Laden und Ladepruefung der Saetze (einmalig, streng): keine Meldung erlaubt. A 1.5.0: wie die App selbst aus dem
         // Ordner der aktuellen Inhalte (Programm mit den vorab eingesetzten Fachrichtungs-Paketen), die eingebaute Datei allein
-        // hat fuer AE/DPA/DV nur Platzhalter
+        // hat fuer FIAE/FIDP/FIDV nur Platzhalter
         var uhr = Stopwatch.StartNew();
         var bestand = EchtSaetze.Laden(Zustand.Aktuell.Saetze(), Zustand.Aktuell.AusgeschlosseneSaetze());
         funde += Ergebnis("Pruefungssaetze im echten Format laden und pruefen", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Abbruch));

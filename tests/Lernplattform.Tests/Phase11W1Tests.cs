@@ -13,10 +13,10 @@ using Microsoft.Data.Sqlite;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// Phase 11 W1 (Weisung P11-1): Kleinigkeiten aus der Sammelliste. 170 Fortschritt zeigt AE/DPA/DV-Klausuren mit
-/// lesbarem Namen (SI wie Python), 171 Nummern der Szenarien und Testprojekte im Notizblock wie in der Liste,
-/// 172 der Abschluss einer AE/DPA/DV-Klausur bucht die Aufgaben auf das Szenario dieser Fachrichtung (nicht auf
-/// ein SI-Szenario), 180 Erinnerung ans Tagesziel wie reminder_due/reminder_text. Nur Testdaten (A3).
+/// Phase 11 W1 (Weisung P11-1): Kleinigkeiten aus der Sammelliste. 170 Fortschritt zeigt FIAE/FIDP/FIDV-Klausuren mit
+/// lesbarem Namen (FISI wie Python), 171 Nummern der Szenarien und Testprojekte im Notizblock wie in der Liste,
+/// 172 der Abschluss einer FIAE/FIDP/FIDV-Klausur bucht die Aufgaben auf das Szenario dieser Fachrichtung (nicht auf
+/// ein FISI-Szenario), 180 Erinnerung ans Tagesziel wie reminder_due/reminder_text. Nur Testdaten (A3).
 /// </summary>
 public class Phase11W1Tests
 {
@@ -32,12 +32,12 @@ public class Phase11W1Tests
     [Fact]
     public void Fortschritt_KlausurDerFachrichtungMitLesbaremNamen_SiUnveraendert()
     {
-        // SI (und ap1/wiso) genau wie Python EXAMS
+        // FISI (und ap1/wiso) genau wie Python EXAMS
         foreach (var (art, (name, kurz)) in FortschrittTexte.Pruefungen)
         {
             Assert.Equal((name, kurz), Auswertung.PruefungName(art));
         }
-        // AE, DPA, DV: Name und Kurzname ihres Pruefungsbereichs
+        // FIAE, FIDP, FIDV: Name und Kurzname ihres Pruefungsbereichs
         foreach (var fr in Fachrichtung.Alle.Where(f => f.Id != "si"))
         {
             foreach (var bereich in fr.Bereiche.Where(b => b.Rolle is "b1" or "b2"))
@@ -97,14 +97,14 @@ public class Phase11W1Tests
                     Assert.StartsWith((i + 1).ToString(CultureInfo.InvariantCulture) + ".\u00A0", SzenarienTexte.Eintrag(i, liste[i].Titel ?? "", false), StringComparison.Ordinal);
                     if (fr == "si")
                     {
-                        // SI wie Python (5452): Schluessel + 1
+                        // FISI wie Python (5452): Schluessel + 1
                         Assert.Equal((i + 1).ToString(CultureInfo.InvariantCulture) + ". " + eintrag.Titel, NotizblockTexte.EintragTitel(eintrag, notiz));
                         Assert.Equal(i, liste[i].Nummer - 1);
                     }
                 }
             }
         }
-        // AE beginnt bei den AP2-Szenarien wieder bei 1, obwohl die gespeicherte Stelle hinter SI liegt
+        // FIAE beginnt bei den AP2-Szenarien wieder bei 1, obwohl die gespeicherte Stelle hinter FISI liegt
         var ae = alle.Fuer("ae");
         var erstes = ae.Ap2Szenarien[0];
         Assert.True(erstes.Nummer > 1);
@@ -143,12 +143,12 @@ public class Phase11W1Tests
                     Assert.Equal(szenario.Titel, zeilen[n].Titel);
                     if (fr.Id == "si")
                     {
-                        Assert.Equal(index, zeilen[n].Position);    // SI: wie Python log_scenario(task["index"])
+                        Assert.Equal(index, zeilen[n].Position);    // FISI: wie Python log_scenario(task["index"])
                     }
                     else
                     {
                         Assert.Equal(szenario.Nummer - 1, zeilen[n].Position);
-                        Assert.True(zeilen[n].Position >= alle.Ap2SzenarienFuer("si").Count);   // nie ein SI-Szenario
+                        Assert.True(zeilen[n].Position >= alle.Ap2SzenarienFuer("si").Count);   // nie ein FISI-Szenario
                     }
                 }
             }

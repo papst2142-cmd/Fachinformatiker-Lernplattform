@@ -50,7 +50,7 @@ public class EchtFormatTests
         Assert.Equal(100, satz.Aufgaben.Sum(a => a.Punkte));
         Assert.Equal(90, satz.Minuten);
         Assert.Equal(4, satz.Aufgaben.Count);
-        // Antwort 4a: AP1 fuer alle Fachrichtungen, AP2 zuerst nur SI (seit A 0.77.0 ein Satz Konzeption, b2 noch ohne)
+        // Antwort 4a: AP1 fuer alle Fachrichtungen, AP2 zuerst nur FISI (seit A 0.77.0 ein Satz Konzeption, b2 noch ohne)
         foreach (var f in Fachrichtung.Alle)
         {
             Assert.Single(bestand.Fuer(EchtSaetze.Ap1, f.Id));

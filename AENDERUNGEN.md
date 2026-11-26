@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 1.14.0
+Die Fachrichtungen heißen jetzt mit denselben Kürzeln wie bei der IHK: FISI, FIAE, FIDP und FIDV.
+
+- FISI steht für Systemintegration, FIAE für Anwendungsentwicklung, FIDP für Daten- und Prozessanalyse und FIDV für Digitale Vernetzung. So stehen die Kürzel auch unten auf den Seiten der echten Prüfung.
+- Du siehst die neuen Kürzel bei der Wahl der Fachrichtung (in den Optionen unter „Ausbildung“ und bei der Frage beim ersten Start), bei den Fachrichtungs-Paketen (zum Beispiel „Fachrichtungs-Paket FIDP“) und in den Hinweisen, wenn ein Paket fehlt oder neue Inhalte da sind.
+- Die Suche in den Optionen findet die Fachrichtungs-Wahl auch über die Kürzel, etwa mit „FIDP“.
+- Die langen Namen der Fachrichtungen bleiben, wie sie sind.
+- Deine gewählte Fachrichtung, dein Lernstand, deine geladenen Pakete und deine Spielstände bleiben genau gleich. Du musst nichts neu wählen oder laden.
+
 ## A 1.13.0
 Im Spiel stehen die Hinweise nicht mehr unten auf dem Weg deiner Figur, sondern als schmale Zeile oben neben der Uhr.
 

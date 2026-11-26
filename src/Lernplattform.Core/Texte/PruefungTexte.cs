@@ -1,7 +1,7 @@
 namespace Lernplattform.Core.Texte;
 
 /// <summary>
-/// Phase 4, W2 (Wortliste W2, Weisung P4-6): Texte der Klausursimulation. Die SI-Texte sind
+/// Phase 4, W2 (Wortliste W2, Weisung P4-6): Texte der Klausursimulation. Die FISI-Texte sind
 /// zeichengleich zu Python v0.63.2 (app_gui ExamPanel, fisi_pruefung); der Test vergleicht jeden
 /// Namen mit dem Teil "texte" von G32 (tests/Vergleich/pruefung.json, mit ast aus Python gelesen).
 /// Neu (Abschnitt 6 und 7 der Wortliste): Fachrichtungen und Optionen &gt; Ausbildung.
@@ -98,7 +98,7 @@ public static class PruefungTexte
 
     /// <summary>
     /// _supplement_hint (fp 501-506). Nr 91 verallgemeinert (Wortliste W2 Abschnitt 6): die beiden
-    /// Kurznamen der Fachrichtung statt "Konzeption, Netzwerke"; fuer SI zeichengleich zu Python.
+    /// Kurznamen der Fachrichtung statt "Konzeption, Netzwerke"; fuer FISI zeichengleich zu Python.
     /// </summary>
     public const string ErgaenzungNein = "Eine mündliche Ergänzungsprüfung würde hier nicht reichen (nur in %s, %s oder WiSo möglich, Gewichtung 2:1).";
     public const string ErgaenzungJa = "Eine mündliche Ergänzungsprüfung in %s könnte reichen: Dafür wären dort mindestens %s nötig (alt zu mündlich 2:1).";
@@ -117,14 +117,15 @@ public static class PruefungTexte
     /// <summary>Auswahl in Optionen &gt; Ausbildung, Reihenfolge wie Pruefung.Ausbildung.Werte.</summary>
     public static readonly IReadOnlyList<(string Wert, string Text)> Fachrichtungen =
     [
-        ("si", "Systemintegration (SI)"),
-        ("ae", "Anwendungsentwicklung (AE)"),
-        ("dpa", "Daten- und Prozessanalyse (DPA)"),
-        ("dv", "Digitale Vernetzung (DV)"),
+        ("si", "Systemintegration (FISI)"),
+        ("ae", "Anwendungsentwicklung (FIAE)"),
+        ("dpa", "Daten- und Prozessanalyse (FIDP)"),
+        ("dv", "Digitale Vernetzung (FIDV)"),
     ];
 
     public static readonly IReadOnlyList<string> AusbildungSuchwoerter =
-        ["Ausbildung", "Fachrichtung", "Systemintegration", "Anwendungsentwicklung", "Datenanalyse", "Vernetzung"];
+        ["Ausbildung", "Fachrichtung", "Systemintegration", "Anwendungsentwicklung", "Datenanalyse", "Vernetzung",
+         "FISI", "FIAE", "FIDP", "FIDV"];   // A 1.14.0 (Weisung P12-402 Antwort 4a)
 
     /// <summary>
     /// Feste Ausnahmen der Pruefung "nur Einfachleerzeichen" (Wortliste W2 Abschnitt 9, vier Eintraege).

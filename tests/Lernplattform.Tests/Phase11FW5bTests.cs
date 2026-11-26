@@ -9,8 +9,8 @@ using Microsoft.Data.Sqlite;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// Phase 11 FW5b (Weisung P11-11): 186 alte Fehlbuchungen von AE/DPA/DV-Klausuren bereinigen (Kopie vorher, nur
-/// belegbare Zeilen, SI-eigene Zeilen bleiben). Nur Testdaten (A3).
+/// Phase 11 FW5b (Weisung P11-11): 186 alte Fehlbuchungen von FIAE/FIDP/FIDV-Klausuren bereinigen (Kopie vorher, nur
+/// belegbare Zeilen, FISI-eigene Zeilen bleiben). Nur Testdaten (A3).
 /// </summary>
 public class Phase11FW5bTests
 {
@@ -62,7 +62,7 @@ public class Phase11FW5bTests
             ("$d", "{\"aufgaben\": [" + aufgaben + "], \"themen\": {}}"), ("$u", "p" + zeit));
 
     /// <summary>
-    /// Lernstand wie vor A 0.32.0: eine AE- und eine DPA-Klausur mit falscher Stelle, dazu SI-eigene Zeilen zur
+    /// Lernstand wie vor A 0.32.0: eine FIAE- und eine FIDP-Klausur mit falscher Stelle, dazu FISI-eigene Zeilen zur
     /// selben und zu anderer Zeit. Rueckgabe: richtige Stellen der drei falschen Zeilen.
     /// </summary>
     private static (long Ae0, long Ae1, long Dpa0) Alt(string pfad, Lerninhalte alle)
@@ -76,14 +76,14 @@ public class Phase11FW5bTests
         Pruefung(pfad, "2026-10-31 11:00:00", "konzeption", "{\"quelle\": \"ap2\", \"index\": 0, \"punkte\": 20, \"max\": 25}");
         Pruefung(pfad, "2026-10-31 12:00:00", Fachrichtung.Nach("dpa").Bereiche.First(b => b.Rolle == "b1").Art,
             "{\"quelle\": \"ap2_dpa\", \"index\": 0, \"punkte\": 20, \"max\": 25}");
-        Ereignis(pfad, "e1", "2026-10-31 10:00:00", 60, 0, ae[0]);    // falsch: AE-Aufgabe auf SI-Stelle 0
+        Ereignis(pfad, "e1", "2026-10-31 10:00:00", 60, 0, ae[0]);    // falsch: FIAE-Aufgabe auf FISI-Stelle 0
         Ereignis(pfad, "e2", "2026-10-31 10:00:00", 60, 1, ae[1]);    // falsch
-        Ereignis(pfad, "e3", "2026-10-31 10:00:00", 60, 0, si[0]);    // SI-eigene Zeile zur selben Zeit: bleibt
+        Ereignis(pfad, "e3", "2026-10-31 10:00:00", 60, 0, si[0]);    // FISI-eigene Zeile zur selben Zeit: bleibt
         Ereignis(pfad, "e4", "2026-10-31 09:00:00", 60, 0, ae[0]);    // andere Zeit: nicht belegbar, bleibt
         Ereignis(pfad, "e5", "2026-10-31 10:00:00", null, 0, ae[0]);  // anderer Abstand: bleibt
-        Ereignis(pfad, "e6", "2026-10-31 11:00:00", 60, 0, si[0]);    // SI-Klausur: bleibt
-        Ereignis(pfad, "e7", "2026-10-31 12:00:00", 60, 0, dpa[0]);   // falsch (DPA)
-        Ereignis(pfad, "e8", "2026-10-30 08:00:00", 60, 3, si[3]);    // SI-Uebung: bleibt
+        Ereignis(pfad, "e6", "2026-10-31 11:00:00", 60, 0, si[0]);    // FISI-Klausur: bleibt
+        Ereignis(pfad, "e7", "2026-10-31 12:00:00", 60, 0, dpa[0]);   // falsch (FIDP)
+        Ereignis(pfad, "e8", "2026-10-30 08:00:00", 60, 3, si[3]);    // FISI-Uebung: bleibt
         return (ae[0].Nummer - 1, ae[1].Nummer - 1, dpa[0].Nummer - 1);
     }
 
@@ -197,7 +197,7 @@ public class Phase11FW5bTests
         Assert.Equal(Erwartet(frageAe, karteAe), Fach(wAe));
         Assert.Contains("100", wAe.Banner.TextPc, StringComparison.Ordinal);
 
-        // SI wie Python: alle Zeilen
+        // FISI wie Python: alle Zeilen
         var wSi = Lies(si);
         Assert.Equal((3L, 1.0), (wSi.Quote.Antworten, wSi.Quote.Richtig));
         Assert.Equal(8, wSi.Verlauf[^1].Anzahl);
@@ -215,8 +215,8 @@ public class Phase11FW5bTests
         var datei = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, "quizfragen.json")))!.AsArray();
         // die Datei bleibt nur angehaengt: die alte Fassung steht weiter an Stelle 231, die neue am Ende (6360)
         Assert.Equal(Alt231, datei[231]!["q"]!.GetValue<string>());
-        // seit A 0.53.0 (Weisung P12-97) haengen danach 1 561 SI-Fragen an: 6 361 + 1 561; seit A 0.53.1 (Weisung P12-106,
-        // Sammelliste 248) dazu 80 neue Fassungen von SI-Fragen
+        // seit A 0.53.0 (Weisung P12-97) haengen danach 1 561 FISI-Fragen an: 6 361 + 1 561; seit A 0.53.1 (Weisung P12-106,
+        // Sammelliste 248) dazu 80 neue Fassungen von FISI-Fragen
         Assert.Equal(6361 + 1561 + 80, datei.Count);
         var neu = datei[6360]!.AsObject();
         Assert.Equal(("ae", "ae_oop", "Fabrikmethode"), (neu["fachrichtung"]!.GetValue<string>(), neu["thema"]!.GetValue<string>(), neu["a"]!.GetValue<string>()));

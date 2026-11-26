@@ -41,10 +41,10 @@ LERNEN_LISTEN = ("karteikarten", "quizfragen", "szenarien_ap2", "projektarbeiten
 LERNEN_ORDNER = os.path.join("inhalte_csharp", "lernen")
 # echte Testdateien der App (Stand 1, je Fachrichtung); nach jeder Inhalte-Aenderung einer Fachrichtung neu bauen
 # (selbsttest prueft die Gleichheit mit dem heutigen Bau)
-# Welle A 1.5.0 (Weisung P12-358, Nico 3a): die echten Pakete Stand 1 brauchen A 1.5.0 (die erste App ohne eigene Inhalte AE/DPA/DV)
-# A 1.8.0 (Weisung P12-372): Stand und braucht_app je Fachrichtung; AE Stand 2 mit den neuen Fassungen (Saetze Format 4)
+# Welle A 1.5.0 (Weisung P12-358, Nico 3a): die echten Pakete Stand 1 brauchen A 1.5.0 (die erste App ohne eigene Inhalte FIAE/FIDP/FIDV)
+# A 1.8.0 (Weisung P12-372): Stand und braucht_app je Fachrichtung; FIAE Stand 2 mit den neuen Fassungen (Saetze Format 4)
 # braucht A 1.8.0. Die Testdatei des vorigen Stands bleibt als echte Testdatei liegen (nie loeschen).
-# A 1.12.0 (Weisung P12-390): AE Stand 3 mit den Struktogramm-Fassungen (Saetze Format 5) braucht A 1.12.0.
+# A 1.12.0 (Weisung P12-390): FIAE Stand 3 mit den Struktogramm-Fassungen (Saetze Format 5) braucht A 1.12.0.
 LERNEN_TESTDATEIEN = {"ae": (3, "A 1.12.0"), "dpa": (1, "A 1.5.0"), "dv": (1, "A 1.5.0")}
 
 
@@ -151,7 +151,7 @@ def lernen_schnitt(repo, fr):
     eigene = [{"stelle": i, "satz": s} for i, s in enumerate(saetze_quelle["saetze"])
               if isinstance(s, dict) and s.get("fachrichtung") == fr and s.get("im_paket") is not True]
     # A 0.94.0: Format 3 nur, wenn ein Satz das Satzpaar ("aufbau") braucht; sonst bleibt das Paket im Format 2
-    # (DPA/DV bytegleich, auch fuer Apps vor A 0.94.0 lesbar)
+    # (FIDP/FIDV bytegleich, auch fuer Apps vor A 0.94.0 lesbar)
     saetze = {"format": _satz_format(saetze_quelle["format"], eigene), "saetze": eigene}
     return _json(lernen), _json(saetze)
 

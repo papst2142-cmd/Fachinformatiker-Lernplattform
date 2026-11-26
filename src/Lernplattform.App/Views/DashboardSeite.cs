@@ -122,7 +122,7 @@ public sealed class DashboardSeite : UserControl
     }
 
     /// <summary>
-    /// Welle A 1.5.0 (Weisung P12-358, Nico 2a, Abnahmebild P12-225 Bild 4): der Sicht fehlen alle Inhalte (AE, DPA, DV nur als
+    /// Welle A 1.5.0 (Weisung P12-358, Nico 2a, Abnahmebild P12-225 Bild 4): der Sicht fehlen alle Inhalte (FIAE, FIDP, FIDV nur als
     /// Paket): Karte mit Text und Knopf „Laden“ (gleicher Weg wie der Hinweis: am Handy ohne WLAN erst die Rueckfrage). Sie bleibt,
     /// bis das Paket da ist; nichts laedt von allein.
     /// </summary>

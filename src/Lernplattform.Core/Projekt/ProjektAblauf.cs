@@ -34,7 +34,7 @@ public sealed class ProjektAblauf(Func<LernstandSchreiber> schreiber, Func<JsonO
     /// <summary>Felder des gezeigten Projekts (geladene Fassung plus eigene gespeicherte Aenderungen).</summary>
     public OrderedDictionary<string, string> Felder { get; private set; } = new(StringComparer.Ordinal);
 
-    /// <summary>Projektstunden der Ausbildung (AE 80, sonst 40), gelesen beim Laden und Zeigen.</summary>
+    /// <summary>Projektstunden der Ausbildung (FIAE 80, sonst 40), gelesen beim Laden und Zeigen.</summary>
     public int MaxStunden { get; private set; } = 40;
 
     public string Reiter { get; private set; } = Abschlussprojekt.Reiter[0].Schluessel;

@@ -16,7 +16,7 @@ namespace Lernplattform.Views;
 /// <summary>
 /// Phase 4, W2 (PB5-PB7): Art "Prüfung" im Pruefungstrainer wie app_gui.ExamPanel v0.63.2
 /// (3379-3915) und overall_card (4109-4151), PC-Wortlaut auf PC und Handy (Wortliste W2).
-/// Auswahl je Fachrichtung (AE, DPA, DV: b1/b2 gesperrt), laufende Pruefung mit Uhr ohne Pause
+/// Auswahl je Fachrichtung (FIAE, FIDP, FIDV: b1/b2 gesperrt), laufende Pruefung mit Uhr ohne Pause
 /// (Zeit ueber start_utc), Rueckfragen mit "Ja"/"Nein", Selbstbewertung, Ergebnis mit "Nach
 /// Themen". Abschluss in einer Buchung (Abschluss.Abschliessen, E6); misslingt er, bleibt die
 /// Pruefung in Phase "bewertung" und die Bewertung stehen (Weisung P4-6, Frage 4 a).
@@ -200,7 +200,7 @@ public sealed class KlausurTeil
                 Schrift.Text(angabe, "Klein", FontWeight.Normal, "Pinsel.muted"),
             },
         };
-        // Phase 9 W2: b1/b2 von AE, DPA und DV erst, wenn jedes Thema mindestens eine Aufgabe hat
+        // Phase 9 W2: b1/b2 von FIAE, FIDP und FIDV erst, wenn jedes Thema mindestens eine Aufgabe hat
         var eigene = Klausur.QuelleFachrichtung(bereich.Quelle) is not null;
         if (Klausur.Art(bereich.Art) is { } art && bereich.Quelle != "keine" && (!eigene || Inhalte.Spielbar(art.Art)))
         {
@@ -209,7 +209,7 @@ public sealed class KlausurTeil
             knopf.Click += async (_, _) => await StartenAsync(art.Art);
             return Zeile(new NebenOderUnter(220, 14) { Children = { text, knopf } }, "Pinsel.card_alt", new Thickness(14, 10));
         }
-        // AE, DPA, DV: fuer die Bereiche b1/b2 gibt es noch keine Aufgaben (Phase 9 W2: eigener Text)
+        // FIAE, FIDP, FIDV: fuer die Bereiche b1/b2 gibt es noch keine Aufgaben (Phase 9 W2: eigener Text)
         text.Children.Add(new LernText(eigene ? FachrichtungTexte.KlausurOhneAufgaben : Beschriftungen.Platzhalter, "Klein",
             FontWeight.Normal, "Pinsel.text_dim"));
         return Zeile(text, "Pinsel.card_alt", new Thickness(14, 10));
@@ -770,7 +770,7 @@ public sealed class KlausurTeil
         }
         if (art == EchtAb)
         {
-            // A 0.76.0: DV mit einer Meldung der Ladepruefung je Bereich (nie still leer, P12-261); seit A 0.86.0 hat DV eigene
+            // A 0.76.0: FIDV mit einer Meldung der Ladepruefung je Bereich (nie still leer, P12-261); seit A 0.86.0 hat FIDV eigene
             // Saetze, die Probe nimmt sie heraus: ein Bereich ohne Saetze zeigt weiter den Platzhalter mit der Meldung
             _a.ProbeSetzen(null);
             _echt.ProbeBestand(new EchtBestand([.. Zustand.EchtBestand.Saetze.Where(s => s.Fachrichtung != "dv")], [new(EchtSaetze.Datei, ProbeFehler),
@@ -829,7 +829,7 @@ public sealed class KlausurTeil
 
     /// <summary>
     /// Nur Start-Test (A 0.85.0, Weisung P12-291): Auswahl wie <see cref="Probe"/> 1 (ohne Speichern, ohne Uhr), aber fuer die
-    /// Fachrichtung <paramref name="fachrichtung"/>; keine eigene Layout-Ansicht (dieselbe Auswahl wie AE in Ansicht 1).
+    /// Fachrichtung <paramref name="fachrichtung"/>; keine eigene Layout-Ansicht (dieselbe Auswahl wie FIAE in Ansicht 1).
     /// </summary>
     internal void ProbeAuswahl(string fachrichtung)
     {

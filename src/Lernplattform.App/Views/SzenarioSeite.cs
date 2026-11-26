@@ -101,7 +101,7 @@ public sealed class SzenarioSeite : UserControl
             };
             if (eintraege.Count == 0)
             {
-                // Phase 9 W2: AE, DPA und DV haben hier (noch) keine eigenen Aufgaben
+                // Phase 9 W2: FIAE, FIDP und FIDV haben hier (noch) keine eigenen Aufgaben
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     _raster.Children.Clear();

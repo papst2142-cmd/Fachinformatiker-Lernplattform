@@ -523,7 +523,7 @@ public class RundgangTests
             Assert.False(AusbildungFrage.WarnungNoetig(fachrichtung, new JsonObject { [schluessel] = true }));
             Assert.True(AusbildungFrage.WarnungNoetig(fachrichtung, new JsonObject { [schluessel] = "" }));    // bool("") = aus
         }
-        // AE -> SI -> AE: der Hinweis kommt wieder, solange B aus ist
+        // FIAE -> FISI -> FIAE: der Hinweis kommt wieder, solange B aus ist
         Assert.True(AusbildungFrage.WarnungNoetig("ae", werte));
         Assert.False(AusbildungFrage.WarnungNoetig("si", werte));
         Assert.True(AusbildungFrage.WarnungNoetig("ae", werte));
@@ -573,10 +573,10 @@ public class RundgangTests
     public void WarnhinweisTextMitFachrichtungUndAbschnitt()
     {
         var text = AusbildungFrage.WarnungText("dpa");
-        Assert.StartsWith("Du hast „Daten- und Prozessanalyse (DPA)“ gewählt.", text, StringComparison.Ordinal);
+        Assert.StartsWith("Du hast „Daten- und Prozessanalyse (FIDP)“ gewählt.", text, StringComparison.Ordinal);
         Assert.Contains("Bei „Ja“ wird „Abschnitt D anzeigen (Daten- und Prozessanalyse)“ eingeschaltet.", text, StringComparison.Ordinal);
         Assert.DoesNotContain("%s", text, StringComparison.Ordinal);
-        Assert.Equal(new[] { "ae", "dpa", "dv" }.Max(f => AusbildungFrage.WarnungText(f).Length), text.Length);   // DPA ist der laengste (Bilder)
+        Assert.Equal(new[] { "ae", "dpa", "dv" }.Max(f => AusbildungFrage.WarnungText(f).Length), text.Length);   // FIDP ist der laengste (Bilder)
     }
 
     /// <summary>Nach Frage und Hinweis kein zweiter Hinweis: ausbildung_zuletzt wird mit der Antwort gesetzt (Auflage P4-11).</summary>
@@ -596,7 +596,7 @@ public class RundgangTests
 
     // -- Zwei Geraete (Frage 2 a) -----------------------------------------------------------------
 
-    /// <summary>A waehlt AE und gleicht ab, dann gleicht B ab: B fragt nicht und zeigt den Hinweis genau einmal.</summary>
+    /// <summary>A waehlt FIAE und gleicht ab, dann gleicht B ab: B fragt nicht und zeigt den Hinweis genau einmal.</summary>
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

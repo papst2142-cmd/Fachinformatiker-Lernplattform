@@ -119,7 +119,7 @@ public static class Zustand
         Inhalte = AlleInhalte.ContinueWith(t => !t.IsCompletedSuccessfully || t.Result is not { } alle ? null
             : _ersteSicht is { } erste && erste.Sicht == Sicht ? erste : alle.Fuer(Sicht), TaskScheduler.Default);
         AbgeleiteteStarten();
-        // Phase 11 FW5b (Sammelliste 186): alte Fehlbuchungen von AE/DPA/DV-Klausuren berichtigen (mit Kopie vorher,
+        // Phase 11 FW5b (Sammelliste 186): alte Fehlbuchungen von FIAE/FIDP/FIDV-Klausuren berichtigen (mit Kopie vorher,
         // unter Vorgaenge); im Hintergrund, nur wenn es solche Zeilen gibt
         _ = AlleInhalte.ContinueWith(t =>
         {
@@ -340,7 +340,7 @@ public static class Zustand
             // inhalte_csharp/lernen nur die neuen Inhalte der gewaehlten Fachrichtung (die anderen beim Wechsel)
             var eingebaut = Eingebaut;
             eingebaut.Vorab();     // die Listen aus inhalte_csharp/lernen lesen schon, waehrend die bisherigen laden
-            // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV kommen nur noch aus den Paketen im Datenordner. Ihre Pruefung
+            // Welle A 1.5.0 (Weisung P12-358): FIAE, FIDP und FIDV kommen nur noch aus den Paketen im Datenordner. Ihre Pruefung
             // („nur angehaengt“) laeuft auf eigenem Faden schon, waehrend die bisherigen Inhalte laden (vorher danach); die
             // Ladepruefung ihrer Saetze laeuft weiter nebenher, waehrend die Inhalte gebildet werden (siehe unten). Ein Paket, das
             // mit genau dieser App schon ganz gut war, pruefen beide nicht noch einmal (PaketAblage.PruefKennung, Lauf 1193)
@@ -546,7 +546,7 @@ public static class Zustand
     private static List<Core.Projekt.ProjektFrage>? _fachfragen;
 
     /// <summary>
-    /// Phase 9 W2: Fragen fuers Fachgespraech der aktuellen Sicht (SI alle, sonst die gemeinsamen nach
+    /// Phase 9 W2: Fragen fuers Fachgespraech der aktuellen Sicht (FISI alle, sonst die gemeinsamen nach
     /// einteilung_bisher.json); die Liste liest bei jedem Zugriff die aktuelle Sicht. Phase 10 W2: dahinter die
     /// eigenen neuen Fragen der Fachrichtung aus inhalte_csharp/lernen/fachgespraech.json.
     /// </summary>
