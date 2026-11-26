@@ -169,7 +169,6 @@ public static partial class AutoMessung
     }
 
     /// <summary>A 0.38.0: offene Gruppen der Seitenleiste gleich nach dem Programmstart (erwartet: keine).</summary>
-    private static IReadOnlyList<string> GruppenBeimStart = [];
 
     /// <summary>Welle CI schneller 2 (Meldung P12-84 Punkt 1, Sammelliste 268/227): je Abschnitt des Start-Tests eine Zeile
     /// "ZEITPLAN &lt;s&gt; s: &lt;Abschnitt&gt;" sofort auf stderr (das CI-Protokoll stempelt sie mit der Uhrzeit, auch wenn der
@@ -191,8 +190,6 @@ public static partial class AutoMessung
         // Weisung P11-35: das X oben rechts gibt es nur auf Android im schmalen Aufbau; der Start-Test zeigt es auch
         // unter Windows, Linux und macOS in den Handy-Groessen, damit Layout-, Namens- und Tab-Pruefung es erfassen
         ansicht.BeendenObenFuerTests(true);
-        // A 0.38.0 (Sammelliste 207): Gruppen der Seitenleiste gleich nach dem Programmstart (alle zu)
-        GruppenBeimStart = ansicht.Leisten.OffeneGruppen;
         // Welle Grafik G1 (Weisung P12-182): alle Messungen des Spiels gelten der Stufe Mittel (bitgleich zu vorher); ohne
         // Merker waehlte der erste Start nach dem Geraet (CI unter Linux mit llvmpipe: Niedrig). Die automatische Wahl prueft
         // GrafikStufenAsync mit eigenem Ablauf und Gegenprobe.
@@ -416,7 +413,7 @@ public static partial class AutoMessung
         Zeitplan("P8W2bMesspunkteAsync");
         funde += await P8W2bMesspunkteAsync(ansicht);   // Phase 8 W2b: Seitenleiste und Optionen
         Zeitplan("P11SeitenleisteAsync");
-        funde += await P11SeitenleisteAsync(ansicht, GruppenBeimStart);   // A 0.38.0: Seitenleiste wie Handy, Gruppen zu, nur eine offen
+        funde += await P11SeitenleisteAsync(ansicht);   // A 1.15.0: Seitenleiste nach Pruefungsteilen (Variante B)
         Zeitplan("P8W8OptionenAsync");
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
         Zeitplan("PaketeAsync");

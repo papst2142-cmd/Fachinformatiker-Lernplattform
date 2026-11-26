@@ -22,8 +22,7 @@ public sealed class Navigationsleisten
     private readonly Action<string> _oeffnen;
     private readonly Dictionary<string, Button> _seitenKnoepfe = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Button> _untenKnoepfe = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, StackPanel> _unterpunkte = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, (Border Pille, TextBlock Aus, TextBlock An)> _untenTeile = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (Border Pille, Control Aus, Control An)> _untenTeile = new(StringComparer.Ordinal);
 
     public Control Seitenleiste { get; }
     public Control UntereLeiste { get; }
@@ -45,29 +44,15 @@ public sealed class Navigationsleisten
     /// </summary>
     private Control BaueSeitenleiste()
     {
-        // Welle A 0.38.0 (Sammelliste 207): Eintraege wie die untere Leiste am Handy, Gruppen zugeklappt
-        // (Regeln der Gruppen in Core/Texte/Seitenleiste.cs)
-        void Merken(NavPunkt punkt)
-        {
-            _punkte[punkt.Id] = punkt;
-            foreach (var u in punkt.Unter)
-            {
-                Merken(u);
-            }
-        }
-        foreach (var punkt in Texte.Seitenleiste.Concat(Texte.NavigationPc.Where(p => Navigation.PcLeisteUnten.Contains(p.Id))))
-        {
-            Merken(punkt);
-        }
+        // Welle A 1.15.0 (Weisungen P12-406/P12-407, Variante B): Zeilen wie das Deckblatt der gewaehlten Fachrichtung
+        // (Core/Texte/Pruefungsteile.cs), ohne Symbole und ohne Aufklappen, genau wie das Entwurfsbild
         var oben = new StackPanel { Spacing = 1, Margin = new Thickness(12, 0, 12, 8) };
-        foreach (var punkt in Texte.Seitenleiste)
-        {
-            EintragMitUnterpunkten(punkt, oben, 0);
-        }
+        _oben = oben;
+        ZeilenBauen(Core.Pruefung.Fachrichtung.Nach(Zustand.Sicht));
         var unten = new StackPanel { Spacing = 1, Margin = new Thickness(12, 8, 12, 0) };
-        foreach (var id in Navigation.PcLeisteUnten)
+        foreach (var zeile in Pruefungsteile.SeitenleisteUnten)
         {
-            EintragMitUnterpunkten(_punkte[id], unten, 0);
+            unten.Children.Add(Eintrag(zeile));
         }
         // Weisung P8-56: "Programm beenden" immer; Patch A 0.37.0 (Sammelliste 206, Antwort 4a) auch auf Android (Tablet quer)
         BeendenKnopf = BeendenEintrag();
@@ -98,29 +83,17 @@ public sealed class Navigationsleisten
     /// <summary>Knopf "Programm beenden" der Seitenleiste (Start-Test).</summary>
     public Button? BeendenKnopf { get; private set; }
 
-    /// <summary>Symbol "Ausschalten" (eigene Umrisse: Strich und offener Ring, 24 x 24).</summary>
-    private static readonly Geometry Ausschalten = Geometry.Parse(
-        "M11,2 L13,2 L13,12 L11,12 Z M16.9,4.6 L15.8,6.3 A7.5,7.5 0 1 1 8.2,6.3 L7.1,4.6 A9.5,9.5 0 1 0 16.9,4.6 Z");
-
     /// <summary>
     /// Weisung P8-56: Zeile wie <see cref="Eintrag"/> (Symbol 22, Text 14 fett text_dim, ohne Strich), schliesst das
     /// Fenster wie das Kreuz: Spielschritte schreiben, Abgleich, Sperren und Velopack laufen im Programmende (App.Exit).
     /// </summary>
     private static Button BeendenEintrag()
     {
-        var symbol = new PathIcon { Data = Ausschalten, Width = 22, Height = 22 }.Farbe(PathIcon.ForegroundProperty, "Pinsel.muted");
-        Mitwachsen(symbol, 22);
-        Avalonia.Automation.AutomationProperties.SetAccessibilityView(symbol, Avalonia.Automation.AccessibilityView.Raw);
-        var symbolRahmen = new Border { Padding = new Thickness(8, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center, Child = symbol };
+        // A 1.15.0: ohne Symbol wie die anderen Zeilen im Entwurf (Variante B), Text buendig mit Hilfe und Optionen
         var text = Schrift.Pt(Navigation.ProgrammBeenden, 14, FontWeight.Bold, "Pinsel.text_dim");
         text.VerticalAlignment = VerticalAlignment.Center;
-        text.TextWrapping = TextWrapping.NoWrap;
-        // Platz des Strichs (4 + 6) wie bei den Eintraegen, damit Symbol und Text buendig stehen
-        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("10,Auto,*") };
-        Grid.SetColumn(symbolRahmen, 1);
-        Grid.SetColumn(text, 2);
-        zeile.Children.Add(symbolRahmen);
-        zeile.Children.Add(text);
+        text.TextWrapping = TextWrapping.Wrap;
+        var zeile = new Border { Padding = new Thickness(16, 0, 8, 0), Child = text };
         var knopf = new Button
         {
             Content = zeile,
@@ -134,13 +107,11 @@ public sealed class Navigationsleisten
         knopf.Click += (_, _) => Programmende.Beenden();
         return knopf;
     }
-    private readonly Dictionary<string, NavPunkt> _punkte = new(StringComparer.Ordinal);
-    private readonly Core.Texte.Seitenleiste _gruppen = new();
+    private readonly Dictionary<string, string> _titel = new(StringComparer.Ordinal);
 
     /// <summary>Beschriftung eines Eintrags der Seitenleiste (Start-Test).</summary>
-    public string Titel(string id) => _punkte[id].Titel;
-    private readonly Dictionary<string, TextBlock> _pfeile = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, (Border Strich, TextBlock Symbol, TextBlock Text, bool Unter)> _seitenTeile = new(StringComparer.Ordinal);
+    public string Titel(string id) => _titel[id];
+    private readonly Dictionary<string, (Border Strich, TextBlock Text, bool Unter)> _seitenTeile = new(StringComparer.Ordinal);
     private TextBlock? _statusWert;
     private Grid? _statusSpur;
     private int _statusLaeuft;
@@ -178,79 +149,87 @@ public sealed class Navigationsleisten
         element.Bind(Layoutable.HeightProperty, element.GetResourceObservable("Schrift.Normal", v => v is double d ? basis * d / Schrift.Grundgroessen["Normal"] : basis));
     }
 
-    private void EintragMitUnterpunkten(NavPunkt punkt, Panel ziel, int ebene)
+    private StackPanel? _oben;
+    private string _fachrichtung = "";
+
+    /// <summary>
+    /// Baut die Zeilen im Bildlauf fuer eine Fachrichtung (Gruppenkopf ABSCHLUSSPRÜFUNG &lt;Kürzel&gt; und Namen der Bereiche wie
+    /// das Deckblatt). Nach einem Wechsel der Fachrichtung aus <see cref="MainView"/>; gleiche Fachrichtung baut nichts neu.
+    /// </summary>
+    public void ZeilenBauen(Core.Pruefung.Fachrichtung fachrichtung)
     {
-        ziel.Children.Add(Eintrag(punkt, _seitenKnoepfe, ebene));
-        if (punkt.Unter.Count > 0)
+        if (_oben is null || _fachrichtung == fachrichtung.Id)
         {
-            var unter = new StackPanel { Spacing = 1, IsVisible = false };
-            foreach (var u in punkt.Unter)
-            {
-                EintragMitUnterpunkten(u, unter, ebene + 1);
-            }
-            _unterpunkte[punkt.Id] = unter;
-            ziel.Children.Add(unter);
+            return;
+        }
+        _fachrichtung = fachrichtung.Id;
+        foreach (var id in _oben.Children.OfType<Button>().Select(k => _seitenKnoepfe.First(e => e.Value == k).Key).ToList())
+        {
+            _seitenKnoepfe.Remove(id);
+            _seitenTeile.Remove(id);
+            _titel.Remove(id);
+        }
+        _oben.Children.Clear();
+        foreach (var zeile in Pruefungsteile.Seitenleiste(fachrichtung))
+        {
+            _oben.Children.Add(zeile.Art == LeistenArt.Gruppe ? Gruppenkopf(zeile.Titel) : Eintrag(zeile));
+        }
+        if (_markiert is { } id2)
+        {
+            Markiere(id2, _markiertEltern);
         }
     }
 
-    /// <summary>
-    /// Zeile wie NavRow: Strich 4 x 20 links (nur aktiv, Verlauf accent), Symbol 22 (Unterpunkt 20, eingerueckt),
-    /// Text, bei Unterpunkten rechts der Pfeil (zu: nach unten, offen: nach oben).
-    /// </summary>
-    private Button Eintrag(NavPunkt punkt, Dictionary<string, Button> ablage, int ebene)
+    /// <summary>Start-Test: Zeilen der Seitenleiste in der Reihenfolge der Anzeige (Art, Kennung, Text).</summary>
+    public IReadOnlyList<LeistenZeile> ZeilenFuerTests =>
+        [.. (_oben?.Children ?? []).Select(c => c is Button k
+            ? new LeistenZeile(_seitenTeile[_seitenKnoepfe.First(e => e.Value == k).Key].Unter ? LeistenArt.Unter : LeistenArt.Eintrag,
+                _seitenKnoepfe.First(e => e.Value == k).Key, _seitenTeile[_seitenKnoepfe.First(e => e.Value == k).Key].Text.Text ?? "")
+            : new LeistenZeile(LeistenArt.Gruppe, null, (c as TextBlock)?.Text ?? ""))];
+
+    /// <summary>Gruppenkopf wie im Entwurf: klein (11), fett, muted, Abstand oben 10 und unten 4.</summary>
+    private static TextBlock Gruppenkopf(string titel)
     {
-        var unter = ebene > 0;
-        var strich = new Border { Width = 4, CornerRadius = new CornerRadius(2), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) }.HoeheMitSchrift(20);
-        var symbol = Symbole.Block(punkt.Symbol, unter ? 20 : 22, "Pinsel.muted");
-        SymbolMitwachsen(symbol, unter ? 20 : 22);
-        // Abstand als Rand eines Rahmens, nicht des Symbols (sonst gilt es in der Layoutpruefung als abgeschnitten)
-        var symbolRahmen = new Border { Padding = new Thickness(8 + 12 * ebene, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center, Child = symbol };
-        var text = unter ? Schrift.Pt(punkt.Titel, 13, FontWeight.Normal, "Pinsel.muted") : Schrift.Pt(punkt.Titel, 14, FontWeight.Bold, "Pinsel.text_dim");
+        var text = Schrift.Pt(titel, 11, FontWeight.Bold, "Pinsel.muted");
+        text.LetterSpacing = 0.8;
+        text.TextWrapping = TextWrapping.Wrap;
+        text.Margin = new Thickness(12, 10, 12, 4);
+        return text;
+    }
+
+    /// <summary>
+    /// Zeile wie im Entwurf: Eintrag fett 14 text_dim, Unterpunkt 13 muted (eingerueckt, darf umbrechen); aktiv card_hi
+    /// mit Strich 4 links (Verlauf accent) und Text text.
+    /// </summary>
+    private Button Eintrag(LeistenZeile zeile)
+    {
+        var id = zeile.Id!;
+        var unter = zeile.Art == LeistenArt.Unter;
+        var strich = new Border { Width = 4, CornerRadius = new CornerRadius(2), VerticalAlignment = VerticalAlignment.Stretch };
+        var text = unter ? Schrift.Pt(zeile.Titel, 13, FontWeight.Normal, "Pinsel.muted") : Schrift.Pt(zeile.Titel, 14, FontWeight.Bold, "Pinsel.text_dim");
         text.VerticalAlignment = VerticalAlignment.Center;
-        text.TextWrapping = TextWrapping.NoWrap;
-        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*,Auto") };
-        Grid.SetColumn(symbolRahmen, 1);
-        Grid.SetColumn(text, 2);
-        zeile.Children.Add(strich);
-        zeile.Children.Add(symbolRahmen);
-        zeile.Children.Add(text);
-        if (punkt.Unter.Count > 0)
-        {
-            var pfeil = Symbole.Block("chevron_right", 16, "Pinsel.muted");
-            SymbolMitwachsen(pfeil, 16);
-            pfeil.RenderTransform = new RotateTransform(90);
-            var pfeilRahmen = new Border { Padding = new Thickness(8, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center, Child = pfeil };
-            Grid.SetColumn(pfeilRahmen, 3);
-            zeile.Children.Add(pfeilRahmen);
-            _pfeile[punkt.Id] = pfeil;
-        }
+        text.TextWrapping = TextWrapping.Wrap;
+        // Abstand als Rand eines Rahmens, nicht des Textes (sonst gilt er in der Layoutpruefung als abgeschnitten)
+        var textRahmen = new Border { Padding = new Thickness(unter ? 30 : 12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center, Child = text };
+        var inhalt = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        Grid.SetColumn(textRahmen, 1);
+        inhalt.Children.Add(strich);
+        inhalt.Children.Add(textRahmen);
         var knopf = new Button
         {
-            Content = zeile,
+            Content = inhalt,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Padding = new Thickness(0, unter ? 8 : 9),
+            VerticalContentAlignment = VerticalAlignment.Stretch,
+            Padding = new Thickness(0, unter ? 7 : 9),
             CornerRadius = new CornerRadius(10),
             Background = Brushes.Transparent,
         };
-        Avalonia.Automation.AutomationProperties.SetName(knopf, punkt.Titel);
-        knopf.Click += (_, _) =>
-        {
-            // wie Sidebar._on_nav: Eintrag mit Unterpunkten klappt auf bzw. zu und oeffnet die Seite;
-            // A 0.38.0: auf der obersten Ebene nur eine Gruppe offen (Core/Texte/Seitenleiste.cs)
-            _gruppen.Klick(punkt.Id);
-            _oeffnen(punkt.Id);
-            if (_gruppen.Offen(punkt.Id) && _unterpunkte.TryGetValue(punkt.Id, out var geoeffnet))
-            {
-                // Hinweis Chat (Weisung P11-37): die aufgeklappte Gruppe so weit wie moeglich ins Bild rollen
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    geoeffnet.BringIntoView(new Rect(0, 0, geoeffnet.Bounds.Width, Math.Min(geoeffnet.Bounds.Height, _rollen?.Viewport.Height ?? double.MaxValue))),
-                    Avalonia.Threading.DispatcherPriority.Loaded);
-            }
-            Aufklappen();
-        };
-        ablage[punkt.Id] = knopf;
-        _seitenTeile[punkt.Id] = (strich, symbol, text, unter);
+        Avalonia.Automation.AutomationProperties.SetName(knopf, zeile.Titel);
+        knopf.Click += (_, _) => _oeffnen(id);
+        _seitenKnoepfe[id] = knopf;
+        _seitenTeile[id] = (strich, text, unter);
+        _titel[id] = zeile.Titel;
         return knopf;
     }
 
@@ -337,42 +316,11 @@ public sealed class Navigationsleisten
 
     private int _statusNochmal;
 
-    /// <summary>Start-Test: Unterpunkte eines Eintrags auf- bzw. zuklappen (ohne die Seite zu oeffnen).</summary>
-    public void Umschalten(string id)
-    {
-        _gruppen.Umschalten(id);
-        Aufklappen();
-    }
-
-    /// <summary>Start-Test: Unterpunkte sichtbar?</summary>
-    public bool Offen(string id) => _unterpunkte.TryGetValue(id, out var unter) && unter.IsVisible;
-
     /// <summary>Start-Test: Zeile "x / y" im Kasten LERNSTATUS (leer, bis sie gelesen ist).</summary>
     public string LernstatusText => _statusWert?.Text ?? "";
 
-    /// <summary>Start-Test: Eintraege der Seitenleiste mit Symbol (Kennung, Symboltext).</summary>
-    public IEnumerable<(string Id, string Symbol)> SeitenSymbole => _seitenTeile.Select(t => (t.Key, t.Value.Symbol.Text ?? ""));
-
     /// <summary>Start-Test: Klick auf einen Eintrag der Seitenleiste wie mit der Maus.</summary>
     public void KlickFuerTests(string id) => _seitenKnoepfe[id].RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-
-    /// <summary>Start-Test (Layoutpruefung): alle Gruppen zugleich zeigen, ohne die Regel "nur eine offen".</summary>
-    public void AlleZeigenFuerTests(bool alle)
-    {
-        if (!alle)
-        {
-            Aufklappen();
-            return;
-        }
-        foreach (var (eltern, unter) in _unterpunkte)
-        {
-            unter.IsVisible = true;
-            if (_pfeile.TryGetValue(eltern, out var pfeil))
-            {
-                pfeil.RenderTransform = new RotateTransform(-90);
-            }
-        }
-    }
 
     /// <summary>
     /// Start-Test (Hinweis Chat, Weisung P11-37): bekommt der Eintrag den Fokus wie per Tab, steht er danach ganz im
@@ -396,21 +344,33 @@ public sealed class Navigationsleisten
         return (p.Y, p.Y + knopf.Bounds.Height, _rollen.Viewport.Height);
     }
 
-    /// <summary>Start-Test: offene Gruppen (sortiert).</summary>
-    public IReadOnlyList<string> OffeneGruppen => _gruppen.OffeneGruppen;
+    /// <summary>Drei Punkte fuer „Mehr“ (eigene Umrisse, 24 x 24).</summary>
+    private static readonly Geometry DreiPunkte = Geometry.Parse(
+        "M4,12 A2,2 0 1 1 8,12 A2,2 0 1 1 4,12 Z M10,12 A2,2 0 1 1 14,12 A2,2 0 1 1 10,12 Z M16,12 A2,2 0 1 1 20,12 A2,2 0 1 1 16,12 Z");
 
-    /// <summary>Unterpunkte zeigen bzw. verbergen, Pfeil drehen (offen: nach oben).</summary>
-    private void Aufklappen()
+    /// <summary>
+    /// A 1.15.0 (Entwurf Variante B): Symbol der unteren Leiste; „ZIFFER_n“ zeigt die Ziffer n als Text (Teil 1, Teil 2),
+    /// „MEHR“ drei Punkte, sonst das Material-Symbol. Groesse 24, waechst mit der Schrift.
+    /// </summary>
+    private static Control UntenSymbol(string name, string pinsel)
     {
-        foreach (var (eltern, unter) in _unterpunkte)
+        if (name.StartsWith("ZIFFER_", StringComparison.Ordinal))
         {
-            var offen = _gruppen.Offen(eltern);
-            unter.IsVisible = offen;
-            if (_pfeile.TryGetValue(eltern, out var pfeil))
-            {
-                pfeil.RenderTransform = new RotateTransform(offen ? -90 : 90);
-            }
+            var ziffer = Schrift.Pt(name["ZIFFER_".Length..], 22, FontWeight.Normal, pinsel);
+            ziffer.HorizontalAlignment = HorizontalAlignment.Center;
+            ziffer.VerticalAlignment = VerticalAlignment.Center;
+            Avalonia.Automation.AutomationProperties.SetAccessibilityView(ziffer, Avalonia.Automation.AccessibilityView.Raw);
+            return ziffer;
         }
+        if (name == "MEHR")
+        {
+            var punkte = new PathIcon { Data = DreiPunkte, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center }
+                .Farbe(PathIcon.ForegroundProperty, pinsel);
+            Mitwachsen(punkte, 24);
+            Avalonia.Automation.AutomationProperties.SetAccessibilityView(punkte, Avalonia.Automation.AccessibilityView.Raw);
+            return punkte;
+        }
+        return Symbole.Block(name, 24, pinsel);
     }
 
     private Control BaueUntereLeiste()
@@ -429,8 +389,8 @@ public sealed class Navigationsleisten
                 TextWrapping = TextWrapping.NoWrap,
                 HorizontalAlignment = HorizontalAlignment.Center,
             }.Groesse("Leiste").Farbe(TextBlock.ForegroundProperty, "Pinsel.text_dim");
-            var aus = Symbole.Block(punkt.Symbol, 24, "Pinsel.muted");
-            var an = Symbole.Block(punkt.SymbolAktiv, 24, "Pinsel.accent");
+            var aus = UntenSymbol(punkt.Symbol, "Pinsel.muted");
+            var an = UntenSymbol(punkt.SymbolAktiv, "Pinsel.accent");
             an.IsVisible = false;
             var pille = new Border
             {
@@ -465,8 +425,8 @@ public sealed class Navigationsleisten
 
     /// <summary>
     /// Sammelliste 341 (Start-Test): welche Eintraege gerade markiert aussehen, je Teil die Kennungen, deren Farbe genau die
-    /// Ressource der Markierung der aktuellen Farbwelt ist (Knopf card_hi, Strich Verlauf accent, Symbol accent, Text text,
-    /// Pfeil accent, Pille unten card_hi). Nur fuer Tests.
+    /// Ressource der Markierung der aktuellen Farbwelt ist (Knopf card_hi, Strich Verlauf accent, Text text,
+    /// Pille unten card_hi). Nur fuer Tests.
     /// </summary>
     public IReadOnlyDictionary<string, IReadOnlyList<string>> MarkiertFuerTests()
     {
@@ -481,34 +441,34 @@ public sealed class Navigationsleisten
         {
             ["Knopf"] = Wo(_seitenKnoepfe, k => k.Background, hi),
             ["Strich"] = Wo(_seitenTeile, t => t.Strich.Background, verlauf),
-            ["Symbol"] = Wo(_seitenTeile, t => t.Symbol.Foreground, akzent),
             ["Text"] = Wo(_seitenTeile, t => t.Text.Foreground, text),
-            ["Pfeil"] = Wo(_pfeile, p => p.Foreground, akzent),
             ["Pille"] = Wo(_untenTeile, t => t.Pille.Background, hi),
         };
     }
 
     /// <summary>Sammelliste 341: Kennung des Eintrags der unteren Leiste, der zu einer Seite gehoert (null = keiner).</summary>
-    public string? UntenZielFuerTests(string id) => _untenTeile.ContainsKey(Texte.HandyZiel(id)) ? Texte.HandyZiel(id) : null;
+    public string? UntenZielFuerTests(string id, string? eltern = null) => UntenZiel(id, eltern) is { Length: > 0 } z ? z : null;
 
     /// <summary>Sammelliste 341: alle Kennungen der Seitenleiste (nur fuer Tests).</summary>
     public IReadOnlyList<string> SeitenKennungenFuerTests => _seitenKnoepfe.Keys.ToList();
 
-    /// <summary>Sammelliste 341: hat die Seite einen Pfeil (Eintrag mit Unterpunkten)?</summary>
-    public bool HatPfeilFuerTests(string id) => _pfeile.ContainsKey(id);
+    private string? _markiert;
+    private string? _markiertEltern;
 
-    /// <summary>Hebt den Eintrag der offenen Seite hervor (am Handy: Lernbereiche unter "Lernen").</summary>
-    public void Markiere(string id)
+    /// <summary>
+    /// Hebt den Eintrag der offenen Seite hervor. Zeigt eine Leiste die Seite nicht selbst, gilt der Eintrag aus
+    /// <paramref name="eltern"/> (Herkunft, z. B. der Pruefungsteil, aus dem eine Uebung kam) bzw. <see cref="Pruefungsteile.Eltern"/>.
+    /// </summary>
+    public void Markiere(string id, string? eltern = null)
     {
+        _markiert = id;
+        _markiertEltern = eltern;
+        var seite = SeitenZiel(id, eltern);
         foreach (var (kennung, knopf) in _seitenKnoepfe)
         {
-            Hervorheben(knopf, kennung == id);
+            Hervorheben(knopf, kennung == seite);
         }
-        // wie Sidebar.set_active: eine Unterseite klappt ihre Gruppe auf (A 0.38.0: die andere zu); eine Seite
-        // ohne Gruppe (Start, Rechner, Fortschritt, Optionen, Hilfe) klappt alle Gruppen zu
-        _gruppen.Seite(id);
-        Aufklappen();
-        var unten = Texte.HandyZiel(id);
+        var unten = UntenZiel(id, eltern);
         foreach (var (kennung, (pille, aus, an)) in _untenTeile)
         {
             var aktiv = kennung == unten;
@@ -525,6 +485,34 @@ public sealed class Navigationsleisten
             aus.IsVisible = !aktiv;
             an.IsVisible = aktiv;
         }
+    }
+
+    /// <summary>Eintrag der Seitenleiste zu einer Seite (leer = keiner).</summary>
+    private string SeitenZiel(string id, string? eltern)
+    {
+        if (_seitenKnoepfe.ContainsKey(id))
+        {
+            return id;
+        }
+        if (eltern is not null)
+        {
+            return SeitenZiel(eltern, null);
+        }
+        return Pruefungsteile.Eltern(id, false) is { } e && _seitenKnoepfe.ContainsKey(e) ? e : "";
+    }
+
+    /// <summary>Eintrag der unteren Leiste zu einer Seite (leer = keiner).</summary>
+    private string UntenZiel(string id, string? eltern)
+    {
+        if (_untenTeile.ContainsKey(id))
+        {
+            return id;
+        }
+        if (eltern is not null)
+        {
+            return UntenZiel(eltern, null);
+        }
+        return Pruefungsteile.Eltern(id, true) is { } e && _untenTeile.ContainsKey(e) ? e : "";
     }
 
     /// <summary>NavRow.set_active: aktiv card_hi, Strich mit Verlauf, Text text, Symbol und Pfeil accent; sonst sidebar, muted/text_dim.</summary>
@@ -553,12 +541,7 @@ public sealed class Navigationsleisten
             Markierung.Loesen(teile.Strich, Border.BackgroundProperty);
             teile.Strich.Background = Brushes.Transparent;
         }
-        teile.Symbol.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.accent" : "Pinsel.muted");
         teile.Text.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.text" : teile.Unter ? "Pinsel.muted" : "Pinsel.text_dim");
-        if (_pfeile.TryGetValue(id, out var pfeil))
-        {
-            pfeil.Farbe(TextBlock.ForegroundProperty, aktiv ? "Pinsel.accent" : "Pinsel.muted");
-        }
         if (aktiv)
         {
             // Sidebar.set_active (B-D-09): den aktiven Eintrag ganz ins Bild rollen

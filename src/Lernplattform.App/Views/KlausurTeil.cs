@@ -271,6 +271,9 @@ public sealed class KlausurTeil
     /// start: laeuft schon eine Pruefung (auch "bewertung"), wird sie gezeigt und nie
     /// ueberschrieben, vor und nach der Rueckfrage.
     /// </summary>
+    /// <summary>Welle A 1.15.0 (Reiter „Prüfen“, PROBEKLAUSUR „Starten“): wie „Starten“ in der Liste, mit derselben Rueckfrage.</summary>
+    internal Task ArtStartenAsync(string art) => StartenAsync(art);
+
     private async Task StartenAsync(string art)
     {
         if (_echt.Laeuft)

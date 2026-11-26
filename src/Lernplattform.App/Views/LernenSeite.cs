@@ -11,12 +11,13 @@ namespace Lernplattform.Views;
 /// <summary>Phase 1, K6: Sammelseite "Lernen" (nur im schmalen Aufbau in der unteren Leiste), wie main.LearnScreen.</summary>
 public static class LernenSeite
 {
-    public static Control Bauen(Action<string> oeffnen, Task<Lerninhalte?> laden)
+    public static Control Bauen(Action<string> oeffnen, Task<Lerninhalte?> laden, IReadOnlyList<LernenEintrag>? eintraege = null)
     {
         var liste = new StackPanel { Spacing = 12, Margin = new Thickness(16, 4, 16, 24) };   // screen_list(spacing=12)
         var inhalte = laden.IsCompletedSuccessfully ? laden.Result : null;
         var untertitelZeilen = new List<(LernenEintrag Eintrag, TextBlock Zeile)>();
-        foreach (var eintrag in Navigation.Lernen)
+        // A 1.15.0: dieselbe Sammelseite auch fuer „Mehr“ (Fortschritt, Optionen, Hilfe)
+        foreach (var eintrag in eintraege ?? Navigation.Lernen)
         {
             var (id, titel) = (eintrag.Id, eintrag.Titel);
             var untertitel = inhalte is null ? FarbenTexte.Laden : Navigation.LernenUntertitel(eintrag, inhalte);

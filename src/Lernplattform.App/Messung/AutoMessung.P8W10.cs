@@ -219,10 +219,10 @@ public static partial class AutoMessung
                     string.Create(inv, $"Inhalt {inhalt:F0} Punkte, breit {dash.Breit}, Seite {dash.Hoehe:F0} Punkte hoch"));
                 if (dash.Breit)
                 {
-                    // Ueberschriften der fuenf Kacheln (vier Ringe und Erfolgsquote) auf einer Hoehe
+                    // Ueberschriften der Kacheln der ersten Reihe auf einer Hoehe (A 1.15.0: Deine Abschlusspruefung und Erfolgsquote)
                     var titel = dash.KachelTitel();
                     var hoehen = titel.Select(t => t.TranslatePoint(new Point(0, 0), dash)?.Y ?? double.NaN).ToList();
-                    Pruefe("Ueberschriften der Kacheln auf einer Hoehe", hoehen.Count == 5 && hoehen.All(y => !double.IsNaN(y)) && hoehen.Max() - hoehen.Min() <= 1,
+                    Pruefe("Ueberschriften der Kacheln auf einer Hoehe", hoehen.Count == 2 && hoehen.All(y => !double.IsNaN(y)) && hoehen.Max() - hoehen.Min() <= 1,
                         string.Join(", ", hoehen.Select(y => y.ToString("F1", inv))));
                 }
             }

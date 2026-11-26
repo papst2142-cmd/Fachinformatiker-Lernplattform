@@ -56,28 +56,31 @@ public static class Navigation
         new("settings", "settings", "Optionen", [], "gear"),
     ];
 
-    /// <summary>Untere Leiste am Handy (NAV).</summary>
+    /// <summary>
+    /// Untere Leiste am Handy. Welle A 1.15.0 (Weisungen P12-406/P12-407, Variante B, Sollwert-Aenderung Nr. 26): Start, Teil 1,
+    /// Teil 2, Lernen, Spiel, Mehr (vorher wie Python NAV: Start, Lernen, Rechner, Spiel, Fortschritt, Optionen).
+    /// ZIFFER_n = Ziffer als Text, MEHR = drei Punkte (beide gezeichnet, nicht aus der Symbolschrift).
+    /// </summary>
     public static readonly IReadOnlyList<NavEintrag> Handy =
     [
         new("dashboard", "DASHBOARD_OUTLINED", "Start", [], SymbolAktiv: "DASHBOARD_ROUNDED"),
-        new("learn", "SCHOOL_OUTLINED", "Lernen", [], SymbolAktiv: "SCHOOL_ROUNDED"),
-        new("calc", "CALCULATE_OUTLINED", "Rechner", [], SymbolAktiv: "CALCULATE_ROUNDED"),
+        new(Pruefungsteile.Teil1, "ZIFFER_1", Pruefungsteile.Teil1Kurz, [], SymbolAktiv: "ZIFFER_1"),
+        new(Pruefungsteile.Teil2, "ZIFFER_2", Pruefungsteile.Teil2Kurz, [], SymbolAktiv: "ZIFFER_2"),
+        new(LernenId, "EDIT_NOTE_ROUNDED", "Lernen", [], SymbolAktiv: "EDIT_NOTE_ROUNDED"),
         new("game", "SPORTS_ESPORTS_OUTLINED", "Spiel", [], SymbolAktiv: "SPORTS_ESPORTS_ROUNDED"),
-        new("progress", "INSIGHTS_OUTLINED", "Fortschritt", [], SymbolAktiv: "INSIGHTS_ROUNDED"),
-        new("settings", "SETTINGS_OUTLINED", "Optionen", [], SymbolAktiv: "SETTINGS_ROUNDED"),
+        new(Pruefungsteile.Mehr, "MEHR", Pruefungsteile.MehrTitel, [], SymbolAktiv: "MEHR"),
     ];
 
-    /// <summary>Sammelseite "Lernen" am Handy (LearnScreen.ENTRIES); Untertitel ueber <see cref="LernenUntertitel"/>.</summary>
+    /// <summary>
+    /// Sammelseite "Lernen" am Handy; Untertitel ueber <see cref="LernenUntertitel"/>. Welle A 1.15.0 (Sollwert-Aenderung Nr. 26):
+    /// nur noch Karteikarten, Notizblock und Rechner wie die Gruppe LERNEN der Seitenleiste; Pruefungstrainer, Szenarien und
+    /// Projekte stehen jetzt unter Teil 1 und Teil 2.
+    /// </summary>
     public static readonly IReadOnlyList<LernenEintrag> Lernen =
     [
         new("cards", "STYLE_ROUNDED", "Karteikarten", "%s Karten in %s Fachbereichen", ["accent"]),
-        new("quiz", "TRACK_CHANGES_ROUNDED", "Prüfungstrainer", "%s Aufgaben, mit %s", ["primary"]),
-        new("ap1scenarios", "LAYERS_ROUNDED", "AP1-Szenarien", "%d Aufgaben der Grundlagenprüfung", ["#2563EB", "#22D3EE"]),
-        new("scenarios", "DIAMOND_ROUNDED", "AP2-Szenarien", "%d Aufgaben der Abschlussprüfung", ["#DB2777", "#FB923C"]),
-        new("testproject", "FLAG_ROUNDED", "Testprojekt", "%d Kundenaufträge zum Üben", ["success"]),
-        new("abschluss", "WORKSPACE_PREMIUM_ROUNDED", "Abschlussprojekt", "Dein IHK-Projekt vom Antrag bis zum Fachgespräch",
-            ["#7C3AED", "#22D3EE"]),
         new("notebook", "EDIT_NOTE_ROUNDED", "Notizblock", "Was du noch üben musst, aus allen Bereichen", ["#DC2626", "#FBBF24"]),
+        new("calc", "CALCULATE_ROUNDED", "Rechner", "Subnetting, Datenmengen, RAID und mehr, mit Trainer", ["#2563EB", "#22D3EE"]),
     ];
 
     public static readonly Kopftitel LernenKopf = new("learn", "LERNEN", "ÜBERSICHT");
@@ -130,18 +133,8 @@ public static class Navigation
     public const string BeendenSatz = "Schließt das Programm ganz. Dein Lernstand ist gespeichert. Das X oben rechts neben der Lupe beendet das Programm ebenfalls.";
     public const string BeendenWarten = "Programm wird beendet …";
 
-    // Welle A 0.38.0 (Sammelliste 207, Nico 04.11.2026, Antworten 1a bis 5a): Seitenleiste gegliedert wie die
-    // untere Leiste am Handy (Titel aus Handy, "Start" = Dashboard), Gruppen zugeklappt, nur eine offen
-    // (Regeln in Seitenleiste.cs); ersetzt die Gruppen LERNEN/SPIEL/WERKZEUGE von Phase 8 W2b.
-    /// <summary>Kennung der Gruppe "Lernen" (Sammelseite am Handy).</summary>
+    /// <summary>Kennung der Sammelseite "Lernen" am Handy.</summary>
     public const string LernenId = "learn";
-
-    /// <summary>Eintraege der Seitenleiste (Kennungen der unteren Leiste am Handy).</summary>
-    public static readonly IReadOnlyList<string> PcLeiste = ["dashboard", "learn", "calc", "game", "progress", "settings"];
-    /// <summary>Unterpunkte von "Lernen" in der Seitenleiste (Reihenfolge wie die Sammelseite Lernen am Handy).</summary>
-    public static readonly IReadOnlyList<string> PcLernen = ["cards", "quiz", "ap1scenarios", "scenarios", "testproject", "abschluss", "notebook"];
-    /// <summary>Unten angeheftet (ausserhalb des Rollbereichs), darunter "Programm beenden", Lernstatus und Version.</summary>
-    public static readonly IReadOnlyList<string> PcLeisteUnten = ["help"];
 
     /// <summary>Brotkrumen am PC (VIEW_TITLES, Reihenfolge wie dort).</summary>
     public static readonly IReadOnlyList<Kopftitel> KopfPc =

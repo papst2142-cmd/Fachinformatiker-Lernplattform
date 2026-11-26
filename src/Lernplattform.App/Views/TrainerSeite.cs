@@ -199,6 +199,20 @@ public sealed class TrainerSeite : UserControl
         });
     }
 
+    /// <summary>
+    /// Welle A 1.15.0 (Reiter „Prüfen“ der Pruefungsteile): Art „Prüfung“ zeigen und dort starten (Probeklausur oder Satz im
+    /// echten Format, mit der bisherigen Rueckfrage); eine laufende Uebung endet wie beim Klick auf „Prüfung“.
+    /// </summary>
+    internal void Pruefen(Func<KlausurTeil, Task> starten) => Mit(u =>
+    {
+        if (_art.Wert != TrainerTexte.Pruefung)
+        {
+            _art.Waehle(TrainerTexte.Pruefung);
+            ArtZeigen(TrainerTexte.Pruefung);
+        }
+        _ = starten(_klausur!);
+    });
+
     /// <summary>Laeuft gerade eine Runde (fuer "Jetzt üben": nur dann gibt es einen zweiten Teil)?</summary>
     public bool Laeuft => _u?.Laeuft ?? false;
 
