@@ -56,13 +56,13 @@ public class EchtTausenderpunktTests
         return [ohneKomma.Replace('.', ','), ohneKomma + "0", ohneKomma[..^1]];
     }
 
-    /// <summary>Rechenwerte ab 1000 (Ergebnis und Ersatzergebnis) in den zehn AE-Saetzen (A 0.84.0).</summary>
+    /// <summary>Rechenwerte ab 1000 (Ergebnis und Ersatzergebnis) in den zehn FIAE-Saetzen (A 0.84.0).</summary>
     private const int AeRechenwerte = 15;
 
-    /// <summary>Rechenwerte ab 1000 (Ergebnis und Ersatzergebnis) in den zehn DPA-Saetzen (A 0.85.0).</summary>
+    /// <summary>Rechenwerte ab 1000 (Ergebnis und Ersatzergebnis) in den zehn FIDP-Saetzen (A 0.85.0).</summary>
     private const int DpaRechenwerte = 24;
 
-    /// <summary>Rechenwerte ab 1000 (Ergebnis und Ersatzergebnis) in den zehn DV-Saetzen (A 0.86.0).</summary>
+    /// <summary>Rechenwerte ab 1000 (Ergebnis und Ersatzergebnis) in den zehn FIDV-Saetzen (A 0.86.0).</summary>
     private const int DvRechenwerte = 6;
 
     [Fact]
@@ -70,7 +70,7 @@ public class EchtTausenderpunktTests
     {
         var werte = Rechenwerte();
         // Kurzplan P12-163: 24 Loesungswerte ab 1000 in den Saetzen bis A 0.83.0, davon 18 ganze Zahlen; seit A 0.84.0
-        // kommen die Werte der AE-Saetze dazu, seit A 0.85.0 die der DPA-Saetze (P12-291), seit A 0.86.0 die der DV-Saetze (P12-292); alle werden genauso geprueft
+        // kommen die Werte der FIAE-Saetze dazu, seit A 0.85.0 die der FIDP-Saetze (P12-291), seit A 0.86.0 die der FIDV-Saetze (P12-292); alle werden genauso geprueft
         var bisher = werte.Where(w => !w.Wo.StartsWith("ae_", StringComparison.Ordinal) && !w.Wo.StartsWith("dpa_", StringComparison.Ordinal)
             && !w.Wo.StartsWith("dv_", StringComparison.Ordinal)).ToList();
         Assert.Equal(24, bisher.Count);

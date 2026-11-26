@@ -62,7 +62,7 @@ public static class PaketTexte
 
     /// <summary>Welle A 0.89.0 (Weisung P12-297 W3-2): die Stadt traegt die Kennung eines anderen Pakets.</summary>
     public const string StadtAnderesPaket = "Die Stadt im Paket gehört zum Paket „{0}“.";
-    // Welle A 0.91.0 (Weisung P12-300, Nico 2c): Fachrichtungs-Pakete (Art „lernen“), Name „Fachrichtungs-Paket AE“
+    // Welle A 0.91.0 (Weisung P12-300, Nico 2c): Fachrichtungs-Pakete (Art „lernen“), Name „Fachrichtungs-Paket FIAE“ (seit A 1.14.0 sichtbar FIAE, der Kopf im Paket bleibt bis zum naechsten Paketstand)
     public const string FrName = "Fachrichtungs-Paket {0}";
     public const string FrText = "Lerninhalte der Fachrichtung {0}: Karteikarten, Quiz, AP2-Szenarien, Testprojekte, Fachgespräch und Prüfungssätze.";
     public const string ZustandEingebaut = "In der App enthalten";
@@ -96,8 +96,8 @@ public static class PaketTexte
     /// <summary>Hinweis nach einem Abgleich: der Lernstand kennt Inhalte, die auf diesem Geraet fehlen.</summary>
     public const string FrNachAbgleich = "Auf diesem Gerät fehlen neuere Inhalte für {0}. Bitte das Fachrichtungs-Paket {0} laden (Optionen › Inhaltspakete). Nichts geht verloren.";
 
-    /// <summary>Anzeige der Fachrichtung im Text (AE, DPA, DV).</summary>
-    public static string Fr(string fachrichtung) => fachrichtung.ToUpperInvariant();
+    /// <summary>Anzeige der Fachrichtung im Text (FIAE, FIDP, FIDV; seit A 1.14.0 wie bei der IHK, Weisung P12-400).</summary>
+    public static string Fr(string fachrichtung) => FachrichtungTexte.KuerzelFuer(fachrichtung);
 
     public const string Speichern = "Das Paket konnte nicht gespeichert werden: {0}";
     public const string Netz = "Laden fehlgeschlagen: {0}";

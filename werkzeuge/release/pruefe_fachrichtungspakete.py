@@ -2,7 +2,7 @@
 """Welle A 1.5.0 (Weisung P12-358, Sammelliste 386, Nico Zusatz a): vor jedem Release der Lernplattform muessen die drei
 Fachrichtungs-Pakete lernen_ae, lernen_dpa, lernen_dv als normale Releases (kein Entwurf, kein Vorab) veroeffentlicht sein,
 und ihre Datei muss Byte fuer Byte die echte Testdatei dieses Commits sein (digest von GitHub = SHA-256 der Datei in
-tests/Lernplattform.Tests/Testdaten/pakete_echt/). Seit A 1.5.0 bringt die App AE, DPA und DV nicht mehr selbst mit: ohne
+tests/Lernplattform.Tests/Testdaten/pakete_echt/). Seit A 1.5.0 bringt die App FIAE, FIDP und FIDV nicht mehr selbst mit: ohne
 diese Pruefung gaebe es eine Zeit mit leerer Fachrichtung. Nichts hier laedt hoch oder aendert etwas (python3.12 -I).
 
   pruefe_fachrichtungspakete.py pruefen

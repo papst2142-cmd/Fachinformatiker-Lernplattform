@@ -97,7 +97,7 @@ public sealed record EchtSatz(string Kennung, string Fachrichtung, string Bereic
     public EchtAnlage? Anlage(string nr) => Anlagen.FirstOrDefault(a => a.Nr == nr);
 
     /// <summary>
-    /// A 0.94.0 (Weisung P12-304, Strukturblatt Abschnitt 7): Aufbau "paar" = Satz eines AE-Satzpaars (Bereich 1 und 2
+    /// A 0.94.0 (Weisung P12-304, Strukturblatt Abschnitt 7): Aufbau "paar" = Satz eines FIAE-Satzpaars (Bereich 1 und 2
     /// derselben Firma, Kennungen mit gleicher Nummer); null = bisheriger Aufbau.
     /// </summary>
     public string? Aufbau { get; init; }
@@ -157,13 +157,13 @@ public static class EchtSaetze
     public const string Datei = "pruefungssaetze.json";
     /// <summary>
     /// Hoechstes bekanntes Format: 1 = Welle 1 (A 0.76.0), 2 = gezeichnete Anlagen und Zeichenaufgaben (A 0.77.0),
-    /// 3 = AE-Satzpaare mit Feld "aufbau" und Feld "gebiet" je Teil (A 0.94.0, Weisung P12-304), 4 = Klassen- und
+    /// 3 = FIAE-Satzpaare mit Feld "aufbau" und Feld "gebiet" je Teil (A 0.94.0, Weisung P12-304), 4 = Klassen- und
     /// Use-Case-Diagramm im Baukasten und neue Fassung eines Satzes mit Feld "fassung" (A 1.8.0, Weisungen P12-371/372),
     /// 5 = Struktogramm im Baukasten (Diagramm "struktogramm" mit Baum "bloecke", A 1.12.0, Weisung P12-390).
     /// </summary>
     public const int Format = 5;
 
-    /// <summary>Aufbau eines Satzes im AE-Satzpaar (Strukturblatt Abschnitt 7).</summary>
+    /// <summary>Aufbau eines Satzes im FIAE-Satzpaar (Strukturblatt Abschnitt 7).</summary>
     public const string AufbauPaar = "paar";
 
     /// <summary>Gebiete eines Teils im Satzpaar (Gewicht: Diagramme etwa ein Viertel, Pseudocode und SQL etwa ein Drittel).</summary>
@@ -426,7 +426,7 @@ public static class EchtSaetze
             }
             if (aufbau != AufbauPaar || fachrichtung != "ae" || bereich == Ap1)
             {
-                throw new EchtLadefehler("\"aufbau\" kennt nur \"paar\" und gilt nur für AE Bereich 1 und 2");
+                throw new EchtLadefehler("\"aufbau\" kennt nur \"paar\" und gilt nur für FIAE Bereich 1 und 2");
             }
         }
         var paar = aufbau == AufbauPaar;

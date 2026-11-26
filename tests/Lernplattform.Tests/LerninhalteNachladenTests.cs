@@ -152,7 +152,7 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
     [InlineData("dv")]
     public void KlausurVonVorEinemWechsel_FindetIhreSzenarien(string fr)
     {
-        // eine Pruefung mit Quelle ap2_<fr> wird gelesen, waehrend SI gewaehlt ist (nicht geladen)
+        // eine Pruefung mit Quelle ap2_<fr> wird gelesen, waehrend FISI gewaehlt ist (nicht geladen)
         var si = Start(Lernen, "si").Fuer("si");
         var soll = Voll(Lernen).Ap2SzenarienFuer(fr);
         var klausur = new KlausurInhalte(si, Core.Daten.Umbenennungen.Laden(Pfade.Inhalte));
@@ -165,7 +165,7 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
     public void Lastprobe_DreitausendJeFachrichtung_ZeitenImProtokoll()
     {
         // Endstand Phase 10 je Fachrichtung: eigene 1 500 Karten, 2 120 Fragen, 50 Testprojekte, 18 Fragen fuers
-        // Fachgespraech (Plan Abschnitt 3); was eine Fachrichtung schon hat, zaehlt mit (W2: AE ist schon fertig).
+        // Fachgespraech (Plan Abschnitt 3); was eine Fachrichtung schon hat, zaehlt mit (W2: FIAE ist schon fertig).
         // Probe-Inhalte nur in dieser Temp-Kopie, nie im Programm
         var ordner = Directory.CreateTempSubdirectory("lastprobe_").FullName;
         try

@@ -22,12 +22,12 @@ namespace Lernplattform.Tests;
 /// </summary>
 public sealed class FachrichtungsPaketTests : IDisposable
 {
-    /// <summary>A 1.12.0 (Weisung P12-390): Version der App in den Tests (vorher A 1.8.0; das AE-Paket Stand 3 braucht A 1.12.0).</summary>
+    /// <summary>A 1.12.0 (Weisung P12-390): Version der App in den Tests (vorher A 1.8.0; das FIAE-Paket Stand 3 braucht A 1.12.0).</summary>
     private const string App = "A 1.12.0";
 
     /// <summary>
-    /// A 1.8.0: Stand und braucht_app des echten Pakets je Fachrichtung, gleich paket_bauen.LERNEN_TESTDATEIEN (AE Stand 2 mit
-    /// den neuen Fassungen der Pruefungssaetze, DPA und DV Stand 1); seit A 1.12.0 AE Stand 3 (Struktogramm, Format 5).
+    /// A 1.8.0: Stand und braucht_app des echten Pakets je Fachrichtung, gleich paket_bauen.LERNEN_TESTDATEIEN (FIAE Stand 2 mit
+    /// den neuen Fassungen der Pruefungssaetze, FIDP und FIDV Stand 1); seit A 1.12.0 FIAE Stand 3 (Struktogramm, Format 5).
     /// Die Dateien lernen_ae_1 und lernen_ae_2 bleiben als echte Testdateien liegen.
     /// </summary>
     private static (long Stand, string Braucht) Echtes(string fr) => fr == "ae" ? (3, "A 1.12.0") : (1, "A 1.5.0");
@@ -193,7 +193,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
             Assert.True(nachbau.Lernen.Listen[name].Zip(e.Lernen.Listen[name]).All(p => JsonElement.DeepEquals(p.First.Eintrag, p.Second.Eintrag)), name);
         }
         Assert.Equal(nachbau.Lernen!.Saetze.Select(s => s.Stelle), e.Lernen!.Saetze.Select(s => s.Stelle));
-        // A 0.94.0 (P12-304): 10 alte und 10 neue AE-Saetze; die 10 alten stehen mit Stelle und Kennung im Ausschluss;
+        // A 0.94.0 (P12-304): 10 alte und 10 neue FIAE-Saetze; die 10 alten stehen mit Stelle und Kennung im Ausschluss;
         // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen (gleiche Kennung, hinten angehaengt); A 1.12.0 (P12-390): dazu 1 (P12-393)
         Assert.Equal(26, e.Lernen.Saetze.Count); // A 1.12.0: 25 + 1 Struktogramm-Fassung (ae_b2_08, P12-393)
         Assert.Equal(EchtInhalteAeTests.Ae, e.Lernen.Ausschluss.Where(a => a.Datei == "pruefungssaetze").Select(a => a.Frage).Order(StringComparer.Ordinal));
@@ -229,8 +229,8 @@ public sealed class FachrichtungsPaketTests : IDisposable
     [Fact]
     public void A3_NurAngehaengt_Gegenproben_RotMitGrund()
     {
-        // Stelle verschoben auf den Platz eines Eintrags einer anderen Fachrichtung (der zweite AE-Block der Quizfragen beginnt
-        // hinter dem DPA-Block; der erste Eintrag des Blocks rueckt auf eine DPA-Stelle): rot
+        // Stelle verschoben auf den Platz eines Eintrags einer anderen Fachrichtung (der zweite FIAE-Block der Quizfragen beginnt
+        // hinter dem FIDP-Block; der erste Eintrag des Blocks rueckt auf eine FIDP-Stelle): rot
         var zweiterBlock = Enumerable.Range(0, 2000).First(i => Stelle("quizfragen", "ae", i + 1) != Stelle("quizfragen", "ae", i) + 1) + 1;
         var dpaStelle = Stelle("quizfragen", "dpa", 30);
         Assert.InRange(dpaStelle, Stelle("quizfragen", "ae", zweiterBlock - 1) + 1, Stelle("quizfragen", "ae", zweiterBlock) - 1);
@@ -265,7 +265,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
     [Fact]
     public void A3_AppNeuerAlsPaket_EintragFehlt_PaketNeuerAlsApp_Gut()
     {
-        // die App hat hinten einen weiteren AE-Eintrag (neuere App): das alte Paket ist rot „aelter als die App“
+        // die App hat hinten einen weiteren FIAE-Eintrag (neuere App): das alte Paket ist rot „aelter als die App“
         var mehr = Angehaengt("karteikarten", "ae");
         var appNeu = new LernenOrdner(mehr);
         var grund = Pruefen(Schnitt("ae"), appNeu).Grund;
@@ -277,7 +277,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         var ohne = Laden(RepoOrdner.Value, ["si", "ae"]);
         Assert.Equal(ohne.Fuer("ae").Karteikarten.Count + 1, mit.Fuer("ae").Karteikarten.Count);
         Assert.Equal(Abdruck(ohne, "si"), Abdruck(mit, "si"));
-        // ein neuer Eintrag an einer Stelle, die die App fuer SI benutzt, waere eine Verschiebung: rot
+        // ein neuer Eintrag an einer Stelle, die die App fuer FISI benutzt, waere eine Verschiebung: rot
         var siHinten = Angehaengt("karteikarten", "si");
         Assert.StartsWith("Das Paket verschiebt Inhalte", Pruefen(Schnitt("ae", 2, mehr), new LernenOrdner(siHinten)).Grund, StringComparison.Ordinal);
     }
@@ -351,9 +351,9 @@ public sealed class FachrichtungsPaketTests : IDisposable
     [Fact]
     public void A4_RueckfrageText_WieInDerWeisung()
     {
-        Assert.Equal("Für AE fehlt das Fachrichtungs-Paket (1,2 MB). Jetzt laden?",
+        Assert.Equal("Für FIAE fehlt das Fachrichtungs-Paket (1,2 MB). Jetzt laden?",
             PaketTexte.Format(PaketTexte.FrFehltFrage, PaketTexte.Fr("ae"), PaketTexte.Mb(1_258_291)));
-        Assert.Equal("Fachrichtungs-Paket DPA", PaketTexte.Format(PaketTexte.FrName, PaketTexte.Fr("dpa")));
+        Assert.Equal("Fachrichtungs-Paket FIDP", PaketTexte.Format(PaketTexte.FrName, PaketTexte.Fr("dpa")));
     }
 
     // ---- Lernstand bleibt bytegleich, ruhen und zurueckkommen --------------------------------------------------------------
@@ -375,10 +375,10 @@ public sealed class FachrichtungsPaketTests : IDisposable
         Directory.CreateDirectory(quelle);
         File.Copy(EchtDatei("ae"), Path.Combine(quelle, Path.GetFileName(EchtDatei("ae"))));
         File.WriteAllBytes(Path.Combine(quelle, "lernen_dpa_1.fipaket"), [1, 2, 3]);   // Fehler: kein Archiv
-        // die App ohne eingebaute AE-Inhalte
+        // die App ohne eingebaute FIAE-Inhalte
         var ohneOrdner = new LernenOrdner(MitPlatzhaltern("ae"));
         var v = new PaketVerwaltung(new PaketAblage(Path.Combine(_tmp, "daten"), ohneOrdner), () => new OrdnerQuelle(quelle), App);
-        // ruhen: ohne Paket fehlt das Szenario in der Sicht, der Hinweis nennt AE, der Lernstand bleibt
+        // ruhen: ohne Paket fehlt das Szenario in der Sicht, der Hinweis nennt FIAE, der Lernstand bleibt
         {
             var lernstand = new Lernstand(pfad);
             var ohne = Lerninhalte.MitLernen(bisher, ohneOrdner, ["si", "ae"]);
@@ -422,7 +422,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         Directory.CreateDirectory(quelle);
         var v = new PaketVerwaltung(new PaketAblage(Path.Combine(_tmp, "daten5"), RepoOrdner.Value), () => new OrdnerQuelle(quelle), App);
         var zeilen = v.Zeilen();
-        Assert.Equal(["Fachrichtungs-Paket AE", "Fachrichtungs-Paket DPA", "Fachrichtungs-Paket DV"], zeilen.Select(z => z.Name));
+        Assert.Equal(["Fachrichtungs-Paket FIAE", "Fachrichtungs-Paket FIDP", "Fachrichtungs-Paket FIDV"], zeilen.Select(z => z.Name));
         Assert.All(zeilen, z => Assert.Equal((PaketZustand.Geladen, PaketTexte.ZustandEingebaut, 0), (z.Zustand, z.ZustandText, z.Knoepfe.Count)));
         Assert.All(zeilen, z => Assert.False(z.ImFahrplan));
         Assert.Empty(v.NeueFachrichtungsStaende());
@@ -450,12 +450,12 @@ public sealed class FachrichtungsPaketTests : IDisposable
     [Fact]
     public void A5_EntfernenGesperrt_SolangeEinSatzOffen_SatzFehltText()
     {
-        Assert.Equal("Du schreibst gerade einen AE-Prüfungssatz. Erst beenden oder abbrechen.", FachrichtungsPaket.EntfernenSperre("lernen_ae", "ae_b1_02"));
+        Assert.Equal("Du schreibst gerade einen FIAE-Prüfungssatz. Erst beenden oder abbrechen.", FachrichtungsPaket.EntfernenSperre("lernen_ae", "ae_b1_02"));
         Assert.Null(FachrichtungsPaket.EntfernenSperre("lernen_ae", "dpa_b1_02"));
         Assert.Null(FachrichtungsPaket.EntfernenSperre("lernen_ae", null));
         Assert.Null(FachrichtungsPaket.EntfernenSperre("lernen_ae", "alle_ap1_01"));
         Assert.Null(FachrichtungsPaket.EntfernenSperre("probe_klein", "ae_b1_02"));
-        Assert.Equal(PaketTexte.Format(PaketTexte.FrSatzFehlt, "DV"), FachrichtungsPaket.SatzFehltText("dv_b2_05"));
+        Assert.Equal(PaketTexte.Format(PaketTexte.FrSatzFehlt, "FIDV"), FachrichtungsPaket.SatzFehltText("dv_b2_05"));
         Assert.Null(FachrichtungsPaket.SatzFehltText("si_b2_05"));
         // die Sperre greift in der Verwaltung: Entfernen tut nichts
         var v = new PaketVerwaltung(new PaketAblage(Path.Combine(_tmp, "daten8"), RepoOrdner.Value), () => new OrdnerQuelle(_tmp), App)
@@ -480,7 +480,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
             () => DateTimeOffset.UnixEpoch, TimeZoneInfo.Utc);
         var schritt = ablauf.Zeigen();
         Assert.Equal(EchtAnsicht.Auswahl, schritt.Ansicht);
-        Assert.Equal(PaketTexte.Format(PaketTexte.FrSatzFehlt, "AE"), schritt.Hinweis);
+        Assert.Equal(PaketTexte.Format(PaketTexte.FrSatzFehlt, "FIAE"), schritt.Hinweis);
         Assert.Equal(vorher, gespeichert.ToJsonString());
     }
 
@@ -495,7 +495,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         Assert.Equal(fr, e.Lernen!.Fachrichtung);
         Assert.Equal(Echtes(fr).Stand, e.Kopf!.Stand);
         // Gegenprobe (A 1.5.0, Nico 3a): eine aeltere App (A 1.4.1, auch A 0.91.0) nimmt es nicht: „braucht A 1.5.0“;
-        // A 1.8.0: das AE-Paket Stand 2 braucht A 1.8.0 (Saetze Format 4), auch A 1.7.0 nimmt es nicht;
+        // A 1.8.0: das FIAE-Paket Stand 2 braucht A 1.8.0 (Saetze Format 4), auch A 1.7.0 nimmt es nicht;
         // A 1.12.0: Stand 3 braucht A 1.12.0 (Saetze Format 5), auch A 1.11.0 und A 1.8.0 nehmen es nicht
         foreach (var alt in new[] { "A 1.4.1", "A 0.91.0", "A 0.90.0" }.Concat(fr == "ae" ? ["A 1.11.0", "A 1.8.0", "A 1.7.0", "A 1.5.0"] : []))
         {
@@ -597,7 +597,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         }
     }
 
-    // ---- (6) A 1.5.0 (Weisung P12-358, Kurzplan P12-225): AE, DPA und DV nur noch im Paket ---------------------------------
+    // ---- (6) A 1.5.0 (Weisung P12-358, Kurzplan P12-225): FIAE, FIDP und FIDV nur noch im Paket ---------------------------------
 
     private static readonly string[] Geschnitten = ["ae", "dpa", "dv"];
 
@@ -613,9 +613,9 @@ public sealed class FachrichtungsPaketTests : IDisposable
         Paket.PruefenArchiv(File.OpenRead(EchtDatei(fr)), App, app);
 
     /// <summary>
-    /// Abnahmesatz 1: der Bau der App schneidet genau AE, DPA und DV heraus. Liest die Einstellung aus LernenTeile.targets und
+    /// Abnahmesatz 1: der Bau der App schneidet genau FIAE, FIDP und FIDV heraus. Liest die Einstellung aus LernenTeile.targets und
     /// die Liste der nicht eingebetteten Quellen aus Lernplattform.App.csproj; in den eingebetteten Dateien steht fuer jeden
-    /// Eintrag von AE/DPA/DV nur ein Platzhalter an seiner Stelle, alles andere gleich dem Repo, die Teile kennen nur SI.
+    /// Eintrag von FIAE/FIDP/FIDV nur ein Platzhalter an seiner Stelle, alles andere gleich dem Repo, die Teile kennen nur FISI.
     /// Gegenprobe: ohne Schnitt (alter Bau) stehen die Inhalte drin.
     /// </summary>
     [Fact]
@@ -651,7 +651,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
             }
         }
         // Kurzplan P12-225: 4 500 Karteikarten, 6 361 Quizfragen, 990 AP2-Szenarien, 150 Testprojekte, 54 Fachfragen, 40 Saetze;
-        // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen der AE-Saetze; A 1.12.0 (P12-390, P12-393): dazu die 1 Struktogramm-Fassung (ae_b2_08)
+        // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen der FIAE-Saetze; A 1.12.0 (P12-390, P12-393): dazu die 1 Struktogramm-Fassung (ae_b2_08)
         Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40 + 5 + 1, platzhalter);
         Assert.DoesNotContain(bau.Keys, k => Geschnitten.Any(fr => k.Contains("." + fr + ".", StringComparison.Ordinal)));
         var ordner = AppOrdner();
@@ -664,7 +664,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
     }
 
     /// <summary>
-    /// Abnahmesaetze 1 und 2: die App ohne AE/DPA/DV zeigt SI genau wie heute (SI laedt nichts); App + echtes Paket = Repo
+    /// Abnahmesaetze 1 und 2: die App ohne FIAE/FIDP/FIDV zeigt FISI genau wie heute (FISI laedt nichts); App + echtes Paket = Repo
     /// (gleiche Nummern, Sicht, Fachgespraech, Saetze), auch beim Start nur mit der gewaehlten Fachrichtung und beim Nachladen.
     /// </summary>
     [Theory]
@@ -701,10 +701,10 @@ public sealed class FachrichtungsPaketTests : IDisposable
     }
 
     /// <summary>
-    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden AE“ zu langsam): mit Paketen und Platzhaltern nimmt das Laden die Eintraege der
+    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden FIAE“ zu langsam): mit Paketen und Platzhaltern nimmt das Laden die Eintraege der
     /// App aus den Teilen der geladenen Fachrichtungen (GemischtTeile) statt die ganze Datei zu zerlegen. Je Liste und je Auswahl
     /// der Fachrichtungen stehen dort genau die Eintraege von Eintraege mit dieser Fachrichtung, an denselben Stellen, Byte fuer
-    /// Byte; ohne, mit einem und mit allen drei Paketen. Gegenprobe: ohne Paket fehlen die AE-Eintraege, mit Paket nicht.
+    /// Byte; ohne, mit einem und mit allen drei Paketen. Gegenprobe: ohne Paket fehlen die FIAE-Eintraege, mit Paket nicht.
     /// </summary>
     [Fact]
     public void A6_GemischtTeile_GleichEintraege()
@@ -731,14 +731,14 @@ public sealed class FachrichtungsPaketTests : IDisposable
             }
         }
         Assert.True(geprueft > 10_000, geprueft.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        // Gegenprobe: ohne Paket keine AE-Karte, mit Paket alle aus dem Paket
+        // Gegenprobe: ohne Paket keine FIAE-Karte, mit Paket alle aus dem Paket
         HashSet<string> nurAe = ["ae"];
         Assert.Empty(Mit(app.GemischtTeile("karteikarten", ["ae"]), nurAe));
         Assert.Equal(ae.Listen["karteikarten"].Count, Mit(ordner[1].GemischtTeile("karteikarten", ["ae"]), nurAe).Count);
     }
 
     /// <summary>
-    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden AE“ 416 ms): ein Fachrichtungs-Paket, das mit genau diesem Programmstand
+    /// Welle A 1.5.0 (Lauf 1193, „Inhalte laden FIAE“ 416 ms): ein Fachrichtungs-Paket, das mit genau diesem Programmstand
     /// (Kennung der Ablage) schon ganz gut war, wird beim naechsten Lesen nicht noch einmal ganz geprueft (Ladepruefung der Saetze,
     /// „nur angehaengt“); das Ergebnis ist dasselbe wie ohne Merker. Belege: der Merker steht nach dem Einsetzen da; unter
     /// derselben Kennung bleibt sogar eine (so nie vorkommende) fremde App gut, unter einer anderen Kennung ist sie rot wie ohne
@@ -748,7 +748,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
     public async Task A6_GanzGeprueft_Gemerkt_GleichesErgebnis_NurMitGleicherApp()
     {
         var app = AppOrdner();
-        // fremde App: an der ersten AE-Stelle der Karteikarten steht ein SI-Platzhalter statt des AE-Platzhalters
+        // fremde App: an der ersten FIAE-Stelle der Karteikarten steht ein FISI-Platzhalter statt des FIAE-Platzhalters
         var text = Encoding.UTF8.GetString(AppBau.Value[LernenTeiler.Ganz + "karteikarten.json"]);
         var stelle = text.IndexOf(LernenTeiler.Platzhalter("ae"), StringComparison.Ordinal);
         Assert.True(stelle > 0);
@@ -811,8 +811,8 @@ public sealed class FachrichtungsPaketTests : IDisposable
     }
 
     /// <summary>
-    /// Abnahmesatz 3: ein neuer Stand 2 (ein AE-Eintrag hinten angehaengt) laeuft mit der App A 1.5.0 ohne App-Update; davor
-    /// liegt eine Luecke (ein SI-Eintrag, den diese App nicht kennt): er ruht, nichts verschiebt sich; DPA/DV unveraendert.
+    /// Abnahmesatz 3: ein neuer Stand 2 (ein FIAE-Eintrag hinten angehaengt) laeuft mit der App A 1.5.0 ohne App-Update; davor
+    /// liegt eine Luecke (ein FISI-Eintrag, den diese App nicht kennt): er ruht, nichts verschiebt sich; FIDP/FIDV unveraendert.
     /// </summary>
     [Fact]
     public void A6_Stand2_OhneAppUpdate_MitLuecke_NichtsVerschiebt()
@@ -848,7 +848,7 @@ public sealed class FachrichtungsPaketTests : IDisposable
         {
             Assert.Equal(Abdruck(mit1, sicht), Abdruck(mit2, sicht));
         }
-        // Gegenprobe: dasselbe Paket mit dem neuen Eintrag an der Stelle der Luecke (die eine neuere App fuer SI haette) ist rot
+        // Gegenprobe: dasselbe Paket mit dem neuen Eintrag an der Stelle der Luecke (die eine neuere App fuer FISI haette) ist rot
         var appMitSi = new LernenOrdner(n => n == name ? Encoding.UTF8.GetBytes(JsonNode.Parse(stand2Repo(name)!)!.AsArray().Take(laenge + 1)
             .Select(e => e!.DeepClone()).Aggregate(new JsonArray(), (l, e) => { l.Add(e); return l; }).ToJsonString()) : Repo(n));
         Assert.StartsWith("Das Paket verschiebt Inhalte", Pruefen(Schnitt("ae", 3, n => n == name

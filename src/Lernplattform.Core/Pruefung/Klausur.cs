@@ -10,7 +10,7 @@ using Lernplattform.Core.Zufall;
 
 namespace Lernplattform.Core.Pruefung;
 
-/// <summary>Ein Pruefungsbereich der Klausursimulation (fisi_pruefung EXAMS, nur SI).</summary>
+/// <summary>Ein Pruefungsbereich der Klausursimulation (fisi_pruefung EXAMS, nur FISI).</summary>
 public sealed record KlausurArt(string Art, string Kurz, int Minuten, string Quelle, string Name,
     IReadOnlyList<IReadOnlyList<string>>? Themen, IReadOnlyList<string>? Pool, IReadOnlyList<string>? QuizThemen);
 
@@ -57,8 +57,8 @@ public sealed class KlausurInhalte
         : Inhalte.Alle.Ap2SzenarienFuer(Klausur.QuelleFachrichtung(quelle) ?? Fachrichtungen.Systemintegration);
 
     /// <summary>
-    /// EXAM[art] mit den Themen der Pruefungsbereiche b1/b2 von AE, DPA und DV aus
-    /// rahmenplan_zusatz.json (je Thema eine Aufgabe); SI wie <see cref="Klausur.Art"/>.
+    /// EXAM[art] mit den Themen der Pruefungsbereiche b1/b2 von FIAE, FIDP und FIDV aus
+    /// rahmenplan_zusatz.json (je Thema eine Aufgabe); FISI wie <see cref="Klausur.Art"/>.
     /// </summary>
     public KlausurArt? Art(string? art)
     {
@@ -182,7 +182,7 @@ public static class Klausur
     ];
 
     /// <summary>
-    /// Phase 9 W2: Bereiche b1/b2 von AE, DPA und DV (Fachrichtung.cs), Quelle "ap2_&lt;fr&gt;"; die Themen
+    /// Phase 9 W2: Bereiche b1/b2 von FIAE, FIDP und FIDV (Fachrichtung.cs), Quelle "ap2_&lt;fr&gt;"; die Themen
     /// kommen aus den Inhalten (<see cref="KlausurInhalte.Art"/>), hier ohne Themen.
     /// </summary>
     public static readonly IReadOnlyList<KlausurArt> FachrichtungsArten = Fachrichtung.Alle
@@ -191,7 +191,7 @@ public static class Klausur
             .Select(b => new KlausurArt(b.Art, b.Kurz, b.Minuten, b.Quelle, b.Name, null, null, null)))
         .ToList();
 
-    /// <summary>EXAM[art] oder null; dazu die Bereiche von AE, DPA und DV (ohne Themen).</summary>
+    /// <summary>EXAM[art] oder null; dazu die Bereiche von FIAE, FIDP und FIDV (ohne Themen).</summary>
     public static KlausurArt? Art(string? art) => Arten.FirstOrDefault(a => a.Art == art) ?? FachrichtungsArten.FirstOrDefault(a => a.Art == art);
 
     /// <summary>Fachrichtung einer Quelle "ap2_ae", "ap2_dpa" oder "ap2_dv"; sonst null.</summary>

@@ -14,7 +14,7 @@ namespace Lernplattform.Tests;
 /// Quelle bleibt allein inhalte_csharp/lernen. Geprueft: jeder Eintrag mit seiner Stelle gleich der Quelle, Index (Laenge,
 /// Pruefsumme, Platzhalter) gleich der Rechnung der App, und das Laden mit Teilen gibt Eintrag fuer Eintrag dasselbe wie ohne
 /// (Nummern, Fachrichtung, Daten, Ausschluss, Fachgespraech) fuer jede Fachrichtung und beim Nachladen. Gegenprobe: mit Teilen
-/// liest das Laden von SI die ganzen Listen nicht.
+/// liest das Laden von FISI die ganzen Listen nicht.
 /// </summary>
 public sealed class InhalteLadenSchnellTests
 {
@@ -88,7 +88,7 @@ public sealed class InhalteLadenSchnellTests
         // die Listen der App sind dieselben wie die des Teilers (und die des Pakets)
         Assert.Equal(Lerninhalte.LernenListen.Select(l => l.Name), LernenTeiler.Listen);
         Assert.Equal(FachrichtungsPaket.Listen, [.. LernenTeiler.Listen, LernenTeiler.NurIndex[0][0]]);
-        // SI ist der kleinste Teil (darum der Gewinn beim Start)
+        // FISI ist der kleinste Teil (darum der Gewinn beim Start)
         Assert.True(teile["quizfragen.si.json"].Length < Quelle("quizfragen")!.Length / 3);
     }
 

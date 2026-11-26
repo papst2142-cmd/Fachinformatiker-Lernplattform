@@ -182,7 +182,7 @@ public sealed class VerknuepfungTests : IDisposable
         Assert.Equal("[Desktop Entry]\nType=Application\nName=Fachinformatiker Lernplattform\nGenericName=Lernprogramm\n"
             + "Comment=Lernprogramm fuer die Pruefungsvorbereitung zum Fachinformatiker\n"
             + "Exec=\"/a b/x.AppImage\"\nIcon=/i.png\nTerminal=false\nCategories=Education;\n"
-            + "Keywords=Fachinformatiker;FI;FISI;IHK;Lernen;Netzwerk;Subnetting;RAID;\nStartupWMClass=Lernplattform\n"
+            + "Keywords=Fachinformatiker;FI;FISI;FIAE;FIDP;FIDV;IHK;Lernen;Netzwerk;Subnetting;RAID;\nStartupWMClass=Lernplattform\n"
             + "X-Lernplattform-Verknuepfung=true\n", Verknuepfung.Inhalt("/a b/x.AppImage", "/i.png"));
         Assert.All(Verknuepfung.Inhalt(AppImage, "/i.png"), z => Assert.True(z < 128));
     }

@@ -14,7 +14,7 @@ Zeitzone fest Europe/Berlin. Teile:
                (Zeitumstellung, Uhr zurueck, nur "start" ohne "start_utc"), time_text
   bewertung  - suggested_points, wiso_result, evaluate, weak_topics, latest_weak
   gesamt     - _abrunden, punkte_text, ihk_note, overall (mit _rules und
-               _supplement_hint) ueber das Raster der Spezifikation P4-5 (SI)
+               _supplement_hint) ueber das Raster der Spezifikation P4-5 (FISI)
   migration  - migrate_running fuer alle Eintraege von CRITERIA_BEFORE, Verlaengern,
                WiSo-Umbenennungen und Antwortmoeglichkeiten; align_marks
   abschluss  - Zeilen, die finish mit fester Uhr und festen uid in eine Wegwerf-

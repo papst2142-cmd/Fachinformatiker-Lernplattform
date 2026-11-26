@@ -67,7 +67,7 @@ public static class FortschrittTexte
     public static readonly IReadOnlyList<(string Wert, string Text)> Filter =
         [(FilterAlle, "Alle"), (FilterAp1, "AP1"), ("Konzeption", "Konzeption"), ("Netzwerke", "Netzwerke"), ("Projekt", "Projekt"), ("WiSo", "WiSo")];
 
-    /// <summary>Phase 9 W2: Filter je Fachrichtung (SI wie Python; AE, DPA, DV mit den Kurznamen ihrer Bereiche b1/b2).</summary>
+    /// <summary>Phase 9 W2: Filter je Fachrichtung (FISI wie Python; FIAE, FIDP, FIDV mit den Kurznamen ihrer Bereiche b1/b2).</summary>
     public static IReadOnlyList<(string Wert, string Text)> FilterFuer(string fachrichtung)
     {
         if (fachrichtung == Inhalte.Fachrichtungen.Systemintegration)

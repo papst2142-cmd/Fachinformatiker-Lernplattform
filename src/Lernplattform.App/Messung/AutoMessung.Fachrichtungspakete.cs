@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using Lernplattform.Core.Diagnose;
 using Lernplattform.Core.Inhalte;
 using Lernplattform.Core.Pakete;
@@ -14,7 +15,7 @@ namespace Lernplattform.Messung;
 /// <summary>
 /// Welle A 0.91.0 (Weisung P12-300 Punkte 1, 3, 5, 6; Nico 3a 4a): Fachrichtungs-Pakete im Start-Test mit der Testquelle und den
 /// echten Testdateien <c>lernen_ae_3</c> (A 1.12.0, vorher <c>lernen_ae_2</c> und <c>lernen_ae_1</c>), <c>lernen_dpa_1</c>, <c>lernen_dv_1</c>. Seit A 1.5.0 (Weisung P12-358) bringt die App
-/// AE, DPA und DV nicht mehr mit: je Fachrichtung Sperre beim offenen Pruefungssatz, Entfernen (danach fehlen die Inhalte, auf der
+/// FIAE, FIDP und FIDV nicht mehr mit: je Fachrichtung Sperre beim offenen Pruefungssatz, Entfernen (danach fehlen die Inhalte, auf der
 /// Startseite genau eine Karte mit „Laden“), der Messpunkt „Fachrichtungs-Paket einsetzen &lt;FR&gt;“ (Pruefen bis die
 /// Sicht steht, ohne Download, einmalig und streng 400 ms), danach dieselben Inhalte wie vorher (das Paket ist der Stand von
 /// A 1.4.1). Der Lernstand bleibt bytegleich.
@@ -68,7 +69,7 @@ public static partial class AutoMessung
                 await Zustand.Inhalte;
                 // was der Wechsel und das letzte Entfernen auf der Oberflaeche angestossen haben, erst ablaufen lassen
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
-                // Welle A 1.5.0 (Weisung P12-358): die App bringt AE, DPA und DV nicht mehr mit; der Start-Test hat die drei Pakete
+                // Welle A 1.5.0 (Weisung P12-358): die App bringt FIAE, FIDP und FIDV nicht mehr mit; der Start-Test hat die drei Pakete
                 // zu Beginn eingesetzt (FachrichtungsPaketeVorabAsync), vorher = Sicht mit Paket wie bei einem Nutzer nach „Laden“
                 var vorher = await Zustand.AlleInhalte is { } a ? Abdruck(a, fr) : "";
                 Pruefe(name + " Paket da (seit A 1.5.0 nur als Paket)", Zustand.Aktuell.Pakete.ContainsKey(fr) && Zustand.Eingebaut.HatPlatzhalter(fr)
@@ -131,6 +132,26 @@ public static partial class AutoMessung
                         "nach dem Laden");
                 }
             }
+            // Welle A 1.14.0 (Weisung P12-400, Sammelliste 466, Abnahmesatz K-1): Optionen › Ausbildung und › Inhaltspakete zeigen die
+            // Kuerzel wie bei der IHK (FISI, FIAE, FIDP, FIDV) und kein altes Kuerzel als eigenes Wort (Gegenprobe im Unit-Test)
+            await ansicht.ZeigeAsync(Seiten.Optionen);
+            if (ansicht.GebauteSeiten.GetValueOrDefault(Seiten.Optionen) is OptionenSeite optionen)
+            {
+                optionen.OeffneBereich(Core.Texte.Optionen.Ausbildung, false);
+                optionen.OeffneBereich(Core.Texte.Optionen.Pakete, false);
+                await ansicht.BildFertigAsync();
+                var sichtbar = optionen.GetVisualDescendants().OfType<TextBlock>().Select(x => x.Text ?? "").Where(x => x.Length > 0).ToList();   // LernText zeichnet ueber TextBlock
+                var alt = sichtbar.Where(s => System.Text.RegularExpressions.Regex.IsMatch(s, @"(?<![\p{L}\p{N}_])(SI|AE|DPA|DV)(?![\p{L}\p{N}_])")).ToList();
+                var fehlt = FachrichtungTexte.Kuerzel.Values.Where(k => !sichtbar.Any(s => s.Contains("(" + k + ")", StringComparison.Ordinal))).ToList();
+                fehlt.AddRange(FachrichtungsPaket.Fachrichtungen.Select(f => PaketTexte.Format(PaketTexte.FrName, PaketTexte.Fr(f))).Where(n => !sichtbar.Any(s => s.StartsWith(n, StringComparison.Ordinal))));
+                Pruefe("Kuerzel wie bei der IHK in Optionen (Sammelliste 466)", alt.Count == 0 && fehlt.Count == 0,
+                    alt.Count == 0 && fehlt.Count == 0 ? "FISI, FIAE, FIDP, FIDV und Fachrichtungs-Paket FIAE/FIDP/FIDV sichtbar, kein altes Kuerzel"
+                        : "alt: " + string.Join(" | ", alt) + "; fehlt: " + string.Join(" | ", fehlt));
+            }
+            else
+            {
+                Pruefe("Kuerzel wie bei der IHK in Optionen (Sammelliste 466)", false, "Optionen nicht gebaut");
+            }
             Pruefe("Lernstand bytegleich", Lernstand() == vorherLernstand, Lernstand() == vorherLernstand ? "gleich" : "GEAENDERT");
             Pruefe("Datenordner mit den drei Paketen", FachrichtungsPaket.Fachrichtungen.All(f => Directory.Exists(Path.Combine(daten, PaketAblage.OrdnerName, FachrichtungsPaket.Kennung(f), EchtStand(f).ToString(System.Globalization.CultureInfo.InvariantCulture)))),
                 "lernen_ae, lernen_dpa, lernen_dv wieder eingesetzt");
@@ -172,7 +193,7 @@ public static partial class AutoMessung
     }
 
     /// <summary>
-    /// Welle A 1.5.0 (Weisung P12-358): die App bringt AE, DPA und DV nur noch als Paket. Zu Beginn jedes Start-Tests setzt der
+    /// Welle A 1.5.0 (Weisung P12-358): die App bringt FIAE, FIDP und FIDV nur noch als Paket. Zu Beginn jedes Start-Tests setzt der
     /// Test die drei echten Pakete (Testdateien, gleich den Releases) in den Datenordner ein, wie ein Nutzer nach „Laden“; alle
     /// spaeteren Schritte (Sichten, Layout, Pruefung im echten Format, Messpunkte je Fachrichtung) sehen damit die Inhalte wie
     /// bisher. Fehlt eine Testdatei oder ist ein Paket rot, ist das ein Fund (nie still uebersprungen).
@@ -206,8 +227,8 @@ public static partial class AutoMessung
     }
 
     /// <summary>
-    /// A 1.8.0 (Weisung P12-372): Stand der echten Testdatei je Fachrichtungs-Paket, gleich paket_bauen.LERNEN_TESTDATEIEN (AE Stand 3 seit A 1.12.0, Stand 2
-    /// mit den neuen Fassungen der Pruefungssaetze, DPA und DV Stand 1); Test A1_EchteTestdateien_JeFachrichtung_Gut prueft beides.
+    /// A 1.8.0 (Weisung P12-372): Stand der echten Testdatei je Fachrichtungs-Paket, gleich paket_bauen.LERNEN_TESTDATEIEN (FIAE Stand 3 seit A 1.12.0, Stand 2
+    /// mit den neuen Fassungen der Pruefungssaetze, FIDP und FIDV Stand 1); Test A1_EchteTestdateien_JeFachrichtung_Gut prueft beides.
     /// </summary>
     internal static long EchtStand(string kennungOderFr) => kennungOderFr is "ae" or "lernen_ae" ? 3 : 1;
 

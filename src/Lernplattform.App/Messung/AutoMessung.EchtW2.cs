@@ -11,7 +11,7 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// A 1.12.0 "Pruefung echt W2" (Weisung P12-390, Plan P12-250): Struktogramm im Baukasten der AE-Saetze. Der Start-Test misst
+/// A 1.12.0 "Pruefung echt W2" (Weisung P12-390, Plan P12-250): Struktogramm im Baukasten der FIAE-Saetze. Der Start-Test misst
 /// die drei Ansichten ab <see cref="EchtFormatTeil.W2Ab"/> (erstes Oeffnen streng 400 ms), prueft ihre Bilder (gezeichnet, mit
 /// Namen), dass beim gewaehlten Block alle Bedienelemente da sind (Textfeld, "Neuer Block kommt …", Nach oben, Nach unten,
 /// Heraus, Entfernen; Auflage B), dass der Blocktext unveraendert gezeigt wird (Auflage C) und bedient ihn auf allen Wegen:

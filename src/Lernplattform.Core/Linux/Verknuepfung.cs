@@ -107,7 +107,7 @@ public static class Verknuepfung
         + "Icon={icon}\n"
         + "Terminal=false\n"
         + "Categories=Education;\n"
-        + "Keywords=Fachinformatiker;FI;FISI;IHK;Lernen;Netzwerk;Subnetting;RAID;\n"
+        + "Keywords=Fachinformatiker;FI;FISI;FIAE;FIDP;FIDV;IHK;Lernen;Netzwerk;Subnetting;RAID;\n"
         + "StartupWMClass=" + Fensterklasse + "\n"
         + Merker + "\n";
 

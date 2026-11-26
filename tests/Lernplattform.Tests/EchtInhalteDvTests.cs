@@ -5,10 +5,10 @@ using Lernplattform.Core.Pruefung.Echt;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// A 0.86.0, Weisung P12-292: Pruefung im echten Format fuer DV. Zehn neue Saetze (je AP2-Bereich fuenf), nur angehaengt.
-/// Prueft Nicos Ziele: wer DV gewaehlt hat, bekommt in beiden Bereichen (Diagnose und Stoerungsbeseitigung, Betrieb und
-/// Erweiterung) fuenf Saetze statt des Platzhalters; danach zeigt keine Fachrichtung mehr den Platzhalter; AP1, SI, AE und DPA
-/// bleiben genau gleich (die Datei vor den DV-Saetzen ist bytegleich). Dazu der heutige Stand der App: jeder Satz hat einen
+/// A 0.86.0, Weisung P12-292: Pruefung im echten Format fuer FIDV. Zehn neue Saetze (je AP2-Bereich fuenf), nur angehaengt.
+/// Prueft Nicos Ziele: wer FIDV gewaehlt hat, bekommt in beiden Bereichen (Diagnose und Stoerungsbeseitigung, Betrieb und
+/// Erweiterung) fuenf Saetze statt des Platzhalters; danach zeigt keine Fachrichtung mehr den Platzhalter; AP1, FISI, FIAE und FIDP
+/// bleiben genau gleich (die Datei vor den FIDV-Saetzen ist bytegleich). Dazu der heutige Stand der App: jeder Satz hat einen
 /// Netzplan aus den vorhandenen Anlagen, Ablaeufe nur als UML-Aktivitaet im Baukasten (Plan: dv_b1_03, dv_b2_02, dv_b2_05),
 /// kein ER, keine Zeichnung ohne Baukasten. Jede Regel mit Gegenprobe.
 /// </summary>
@@ -37,15 +37,15 @@ public class EchtInhalteDvTests
     [Fact]
     public void DV_ZehnSaetze_JeBereichFuenf_KeinPlatzhalterMehr_AndereGleich()
     {
-        // A 0.94.0: wie in der App (die alten AE-Saetze schliesst ausschluss.json aus, die AE-Satzpaare stehen an ihrer Stelle)
+        // A 0.94.0: wie in der App (die alten FIAE-Saetze schliesst ausschluss.json aus, die FIAE-Satzpaare stehen an ihrer Stelle)
         var bestand = EchtTestDatei.App();
         Assert.Empty(bestand.Fehler);
-        // A 0.94.0: dahinter folgen die AE-Satzpaare (EchtInhalteAePaareTests)
+        // A 0.94.0: dahinter folgen die FIAE-Satzpaare (EchtInhalteAePaareTests)
         Assert.Equal(57, bestand.Saetze.Count);
         Assert.Equal(Dv, bestand.Saetze.Skip(37).Take(Dv.Length).Select(s => s.Kennung));
         foreach (var f in Fachrichtung.Alle)
         {
-            // AP1 gilt fuer alle (unveraendert 6), AP2: SI 6/5, AE und DPA 5/5 wie bisher, DV neu 5/5
+            // AP1 gilt fuer alle (unveraendert 6), AP2: FISI 6/5, FIAE und FIDP 5/5 wie bisher, FIDV neu 5/5
             Assert.Equal(6, bestand.Fuer(EchtSaetze.Ap1, f.Id).Count);
             Assert.Equal(f.Id == "si" ? 6 : 5, bestand.Fuer(EchtSaetze.B1, f.Id).Count);
             Assert.Equal(5, bestand.Fuer(EchtSaetze.B2, f.Id).Count);
@@ -54,7 +54,7 @@ public class EchtInhalteDvTests
         }
         Assert.All(bestand.Fuer(EchtSaetze.B1, "dv"), s => Assert.StartsWith("dv_b1_", s.Kennung, StringComparison.Ordinal));
         Assert.All(bestand.Fuer(EchtSaetze.B2, "dv"), s => Assert.StartsWith("dv_b2_", s.Kennung, StringComparison.Ordinal));
-        // Gegenprobe: ohne die DV-Saetze hat DV wieder den Platzhalter (keine Saetze, keine Meldung), die anderen nicht
+        // Gegenprobe: ohne die FIDV-Saetze hat FIDV wieder den Platzhalter (keine Saetze, keine Meldung), die anderen nicht
         var ohne = new EchtBestand([.. bestand.Saetze.Where(s => !Dv.Contains(s.Kennung))], []);
         Assert.Empty(ohne.Fuer(EchtSaetze.B1, "dv"));
         Assert.Empty(ohne.Fuer(EchtSaetze.B2, "dv"));
@@ -68,7 +68,7 @@ public class EchtInhalteDvTests
         var roh = EchtTestDatei.AlsFormat2(File.ReadAllBytes(Datei));
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
-        // direkt danach beginnt der erste DV-Satz
+        // direkt danach beginnt der erste FIDV-Satz
         var danach = System.Text.Encoding.UTF8.GetString(roh, VorherLaenge, 40);
         Assert.StartsWith(",\n  {", danach, StringComparison.Ordinal);
         Assert.Contains("\"kennung\": \"dv_b1_01\"", System.Text.Encoding.UTF8.GetString(roh, VorherLaenge, 400), StringComparison.Ordinal);
@@ -101,7 +101,7 @@ public class EchtInhalteDvTests
     }
 
     /// <summary>
-    /// Netzplan und Monitor nur aus den vorhandenen Anlagen (keine neue Anlagenart): jeder DV-Satz hat einen Netzplan, je
+    /// Netzplan und Monitor nur aus den vorhandenen Anlagen (keine neue Anlagenart): jeder FIDV-Satz hat einen Netzplan, je
     /// Bereich hat mindestens ein Satz einen Monitor. Gegenprobe: ein Satz ohne Netzplan waere ein Fund.
     /// </summary>
     [Fact]

@@ -21,7 +21,7 @@ public sealed record VerlaufZeile(string Datum, string Name, string Punkte, stri
 /// Phase 4, W2 (PB7): Verlauf der Pruefungen (DBManager.exams) und Kachel "Gesamtergebnis" wie
 /// app_gui.overall_card: letzte Pruefung je Bereich plus geschaetzte Projektnote des aktiven
 /// Projekts (fisi_projekt projects, active_project, estimate). Die Bereiche und Namen kommen aus der
-/// Fachrichtung; fuer AE, DPA und DV gibt es b1/b2 noch nicht ("noch offen").
+/// Fachrichtung; fuer FIAE, FIDP und FIDV gibt es b1/b2 noch nicht ("noch offen").
 /// </summary>
 public static class Gesamtstand
 {

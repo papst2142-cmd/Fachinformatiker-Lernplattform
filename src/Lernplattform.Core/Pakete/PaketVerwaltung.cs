@@ -107,7 +107,7 @@ public sealed class PaketVerwaltung
         var geladen = _ablage.Liste(_app).ToDictionary(g => g.Kennung, StringComparer.Ordinal);
         var angebote = _angebote.ToDictionary(a => a.Kennung, StringComparer.Ordinal);
         var zeilen = new List<PaketZeile>();
-        // Welle A 0.91.0 (Weisung P12-300 Punkt 5): je Fachrichtung AE, DPA, DV immer eine Zeile „Fachrichtungs-Paket AE“
+        // Welle A 0.91.0 (Weisung P12-300 Punkt 5): je Fachrichtung FIAE, FIDP, FIDV immer eine Zeile „Fachrichtungs-Paket FIAE“
         var frZeilen = _ablage.Eingebaut is null ? [] : FachrichtungsPaket.Fachrichtungen.Select(FachrichtungsPaket.Kennung);
         foreach (var kennung in geladen.Keys.Union(angebote.Keys).Union(_fehler.Keys).Union(frZeilen))
         {

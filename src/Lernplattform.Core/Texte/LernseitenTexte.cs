@@ -206,7 +206,7 @@ public static class NotizblockTexte
 
     /// <summary>
     /// Titel eines Eintrags; Szenarien und Testprojekte mit Nummer (5452-5454). Phase 11 W1 (Sammelliste 171):
-    /// die Nummer zaehlt wie die Liste der Seite (<see cref="Notizblock.Nummer"/>), bei SI wie Python.
+    /// die Nummer zaehlt wie die Liste der Seite (<see cref="Notizblock.Nummer"/>), bei FISI wie Python.
     /// </summary>
     public static string EintragTitel(NotizEintrag eintrag, Notizblock notiz) =>
         eintrag.Quelle is Quellen.Ap1 or Quellen.Ap2 or Quellen.Projekt

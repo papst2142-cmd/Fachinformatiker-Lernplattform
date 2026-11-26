@@ -25,7 +25,7 @@ Inhalt:
             gelesen: Kennungen, die die Grundregeln verletzen (fehler), je gueltigem Satz Kopfdaten und
             Zaehlwerte (saetze) und je Fachrichtung die sichtbaren Saetze je Bereich (sichten; AP1 gilt fuer
             alle Fachrichtungen, AP2 nur fuer die eigene)
-            Seit Sollwert-Aenderung Nr. 22 (A 0.94.0, Weisung P12-304): AE-Satzpaare ("aufbau": "paar",
+            Seit Sollwert-Aenderung Nr. 22 (A 0.94.0, Weisung P12-304): FIAE-Satzpaare ("aufbau": "paar",
             Strukturblatt Abschnitt 7) mit eigenen Grundregeln und Paarpruefung; je Satz dazu aufbau und die
             Punkte je Gebiet; Saetze, die lernen/ausschluss.json ausschliesst (Stelle und Kennung), stehen in
             "ausgeschlossen" und fehlen in den sichten (sie bleiben fuer offene Laeufe geladen)

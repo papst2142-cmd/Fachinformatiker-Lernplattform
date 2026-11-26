@@ -11,7 +11,7 @@ namespace Lernplattform.Core.Inhalte;
 /// <see cref="Lerninhalt.Nummer"/> zaehlt weiter (der Lernstand der Szenarien und Testprojekte
 /// speichert Nummer - 1). Die bisherigen Inhalte teilt einteilung_bisher.json in "si" und
 /// "gemeinsam" ein (ohne Eintrag si). <see cref="Fuer"/> liefert die Sicht einer Fachrichtung:
-/// gemeinsame Inhalte plus die eigenen, in der Reihenfolge der Gesamtliste. SI sieht damit genau
+/// gemeinsame Inhalte plus die eigenen, in der Reihenfolge der Gesamtliste. FISI sieht damit genau
 /// die bisherigen Inhalte (alle G-Werte bleiben). Das Spiel liest nur <see cref="Bisher"/>.
 /// </summary>
 public sealed partial class Lerninhalte
@@ -182,7 +182,7 @@ public sealed partial class Lerninhalte
 
     /// <summary>
     /// Fragen fuers Fachgespraech der Sicht <paramref name="fachrichtung"/> (unbekannt = si): die bisherigen mit
-    /// Einteilung gemeinsam oder dieser Fachrichtung (SI damit alle wie Python), dahinter die eigenen neuen.
+    /// Einteilung gemeinsam oder dieser Fachrichtung (FISI damit alle wie Python), dahinter die eigenen neuen.
     /// </summary>
     public IReadOnlyList<Projekt.ProjektFrage> FachgespraechFuer(IReadOnlyList<Projekt.ProjektFrage> bisherige, string? fachrichtung)
     {
@@ -377,7 +377,7 @@ public sealed partial class Lerninhalte
 
     /// <summary>
     /// Wie <see cref="MitLernen"/>, aber eine nicht lesbare Datei in inhalte_csharp/lernen nimmt nie die bisherigen
-    /// Inhalte mit: dann gelten nur die bisherigen (alles si, AE/DPA/DV sehen nichts), der Fehler geht an
+    /// Inhalte mit: dann gelten nur die bisherigen (alles si, FIAE/FIDP/FIDV sehen nichts), der Fehler geht an
     /// <paramref name="fehler"/>. Ein Fehler in inhalte/ selbst wirft wie bisher.
     /// </summary>
     public static Lerninhalte MitLernenSicher(Func<Lerninhalte> bisher, Func<string, byte[]?> lernen, Action<Exception> fehler,
@@ -405,8 +405,8 @@ public sealed partial class Lerninhalte
 
     /// <summary>
     /// Sicht einer Fachrichtung (unbekannt = si): gemeinsame und eigene Inhalte in der Reihenfolge der
-    /// Gesamtliste, Themen mit sichtbaren Inhalten (SI: alle bisherigen) plus die eigenen neuen Themen,
-    /// Rahmenplan bei AE, DPA und DV mit dem Zusatz der Fachrichtung.
+    /// Gesamtliste, Themen mit sichtbaren Inhalten (FISI: alle bisherigen) plus die eigenen neuen Themen,
+    /// Rahmenplan bei FIAE, FIDP und FIDV mit dem Zusatz der Fachrichtung.
     /// </summary>
     public Lerninhalte Fuer(string? fachrichtung)
     {
@@ -461,7 +461,7 @@ public sealed partial class Lerninhalte
         Alle._ap2Je.GetOrAdd(fachrichtung, fr => MitFachrichtung(fr).Ap2Szenarien.Where(e => e.Zugehoerigkeit == fr).ToList());
 
     /// <summary>
-    /// Rahmenplan der Sicht AE, DPA oder DV: Kopie des bisherigen Plans, dazu die Lernfelder der
+    /// Rahmenplan der Sicht FIAE, FIDP oder FIDV: Kopie des bisherigen Plans, dazu die Lernfelder der
     /// Fachrichtung aus dem Zusatz (Feld "fachrichtung") und die AP2-Zuordnung ihrer Punkte.
     /// </summary>
     public static JsonObject RahmenplanFuer(JsonObject rahmenplan, JsonObject zusatz, string fachrichtung)
@@ -794,7 +794,7 @@ public sealed class LernenOrdner
     {
         if (MitTeilen)
         {
-            // Welle A 0.97.0 (W2): nur die Teile von SI (immer geladen) und die kleine Datei des Fachgespraechs; die Teile der
+            // Welle A 0.97.0 (W2): nur die Teile von FISI (immer geladen) und die kleine Datei des Fachgespraechs; die Teile der
             // gewaehlten Fachrichtung zerlegt MitLernen nebeneinander (TeileVorab)
             TeileVorab([Fachrichtungen.Systemintegration]);
             _ = Task.Run(() =>

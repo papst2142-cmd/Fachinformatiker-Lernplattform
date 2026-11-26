@@ -26,7 +26,7 @@ public static partial class AutoMessung
     /// <summary>Ab dieser Laufzeit pruefen die W4-Ansichten nur noch 2 Groessen (Plan Phase 4, Zeitbudget).</summary>
     public static readonly TimeSpan W4Zeitgrenze = TimeSpan.FromMinutes(7.5);
 
-    /// <summary>Laengster Text, den der Warnhinweis zeigt (DPA, Weisung P4-11).</summary>
+    /// <summary>Laengster Text, den der Warnhinweis zeigt (FIDP, Weisung P4-11).</summary>
     public const string WarnungFachrichtung = "dpa";
 
     /// <summary>Anzahl der W4-Ansichten (fuer den Bericht).</summary>
@@ -48,7 +48,7 @@ public static partial class AutoMessung
     /// <summary>
     /// Die neuen Ansichten der W4 nacheinander (je nach dem Zeigen pruefen): Hilfe eingeklappt und mit dem
     /// laengsten Abschnitt offen, Rundgang Seiten 1-5 und Seite 5 mit Fehlerzeile, Ausbildungsfrage,
-    /// Warnhinweis DPA, Optionen "Rundgang und Hilfe" und "Lerninhalte" aufgeklappt.
+    /// Warnhinweis FIDP, Optionen "Rundgang und Hilfe" und "Lerninhalte" aufgeklappt.
     /// </summary>
     private static async IAsyncEnumerable<string> W4Ansichten(MainView ansicht)
     {

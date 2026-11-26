@@ -30,7 +30,7 @@ public sealed record FachrichtungsInhalt(string Fachrichtung, long Stand,
 /// Fachrichtung an einer Stelle hat, steht im Paket an derselben Stelle gleich; an einer Stelle, an der die App einen
 /// Eintrag einer anderen Fachrichtung hat, darf das Paket nichts haben. Sonst ist das Paket rot und wird nicht genommen.
 /// <para>
-/// Vorbereitung 386 (AE, DPA, DV spaeter nur noch als Paket): die App darf statt eines eigenen Eintrags einen Platzhalter
+/// Vorbereitung 386 (FIAE, FIDP, FIDV spaeter nur noch als Paket): die App darf statt eines eigenen Eintrags einen Platzhalter
 /// <c>{"fachrichtung": "ae", "im_paket": true}</c> tragen. Er haelt die Stelle frei (die Nummern aller anderen bleiben),
 /// wird nie gezeigt und muss im Paket an derselben Stelle stehen.
 /// </para>
@@ -43,7 +43,7 @@ public static class FachrichtungsPaket
     public const string ImPaket = "im_paket";
     public const long Format = 1;
 
-    /// <summary>Fachrichtungen, die es als Paket gibt (SI bleibt immer ganz in der App).</summary>
+    /// <summary>Fachrichtungen, die es als Paket gibt (FISI bleibt immer ganz in der App).</summary>
     public static readonly IReadOnlyList<string> Fachrichtungen = ["ae", "dpa", "dv"];
 
     /// <summary>Listen eines Pakets: die vier Lernlisten und die neuen Fragen fuers Fachgespraech.</summary>
@@ -101,7 +101,7 @@ public static class FachrichtungsPaket
         {
             return (null, PaketTexte.Format(PaketTexte.DateiFehlt, dateien.ContainsKey(LernenDatei) ? SaetzeDatei : LernenDatei), OhneGrund);
         }
-        // Welle A 1.5.0 (Weisung P12-358): AE, DPA und DV kommen beim Start nur noch aus den Paketen; die Saetze (Aufbau, danach
+        // Welle A 1.5.0 (Weisung P12-358): FIAE, FIDP und FIDV kommen beim Start nur noch aus den Paketen; die Saetze (Aufbau, danach
         // die Ladepruefung) werden darum neben der grossen Datei lernen.json gelesen, nicht danach. Die Reihenfolge der Gruende
         // bleibt: erst lernen.json, dann der Aufbau der Saetze, dann ihre Ausschluesse, zuletzt die Ladepruefung.
         var satzAufgabe = Task.Run(() => SaetzeLesen(saetze, fachrichtung, mitLadepruefung));

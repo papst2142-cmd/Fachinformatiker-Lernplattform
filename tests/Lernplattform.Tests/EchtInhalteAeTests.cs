@@ -5,9 +5,9 @@ using Lernplattform.Core.Pruefung.Echt;
 namespace Lernplattform.Tests;
 
 /// <summary>
-/// A 0.84.0, Weisung P12-285: Pruefung im echten Format fuer AE. Zehn neue Saetze (je AP2-Bereich fuenf), nur angehaengt.
-/// Prueft Nicos Ziele: wer AE gewaehlt hat, bekommt in beiden Bereichen fuenf Saetze statt des Platzhalters (DPA seit
-/// A 0.85.0 und DV seit A 0.86.0 haben eigene Saetze, eigene Tests); AP1 und SI bleiben genau gleich (die Datei vor den AE-Saetzen ist bytegleich). Dazu der
+/// A 0.84.0, Weisung P12-285: Pruefung im echten Format fuer FIAE. Zehn neue Saetze (je AP2-Bereich fuenf), nur angehaengt.
+/// Prueft Nicos Ziele: wer FIAE gewaehlt hat, bekommt in beiden Bereichen fuenf Saetze statt des Platzhalters (FIDP seit
+/// A 0.85.0 und FIDV seit A 0.86.0 haben eigene Saetze, eigene Tests); AP1 und FISI bleiben genau gleich (die Datei vor den FIAE-Saetzen ist bytegleich). Dazu der
 /// heutige Stand der App (Punkt 3): Klassen-, Use-Case-Diagramm und Struktogramm nur als Zeilen "auf Papier",
 /// Aktivitaetsdiagramm und ER im Baukasten. Jede Regel mit Gegenprobe.
 /// </summary>
@@ -33,14 +33,14 @@ public class EchtInhalteAeTests
     [Fact]
     public void AE_ZehnSaetze_JeBereichFuenf_SiUndAp1Gleich()
     {
-        // A 0.94.0: wie in der App (die alten AE-Saetze schliesst ausschluss.json aus, die AE-Satzpaare stehen an ihrer Stelle)
+        // A 0.94.0: wie in der App (die alten FIAE-Saetze schliesst ausschluss.json aus, die FIAE-Satzpaare stehen an ihrer Stelle)
         var bestand = EchtTestDatei.App();
         Assert.Empty(bestand.Fehler);
-        // ab A 0.85.0 folgen die DPA-, ab A 0.86.0 die DV-Saetze (EchtInhalteDpaTests, EchtInhalteDvTests); die AE-Saetze stehen unveraendert an Platz 17 bis 26
+        // ab A 0.85.0 folgen die FIDP-, ab A 0.86.0 die FIDV-Saetze (EchtInhalteDpaTests, EchtInhalteDvTests); die FIAE-Saetze stehen unveraendert an Platz 17 bis 26
         Assert.Equal(Ae, bestand.Saetze.Skip(17).Take(Ae.Length).Select(s => s.Kennung));
         foreach (var f in Fachrichtung.Alle)
         {
-            // AP1 gilt fuer alle (unveraendert 6), AP2: SI 6/5 wie bisher, AE neu 5/5 (DPA und DV: eigene Tests, je 5/5)
+            // AP1 gilt fuer alle (unveraendert 6), AP2: FISI 6/5 wie bisher, FIAE neu 5/5 (FIDP und FIDV: eigene Tests, je 5/5)
             Assert.Equal(6, bestand.Fuer(EchtSaetze.Ap1, f.Id).Count);
             Assert.Equal(f.Id switch { "si" => 6, "ae" or "dpa" or "dv" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B1, f.Id).Count);
             Assert.Equal(f.Id switch { "si" => 5, "ae" or "dpa" or "dv" => 5, _ => 0 }, bestand.Fuer(EchtSaetze.B2, f.Id).Count);
@@ -58,7 +58,7 @@ public class EchtInhalteAeTests
         var roh = EchtTestDatei.AlsFormat2(File.ReadAllBytes(Datei));
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
-        // direkt danach beginnt der erste AE-Satz
+        // direkt danach beginnt der erste FIAE-Satz
         var danach = System.Text.Encoding.UTF8.GetString(roh, VorherLaenge, 40);
         Assert.StartsWith(",\n  {", danach, StringComparison.Ordinal);
         // Gegenprobe: ein geaendertes Zeichen vorn faellt auf

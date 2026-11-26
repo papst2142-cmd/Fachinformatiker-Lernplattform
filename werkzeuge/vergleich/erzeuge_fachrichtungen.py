@@ -5,8 +5,8 @@ Gesamtergebnis und Ergaenzung) als tests/Vergleich/fachrichtungen.json.
 Das Skript ist unabhaengig entstanden, nur aus der Spezifikation
 Fi-Austausch/anlagen/P4-5_Spezifikation_G32_G36.md (Stand 22.10.2026),
 ohne Code der Python-Linie oder der C#-Linie zu lesen. Es ist der zweite
-Beleg neben dem Python-Erzeuger von G32 (Abschnitt 6 nur SI). Phase 9 W2
-(Weisung P9-5 Punkt 4): Quelle der Bereiche b1/b2 von AE, DPA und DV ist
+Beleg neben dem Python-Erzeuger von G32 (Abschnitt 6 nur FISI). Phase 9 W2
+(Weisung P9-5 Punkt 4): Quelle der Bereiche b1/b2 von FIAE, FIDP und FIDV ist
 "ap2_<fachrichtung>" statt "keine".
 
 Aufruf aus dem Repo-Wurzelordner (Python 3.12, nur Standardbibliothek):

@@ -6,10 +6,26 @@ namespace Lernplattform.Core.Texte;
 /// </summary>
 public static class FachrichtungTexte
 {
+    /// <summary>
+    /// Welle A 1.14.0 (Weisung P12-400, Nico 26.11.2026 Karte b, Sammelliste 466): sichtbare Kuerzel der Fachrichtung wie bei
+    /// der IHK. Die Kennungen si/ae/dpa/dv bleiben ueberall intern (Lernstand, Einstellungen, Inhalte, Pakete).
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> Kuerzel = new Dictionary<string, string>
+    {
+        ["si"] = "FISI",
+        ["ae"] = "FIAE",
+        ["dpa"] = "FIDP",
+        ["dv"] = "FIDV",
+    };
+
+    /// <summary>Sichtbares Kuerzel zur Kennung; eine unbekannte Kennung bleibt sichtbar (gross geschrieben), nie still leer.</summary>
+    public static string KuerzelFuer(string fachrichtung) =>
+        Kuerzel.TryGetValue(fachrichtung, out var kuerzel) ? kuerzel : fachrichtung.ToUpperInvariant();
+
     /// <summary>AP2-Szenarien und Testprojekte, wenn die gewaehlte Fachrichtung (noch) keine eigenen hat.</summary>
     public const string KeineAufgaben = "Für deine Fachrichtung gibt es hier noch keine Aufgaben. Sie kommen mit den nächsten Lerninhalten.";
 
-    /// <summary>Klausursimulation, Bereich b1/b2 ohne Aufgaben (ersetzt bei AE, DPA und DV den allgemeinen Platzhalter).</summary>
+    /// <summary>Klausursimulation, Bereich b1/b2 ohne Aufgaben (ersetzt bei FIAE, FIDP und FIDV den allgemeinen Platzhalter).</summary>
     public const string KlausurOhneAufgaben = "Für diesen Prüfungsbereich gibt es noch keine Aufgaben. Sie kommen mit den nächsten Lerninhalten.";
 
     /// <summary>Phase 10 W1 (Weisung P9-13, Nico 5): kleine Ladeanzeige, solange nach einem Wechsel die Inhalte der neuen Fachrichtung nachladen.</summary>

@@ -12,7 +12,7 @@ namespace Lernplattform.Tests;
 /// Stelle von "Neuer Block kommt", Nach oben/unten, Heraus, Entfernen, Fall hinzufuegen/entfernen), Text genau wie eingegeben;
 /// (3) das Musterbild wird streng gelesen, jede Verletzung ist eine klare Meldung; die eigene Zeichnung stuerzt nie ab;
 /// (4) nach dem Abgeben zaehlt das Programm Bausteine, Schachtelung, Faelle, leere Zweige und Tiefe gegen das Musterbild,
-/// Texte nie; (5) Format 5, eine neue AE-Fassung (ae_b2_08; ae_b2_02 heraus nach Weisung P12-393, Nico 1b) nur angehaengt, Format 4 bleibt als echte Testdatei ladbar. Jede Regel mit
+/// Texte nie; (5) Format 5, eine neue FIAE-Fassung (ae_b2_08; ae_b2_02 heraus nach Weisung P12-393, Nico 1b) nur angehaengt, Format 4 bleibt als echte Testdatei ladbar. Jede Regel mit
 /// Gegenprobe.
 /// </summary>
 public class EchtStruktogrammTests

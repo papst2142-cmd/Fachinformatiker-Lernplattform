@@ -10,7 +10,7 @@ neu und verlangt Byte-Gleichheit.
 
 Regeln (12.4 Punkt 2):
   1. AP1-Szenarien: alle gemeinsam (Teil 1 ist fuer alle Fachrichtungen gleich).
-  2. AP2-Szenarien und Testprojekte: alle si (SI-Pruefungsbereiche).
+  2. AP2-Szenarien und Testprojekte: alle si (FISI-Pruefungsbereiche).
   3. Karteikarten und Quizfragen (aus der Datei): Themen der WiSo-Pruefung
      (recht, arbeitswelt) immer gemeinsam. Sonst nach der Rahmenplan-
      Zuordnung der Python-Linie (fisi_rahmenplan.item_points): trifft der

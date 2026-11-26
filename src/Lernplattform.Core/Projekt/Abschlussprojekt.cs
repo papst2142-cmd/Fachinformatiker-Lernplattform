@@ -37,7 +37,7 @@ public sealed record ExportBlock(string Art, string Text);
 /// Abschneiden und strip in Codepunkten mit Pythons Leerraum (PythonZeichen), "%.1f"/"%.2f" aus dem
 /// exakten Binaerwert halb gerade (<see cref="Fest"/>), round halb gerade (PythonRunden), Summen mit
 /// PythonSumme, Sortieren nach Codepunkten und stabil. Die Obergrenze der Projektstunden kommt aus der
-/// Ausbildung (Weisung P4-8, Frage 1 b: AE 80, sonst 40; Python kennt nur 40).
+/// Ausbildung (Weisung P4-8, Frage 1 b: FIAE 80, sonst 40; Python kennt nur 40).
 /// </summary>
 public static partial class Abschlussprojekt
 {
@@ -54,7 +54,7 @@ public static partial class Abschlussprojekt
     public const string GeloeschtFeld = Gesamtstand.GeloeschtFeld;
     public const string AktivSchluessel = Gesamtstand.AktivSchluessel;
 
-    /// <summary>MAX_HOURS je Ausbildung (Fachrichtung.ProjektStunden, G36): AE 80, SI/DPA/DV 40.</summary>
+    /// <summary>MAX_HOURS je Ausbildung (Fachrichtung.ProjektStunden, G36): FIAE 80, FISI/FIDP/FIDV 40.</summary>
     public static int MaxStunden(string fachrichtung) => Fachrichtung.Nach(fachrichtung).ProjektStunden;
 
     public static readonly IReadOnlyList<(string Schluessel, string Name)> Reiter =

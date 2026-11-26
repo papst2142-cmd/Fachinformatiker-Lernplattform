@@ -9,14 +9,14 @@ using Lernplattform.Views;
 namespace Lernplattform.Messung;
 
 /// <summary>
-/// FW6 (Weisung P11-12, Sammelliste 177 Teil 2): eine breite Tabelle (SI-Szenario "Nutzwertanalyse zur Auswahl einer
+/// FW6 (Weisung P11-12, Sammelliste 177 Teil 2): eine breite Tabelle (FISI-Szenario "Nutzwertanalyse zur Auswahl einer
 /// Firewall") steht am Handy in jeder Schriftstufe in einem eigenen Bereich mit fester Zeichenbreite, ohne Umbruch;
 /// ist sie breiter als der Bereich, laesst sie sich seitlich wischen und darunter steht "→ wischen". In der groessten
 /// Stufe muss sie wischbar sein (sonst prueft der Punkt nichts).
 /// </summary>
 public static partial class AutoMessung
 {
-    /// <summary>Titel des Szenarios mit der breitesten Tabelle der Aufgabenstellung (SI).</summary>
+    /// <summary>Titel des Szenarios mit der breitesten Tabelle der Aufgabenstellung (FISI).</summary>
     public const string Fw6TabellenSzenario = "Nutzwertanalyse zur Auswahl einer Firewall";
 
     private static async Task<int> P11Fw6TabellenAsync(MainView ansicht)

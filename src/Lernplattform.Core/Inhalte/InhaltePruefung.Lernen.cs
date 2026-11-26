@@ -16,7 +16,7 @@ namespace Lernplattform.Core.Inhalte;
 /// </summary>
 public static partial class InhaltePruefung
 {
-    /// <summary>Abschnitt des Rahmenplans je Fachrichtung (FIAusbV Anlage: B AE, C SI, D DPA, E DV).</summary>
+    /// <summary>Abschnitt des Rahmenplans je Fachrichtung (FIAusbV Anlage: B FIAE, C FISI, D FIDP, E FIDV).</summary>
     public static readonly IReadOnlyDictionary<string, string> AbschnittJe = new Dictionary<string, string>
     {
         ["si"] = "C", ["ae"] = "B", ["dpa"] = "D", ["dv"] = "E",

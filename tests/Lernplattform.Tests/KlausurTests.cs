@@ -226,7 +226,7 @@ public class KlausurTests
         Assert.Equal(Py(letzte[1]), Py(Objekt(ist.Select(p => new KeyValuePair<string, object?>(p.Key, p.Value)))));
     }
 
-    /// <summary>Spalten der Rollen (SI): Python rechnet mit den Bereichsnamen, C# mit Rollen.</summary>
+    /// <summary>Spalten der Rollen (FISI): Python rechnet mit den Bereichsnamen, C# mit Rollen.</summary>
     private static readonly string[] Si = ["ap1", "projekt", "konzeption", "netzwerke", "wiso"];
 
     [Fact]

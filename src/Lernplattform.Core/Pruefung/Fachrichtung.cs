@@ -6,8 +6,8 @@ public sealed record Pruefungsbereich(string Rolle, string Art, string Kurz, str
 
 /// <summary>
 /// Phase 4, W2 (Spezifikation G32/G36 Abschnitt 1, Addendum P4-2 Tabelle 1, FIAusbV 2020):
-/// Aufbau der Abschlusspruefung je Fachrichtung. SI ist Python v0.63.2 (fisi_pruefung EXAMS,
-/// WEIGHTS, PART2, AREA_NAME); AE, DPA und DV haben eigene Bereiche b1/b2. Phase 9 W2: ihre
+/// Aufbau der Abschlusspruefung je Fachrichtung. FISI ist Python v0.63.2 (fisi_pruefung EXAMS,
+/// WEIGHTS, PART2, AREA_NAME); FIAE, FIDP und FIDV haben eigene Bereiche b1/b2. Phase 9 W2: ihre
 /// Aufgaben kommen aus inhalte_csharp/lernen (Quelle "ap2_ae", "ap2_dpa", "ap2_dv"); solange es
 /// keine gibt, zeigt die Auswahl den Platzhalter. Gewichte und Ergaenzung sind fuer alle gleich.
 /// </summary>
@@ -36,7 +36,7 @@ public sealed record Fachrichtung(string Id, string Name, string Projekt, int Pr
             ("betrieb", "Betrieb", "AP2 · Betrieb und Erweiterung von vernetzten Systemen")),
     ];
 
-    /// <summary>Fachrichtung zur Kennung; unbekannt oder null ergibt SI.</summary>
+    /// <summary>Fachrichtung zur Kennung; unbekannt oder null ergibt FISI.</summary>
     public static Fachrichtung Nach(string? id) => Alle.FirstOrDefault(f => f.Id == id) ?? Alle[0];
 
     private static Fachrichtung Neu(string id, string name, string projekt, int stunden, string quelle,

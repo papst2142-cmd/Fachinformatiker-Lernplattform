@@ -1,7 +1,7 @@
 namespace Lernplattform.Core.Pakete;
 
 /// <summary>
-/// Welle A 1.5.0 (Weisung P12-358, Lauf 1193: „Inhalte laden AE“ ueber 400 ms): merkt sich Fachrichtungs-Pakete, die mit
+/// Welle A 1.5.0 (Weisung P12-358, Lauf 1193: „Inhalte laden FIAE“ ueber 400 ms): merkt sich Fachrichtungs-Pakete, die mit
 /// genau dieser App schon ganz geprueft und gut waren (Aufbau, Ladepruefung der Saetze, „nur angehaengt“). Der Schluessel
 /// nennt Fachrichtung, Stand und die gepruefte SHA-256 beider Inhaltsdateien; die Kennung der App
 /// (<see cref="PaketAblage.PruefKennung"/>) nennt den Programmstand (Code und Inhalte der App). Das Ergebnis dieser Pruefungen
