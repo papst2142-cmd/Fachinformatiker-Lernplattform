@@ -130,10 +130,10 @@ public sealed class SpielBedienungTests
             var tasten = new Tastenbelegung();
             // seit A 0.93.0 ist die Leertaste der Standard fuer „Springen“ (B ist frei)
             tasten.Setzen(Tastenbelegung.Hinein, "B", out _);
-            tasten.Setzen(Tastenbelegung.Vollbild, "H", out _);    // A 0.80.0: F, seit A 1.6.0 G sind Standard fuer „Kamera flacher“, F fuer die Handlung
+            tasten.Setzen(Tastenbelegung.Vollbild, "J", out _);    // A 0.80.0: F, seit A 1.6.0 G sind Standard fuer „Kamera flacher“, F fuer die Handlung, seit A 1.13.0 H fuer den Hinweis
             Assert.True(tasten.Speichern(einstellungen));
             var werte = JsonNode.Parse(File.ReadAllText(einstellungen.Pfad))!.AsObject();
-            Assert.Equal("{\"hinein\":\"B\",\"vollbild\":\"H\"}", werte[Tastenbelegung.Schluessel]!.ToJsonString());
+            Assert.Equal("{\"hinein\":\"B\",\"vollbild\":\"J\"}", werte[Tastenbelegung.Schluessel]!.ToJsonString());
             var gelesen = Tastenbelegung.Lesen(werte);
             Assert.Equal(tasten.Eigen, gelesen.Eigen);
             Assert.Equal("B", gelesen.AnzeigeFuer(Tastenbelegung.Hinein));

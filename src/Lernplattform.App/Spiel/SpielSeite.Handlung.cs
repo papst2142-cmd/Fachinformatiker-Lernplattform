@@ -358,7 +358,12 @@ public sealed partial class SpielSeite
             _ortKnoepfe.IsVisible = true;
             _knoepfeRolle.IsVisible = true;
         }
-        _xKnopf.IsVisible = modus;
+        if (_xKnopf.IsVisible != modus)
+        {
+            _xKnopf.IsVisible = modus;
+            // Welle A 1.13.0: der Platz fuer die Hinweiszeile neben der Uhr haengt am X
+            HinweisObenLegen();
+        }
         if (modus)
         {
             // Symbol des X schwarz oder weiss, je nachdem, was auf der Farbe des Programms mehr Kontrast hat
@@ -387,6 +392,8 @@ public sealed partial class SpielSeite
             }
             Avalonia.Automation.AutomationProperties.SetName(_fAnzeige, text);
         }
+        UntenSetzen();
+        HinweisObenZeigen();
         if (_auswahl is { IsVisible: true })
         {
             if (!modus || spiel is null || spiel.Handlungen.Count == 0)
@@ -567,5 +574,19 @@ public sealed partial class SpielSeite
         Canvas.SetLeft(_auswahl, links);
         Canvas.SetTop(_auswahl, oben);
         _auswahl.Arrange(new Rect(links, oben, ds.Width, ds.Height));
+    }
+
+    /// <summary>
+    /// Welle A 1.13.0 (Sammelliste 464): mit der Handlung steht der Hinweis oben; die Karte unten gibt es dann nur noch fuer die
+    /// Anzeige „F: …“ am PC, den Text der Gegenprobe (und die Knoepfe der Probe-APK), sonst ist unten nichts mehr im Weg.
+    /// Nur bei einer Aenderung (Lehre A 1.6.0); auch nach jedem neuen Hinweisfeld gerufen.
+    /// </summary>
+    private void UntenSetzen()
+    {
+        var untenDa = !HandlungModus || (_fAnzeige?.IsVisible ?? false) || _zeileRolle.IsVisible || (_knoepfeRolle.IsVisible && _knoepfe.Children.Any(c => c.IsVisible));
+        if (_unten.IsVisible != untenDa)
+        {
+            _unten.IsVisible = untenDa;
+        }
     }
 }

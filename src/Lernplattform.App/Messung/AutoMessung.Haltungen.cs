@@ -69,11 +69,6 @@ public static partial class AutoMessung
             var stelle = HaltungsStelle(spiel, innen);
             await ansicht.BildFertigAsync();
             await Bilder(3);
-            if (seite.HinweisZu)
-            {
-                seite.HinweisUmschalten();
-                await Bilder(2);
-            }
             // 404: aufgeklappt keine Eintraege Springen/Ducken/Kriechen; die Tastenbelegung nennt alle drei mit ihrer Taste
             var belegung = Tastenbelegung.Aktuell;
             var tasten = new[] { Tastenbelegung.Springen, Tastenbelegung.Ducken, Tastenbelegung.Kriechen }

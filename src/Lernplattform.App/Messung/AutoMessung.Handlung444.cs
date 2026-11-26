@@ -57,7 +57,6 @@ public static partial class AutoMessung
         }
         var vorher = seite.Spiel;
         var (breiteVorher, hoeheVorher) = (fenster.Width, fenster.Height);
-        var zuVorher = seite.HinweisZu;
         string Name(Control c) => Avalonia.Automation.AutomationProperties.GetName(c) ?? "";
         void Tippen(DaumenKnopf k) => (ControlAutomationPeer.CreatePeerForElement(k) as IInvokeProvider)?.Invoke();
         void Taste(Key taste, bool runter) => seite.RaiseEvent(new KeyEventArgs
@@ -96,10 +95,6 @@ public static partial class AutoMessung
             var (hoechstB, hoechstH) = Hoechstgroesse(fenster);
             fenster.Width = Math.Min(1360, hoechstB);
             fenster.Height = Math.Min(880, hoechstH);
-            if (seite.HinweisZu)
-            {
-                seite.HinweisUmschalten();
-            }
             // am Ausgang: „F: Zur Stadt“, oben rechts nur das X, unten links Ich-Sicht und Handy, keine Knoepfe des Orts unten
             spiel.Ansehen(innen, innen.StartX, innen.StartZ, 0f);
             await Warten();
@@ -273,10 +268,6 @@ public static partial class AutoMessung
             seite.AuswahlZeigen(false);
             fenster.Width = breiteVorher;
             fenster.Height = hoeheVorher;
-            if (seite.HinweisZu != zuVorher)
-            {
-                seite.HinweisUmschalten();
-            }
             seite.SpielSetzen(vorher);
             await ansicht.BildFertigAsync();
         }

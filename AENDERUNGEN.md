@@ -1,5 +1,16 @@
 # Änderungen
 
+## A 1.13.0
+Im Spiel stehen die Hinweise nicht mehr unten auf dem Weg deiner Figur, sondern als schmale Zeile oben neben der Uhr.
+
+- Kommt deine Figur an ein Möbelstück, eine Tür oder eine Haltestelle, steht der Hinweis oben: fett der Name, dahinter der Text, so weit er in die Zeile passt. Am schmalen Handy im Hochformat steht die Zeile unter der Uhr.
+- Nach 6 Sekunden bleibt nur noch der Name stehen, blass. Gehst du weiter, verschwindet die Zeile ganz. Unten bleibt der Weg vor deiner Figur frei, dort stehen nur noch die Knöpfe zum Steuern.
+- Tippst du auf die Zeile (am PC auch mit der Maus oder der Taste H), siehst du den ganzen Text oben. Noch einmal Tippen zeigt wieder nur den Namen, Weitergehen schließt ihn. Die Taste kannst du in den Optionen unter der Tastenbelegung ändern.
+- Das Dreieck zum Ein- und Ausklappen des Hinweisfelds gibt es nicht mehr. Der Knopf für das Handy steht unten in der Mitte. „Spiel verlassen“ ist immer zu sehen.
+- Beim Einrichten der Wohnung bleibt die Tafel unten wie bisher, nur ohne Dreieck.
+- Der Screenreader liest jeden neuen Hinweis vor wie bisher.
+- Dein Lernstand, die Lerninhalte und deine Spielstände bleiben genau gleich.
+
 ## A 1.12.0
 In der Prüfung im echten Format zeichnest du Struktogramme jetzt selbst im Baukasten.
 

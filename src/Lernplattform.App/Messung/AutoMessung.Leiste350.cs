@@ -19,9 +19,8 @@ namespace Lernplattform.Messung;
 ///    verlassen“ immer zu sehen (auch zugeklappt), ohne 3D bleibt „Orte“. 2. Reiter „Übersicht“ im Handy zeigt dieselben Texte und
 ///    Werte wie die Seite der Spiel-Tafel (Gegenprobe: der Reiter „Offen“ liefert andere Texte; ohne Spielstand kein Reiter).
 /// 3. „Spiel verlassen“ aus der Leiste mit Maus, Finger, Eingabetaste und Screenreader (Name und Aufruf ueber die Automation).
-/// Seit A 0.87.0 (Sammelliste 371, Nico: „Der Spiel Beenden Button soll sich ebenfalls mit dem Dreieck verstecken lassen.“):
-/// zugeklappt ist „Spiel verlassen“ weg, aufgeklappt da (Gegenprobe <see cref="SpielSeite.VerlassenZuAltFuerTests"/>); vor dem
-/// Verlassen wird darum erst aufgeklappt.
+/// Seit A 1.13.0 (Sammelliste 464, Nico 5a) gibt es das Dreieck zum Zuklappen nicht mehr (damit entfaellt auch das Verstecken von
+/// „Spiel verlassen“ aus A 0.87.0, Sammelliste 371): „Spiel verlassen“ und das Handy sind in jeder Lage zu sehen.
 /// </summary>
 public static partial class AutoMessung
 {
@@ -52,12 +51,11 @@ public static partial class AutoMessung
         {
             var leiste = seite.LeisteKnoepfe;
             var doppelt = leiste.Where(t => t is StadtTexte.Uebersicht or KarteTexte.Karte).ToList();
-            // Sammelliste 371: „Spiel verlassen“ nur aufgeklappt zu sehen, zugeklappt mit den anderen Knoepfen weg
-            var verlassen = seite.VerlassenKnopf.IsEffectivelyVisible == !seite.HinweisZu;
+            var verlassen = seite.VerlassenKnopf.IsEffectivelyVisible;
             var orte = !gl || seite.Spiel?.ImInnenraum == true || !seite.OrteKnopfSichtbar;
             Pruefe(name, doppelt.Count == 0 && verlassen && orte,
                 "Leiste: " + string.Join(", ", leiste) + (doppelt.Count > 0 ? " (DOPPELT: " + string.Join(", ", doppelt) + ")" : "")
-                + (verlassen ? "" : seite.HinweisZu ? ", Spiel verlassen ZUGEKLAPPT DA" : ", Spiel verlassen FEHLT") + (orte ? "" : ", Orte mit 3D da"));
+                + (verlassen ? "" : ", Spiel verlassen FEHLT") + (orte ? "" : ", Orte mit 3D da"));
         }
         var vorher = seite.Spiel;
         try
@@ -71,31 +69,9 @@ public static partial class AutoMessung
             await ansicht.BildFertigAsync();
             Lage("draussen" + (gl ? "" : " ohne 3D"));
             Pruefe("ohne 3D Orte", gl || seite.OrteKnopfSichtbar, gl ? "mit 3D (kein Knopf Orte)" : seite.OrteKnopfSichtbar ? "Knopf Orte da" : "Knopf Orte FEHLT");
-            var zuVorher = seite.HinweisZu;
-            seite.HinweisUmschalten();
-            await ansicht.BildFertigAsync();
-            var zu = seite.HinweisZu ? "zugeklappt" : "aufgeklappt";
-            var verlassenSoll = !seite.HinweisZu;
-            Pruefe("Handy und Spiel verlassen " + zu, seite.VerlassenKnopf.IsEffectivelyVisible == verlassenSoll && seite.QuestKnopf?.IsEffectivelyVisible == true,
-                (seite.VerlassenKnopf.IsEffectivelyVisible ? "Spiel verlassen da" : "Spiel verlassen weg") + (verlassenSoll ? " (soll da)" : " (soll weg, 371)")
-                + (seite.QuestKnopf?.IsEffectivelyVisible == true ? ", Handy da" : ", Handy FEHLT"));
-            Lage(zu);
-            if (seite.HinweisZu)
-            {
-                // Gegenprobe 371: mit dem alten Verhalten bleibt der Knopf zugeklappt da, die Pruefung oben erkennt das
-                seite.VerlassenZuAltFuerTests = true;
-                seite.Beschriften();
-                await ansicht.BildFertigAsync();
-                var altDa = seite.VerlassenKnopf.IsEffectivelyVisible;
-                seite.VerlassenZuAltFuerTests = false;
-                seite.Beschriften();
-                await ansicht.BildFertigAsync();
-                Pruefe("Gegenprobe 371 zugeklappt alt", altDa && !seite.VerlassenKnopf.IsEffectivelyVisible,
-                    (altDa ? "alt: Knopf da (erkannt)" : "alt: Knopf WEG (Gegenprobe wirkt nicht)") + (seite.VerlassenKnopf.IsEffectivelyVisible ? ", neu: Knopf DA" : ", neu: Knopf weg"));
-            }
-            seite.HinweisUmschalten();
-            await ansicht.BildFertigAsync();
-            Pruefe("Pfeil zurueck", seite.HinweisZu == zuVorher, seite.HinweisZu == zuVorher ? "wie vorher" : "Zustand NICHT zurueck");
+            // seit A 1.13.0 (Sammelliste 464, Nico 5a): kein Dreieck mehr, „Spiel verlassen“ und das Handy sind immer zu sehen
+            Pruefe("Handy und Spiel verlassen ohne Dreieck", seite.VerlassenKnopf.IsEffectivelyVisible && seite.QuestKnopf?.IsEffectivelyVisible == true,
+                (seite.VerlassenKnopf.IsEffectivelyVisible ? "Spiel verlassen da" : "Spiel verlassen FEHLT") + (seite.QuestKnopf?.IsEffectivelyVisible == true ? ", Handy da" : ", Handy FEHLT"));
             // nach einem schmalen Fenster steht „Spiel verlassen“ am PC wieder neben dem Pfeil (die Leiste klemmt nicht)
             if (TopLevel.GetTopLevel(ansicht) is Window fenster)
             {
@@ -231,12 +207,6 @@ public static partial class AutoMessung
             }
             Frisch(s);
             await ansicht.BildFertigAsync();
-            // Sammelliste 371: zugeklappt erst aufklappen (der Weg zum Verlassen bleibt: Pfeil, dann der Knopf)
-            if (s.HinweisZu)
-            {
-                s.HinweisUmschalten();
-                await ansicht.BildFertigAsync();
-            }
             var knopf = s.VerlassenKnopf;
             switch (art)
             {

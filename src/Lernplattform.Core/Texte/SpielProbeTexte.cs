@@ -320,6 +320,10 @@ public static class SpielProbeTexte
     // Phase 8 W10 (Sammelliste 148, Nico 1b): Klappknopf des Hinweisfelds (Bildschirmleser)
     public const string HinweisEinklappen = "Hinweis einklappen";
     public const string HinweisAusklappen = "Hinweis ausklappen";
+    // Welle A 1.13.0 (Sammelliste 464): Zeile oben mit dem Hinweis (Bildschirmleser); das Dreieck mit den zwei Texten oben gibt es
+    // seitdem nicht mehr (die Texte bleiben fuer die Hilfe-Begriffe unveraendert stehen)
+    public const string HinweisZeile = "Hinweis: {0}. Antippen zeigt den ganzen Text.";
+    public const string HinweisGanz = "Hinweis: {0}. Antippen schließt den ganzen Text.";
     public const string ImBuero = "Büro der Bitweiche. Tippe auf den Boden, um hinzugehen.";
     public const string Spielzeit = "Spielzeit {0} Uhr";
     public const string Bilder = "{0} Bilder/s";

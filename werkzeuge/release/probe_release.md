@@ -1,24 +1,24 @@
-In der Prüfung im echten Format zeichnest du Struktogramme jetzt selbst im Baukasten.
+Im Spiel stehen die Hinweise nicht mehr unten auf dem Weg deiner Figur, sondern als schmale Zeile oben neben der Uhr.
 
-- In der Anwendungsentwicklung (Prüfungsbereich 2) gibt es eine Aufgabe, in der du ein Struktogramm zeichnest. Bisher war das eine Aufgabe auf Papier, jetzt zeichnest du es direkt im Programm.
-- Du hast sieben Bausteine: Anweisung, Verzweigung, Fallauswahl, Zählschleife, Schleife mit Prüfung am Anfang (solange), Schleife mit Prüfung am Ende (wiederhole) und Aufruf. Tippe einen Baustein an, und er kommt an die Stelle, die unter „Neuer Block kommt“ steht: nach oder vor dem gewählten Block oder in einen Zweig.
-- Du tippst einen Block im Bild oder in der Liste darunter an und schreibst seinen Text. Mit „Nach oben“, „Nach unten“ und „Heraus“ verschiebst du ihn, mit „Entfernen“ nimmst du ihn weg; hat er Inhalt, fragt das Programm vorher nach. Bei der Fallauswahl fügst du Fälle hinzu oder nimmst sie weg, „sonst“ steht immer am Ende.
-- Das Bild folgt der üblichen Norm: Ein leerer Zweig zeigt „∅“, ein Aufruf hat doppelte Seitenlinien. Dein Text steht genau so da, wie du ihn eingibst.
-- Nach dem Abgeben siehst du deine Zeichnung neben dem Musterbild, dazu eine Zählung der Bausteine, damit du selbst vergleichen kannst.
-- Mit der Tastatur wählst du Blöcke mit den Pfeiltasten und öffnest das Textfeld mit der Eingabetaste; der Screenreader liest jeden Block vor.
-- Die Aufgabe hat dafür eine neue Fassung bekommen. Dein Lernstand, die anderen Lerninhalte und Prüfungssätze und deine Spielstände bleiben genau gleich.
+- Kommt deine Figur an ein Möbelstück, eine Tür oder eine Haltestelle, steht der Hinweis oben: fett der Name, dahinter der Text, so weit er in die Zeile passt. Am schmalen Handy im Hochformat steht die Zeile unter der Uhr.
+- Nach 6 Sekunden bleibt nur noch der Name stehen, blass. Gehst du weiter, verschwindet die Zeile ganz. Unten bleibt der Weg vor deiner Figur frei, dort stehen nur noch die Knöpfe zum Steuern.
+- Tippst du auf die Zeile (am PC auch mit der Maus oder der Taste H), siehst du den ganzen Text oben. Noch einmal Tippen zeigt wieder nur den Namen, Weitergehen schließt ihn. Die Taste kannst du in den Optionen unter der Tastenbelegung ändern.
+- Das Dreieck zum Ein- und Ausklappen des Hinweisfelds gibt es nicht mehr. Der Knopf für das Handy steht unten in der Mitte. „Spiel verlassen“ ist immer zu sehen.
+- Beim Einrichten der Wohnung bleibt die Tafel unten wie bisher, nur ohne Dreieck.
+- Der Screenreader liest jeden neuen Hinweis vor wie bisher.
+- Dein Lernstand, die Lerninhalte und deine Spielstände bleiben genau gleich.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.12.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.13.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.12.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.12.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.12.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.12.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.13.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.13.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.13.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.13.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)
