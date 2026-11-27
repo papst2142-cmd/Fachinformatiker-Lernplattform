@@ -22,7 +22,7 @@ public class KlausurTests
 {
     internal static readonly JsonNode G32 = LadeG32();
     internal static readonly Lerninhalte Inhalte = Lerninhalte.Laden(Pfade.Inhalte);
-    internal static readonly KlausurInhalte Klausurinhalte = new(Inhalte, Umbenennungen.Laden(Pfade.Inhalte));
+    internal static readonly KlausurInhalte Klausurinhalte = new(Inhalte);
     internal static readonly TimeZoneInfo Berlin = SpeichernTests.Berlin;
 
     private static JsonNode LadeG32()
@@ -124,6 +124,20 @@ public class KlausurTests
         }
     }
 
+    /// <summary>
+    /// A 1.18.0 (L0, Weisung P12-437 2a): alte Fragetexte schreibt der Start um (AlteFragetexte), nicht mehr die Pruefung beim
+    /// Anzeigen und Zaehlen. Gerechnet wird "Start, dann Pruefung" gegen den unveraenderten Sollwert G32: laufende WiSo-Pruefung
+    /// wie beim Start in einstellungen.json, gespeicherte Pruefungen wie pruefungen.daten.
+    /// </summary>
+    internal static JsonObject LaufendeNachStart(JsonNode zustand)
+    {
+        var werte = new JsonObject { [LaufendePruefung.Schluessel] = zustand.DeepClone() };
+        AlteFragetexte.LaufendeUmschreiben(werte);
+        return werte[LaufendePruefung.Schluessel]!.DeepClone().AsObject();
+    }
+
+    internal static List<KlausurEintrag> VerlaufNachStart(JsonNode? liste) => Verlauf(AlteFragetexteTests.MitHeutigenTexten(liste));
+
     internal static List<KlausurEintrag> Verlauf(JsonNode? liste) => liste!.AsArray()
         .Select(e => new KlausurEintrag("", Json.Text(e!["art"]), null, null, e["daten"]?.DeepClone(), null)).ToList();
 
@@ -140,7 +154,7 @@ public class KlausurTests
         foreach (var fall in neu["faelle"]!.AsArray())
         {
             var art = (string)fall!["art"]!;
-            var verlauf = Verlauf(verlaeufe[art + "|" + (string)fall["verlauf"]!]);
+            var verlauf = VerlaufNachStart(verlaeufe[art + "|" + (string)fall["verlauf"]!]);
             var startwert = (long)fall["startwert"]!;
             var ort = art + " " + (string)fall["verlauf"]! + " " + startwert;
             var naiv = Klausur.NeuOrtszeit(Klausurinhalte, art, verlauf, new PythonZufall(startwert), NaivBerlin(jetzt), Berlin);
@@ -201,7 +215,7 @@ public class KlausurTests
         }
         foreach (var a in b["auswertungen"]!.AsArray())
         {
-            var zustand = a!["zustand"]!.DeepClone().AsObject();
+            var zustand = LaufendeNachStart(a!["zustand"]!);
             if (a["wiso"] is JsonArray wiso)
             {
                 Assert.Equal(Py(wiso), Py(Bewertung.Wiso(Klausurinhalte, zustand)
@@ -284,7 +298,7 @@ public class KlausurTests
         var m = G32["migration"]!;
         foreach (var f in m["faelle"]!.AsArray())
         {
-            var zustand = f![0]!.DeepClone().AsObject();
+            var zustand = LaufendeNachStart(f![0]!);
             LaufendePruefung.Migrieren(Klausurinhalte, zustand);
             Assert.Equal(Py(f[1]), Py(zustand));
         }
@@ -312,7 +326,7 @@ public class KlausurTests
             var schreiber = new LernstandSchreiber(lernstand, SpeichernTests.FesteUhr(() => jetzt), () => uids[naechste++]);
             var einstellungen = new JsonObject();
             var ablage = new LaufendePruefung(() => einstellungen.DeepClone().AsObject(), a => { a(einstellungen); return true; });
-            var zustand = aufruf["zustand"]!.DeepClone().AsObject();
+            var zustand = LaufendeNachStart(aufruf["zustand"]!);
             zustand[LaufendePruefung.KennungSchluessel] = uids[^1];
             Assert.NotNull(Abschluss.Abschliessen(Klausurinhalte, schreiber, ablage, zustand));
             Assert.Equal(uids.Count - 1, naechste);

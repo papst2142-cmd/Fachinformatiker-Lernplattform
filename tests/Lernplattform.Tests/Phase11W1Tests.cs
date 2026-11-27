@@ -117,11 +117,10 @@ public class Phase11W1Tests
     public void Abschluss_AufgabenDerFachrichtungTreffenIhrSzenario_SiUnveraendert()
     {
         var alle = Echt();
-        var umbenennungen = Umbenennungen.Laden(Pfade.Inhalte);
         foreach (var fr in Fachrichtung.Alle)
         {
             var sicht = alle.Fuer(fr.Id);
-            var inhalte = new KlausurInhalte(sicht, umbenennungen);
+            var inhalte = new KlausurInhalte(sicht);
             foreach (var bereich in fr.Bereiche.Where(b => b.Rolle is "b1" or "b2"))
             {
                 var zustand = Klausur.Neu(inhalte, bereich.Art, [], new PythonZufall(5), new DateTimeOffset(2026, 11, 2, 8, 0, 0, TimeSpan.Zero), SpeichernTests.Berlin);

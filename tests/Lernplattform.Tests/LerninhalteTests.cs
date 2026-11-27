@@ -26,12 +26,16 @@ public class LerninhalteTests
     private static readonly JsonElement G52 = VergleichsHilfe.Lade("lerninhalte_pruefung.json");
     private static readonly string Lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
     private static readonly string Probe = Path.Combine(Pfade.Wurzel, "tests", "Lerninhalte", "probe");
-    private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen =
-        Core.Daten.Umbenennungen.Laden(Pfade.Inhalte);
 
     /// <summary>Datei aus dem ersten Ordner, der sie hat (Name ohne ".json"), sonst null.</summary>
-    private static Func<string, byte[]?> Ordner(params string[] ordner) => name =>
+    internal static Func<string, byte[]?> Ordner(params string[] ordner) => name =>
         ordner.Select(o => Path.Combine(o, name + ".json")).FirstOrDefault(File.Exists) is { } pfad ? File.ReadAllBytes(pfad) : null;
+
+    /// <summary>
+    /// A 1.18.0 (L0): der Stand vor dem Loeschen (<see cref="L0Vorher"/>); die Zaehltests der Wellen davor beschreiben die
+    /// Stellen in den Dateien vor L0 und rechnen darauf, <see cref="L2_SichtbareZahlen_VorUndNachL0Gleich"/> prueft heute.
+    /// </summary>
+    private static Lerninhalte VorL0() => Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), L0Vorher.Ordner());
 
     /// <summary>Immer frisch geladen: MitLernen setzt die Zugehoerigkeit der bisherigen Eintraege.</summary>
     private static Lerninhalte Echt() => Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), Ordner(Lernen));
@@ -45,10 +49,10 @@ public class LerninhalteTests
     [Fact]
     public void EchteUndProbeOhneMeldung_GleichSkript()
     {
-        Assert.Equal(Texte(G52.GetProperty("echt")), InhaltePruefung.PruefenLernen(Echt(), Umbenennungen));
-        Assert.Empty(InhaltePruefung.PruefenLernen(Echt(), Umbenennungen));
-        Assert.Equal(Texte(G52.GetProperty("probe")), InhaltePruefung.PruefenLernen(MitProbe(), Umbenennungen));
-        Assert.Empty(InhaltePruefung.PruefenLernen(MitProbe(), Umbenennungen));
+        Assert.Equal(Texte(G52.GetProperty("echt")), InhaltePruefung.PruefenLernen(Echt()));
+        Assert.Empty(InhaltePruefung.PruefenLernen(Echt()));
+        Assert.Equal(Texte(G52.GetProperty("probe")), InhaltePruefung.PruefenLernen(MitProbe()));
+        Assert.Empty(InhaltePruefung.PruefenLernen(MitProbe()));
     }
 
     public static TheoryData<string> Faelle()
@@ -100,7 +104,7 @@ public class LerninhalteTests
             n => dateien.TryGetValue(n, out var d) ? Encoding.UTF8.GetBytes(d.ToJsonString()) : lesen(n));
         var soll = Texte(G52.GetProperty("faelle").GetProperty(name));
         Assert.NotEmpty(soll);
-        Assert.Equal(soll, InhaltePruefung.PruefenLernen(inhalte, Umbenennungen));
+        Assert.Equal(soll, InhaltePruefung.PruefenLernen(inhalte));
     }
 
     private static JsonNode? Schritt(JsonNode knoten, JsonNode teil) =>
@@ -125,7 +129,7 @@ public class LerninhalteTests
         Assert.Equal(Schluessel(vorher.Karteikarten), Schluessel(inhalte.Fuer("si").Karteikarten));
         Assert.Equal(Schluessel(vorher.Quizfragen), Schluessel(inhalte.Fuer("si").Quizfragen));
         Assert.Empty(inhalte.Fuer("ae").Karteikarten);     // ohne Einteilung gilt si
-        Assert.Empty(InhaltePruefung.PruefenLernen(Lerninhalte.MitLernenSicher(() => Lerninhalte.Laden(Pfade.Inhalte), Ordner(Lernen), fehler.Add), Umbenennungen));
+        Assert.Empty(InhaltePruefung.PruefenLernen(Lerninhalte.MitLernenSicher(() => Lerninhalte.Laden(Pfade.Inhalte), Ordner(Lernen), fehler.Add)));
         Assert.Single(fehler);
     }
 
@@ -345,7 +349,7 @@ public class LerninhalteTests
     [Fact]
     public void AeRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
     {
-        var alle = Echt();
+        var alle = VorL0();   // Stellen vor L0 (A 1.18.0)
         // die neuen Eintraege haengen hinter Runde 1 an (900 Karten, 1 110 Fragen) und gehoeren alle zu FIAE
         // (Phase 10 W3 haengt FIDP dahinter an)
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(900).Take(1200).Count());
@@ -377,7 +381,7 @@ public class LerninhalteTests
     [Fact]
     public void DpaRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
     {
-        var alle = Echt();
+        var alle = VorL0();   // Stellen vor L0 (A 1.18.0)
         // die neuen Eintraege haengen hinter FIAE Runden 2 bis 4 an (2 100 Karten, 2 860 Fragen) und gehoeren alle zu FIDP
         // (Phase 10 W4 haengt FIDV dahinter an)
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(2100).Take(1200).Count());
@@ -447,7 +451,7 @@ public class LerninhalteTests
     [Fact]
     public void DvRunden2bis4_ZahlenJeArt_AndereBleibenGleich()
     {
-        var alle = Echt();
+        var alle = VorL0();   // Stellen vor L0 (A 1.18.0)
         // die neuen Eintraege haengen hinter FIDP Runden 2 bis 4 an (3 300 Karten, 4 610 Fragen) und gehoeren alle zu FIDV
         Assert.Equal(1200, NeueEintraege(alle.Karteikarten).Skip(3300).Count());
         Assert.All(NeueEintraege(alle.Karteikarten).Skip(3300), e => Assert.Equal("dv", e.Zugehoerigkeit));
@@ -478,6 +482,28 @@ public class LerninhalteTests
         }
     }
 
+    /// <summary>
+    /// L2 (Weisung P12-424): nach dem Loeschen sieht jede Fachrichtung genau so viele Inhalte je Art wie vorher (die geloeschten
+    /// Eintraege waren ausgeblendet), und jeder sichtbare Eintrag ist derselbe (gleiche Reihenfolge, gleiche Frage).
+    /// </summary>
+    [Fact]
+    public void L2_SichtbareZahlen_VorUndNachL0Gleich()
+    {
+        var vorher = VorL0();
+        var heute = Echt();
+        Assert.Equal(128, vorher.Ausschluss.Count);
+        Assert.Empty(heute.Ausschluss);
+        foreach (var fr in Fachrichtungen.Werte)
+        {
+            Assert.Equal(Groesse(vorher, fr), Groesse(heute, fr));
+            var (v, h) = (vorher.Fuer(fr), heute.Fuer(fr));
+            Assert.Equal(v.Karteikarten.Select(e => e.Frage), h.Karteikarten.Select(e => e.Frage));
+            Assert.Equal(v.Quizfragen.Select(e => e.Frage), h.Quizfragen.Select(e => e.Frage));
+            Assert.Equal(v.Testprojekte.Select(e => (e.Nummer, e.Frage)), h.Testprojekte.Select(e => (e.Nummer, e.Frage)));
+        }
+        Assert.Equal((2584, 3735), (heute.Fuer("si").Karteikarten.Count, heute.Fuer("si").Quizfragen.Count));
+    }
+
     // -- FISI auffuellen (Weisung P12-97, Nico 08.11.2026 20:54 MEZ, Sammelliste 243) -------------
 
     /// <summary>
@@ -488,7 +514,7 @@ public class LerninhalteTests
     [Fact]
     public void SiAuffuellen_ZahlenJeArt_AndereBleibenGleich()
     {
-        var alle = Echt();
+        var alle = VorL0();   // Stellen vor L0 (A 1.18.0)
         Assert.Equal(1019, NeueSi(alle.Karteikarten, alle.Bisher.Karteikarten.Count).Count());
         Assert.Equal(1019, alle.Karteikarten.Skip(alle.Bisher.Karteikarten.Count + 4500).Count());
         Assert.All(alle.Karteikarten.Skip(alle.Bisher.Karteikarten.Count + 4500), e => Assert.Equal("si", e.Zugehoerigkeit));
@@ -553,9 +579,10 @@ public class LerninhalteTests
     private static readonly (string Quelle, int Stelle, string Option)[] VerneinungLogik =
     [
         ("inhalte/quizfragen", 1415, "wenn NICHT stammkunde UND bestellwert > 500"),
-        ("lernen/quizfragen", 3205, "NICHT-Gatter"),
-        ("lernen/quizfragen", 4893, "NICHT"),
-        ("lernen/quizfragen", 4910, "NICHT"),
+        // A 1.18.0 (L0): Stellen nach dem Loeschen (vorher 3205, 4893, 4910; L0Vorher.StelleHeute)
+        ("lernen/quizfragen", 3204, "NICHT-Gatter"),
+        ("lernen/quizfragen", 4892, "NICHT"),
+        ("lernen/quizfragen", 4909, "NICHT"),
         ("lernen/karteikarten", 3508, "NICHT (A UND B) = NICHT A ODER NICHT B"),
         ("lernen/karteikarten", 3508, "NICHT (A UND B) = NICHT A UND B ODER A UND NICHT B"),
         ("lernen/karteikarten", 3508, "NICHT (A UND B) = A ODER B"),
@@ -566,8 +593,11 @@ public class LerninhalteTests
     private static (string Quelle, int Stelle) QuelleUndStelle(string art, int nummer, int basis) =>
         nummer <= basis ? ("inhalte/" + art, nummer - 1) : ("lernen/" + art, nummer - 1 - basis);
 
-    /// <summary>Optionen mit Verneinung in Grossschrift: (Quelle, Stelle, Option), ohne die festen Ausnahmen.</summary>
-    private static List<(string Quelle, int Stelle, string Option)> GrossschriftVerneinungen(Lerninhalte sicht, Lerninhalte alle)
+    /// <summary>
+    /// Optionen mit Verneinung in Grossschrift: (Quelle, Stelle, Option), ohne die festen Ausnahmen. vorL0: die Inhalte sind
+    /// der Stand vor dem Loeschen (<see cref="L0Vorher"/>), die Ausnahmen werden mit der Stelle von heute verglichen.
+    /// </summary>
+    private static List<(string Quelle, int Stelle, string Option)> GrossschriftVerneinungen(Lerninhalte sicht, Lerninhalte alle, bool vorL0 = false)
     {
         var funde = new List<(string, int, string)>();
         foreach (var (art, liste, basis) in new[] { ("karteikarten", sicht.Karteikarten, alle.Bisher.Karteikarten.Count),
@@ -576,9 +606,10 @@ public class LerninhalteTests
             foreach (var e in liste)
             {
                 var (quelle, stelle) = QuelleUndStelle(art, e.Nummer, basis);
+                var heute = vorL0 && quelle.StartsWith("lernen/", StringComparison.Ordinal) ? L0Vorher.StelleHeute(art, stelle) ?? -1 : stelle;
                 foreach (var o in e.Optionen.Where(o => Verneinung.IsMatch(o)))
                 {
-                    if (!VerneinungLogik.Contains((quelle, stelle, o)))
+                    if (!VerneinungLogik.Contains((quelle, heute, o)))
                     {
                         funde.Add((quelle, stelle, o));
                     }
@@ -626,8 +657,9 @@ public class LerninhalteTests
     [Fact]
     public void Optionen_OhneGrossschriftVerneinung_Gegenprobe()
     {
+        // A 1.18.0 (L0): die alten Fassungen sind geloescht; gerechnet wird auf dem Stand vor L0 (L0Vorher)
         var ohne248 = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), OhneAusschluss248());
-        var funde = GrossschriftVerneinungen(ohne248, ohne248);
+        var funde = GrossschriftVerneinungen(ohne248, ohne248, vorL0: true);
         Assert.Equal(157, funde.Count);
         Assert.All(funde, f => Assert.StartsWith("lernen/", f.Quelle));
         // ohne die feste Liste waeren auch die 8 Logik-Optionen ein Fund
@@ -639,10 +671,13 @@ public class LerninhalteTests
         Assert.DoesNotMatch(Verneinung, "Nichtig, Keinesfalls, Nurse");
     }
 
-    /// <summary>inhalte_csharp/lernen ohne die Ausschluesse aus Sammelliste 248 (alte Fassungen wieder gezogen).</summary>
+    /// <summary>
+    /// inhalte_csharp/lernen ohne die Ausschluesse aus Sammelliste 248 (alte Fassungen wieder gezogen); seit A 1.18.0 der
+    /// Stand vor dem Loeschen (<see cref="L0Vorher"/>), weil die alten Fassungen geloescht sind.
+    /// </summary>
     private static Func<string, byte[]?> OhneAusschluss248()
     {
-        var lernen = Ordner(Lernen);
+        var lernen = L0Vorher.Ordner();
         return name =>
         {
             var inhalt = lernen(name);
@@ -665,7 +700,7 @@ public class LerninhalteTests
     /// verrieten (Datei, Stelle der neuen Fassung ab 0, Nummer der Option ab 0). Alle anderen gleichen der alten Fassung
     /// bis auf die Gross-/Kleinschreibung.
     /// </summary>
-    private static readonly (string Datei, int Stelle, int Option)[] Umformuliert248 = [("quizfragen", 7963, 3), ("quizfragen", 7976, 2)];
+    private static readonly (string Datei, int Stelle, int Option)[] Umformuliert248 = [("quizfragen", 7963, 3), ("quizfragen", 7976, 2)];   // Stellen vor L0
 
     /// <summary>
     /// Weisung P12-106 (Sammelliste 248): 127 FISI-Eintraege (47 Karten, 80 Fragen) haben eine neue Fassung am Ende der
@@ -676,7 +711,9 @@ public class LerninhalteTests
     [Fact]
     public void Grossschrift248_NeueFassungAngehaengt_AlteAusgeschlossen_ZahlenGleich()
     {
-        var alle = Echt();
+        // A 1.18.0 (L0): die alten Fassungen sind geloescht (geloescht.json); geprueft wird der Stand vor L0 (L0Vorher),
+        // dazu, dass genau diese 127 alten Fassungen geloescht sind und die Zahlen heute gleich bleiben
+        var alle = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), L0Vorher.Ordner());
         // Eintrag 0 ist Sammelliste 181 (quizfragen 231), danach folgen die 127 aus Sammelliste 248
         Assert.Equal(("quizfragen", 231), (alle.Ausschluss[0].Datei, alle.Ausschluss[0].Stelle));
         var aus = alle.Ausschluss.Skip(1).ToList();
@@ -687,9 +724,11 @@ public class LerninhalteTests
                      ("quizfragen", 80, alle.Bisher.Quizfragen.Count, alle.Quizfragen),
                  })
         {
-            var roh = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, datei + ".json")))!.AsArray();
+            var roh = JsonNode.Parse(L0Vorher.Datei(datei))!.AsArray();
             var alte = aus.Where(a => a.Datei == datei).Select(a => a.Stelle).Order().ToList();
             Assert.Equal(anzahl, alte.Count);
+            Assert.Equal(alte, GeloeschtListe().Where(g => g.Datei == datei && g.Grund.Contains("Sammelliste 248", StringComparison.Ordinal))
+                .Select(g => g.Stelle).Order());
             for (var i = 0; i < anzahl; i++)
             {
                 var alt = roh[alte[i]]!.AsObject();
@@ -718,6 +757,11 @@ public class LerninhalteTests
         }
         Assert.True(JedeArtGleichGross(alle), Groessen(alle));
         Assert.Equal((2584, 3735), (alle.Fuer("si").Karteikarten.Count, alle.Fuer("si").Quizfragen.Count));
+        // heute: dieselben Zahlen ohne Ausschluss (geloescht statt ausgeblendet)
+        var heute = Echt();
+        Assert.Empty(heute.Ausschluss);
+        Assert.True(JedeArtGleichGross(heute), Groessen(heute));
+        Assert.Equal((2584, 3735), (heute.Fuer("si").Karteikarten.Count, heute.Fuer("si").Quizfragen.Count));
     }
 
     /// <summary>
@@ -791,7 +835,7 @@ public class LerninhalteTests
         // (der Hinweis "noch keine Aufgaben" kommt bei keiner Fachrichtung mehr)
         foreach (var fr in new[] { "ae", "dpa", "dv" })
         {
-            var echt = new KlausurInhalte(Echt().Fuer(fr), Umbenennungen);
+            var echt = new KlausurInhalte(Echt().Fuer(fr));
             foreach (var art in Fachrichtung.Nach(fr).Bereiche.Where(b => b.Rolle is "b1" or "b2"))
             {
                 Assert.True(echt.Spielbar(art.Art), fr + " " + art.Art);
@@ -800,7 +844,7 @@ public class LerninhalteTests
         }
         foreach (var (fr, arten) in new[] { ("ae", new[] { "softwareprodukt", "algorithmen" }), ("dpa", new[] { "prozessanalyse", "datenqualitaet" }), ("dv", new[] { "diagnose", "betrieb" }) })
         {
-            var echt = new KlausurInhalte(Echt().Fuer(fr), Umbenennungen);
+            var echt = new KlausurInhalte(Echt().Fuer(fr));
             foreach (var art in arten)
             {
                 var zustand = Klausur.Neu(echt, art, [], new PythonZufall(11), new DateTimeOffset(2026, 10, 30, 8, 0, 0, TimeSpan.Zero), SpeichernTests.Berlin);
@@ -815,7 +859,7 @@ public class LerninhalteTests
                 }
             }
         }
-        var probe = new KlausurInhalte(MitProbe().Fuer("ae"), Umbenennungen);
+        var probe = new KlausurInhalte(MitProbe().Fuer("ae"));
         Assert.False(probe.Spielbar("prozessanalyse"));
         foreach (var art in new[] { "softwareprodukt", "algorithmen" })
         {
@@ -830,7 +874,7 @@ public class LerninhalteTests
             }
         }
         // FISI-Klausur bleibt wie heute
-        Assert.True(new KlausurInhalte(MitProbe().Fuer("si"), Umbenennungen).Spielbar(Klausur.Konzeption));
+        Assert.True(new KlausurInhalte(MitProbe().Fuer("si")).Spielbar(Klausur.Konzeption));
         Assert.Equal("ap2", Klausur.Art(Klausur.Konzeption)!.Quelle);
     }
 
@@ -3379,12 +3423,75 @@ public class LerninhalteTests
             }
             // Phase 10 W2: fachgespraech.json ist ein Objekt mit der Liste "fragen" (wie inhalte/fachgespraech.json)
             var ist = (datei == Lerninhalte.FachgespraechDatei ? daten["fragen"]! : daten).AsArray().Select(e => Hash(e!)).ToList();
-            Assert.True(ist.Count >= soll.Length, datei + ": Eintraege geloescht");
-            Assert.Equal(soll, ist.Take(soll.Length));
-            Assert.True(ist.Count == soll.Length, datei + ": neue Eintraege in die Tabelle Eingetragen anhaengen: " + string.Join(", ", ist.Skip(soll.Length)));
+            // A 1.18.0 (L0, Weisung P12-424 Nico 1b): geloescht wird nur ueber die Loeschliste geloescht.json; die Tabelle bleibt
+            // vollstaendig (nur anhaengen), die Datei ist die Tabelle ohne die eingetragenen Stellen (Hash je Stelle gleich)
+            var weg = GeloeschtListe().Where(g => g.Datei == datei).ToList();
+            foreach (var g in weg)
+            {
+                Assert.True(g.Stelle < soll.Length && soll[g.Stelle] == g.Hash16, datei + ": Loeschliste Stelle " + g.Stelle + " passt nicht zur Tabelle");
+            }
+            var stellen = weg.Select(g => g.Stelle).ToHashSet();
+            var bleibt = soll.Where((_, i) => !stellen.Contains(i)).ToList();
+            Assert.True(ist.Count >= bleibt.Count, datei + ": Eintraege geloescht, die nicht in geloescht.json stehen");
+            Assert.Equal(bleibt, ist.Take(bleibt.Count));
+            Assert.True(ist.Count == bleibt.Count, datei + ": neue Eintraege in die Tabelle Eingetragen anhaengen: " + string.Join(", ", ist.Skip(bleibt.Count)));
         }
         Assert.Equal(Lerninhalte.LernenListen.Select(l => l.Name).Append(Lerninhalte.ThemenDatei).Append(Lerninhalte.FachgespraechDatei).Order(StringComparer.Ordinal),
             Eingetragen.Keys.Order(StringComparer.Ordinal));
+    }
+
+    /// <summary>Ein Eintrag der Loeschliste inhalte_csharp/lernen/geloescht.json (A 1.18.0, L0).</summary>
+    internal sealed record Geloescht(string Datei, int Stelle, string? Frage, string? Kennung, long? Fassung, string Hash16, string Grund);
+
+    internal static IReadOnlyList<Geloescht> GeloeschtListe()
+    {
+        var daten = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, Lerninhalte.GeloeschtDatei + ".json")))!;
+        return [.. daten["eintraege"]!.AsArray().Select(e => new Geloescht((string)e!["datei"]!, (int)e["stelle"]!, (string?)e["q"],
+            (string?)e["kennung"], (long?)e["fassung"], (string)e["hash16"]!, (string)e["grund"]!))];
+    }
+
+    /// <summary>
+    /// L1 (Weisung P12-424): die Loeschliste ist vollstaendig und eindeutig. Je Eintrag Datei, Stelle vor dem Loeschen, Text
+    /// bzw. Kennung und Fassung, hash16 (16 Zeichen), Grund, Datum und Weisung; keine Stelle doppelt; nichts geloescht, was nicht
+    /// in der Liste steht (Listen: <see cref="NurAnhaengen_EintraegeGleichDerTabelle"/>, Saetze: <c>EchtSaetzeLoeschlisteTests</c>).
+    /// </summary>
+    [Fact]
+    public void Loeschliste_VollstaendigUndEindeutig()
+    {
+        var daten = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, Lerninhalte.GeloeschtDatei + ".json")))!;
+        var eintraege = daten["eintraege"]!.AsArray();
+        Assert.NotEmpty(eintraege);
+        foreach (var e in eintraege)
+        {
+            var o = e!.AsObject();
+            Assert.Matches("^[0-9a-f]{16}$", (string)o["hash16"]!);
+            Assert.False(string.IsNullOrWhiteSpace((string?)o["grund"]));
+            Assert.Matches(@"^\d{4}-\d{2}-\d{2}$", (string)o["datum"]!);
+            Assert.Matches("^P\\d+-\\d+$", (string)o["weisung"]!);
+            Assert.Contains((string)o["fachrichtung"]!, new[] { "si", "ae", "dpa", "dv" });
+            var datei = (string)o["datei"]!;
+            Assert.True(datei == Core.Pruefung.Echt.EchtSaetze.DateiName
+                ? o["kennung"] is not null && o["fassung"] is not null && o["q"] is null
+                : Eingetragen.ContainsKey(datei) && datei != "themen" && o["q"] is not null && o["kennung"] is null, datei);
+        }
+        var liste = GeloeschtListe();
+        Assert.Equal(liste.Count, liste.Select(g => (g.Datei, g.Stelle)).Distinct().Count());
+        // Gegenprobe: um eine Stelle verschoben passt der Hash nicht mehr zur Tabelle (die Pruefung je Stelle greift)
+        Assert.Contains(liste.Where(g => g.Datei != Core.Pruefung.Echt.EchtSaetze.DateiName), g => Eingetragen[g.Datei][g.Stelle + 1] != g.Hash16);
+    }
+
+    /// <summary>L4 (Weisung P12-424 Nico 2b/3a): keine umbenennungen.json mehr, keine Quelle „alte Datenbank“ bei der Uebernahme.</summary>
+    [Fact]
+    public void PythonWeg_KeineUmbenennungenKeineAlteDatenbank()
+    {
+        Assert.False(File.Exists(Path.Combine(Pfade.Inhalte, "umbenennungen.json")));
+        Assert.False(File.Exists(Path.Combine(Lernen, "ausschluss.json")));
+        Assert.Equal(["AbgleichDatei", "Sicherung"], Enum.GetNames<UebernahmeQuelle>().Order(StringComparer.Ordinal));
+        Assert.DoesNotContain("AlteDatenbank", Enum.GetNames<UebernahmeFehler>().Concat(Enum.GetNames<UebernahmeQuelle>()));
+        Assert.Null(typeof(Uebernahme).GetMethod("LeseAlteDatenbank"));
+        Assert.Null(typeof(Uebernahme).Assembly.GetType("Lernplattform.Core.Daten.Umbenennungen"));
+        // Eine SQLite-Datei ist keine Quelle mehr (Kopf "SQLite format 3")
+        Assert.Null(UebernahmeAblauf.Erkennen([.. "SQLite format 3\0"u8, .. new byte[200]]));
     }
 
     [Fact]
@@ -3438,7 +3545,7 @@ public class LerninhalteTests
         public void Abgleichen(GitHubAttrappe attrappe)
         {
             using var netz = new GitHubZugang(attrappe.Basis, TimeSpan.FromSeconds(10));
-            Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, [], Uhr);
+            Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, Uhr);
         }
 
         /// <summary>Alle Zeilen aller Tabellen ohne die Zeile der Fachrichtung (zz-einstellungen) und ohne den Zaehler sqlite_sequence.</summary>

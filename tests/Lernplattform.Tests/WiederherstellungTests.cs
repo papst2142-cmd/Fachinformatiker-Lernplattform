@@ -17,7 +17,6 @@ public class WiederherstellungTests
 {
     private static readonly JsonElement G37 = VergleichsHilfe.Lade("sicherung_ersetzen.json");
     private static readonly JsonElement G20 = VergleichsHilfe.Lade("uebernahme.json");
-    private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen = Core.Daten.Umbenennungen.Laden(Pfade.Inhalte);
 
     private static Uhr Uhr => SpeichernTests.FesteUhr(G37.GetProperty("jetzt_utc").GetString()!);
 
@@ -191,7 +190,7 @@ public class WiederherstellungTests
             var daten = Sicherung(fall.GetProperty("datei").GetString()!).Daten;
             foreach (var python in fall.GetProperty("meldungen").EnumerateArray().Select(m => m.GetString()!))
             {
-                var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), daten, Umbenennungen, Uhr);
+                var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), daten, Uhr);
                 var kern = hinweise.Aggregate(python, (text, h) => text.Replace(" " + h, "", StringComparison.Ordinal));
                 var ohneKopie = SicherungTexte.Zusammengefuehrt(bericht, null);
                 var ohneHinweise = UebernahmeTexte.Hinweise(UebernahmeQuelle.Sicherung, bericht.UngueltigInDatei, bericht.ZukunftsMarken)

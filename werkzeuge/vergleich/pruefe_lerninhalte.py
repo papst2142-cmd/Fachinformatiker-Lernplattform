@@ -32,6 +32,12 @@ Inhalt:
             Seit Sollwert-Aenderung Nr. 24 (A 1.8.0, Weisung P12-372): Format 4 mit neuer Fassung eines Satzes
             ("fassung": n, dieselbe Kennung hinten angehaengt, ersetzt die vorige an ihrer Stelle); je Satz mit
             Fassung ueber 1 dazu "fassung"
+            Seit Sollwert-Aenderung Nr. 28 (A 1.18.0, L0, Weisung P12-424): inhalte/umbenennungen.json ist weg, die
+            alten Fragetexte stehen nur noch in src/Lernplattform.Core/Daten/alte_fragetexte.json (gleicher Aufbau
+            "karte"/"quiz", nur fuer das Umschreiben des Lernstands beim Start); lernen/ausschluss.json gibt es
+            nicht mehr (geloeschte Eintraege stehen in lernen/geloescht.json), fehlt sie, schliesst sie nichts aus;
+            die sichten stehen nach Kennung geordnet (so stand eine neue Fassung bisher an der Stelle der alten;
+            seit die alte geloescht ist, steht die neue allein hinten in der Datei)
 
 Aufruf (Python 3.12, nur Standardbibliothek):
   python3 -I werkzeuge/vergleich/pruefe_lerninhalte.py <repo> <ziel.json>
@@ -55,7 +61,7 @@ AP2_THEMEN = ["Subnetting & Routing", "IT-Sicherheit", "Storage & RAID", "Netzwe
 THEMEN_BLOCK = {"Virtualisierung": "Storage & RAID", "Projektmanagement": "Wirtschaft & Beratung",
                 "Systemadministration": "Storage & RAID", "Automatisierung & Skripte": "Storage & RAID",
                 "Arbeitsplatz einrichten: Bedarf, Beschaffung, Übergabe": "Projektplanung"}
-LISTEN = [  # Datei, Pflichtfelder, Auswahl, Tabelle in umbenennungen.json, Felder, die Listen sein muessen
+LISTEN = [  # Datei, Pflichtfelder, Auswahl, Tabelle in alte_fragetexte.json, Felder, die Listen sein muessen
     ("karteikarten", ("cat", "q", "a", "a_full", "options"), True, "karte", ("rahmenplan", "options")),
     ("quizfragen", ("cat", "q", "a", "exp", "options"), True, "quiz", ("rahmenplan", "options")),
     ("szenarien_ap2", ("cat", "title", "theme", "text", "solution"), False, None, ("rahmenplan",)),
@@ -152,7 +158,7 @@ def pruefen(bisher, quiz_alle, lernen, umbenennungen):
                 meldungen.append("%s: doppelt vorhanden (%s)" % (wo, s[:60]))
             gesehen.add(s)
             if tabelle and s in alte_texte:
-                meldungen.append("%s: Fragetext steht als alter Text in umbenennungen.json" % wo)
+                meldungen.append("%s: Fragetext steht als alter Text in alte_fragetexte.json" % wo)
             if auswahl:
                 optionen = als_liste(e.get("options"))
                 if len(optionen) != 4 or len({json.dumps(o, ensure_ascii=False) for o in optionen}) != 4:
@@ -483,11 +489,12 @@ def pruefungssaetze(repo):
             saetze[kennung]["aufbau"] = s["aufbau"]
             saetze[kennung]["gebiete"] = {g: sum(t["punkte"] for t in alle_teile if t.get("gebiet") == g)
                                           for g in ("diagramm", "pseudocode", "sql")}
-    aus = lesen(os.path.join(repo, "inhalte_csharp", "lernen", "ausschluss.json"))
+    aus_pfad = os.path.join(repo, "inhalte_csharp", "lernen", "ausschluss.json")
+    aus = lesen(aus_pfad) if os.path.exists(aus_pfad) else {}
     ausgeschlossen = sorted(a["kennung"] for a in aus.get("eintraege") or [] if a.get("datei") == "pruefungssaetze"
                             and 0 <= a.get("stelle", -1) < len(daten["saetze"])
                             and daten["saetze"][a["stelle"]].get("kennung") == a.get("kennung"))
-    sichten = {fr: {b: [k for k, x in saetze.items() if x["bereich"] == b and k not in ausgeschlossen
+    sichten = {fr: {b: [k for k, x in sorted(saetze.items()) if x["bereich"] == b and k not in ausgeschlossen
                         and (x["fachrichtung"] == "alle" if b == "ap1" else x["fachrichtung"] == fr)]
                     for b in ("ap1", "b1", "b2")} for fr in FACHRICHTUNGEN}
     return {"format": daten["format"], "fehler": fehler, "saetze": saetze, "ausgeschlossen": ausgeschlossen, "sichten": sichten}
@@ -503,8 +510,8 @@ def main():
     inhalte = os.path.join(repo, "inhalte")
     bisher = {name: lesen(os.path.join(inhalte, name + ".json"))
               for name in ("karteikarten", "quizfragen", "szenarien_ap1", "szenarien_ap2", "projektarbeiten",
-                           "themen", "rahmenplan", "fachgespraech", "umbenennungen")}
-    umbenennungen = bisher["umbenennungen"]
+                           "themen", "rahmenplan", "fachgespraech")}
+    umbenennungen = lesen(os.path.join(repo, "src", "Lernplattform.Core", "Daten", "alte_fragetexte.json"))
 
     def ordner(pfad, namen):
         return {n: lesen(os.path.join(pfad, n + ".json")) for n in namen

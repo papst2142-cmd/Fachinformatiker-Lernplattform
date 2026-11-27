@@ -10,7 +10,7 @@ namespace Lernplattform.Core.Inhalte;
 /// Phase 9 W2 (Plan Phase 9 Abschnitt 5): Ladepruefung der neuen Inhalte in inhalte_csharp/lernen
 /// wie fisi_core.validate_content (Pflichtfelder, vier verschiedene Antworten, Thema im Fachbereich,
 /// Hinweis je Aufgabe), dazu das Pflichtfeld "fachrichtung", eindeutige Fragetexte und Titel ueber
-/// beide Ordner und gegen die alten Texte in umbenennungen.json, die Themen der Pruefungsbereiche und
+/// beide Ordner und gegen die alten Texte in alte_fragetexte.json (bis A 1.17.0 umbenennungen.json), die Themen der Pruefungsbereiche und
 /// der Rahmenplan-Zusatz. Unabhaengige Gegenkontrolle: werkzeuge/vergleich/pruefe_lerninhalte.py
 /// (Vergleichswerte G52). Leere Liste = alles in Ordnung.
 /// </summary>
@@ -34,14 +34,12 @@ public static partial class InhaltePruefung
     private static readonly string[] FachfrageFelder = ["id", "q", "hinweis"];
 
     /// <summary>Wie unten; die bisherigen Fragen fuers Fachgespraech kommen aus dem Ordner der Inhalte (leer ohne Ordner).</summary>
-    public static List<string> PruefenLernen(Lerninhalte alle, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen) =>
-        PruefenLernen(alle, umbenennungen, alle.Bisher.Ordner.Length > 0 ? Projekt.Fachgespraech.Laden(alle.Bisher.Ordner) : []);
+    public static List<string> PruefenLernen(Lerninhalte alle) =>
+        PruefenLernen(alle, alle.Bisher.Ordner.Length > 0 ? Projekt.Fachgespraech.Laden(alle.Bisher.Ordner) : []);
 
     /// <param name="alle">Gesamtinhalte aus <see cref="Lerninhalte.MitLernen"/>.</param>
-    /// <param name="umbenennungen">inhalte/umbenennungen.json (Tabelle, alter Text, neuer Text).</param>
     /// <param name="bisherigeFachfragen">inhalte/fachgespraech.json (Kennung und Frage muessen bei neuen Fragen neu sein).</param>
-    public static List<string> PruefenLernen(Lerninhalte alle, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen,
-        IReadOnlyList<Projekt.ProjektFrage> bisherigeFachfragen)
+    public static List<string> PruefenLernen(Lerninhalte alle, IReadOnlyList<Projekt.ProjektFrage> bisherigeFachfragen)
     {
         var meldungen = new List<string>();
         var bisher = alle.Bisher;
@@ -55,7 +53,8 @@ public static partial class InhaltePruefung
                 _ => bisher.Testprojekte,
             };
             var gesehen = alteListe.Select(e => DoppelSchluessel(e.Daten)).ToHashSet(StringComparer.Ordinal);
-            var alteTexte = umbenennungen.Where(u => u.Tabelle == tabelle).Select(u => DoppelText(u.Alt)).ToHashSet(StringComparer.Ordinal);
+            // Welle A 1.18.0 (L0): ein neuer Eintrag darf keinen alten Text tragen, sonst schriebe AlteFragetexte seine Antworten um
+            var alteTexte = AlteFragetexte.Zuordnungen.Where(u => u.Tabelle == tabelle).Select(u => DoppelText(u.Alt)).ToHashSet(StringComparer.Ordinal);
             var neue = alle.Neue.TryGetValue(art, out var liste) ? liste : [];
             for (var k = 0; k < neue.Count; k++)
             {
@@ -90,7 +89,7 @@ public static partial class InhaltePruefung
                 }
                 if (tabelle is not null && alteTexte.Contains(schluessel))
                 {
-                    meldungen.Add($"{wo}: Fragetext steht als alter Text in umbenennungen.json");
+                    meldungen.Add($"{wo}: Fragetext steht als alter Text in alte_fragetexte.json");
                 }
                 if (auswahl)
                 {

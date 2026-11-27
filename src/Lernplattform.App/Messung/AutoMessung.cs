@@ -1129,7 +1129,7 @@ public static partial class AutoMessung
 
     /// <summary>Bericht mit allen Zeilen und Hinweisen (grosse Zahlen), nur fuer die Anzeige.</summary>
     private static UebernahmeBericht ProbeBericht() =>
-        new(UebernahmeQuelle.Sicherung, true, 12345, 12345, 23456, 1234, 0, 2345, 0, 0, 1, 1, 0,
+        new(UebernahmeQuelle.Sicherung, true, 12345, 12345, 23456, 1234, 0, 2345, 0, 0, 1, 1,
             new Dictionary<string, string>(), [], null, 1);
 
     /// <summary>Kleine Sicherung (gzip-JSON) fuer die Zeilen der Vorschau.</summary>

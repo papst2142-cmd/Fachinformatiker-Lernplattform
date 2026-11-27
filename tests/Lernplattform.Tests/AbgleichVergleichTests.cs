@@ -15,7 +15,6 @@ namespace Lernplattform.Tests;
 public class AbgleichVergleichTests
 {
     private static readonly JsonElement G21 = VergleichsHilfe.Lade("abgleich.json");
-    private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen = Core.Daten.Umbenennungen.Laden(Pfade.Inhalte);
 
     private static Uhr Uhr => SpeichernTests.FesteUhr(G21.GetProperty("jetzt_utc").GetString()!);
 
@@ -170,12 +169,20 @@ public class AbgleichVergleichTests
         var datei = fall.GetProperty("datei").ValueKind == JsonValueKind.Null ? null : GitHubAttrappe.Packen(fall.GetProperty("datei").GetString()!);
         double? dev = fall.GetProperty("abweichung").ValueKind == JsonValueKind.Null ? null : fall.GetProperty("abweichung").GetDouble();
 
-        var r = Abgleich.Versuch(new Lernstand(pfad), datei, dev, Uhr, Abweichung, Umbenennungen, Path.Combine(ordner.Pfad, "sicherungen"));
+        // A 1.18.0 (L0, Weisung P12-437 2a): alte Fragetexte schreibt nicht mehr der Abgleich um, sondern jeder Start.
+        // Gerechnet wird darum "Start, Abgleich, naechster Start" gegen den unveraenderten Sollwert (G21 = Stand nach
+        // Pythons apply_question_renames); im Export stehen Texte aus der fremden Datei bis zum naechsten Abgleich wie
+        // geladen, darum wird er mit den heutigen Texten verglichen.
+        AlteFragetexte.Ausfuehren(new Lernstand(pfad), Uhr);
+        var r = Abgleich.Versuch(new Lernstand(pfad), datei, dev, Uhr, Abweichung, Path.Combine(ordner.Pfad, "sicherungen"));
+        AlteFragetexte.Ausfuehren(new Lernstand(pfad), Uhr);
 
-        var erwartet = VergleichsHilfe.Stand(fall.GetProperty("nachher"));
+        // Ohne Zusammenfuehren (Datei fehlt oder leer) liess Python alte Texte stehen; der Start schreibt sie jetzt immer um
+        using var heutig = JsonDocument.Parse(AlteFragetexteTests.MitHeutigenTexten(fall.GetProperty("nachher")));
+        var erwartet = VergleichsHilfe.Stand(heutig.RootElement);
         var ist = VergleichsHilfe.Stand(pfad, fall.GetProperty("nachher"));
         Assert.True(erwartet.SequenceEqual(ist), VergleichsHilfe.Unterschied(erwartet, ist));
-        Assert.Equal(fall.GetProperty("export").GetString(), PythonJson.Text(r.Export));
+        Assert.Equal(AlteFragetexteTests.MitHeutigenTexten(fall.GetProperty("export").GetString()!), AlteFragetexteTests.MitHeutigenTexten(PythonJson.Text(r.Export)));
         Assert.Equal(fall.GetProperty("received").GetInt32(), r.Erhalten);
         Assert.Equal(fall.GetProperty("gone").GetInt32(), r.Weg);
         Assert.Equal(fall.GetProperty("invalid").GetInt32(), r.Ungueltig);

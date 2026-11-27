@@ -21,7 +21,6 @@ namespace Lernplattform.Tests;
 public class SpielAbgleichTests
 {
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_abgleich.json");
-    private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen = Core.Daten.Umbenennungen.Laden(Pfade.Inhalte);
     private static readonly string[] Geraete = ["PC", "Handy", "Tablet"];
     private static readonly string[] Runde = ["PC", "Handy", "Tablet", "PC", "Handy"];
 
@@ -117,7 +116,7 @@ public class SpielAbgleichTests
             Spielschlange.AlleLeeren();
             using var sperre = Vorgaenge.Sperren();
             var datei = server is null ? null : GitHubAttrappe.Packen(server);
-            var r = Abgleich.Versuch(Lernstaende[geraet], datei, null, Uhr, Abweichung, Umbenennungen,
+            var r = Abgleich.Versuch(Lernstaende[geraet], datei, null, Uhr, Abweichung,
                 Path.Combine(ordner.Pfad, geraet, "sicherungen"));
             server = PythonJson.Text(r.Export);
             return r;

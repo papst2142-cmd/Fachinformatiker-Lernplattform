@@ -48,7 +48,7 @@ public sealed class LaufendePruefung(Func<JsonObject> laden, Func<Action<JsonObj
     // -- migrate_running ----------------------------------------------------------------------
 
     /// <summary>
-    /// migrate_running: WiSo-Fragetexte nach umbenennungen.json, genau eine umformulierte
+    /// migrate_running: WiSo-Fragetexte (seit A 1.18.0 ohne umbenennungen.json, siehe AlteFragetexte), genau eine umformulierte
     /// Antwortmoeglichkeit; Haken offener Aufgaben an geaenderte Kriterien anpassen. Im Zweifel
     /// bleibt die Pruefung, wie sie war (Python: except Exception: pass).
     /// </summary>

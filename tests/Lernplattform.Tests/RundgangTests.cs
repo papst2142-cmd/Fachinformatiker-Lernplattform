@@ -74,7 +74,7 @@ public class RundgangTests
                 w[Abgleich.TokenSchluessel] = Token;
             });
             using var netz = new GitHubZugang(attrappe.Basis, TimeSpan.FromSeconds(10));
-            Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, [], Uhr);
+            Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, Uhr);
         }
 
         public StartSchritte Start(bool nurAnzeige = false, bool autoModus = false) =>

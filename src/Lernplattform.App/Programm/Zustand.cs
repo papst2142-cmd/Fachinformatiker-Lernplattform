@@ -82,12 +82,6 @@ public static class Zustand
         BeimBeenden?.Invoke();
     }
 
-    private static IReadOnlyList<(string Tabelle, string Alt, string Neu)>? _umbenennungen;
-
-    /// <summary>inhalte/umbenennungen.json (apply_question_renames bei der Uebernahme).</summary>
-    public static IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen =>
-        _umbenennungen ??= Core.Daten.Umbenennungen.Laden(EingebauteDatei);
-
     /// <summary>StatusBook(db): Antworten neu lesen.</summary>
     public static StatusBuch BuchLesen() => new(Antwortbuch.Lesen(Lernstand));
 
@@ -114,6 +108,11 @@ public static class Zustand
         DefektHinweis = Einstellungen.DefektHinweis();
         Werte = Einstellungen.Laden();
         Core.Daten.Abgleich.GeheimnisseSetzen(Werte);   // A7: Zugangsschluessel nie in die Fehlerdatei
+        // Welle A 1.18.0 (L0, Weisung P12-424): eine laufende WiSo-Pruefung mit alten Fragetexten einmal umschreiben
+        if (Core.Daten.AlteFragetexte.LaufendeUmschreiben(Werte.DeepClone().AsObject()))
+        {
+            Aendere(w => Core.Daten.AlteFragetexte.LaufendeUmschreiben(w));
+        }
         DesignAnwenden();
         AlleInhalte = Task.Run(InhalteLaden);
         Inhalte = AlleInhalte.ContinueWith(t => !t.IsCompletedSuccessfully || t.Result is not { } alle ? null
@@ -126,6 +125,15 @@ public static class Zustand
             if (!t.IsCompletedSuccessfully || t.Result is not { } alle)
             {
                 return;
+            }
+            try
+            {
+                // Welle A 1.18.0 (L0, Weisung P12-424): alte Fragetexte im Lernstand umschreiben (Kopie vorher, nur wenn es welche gibt)
+                Core.Daten.AlteFragetexte.Ausfuehren(Lernstand);
+            }
+            catch (Exception fehler)
+            {
+                Core.Diagnose.Fehlerprotokoll.Schreiben(fehler);
             }
             try
             {
@@ -567,8 +575,9 @@ public static class Zustand
     private static Lazy<Core.Pruefung.Echt.EchtBestand> NeuerBestand()
     {
         var ordner = Aktuell;
-        // A 0.94.0: ersetzte Saetze (ausschluss.json) bleiben fuer offene Laeufe im Bestand, werden aber nicht mehr angeboten
-        return new(() => Core.Pruefung.Echt.EchtSaetze.Laden(ordner.Saetze(), ordner.AusgeschlosseneSaetze()));
+        // A 0.94.0: ersetzte Saetze (ausschluss.json eines aelteren Pakets) bleiben fuer offene Laeufe im Bestand, werden aber
+        // nicht mehr angeboten; A 1.18.0: geloeschte Saetze (geloescht.json) beenden einen offenen Lauf
+        return new(() => Core.Pruefung.Echt.EchtSaetze.Laden(ordner.Saetze(), ordner.AusgeschlosseneSaetze(), ordner.GeloeschteSaetze()));
     }
 
     public static Core.Pruefung.Echt.EchtBestand EchtBestand => _echt.Value;

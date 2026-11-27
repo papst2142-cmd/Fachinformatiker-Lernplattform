@@ -15,7 +15,7 @@ public class EchtInhalteDpaTests
 {
     private static readonly string Datei = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen", EchtSaetze.Datei);
 
-    private static EchtBestand Bestand => EchtSaetze.Laden(File.ReadAllBytes(Datei));
+    private static EchtBestand Bestand => EchtSaetze.Laden(EchtTestDatei.Vorher);
 
     /// <summary>Die 10 Saetze der Welle in der Reihenfolge der Datei (hinter den 27 Saetzen bis A 0.84.1).</summary>
     public static readonly string[] Dpa =
@@ -59,7 +59,7 @@ public class EchtInhalteDpaTests
     public void DPA_NurAngehaengt_DateiDavorBytegleich()
     {
         // A 0.94.0: Datei seit Format 3, sonst bis hierher nur angehaengt (EchtTestDatei.AlsFormat2)
-        var roh = EchtTestDatei.AlsFormat2(File.ReadAllBytes(Datei));
+        var roh = EchtTestDatei.AlsFormat2(EchtTestDatei.Vorher);
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));
         // direkt danach beginnt der erste FIDP-Satz

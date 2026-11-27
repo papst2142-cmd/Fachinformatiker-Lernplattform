@@ -33,10 +33,25 @@ internal static class EchtTestDatei
     /// <summary>Wie <see cref="AlsFormat"/> mit Format 2 (Anfangs-Pruefsummen der Wellen bis A 0.93.0).</summary>
     public static byte[] AlsFormat2(byte[] roh) => AlsFormat(roh, 2);
 
-    /// <summary>Kennungen, die lernen/ausschluss.json der App ausschliesst (wie im Programm).</summary>
+    /// <summary>
+    /// A 1.18.0 (L0): die Datei wie vor dem Loeschen, bytegleich (<see cref="L0Vorher"/>). Die Tests der Wellen davor
+    /// (nur angehaengt, alte Fassungen, Gegenproben) rechnen weiter auf ihr; die heutige Datei ist sie ohne die Saetze der
+    /// Loeschliste (<see cref="EchtL0Tests"/>).
+    /// </summary>
+    public static byte[] Vorher => L0Vorher.Datei("pruefungssaetze");
+
+    /// <summary>Kennungen, die lernen/ausschluss.json VOR L0 ausschloss (wie im Programm bis A 1.17.0, auf <see cref="Vorher"/>).</summary>
     public static IReadOnlyList<string> Ausgeschlossen() =>
-        new LernenOrdner(n => File.Exists(Path.Combine(Ordner, n + ".json")) ? File.ReadAllBytes(Path.Combine(Ordner, n + ".json")) : null)
+        new LernenOrdner(n => n == Lerninhalte.AusschlussDatei ? L0Vorher.Ausschluss
+            : n == EchtSaetze.DateiName ? Vorher
+            : n == Lerninhalte.GeloeschtDatei ? null
+            : File.Exists(Path.Combine(Ordner, n + ".json")) ? File.ReadAllBytes(Path.Combine(Ordner, n + ".json")) : null)
             .AusgeschlosseneSaetze();
+
+    /// <summary>Geloeschte Saetze (Kennung, Fassung) laut Loeschliste der App (wie im Programm seit A 1.18.0).</summary>
+    public static IReadOnlyList<(string Kennung, int Fassung)> Geloescht() =>
+        new LernenOrdner(n => File.Exists(Path.Combine(Ordner, n + ".json")) ? File.ReadAllBytes(Path.Combine(Ordner, n + ".json")) : null)
+            .GeloeschteSaetze();
 
     /// <summary>
     /// Jeder Satz hat eine eigene Firma; nur die zwei Saetze eines FIAE-Satzpaars (aufbau "paar", gleiche Nummer) teilen sie.
@@ -52,6 +67,9 @@ internal static class EchtTestDatei
         }
     }
 
-    /// <summary>Bestand wie in der App: alle Saetze geladen, die ausgeschlossenen nicht mehr angeboten.</summary>
-    public static EchtBestand App() => EchtSaetze.Laden(File.ReadAllBytes(Datei), Ausgeschlossen());
+    /// <summary>Bestand wie in der App bis A 1.17.0: Datei vor L0, die ausgeschlossenen nicht mehr angeboten.</summary>
+    public static EchtBestand App() => EchtSaetze.Laden(Vorher, Ausgeschlossen());
+
+    /// <summary>Bestand wie in der App seit A 1.18.0: heutige Datei, kein Ausschluss mehr, Loeschliste fuer offene Laeufe.</summary>
+    public static EchtBestand AppHeute() => EchtSaetze.Laden(File.ReadAllBytes(Datei), [], Geloescht());
 }

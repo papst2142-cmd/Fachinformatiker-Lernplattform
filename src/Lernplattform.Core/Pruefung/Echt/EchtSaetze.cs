@@ -126,14 +126,29 @@ public sealed record EchtBestand(IReadOnlyList<EchtSatz> Saetze, IReadOnlyList<E
     /// </summary>
     public IReadOnlySet<string> Ausgeschlossen { get; init; } = new HashSet<string>(StringComparer.Ordinal);
 
-    /// <summary>Gueltige Saetze eines Bereichs (ap1, b1, b2) fuer eine Fachrichtung; AP1 gilt fuer alle; ohne ausgeschlossene.</summary>
+    /// <summary>
+    /// Gueltige Saetze eines Bereichs (ap1, b1, b2) fuer eine Fachrichtung; AP1 gilt fuer alle; ohne ausgeschlossene.
+    /// A 1.18.0 (L0): nach Kennung geordnet. Bisher trat eine neue Fassung an die Stelle der alten; seit die alte geloescht
+    /// ist, steht die neue allein hinten in der Datei (ae_b2_08). Die Ordnung nach Kennung ist genau die Reihenfolge davor
+    /// (Test <c>EchtL0Tests.L2_AppBietetGenauDieselbenSaetzeAn</c>), auch fuer die Saetze aus Fachrichtungs-Paketen.
+    /// </summary>
     public IReadOnlyList<EchtSatz> Fuer(string bereich, string fachrichtung) => Saetze
         .Where(s => s.Bereich == bereich && (bereich == EchtSaetze.Ap1 ? s.Fachrichtung == EchtSaetze.Alle : s.Fachrichtung == fachrichtung)
             && !Ausgeschlossen.Contains(s.Kennung))
+        .OrderBy(s => s.Kennung, StringComparer.Ordinal)
         .ToList();
 
     /// <summary>Wird dieser Satz nicht mehr angeboten (ersetzt)?</summary>
     public bool IstAusgeschlossen(string? kennung) => kennung is not null && Ausgeschlossen.Contains(kennung);
+
+    /// <summary>
+    /// A 1.18.0 (L0, Weisung P12-424 Nico 1b und 5a): Saetze (Kennung, Fassung), die laut inhalte_csharp/lernen/geloescht.json
+    /// aus dem Programm geloescht sind. Ein offener Lauf genau dieser Fassung wird beendet (<see cref="EchtAblauf.Zeigen"/>).
+    /// </summary>
+    public IReadOnlySet<(string Kennung, int Fassung)> Geloescht { get; init; } = new HashSet<(string, int)>();
+
+    /// <summary>Ist diese Fassung des Satzes geloescht?</summary>
+    public bool IstGeloescht(string? kennung, int fassung) => kennung is not null && Geloescht.Contains((kennung, fassung));
 
     /// <summary>Fehler, die einen Bereich betreffen (Satz dieses Bereichs oder die ganze Datei).</summary>
     public IReadOnlyList<EchtFehler> FehlerFuer(string bereich, string fachrichtung) => Fehler
@@ -231,11 +246,15 @@ public static class EchtSaetze
     /// Datei lesen und pruefen; null = Datei fehlt (keine Saetze, kein Fehler). <paramref name="ausgeschlossen"/>: Kennungen,
     /// die laut ausschluss.json nicht mehr angeboten werden (A 0.94.0); sie werden trotzdem geprueft und geladen.
     /// </summary>
-    public static EchtBestand Laden(byte[]? datei, IEnumerable<string>? ausgeschlossen = null)
+    public static EchtBestand Laden(byte[]? datei, IEnumerable<string>? ausgeschlossen = null,
+        IEnumerable<(string Kennung, int Fassung)>? geloescht = null)
     {
         var bestand = LadenOhneAusschluss(datei);
-        return ausgeschlossen is null ? bestand
-            : bestand with { Ausgeschlossen = new HashSet<string>(ausgeschlossen, StringComparer.Ordinal) };
+        if (ausgeschlossen is not null)
+        {
+            bestand = bestand with { Ausgeschlossen = new HashSet<string>(ausgeschlossen, StringComparer.Ordinal) };
+        }
+        return geloescht is null ? bestand : bestand with { Geloescht = new HashSet<(string, int)>(geloescht) };
     }
 
     private static EchtBestand LadenOhneAusschluss(byte[]? datei)

@@ -98,7 +98,7 @@ internal static class AbsturzProbe
                         }
                     };
                     var daten = Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, args[1]);
-                    Uebernahme.Uebernehmen(new Lernstand(args[0]), daten, Umbenennungen.Laden(Pfade.Inhalte));
+                    Uebernahme.Uebernehmen(new Lernstand(args[0]), daten);
                     Console.Out.WriteLine(Fertig);
                     Console.Out.Flush();
                     break;
@@ -238,8 +238,7 @@ internal static class AbsturzProbe
                             Thread.Sleep(Timeout.Infinite);
                         }
                     };
-                    Uebernahme.Vorschau(new Lernstand(args[0]), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, args[1]),
-                        Umbenennungen.Laden(Pfade.Inhalte));
+                    Uebernahme.Vorschau(new Lernstand(args[0]), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, args[1]));
                     Console.Out.WriteLine(Fertig);
                     Console.Out.Flush();
                     break;

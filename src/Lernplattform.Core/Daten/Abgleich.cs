@@ -141,7 +141,7 @@ public static class Abgleich
     /// in der Commit-Nachricht („PC“ oder „Handy“, ohne Rechnernamen, Sammelliste 24).
     /// </summary>
     public static AbgleichErgebnis Ausfuehren(Lernstand lernstand, Einstellungen einstellungen, string geraet, GitHubZugang netz,
-        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr? uhr = null, Uhrabweichung? abweichung = null,
+        Uhr? uhr = null, Uhrabweichung? abweichung = null,
         string? sicherungsordner = null)
     {
         uhr ??= Uhr.System;
@@ -180,7 +180,7 @@ public static class Abgleich
             {
                 Uebernahme.Protokoll(lernstand.Pfad, OhneDatumZeile);
             }
-            var lokal = LokalAbgleichen(lernstand, fremd, dev, ersterAbgleich, uhr, abweichung, umbenennungen, ordner);
+            var lokal = LokalAbgleichen(lernstand, fremd, dev, ersterAbgleich, uhr, abweichung, ordner);
             if (lokal.Sicherung is not null)
             {
                 sicherungen.Add(lokal.Sicherung);
@@ -470,10 +470,10 @@ public static class Abgleich
 
     /// <summary>Nur fuer Tests (G21): ein Versuch von sync ohne Netz mit gegebener Datei (null = fehlt) und Abweichung.</summary>
     internal static VersuchErgebnis Versuch(Lernstand lernstand, byte[]? datei, double? dev, Uhr uhr, Uhrabweichung abweichung,
-        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, string sicherungsordner)
+        string sicherungsordner)
     {
         var fremd = datei is null ? null : Felder(datei, Uebernahme.LeseAbgleichDatei(datei));
-        var lokal = LokalAbgleichen(lernstand, fremd, dev, false, uhr, abweichung, umbenennungen, sicherungsordner);
+        var lokal = LokalAbgleichen(lernstand, fremd, dev, false, uhr, abweichung, sicherungsordner);
         var (gleich, gesendet) = Vergleichen(lokal.Export, fremd);
         return new VersuchErgebnis(lokal.Export, lokal.Erhalten, lokal.Weg.Count, lokal.Ungueltig, lokal.Gekappt, lokal.Misch,
             gleich, gesendet);
@@ -581,7 +581,7 @@ public static class Abgleich
     /// gesichert und dann geschrieben. Scheitert die Sicherung: nichts geaendert (T5).
     /// </summary>
     private static Lokal LokalAbgleichen(Lernstand lernstand, Fremd? fremd, double? dev, bool ersterAbgleich, Uhr uhr,
-        Uhrabweichung abweichung, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, string ordner)
+        Uhrabweichung abweichung, string ordner)
     {
         var jetzt = uhr.Jetzt().ToUniversalTime();
         var fest = new Uhr(() => jetzt, uhr.Zone);   // ein Zeitpunkt fuer Probe und Schreiben
@@ -599,7 +599,7 @@ public static class Abgleich
             }
             var vorher = Stand(db, tx);
             tx.Save("probe");
-            var schritt = Schritte(db, tx, fremd, dev, fest, abweichung, umbenennungen);
+            var schritt = Schritte(db, tx, fremd, dev, fest, abweichung);
             string? sicherung = null;
             if (ersterAbgleich || Geaendert(vorher, Stand(db, tx)))
             {
@@ -612,7 +612,7 @@ public static class Abgleich
                 {
                     throw new AbgleichAusnahme(AbgleichFehler.SicherungGescheitert);
                 }
-                schritt = Schritte(db, tx, fremd, dev, fest, abweichung, umbenennungen);
+                schritt = Schritte(db, tx, fremd, dev, fest, abweichung);
             }
             else
             {
@@ -671,7 +671,7 @@ public static class Abgleich
         vorher.Any(p => !nachher.TryGetValue(p.Key, out var neu) || neu != p.Value);
 
     private static Schritt Schritte(SqliteConnection db, SqliteTransaction tx, Fremd? fremd, double? dev, Uhr uhr,
-        Uhrabweichung abweichung, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen)
+        Uhrabweichung abweichung)
     {
         var misch = MischMerken(db, tx, fremd, dev, uhr);
         var daten = fremd?.Daten;
@@ -685,7 +685,7 @@ public static class Abgleich
         if (fremd is { Leer: false } && daten is not null)
         {
             var weg = new HashSet<(string, object?)>();
-            var bericht = Uebernahme.Zusammenfuehren(db, tx, daten, umbenennungen, uhr, false,
+            var bericht = Uebernahme.Zusammenfuehren(db, tx, daten, uhr, false,
                 new AbgleichModus(misch, dev is { } d2 ? uhr.Jetzt() - Sek(d2) : null), weg);
             return new Schritt(bericht.Uebernommen, weg, bericht.UngueltigeMarken, gekappt, misch);
         }

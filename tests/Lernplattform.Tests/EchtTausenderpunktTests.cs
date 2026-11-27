@@ -13,7 +13,7 @@ public class EchtTausenderpunktTests
 {
     private static readonly string Datei = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen", EchtSaetze.Datei);
 
-    private static EchtBestand Bestand => EchtSaetze.Laden(File.ReadAllBytes(Datei));
+    private static EchtBestand Bestand => EchtSaetze.Laden(EchtTestDatei.Vorher);
 
     /// <summary>Jedes Rechenfeld mit jedem seiner Werte (Ergebnis, Ersatzergebnis) ab 1000.</summary>
     private static List<(string Wo, EchtAntwort Antwort, double Wert)> Rechenwerte() =>

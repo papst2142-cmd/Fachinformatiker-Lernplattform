@@ -32,7 +32,7 @@ public static partial class AutoMessung
         // Ordner der aktuellen Inhalte (Programm mit den vorab eingesetzten Fachrichtungs-Paketen), die eingebaute Datei allein
         // hat fuer FIAE/FIDP/FIDV nur Platzhalter
         var uhr = Stopwatch.StartNew();
-        var bestand = EchtSaetze.Laden(Zustand.Aktuell.Saetze(), Zustand.Aktuell.AusgeschlosseneSaetze());
+        var bestand = EchtSaetze.Laden(Zustand.Aktuell.Saetze(), Zustand.Aktuell.AusgeschlosseneSaetze(), Zustand.Aktuell.GeloeschteSaetze());
         funde += Ergebnis("Pruefungssaetze im echten Format laden und pruefen", Messwiederholung.Einmal(uhr.Elapsed.TotalMilliseconds, Abbruch));
         Messwerte.Notiere("Pruefung im echten Format: " + bestand.Saetze.Count + " Saetze, " + bestand.Fehler.Count + " Meldungen der Ladepruefung");
         foreach (var fehler in bestand.Fehler)

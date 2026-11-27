@@ -91,7 +91,7 @@ public sealed class SpielUhrabweichungTests
             attrappe.Datum = () => Zeit.AddHours(-1);
             using var netz = new GitHubZugang(attrappe.Basis, TimeSpan.FromSeconds(10));
             var wechsel = Vorgaenge.Wechsel;
-            Abgleich.Ausfuehren(lernstand, einstellungen, "PC", netz, [], uhr, abweichung);
+            Abgleich.Ausfuehren(lernstand, einstellungen, "PC", netz, uhr, abweichung);
             Assert.True(Vorgaenge.Wechsel > wechsel);
         }
         Assert.Equal(3600.0, JsonNode.Parse((string)schreiber.UhrabweichungLesen()!)!["s"]!.GetValue<double>());
@@ -118,7 +118,7 @@ public sealed class SpielUhrabweichungTests
         File.WriteAllBytes(datei, sicherung);
         OhneSperreSetzen(7200);
         Assert.Equal(0, Schritt());
-        Uebernahme.Uebernehmen(lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, datei), [], uhr,
+        Uebernahme.Uebernehmen(lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, datei), uhr,
             Path.Combine(ordner.Pfad, "sicherungen"));
         Assert.Equal(240, Schritt());   // 120 + 120
         Assert.Equal(5, db.UhrabweichungGelesen);

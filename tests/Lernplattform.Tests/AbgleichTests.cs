@@ -21,7 +21,6 @@ public class AbgleichTests
     private const string Repo = "pruefer/lernstand-test";
     private const string Token = "ghp_TestSchluessel0123456789abcdefghijklmn";
 
-    private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> KeineUmbenennungen = [];
 
     /// <summary>Ein Geraet: eigener Datenordner, Lernstand, Einstellungen, feste Uhr (Berlin).</summary>
     internal sealed class Geraet : IDisposable
@@ -58,11 +57,11 @@ public class AbgleichTests
 
         public string Sicherungen => Path.Combine(_ordner.Pfad, Uebernahme.SicherungsOrdner);
 
-        public AbgleichErgebnis Abgleichen(GitHubAttrappe attrappe, IReadOnlyList<(string, string, string)>? umbenennungen = null,
+        public AbgleichErgebnis Abgleichen(GitHubAttrappe attrappe,
             string? sicherungsordner = null, TimeSpan? warten = null)
         {
             using var netz = new GitHubZugang(attrappe.Basis, warten ?? TimeSpan.FromSeconds(10));
-            return Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, umbenennungen ?? KeineUmbenennungen, Uhr, Abweichung,
+            return Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, Uhr, Abweichung,
                 sicherungsordner);
         }
 
@@ -248,7 +247,7 @@ public class AbgleichTests
         using (var netz = new GitHubZugang(new Uri("http://127.0.0.1:" + port.ToString(CultureInfo.InvariantCulture)), TimeSpan.FromSeconds(2)))
         {
             Assert.Equal(AbgleichFehler.KeineVerbindung, Assert.Throws<AbgleichAusnahme>(() =>
-                Abgleich.Ausfuehren(pc.Lernstand, pc.Einstellungen, pc.Name, netz, KeineUmbenennungen, pc.Uhr, pc.Abweichung)).Fehler);
+                Abgleich.Ausfuehren(pc.Lernstand, pc.Einstellungen, pc.Name, netz, pc.Uhr, pc.Abweichung)).Fehler);
         }
         using var attrappe = Attrappe();
         attrappe.Verzoegerung = TimeSpan.FromSeconds(2);
@@ -290,7 +289,7 @@ public class AbgleichTests
         einstellungen.Setze(Abgleich.RepoSchluessel, Repo);
         einstellungen.Setze(Abgleich.TokenSchluessel, Token);
         using var netz = new GitHubZugang(attrappe.Basis, TimeSpan.FromSeconds(5));
-        var e = Assert.Throws<AbgleichAusnahme>(() => Abgleich.Ausfuehren(lernstand, einstellungen, "PC", netz, KeineUmbenennungen));
+        var e = Assert.Throws<AbgleichAusnahme>(() => Abgleich.Ausfuehren(lernstand, einstellungen, "PC", netz));
         Assert.Equal((AbgleichFehler.Ausgesetzt, "kaputt"), (e.Fehler, e.Grund));
         Assert.Empty(attrappe.Anfragen);    // vor jedem Zugriff aufs Netz
     }
@@ -374,10 +373,10 @@ public class AbgleichTests
         }.ToJsonString()));
     }
 
-    public static TheoryData<string> Ausloeser() => ["loeschmarke", "geloeschter_durchgang", "projekt_fassung", "fragetext", "uhr_nachtrag", "marke_gekappt"];
+    public static TheoryData<string> Ausloeser() => ["loeschmarke", "geloeschter_durchgang", "projekt_fassung", "uhr_nachtrag", "marke_gekappt"];
 
     /// <summary>Bereitet Geraet und Datei so vor, dass der Abgleich vorhandene Eintraege aendert.</summary>
-    private static (IReadOnlyList<(string, string, string)> Umbenennungen, Func<Geraet, bool> Geaendert) Vorbereiten(string fall,
+    private static Func<Geraet, bool> Vorbereiten(string fall,
         Geraet pc, GitHubAttrappe attrappe)
     {
         pc.Einstellungen.Setze(Abgleich.ZuletztSchluessel, "2026-10-19 10:00:00");   // nicht der erste Abgleich
@@ -386,7 +385,7 @@ public class AbgleichTests
             case "loeschmarke":
                 pc.Schreiber.KarteSpeichern("Netzwerk", "Frage A", "karte", true);
                 Datei(attrappe, new JsonObject(), new JsonObject { ["reset_at"] = "2026-10-20 12:30:00+02:00" });
-                return (KeineUmbenennungen, g => g.Zeilen("SELECT 1 FROM card_events").Count == 0);
+                return g => g.Zeilen("SELECT 1 FROM card_events").Count == 0;
             case "geloeschter_durchgang":
                 pc.Ausfuehren("INSERT INTO spiel_ereignisse (timestamp, utc_offset, typ, daten, geraet, lauf, uid) VALUES "
                     + "('2026-10-20 11:00:00', 120, 'zug', '{}', 'PC', 'L1', 'e1')");
@@ -394,7 +393,7 @@ public class AbgleichTests
                 {
                     ["spiel_plaetze"] = new JsonArray(new JsonArray("p1", "2026-10-20 11:30:00", 1, "L1", "geloescht", "{}", "Handy")),
                 });
-                return (KeineUmbenennungen, g => g.Zeilen("SELECT 1 FROM spiel_ereignisse").Count == 0);
+                return g => g.Zeilen("SELECT 1 FROM spiel_ereignisse").Count == 0;
             case "projekt_fassung":
                 pc.Ausfuehren("INSERT INTO abschlussprojekt (timestamp, projekt, feld, wert, uid) VALUES "
                     + "('2026-10-20 11:00:00', 'P', 'titel', 'alt', 'a1')");
@@ -402,22 +401,18 @@ public class AbgleichTests
                 {
                     ["abschlussprojekt"] = new JsonArray(new JsonArray("a2", "2026-10-20 11:30:00", "P", "titel", "neu")),
                 });
-                return (KeineUmbenennungen, g => g.Zeilen("SELECT 1 FROM abschlussprojekt WHERE uid = 'a1'").Count == 0);
-            case "fragetext":
-                pc.Schreiber.KarteSpeichern("Netzwerk", "Alter Text", "karte", true);
-                Datei(attrappe, new JsonObject());
-                return ([("card_events", "Alter Text", "Neuer Text")], g => Fragen(g) is ["Neuer Text"]);
+                return g => g.Zeilen("SELECT 1 FROM abschlussprojekt WHERE uid = 'a1'").Count == 0;
             case "uhr_nachtrag":
                 // Geraeteuhr eine Stunde vor; eigener, noch nicht hochgeladener Eintrag bekommt die Abweichung
                 pc.Schreiber.KarteSpeichern("Netzwerk", "Frage A", "karte", true);
                 attrappe.Datum = () => Zeit.AddHours(-1);
                 Datei(attrappe, new JsonObject());
-                return (KeineUmbenennungen, g => g.Zeilen("SELECT utc_offset FROM card_events") is [[180L]]);
+                return g => g.Zeilen("SELECT utc_offset FROM card_events") is [[180L]];
             case "marke_gekappt":
                 // Eigene Loeschmarke in der Zukunft: der Abgleich kappt sie auf jetzt (_clamp_future_markers)
                 pc.Ausfuehren("INSERT INTO sync_meta (key, value) VALUES ('reset_at', '2026-10-25 12:00:00+02:00')");
                 Datei(attrappe, new JsonObject());
-                return (KeineUmbenennungen, g => g.Zeilen("SELECT value FROM sync_meta WHERE key = 'reset_at'") is [[string w]] && w != "2026-10-25 12:00:00+02:00");
+                return g => g.Zeilen("SELECT value FROM sync_meta WHERE key = 'reset_at'") is [[string w]] && w != "2026-10-25 12:00:00+02:00";
             default:
                 throw new ArgumentException(fall);
         }
@@ -429,10 +424,10 @@ public class AbgleichTests
     {
         using var attrappe = Attrappe();
         using var pc = new Geraet("PC Test", Zeit);
-        var (umbenennungen, geaendert) = Vorbereiten(fall, pc, attrappe);
+        var geaendert = Vorbereiten(fall, pc, attrappe);
         var vorher = Abbild(pc);
 
-        var ergebnis = pc.Abgleichen(attrappe, umbenennungen);
+        var ergebnis = pc.Abgleichen(attrappe);
         Assert.True(geaendert(pc));
         var sicherung = Assert.Single(ergebnis.Sicherungen);
         Assert.Matches(@"^vor_abgleich_\d{4}-\d{2}-\d{2}_\d{6}\.db$", Path.GetFileName(sicherung));
@@ -451,14 +446,14 @@ public class AbgleichTests
     {
         using var attrappe = Attrappe();
         using var pc = new Geraet("PC Test", Zeit);
-        var (umbenennungen, geaendert) = Vorbereiten(fall, pc, attrappe);
+        var geaendert = Vorbereiten(fall, pc, attrappe);
         var blockiert = Path.Combine(pc.Ordner, "blockiert");
         File.WriteAllText(blockiert, "keine Ordner");
         var vorher = Abbild(pc);
         var commits = attrappe.Commits;
         var zuletzt = File.ReadAllText(pc.Einstellungen.Pfad);
 
-        var e = Assert.Throws<AbgleichAusnahme>(() => pc.Abgleichen(attrappe, umbenennungen, blockiert));
+        var e = Assert.Throws<AbgleichAusnahme>(() => pc.Abgleichen(attrappe, blockiert));
         Assert.Equal(AbgleichFehler.SicherungGescheitert, e.Fehler);
         Assert.Equal(vorher, Abbild(pc));
         Assert.False(geaendert(pc));
@@ -489,11 +484,11 @@ public class AbgleichTests
     {
         using var attrappe = Attrappe();
         using var pc = new Geraet("PC Test", Zeit);
-        var (umbenennungen, _) = Vorbereiten("loeschmarke", pc, attrappe);
+        Vorbereiten("loeschmarke", pc, attrappe);
         Directory.CreateDirectory(pc.Sicherungen);
         var vorhanden = Path.Combine(pc.Sicherungen, "vor_abgleich_2026-10-20_120000.db");
         File.WriteAllText(vorhanden, "bleibt");
-        var ergebnis = pc.Abgleichen(attrappe, umbenennungen);
+        var ergebnis = pc.Abgleichen(attrappe);
         Assert.Equal("vor_abgleich_2026-10-20_120000_2.db", Path.GetFileName(Assert.Single(ergebnis.Sicherungen)));
         Assert.Equal("bleibt", File.ReadAllText(vorhanden));
     }

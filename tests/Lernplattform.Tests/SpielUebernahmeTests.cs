@@ -13,15 +13,14 @@ namespace Lernplattform.Tests;
 /// G44 Teil Uebernahme (<c>spiel_uebernahme.json</c>, Erzeuger
 /// <c>werkzeuge/vergleich/erzeuge_spiel_uebernahme.py</c>). Eine echte Python-Datenbank mit vier
 /// Durchgaengen (alter Durchgang, Firma aus dem Szenario des Fingerabdrucks, geloeschter Durchgang,
-/// Einfach) kommt ueber den bestehenden Uebernahme-Weg (Sicherung, Abgleich-Datei, alte Datenbank) in
-/// eine leere und in eine schon bespielte C#-Datenbank. Danach rechnet C# jeden Durchgang gleich nach
+/// Einfach) kommt ueber den bestehenden Uebernahme-Weg (Sicherung, Abgleich-Datei; die alte Datenbank als
+/// Quelle entfiel mit A 1.18.0) in eine leere und in eine schon bespielte C#-Datenbank. Danach rechnet C# jeden Durchgang gleich nach
 /// (jedes Feld, Hash f2b59ce8), die Plaetze und die Bestenliste stimmen, und keine Zeile geht verloren
 /// (R3: alle Spielzeilen der Quelle und alle eigenen, eine zweite Uebernahme bringt nichts Neues).
 /// </summary>
 public class SpielUebernahmeTests
 {
     private static readonly JsonElement Soll = VergleichsHilfe.Lade("spiel_uebernahme.json");
-    private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen = Core.Daten.Umbenennungen.Laden(Pfade.Inhalte);
 
     private static readonly (string Name, string Spalten)[] SpielTabellen =
     [
@@ -45,7 +44,7 @@ public class SpielUebernahmeTests
     public static TheoryData<string, bool> Faelle()
     {
         var daten = new TheoryData<string, bool>();
-        foreach (var quelle in new[] { "sicherung", "abgleich", "alte_db" })
+        foreach (var quelle in new[] { "sicherung", "abgleich" })
         {
             daten.Add(quelle, false);
             daten.Add(quelle, true);
@@ -53,34 +52,9 @@ public class SpielUebernahmeTests
         return daten;
     }
 
-    /// <summary>Die Python-Datenbank nachbauen: Aufbau aus sqlite_master, alle Zeilen mit id, sqlite_sequence.</summary>
-    private static string BaueQuelle(string ordner)
-    {
-        var pfad = Path.Combine(Directory.CreateDirectory(Path.Combine(ordner, "python")).FullName, "fisi_lernplattform.db");
-        if (File.Exists(pfad))
-        {
-            return pfad;
-        }
-        var quelle = Soll.GetProperty("quelle_db");
-        using var db = VergleichsHilfe.Oeffnen(pfad);
-        using var tx = db.BeginTransaction();
-        foreach (var teil in quelle.GetProperty("aufbau").EnumerateArray())
-        {
-            VergleichsHilfe.Ausfuehren(db, teil[2].GetString()!);
-        }
-        VergleichsHilfe.FuelleTabellen(db, quelle.GetProperty("tabellen"));
-        VergleichsHilfe.Ausfuehren(db, "DELETE FROM sqlite_sequence");
-        foreach (var z in quelle.GetProperty("sqlite_sequence").EnumerateArray())
-        {
-            VergleichsHilfe.Ausfuehren(db, "INSERT INTO sqlite_sequence (name, seq) VALUES ($p0, $p1)", z[0].GetString(), z[1].GetInt64());
-        }
-        tx.Commit();
-        return pfad;
-    }
-
     private static byte[] Gzip(string text) => UebernahmeTests.Gzip(text);
 
-    /// <summary>Die Quelle wie im Programm lesen: Sicherung, Abgleich-Datei (Teil daten der Sicherung) oder alte Datenbank.</summary>
+    /// <summary>Die Quelle wie im Programm lesen: Sicherung oder Abgleich-Datei (Teil daten der Sicherung); die alte Datenbank entfiel mit A 1.18.0.</summary>
     private static Austausch Quelle(string art, string ordner)
     {
         var sicherung = Soll.GetProperty("sicherung").GetString()!;
@@ -98,7 +72,7 @@ public class SpielUebernahmeTests
                     return Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, abgleich);
                 }
             default:
-                return Uebernahme.Lesen(UebernahmeQuelle.AlteDatenbank, BaueQuelle(ordner));
+                throw new ArgumentException(art);
         }
     }
 
@@ -135,7 +109,7 @@ public class SpielUebernahmeTests
         Assert.Equal(eigen, eigene["spiel_ereignisse"].Count > 0);
 
         var daten = Quelle(quelle, ordner.Pfad);
-        Uebernahme.Uebernehmen(ziel, daten, Umbenennungen, Uhr, Path.Combine(ordner.Pfad, "sicherungen"));
+        Uebernahme.Uebernehmen(ziel, daten, Uhr, Path.Combine(ordner.Pfad, "sicherungen"));
         Vollstaendig(ziel, eigene, quelle);
         Nachgerechnet(ziel);
         if (!eigen)
@@ -146,7 +120,7 @@ public class SpielUebernahmeTests
 
         // Dieselbe Datei noch einmal: keine neue Zeile, nichts verloren
         var vorher = SpielTabellen.Select(t => T(SpielZeilen(ziel, t.Name, t.Spalten))).ToList();
-        Uebernahme.Uebernehmen(ziel, Quelle(quelle, ordner.Pfad), Umbenennungen, Uhr, Path.Combine(ordner.Pfad, "sicherungen"));
+        Uebernahme.Uebernehmen(ziel, Quelle(quelle, ordner.Pfad), Uhr, Path.Combine(ordner.Pfad, "sicherungen"));
         Assert.Equal(vorher, SpielTabellen.Select(t => T(SpielZeilen(ziel, t.Name, t.Spalten))).ToList());
     }
 
@@ -231,23 +205,5 @@ public class SpielUebernahmeTests
         Assert.Equal(T(soll.GetProperty("zeilen_text")), T(plaetze.Select(p => (object?)Spielstaende.Zeile(p)).ToList()));
         Assert.Equal(T(Soll.GetProperty("bestenliste")), T(SpielDatenbank.Bestenzeilen(ziel)
             .Select(z => (object?)new List<object?> { z.Zeit, z.Lauf, z.Art, z.Schluessel, z.Wert, z.Daten }).ToList()));
-    }
-
-    /// <summary>Der Nachbau ist die Python-Datenbank: C# liest dort dasselbe wie Python (auch den gewaehlten Durchgang).</summary>
-    [Fact]
-    public void NachbauWiePython()
-    {
-        using var ordner = new TempOrdner();
-        var pfad = BaueQuelle(ordner.Pfad);
-        var quelle = new Lernstand(pfad);
-        Assert.Null(quelle.NurLesenGrund);
-        Nachgerechnet(quelle);
-        WieGelesen(quelle);
-        using var v = quelle.Verbindung();
-        var belegung = Spielstaende.Belegung(Spielstaende.Zeilen(v), Spielstaende.HatAlteEreignisse(v));
-        Assert.Equal(Soll.GetProperty("gelesen").GetProperty("aktiv").GetString(), Spielstaende.AktiverLauf(Spielstaende.GespeicherterLauf(v), belegung));
-        var namen = Soll.GetProperty("laeufe_namen");
-        Assert.Contains(namen.GetProperty("weg").GetString()!, belegung.Geloescht);
-        Assert.Equal(0, Soll.GetProperty("laeufe").GetProperty(namen.GetProperty("weg").GetString()!).GetProperty("anzahl").GetInt32());
     }
 }

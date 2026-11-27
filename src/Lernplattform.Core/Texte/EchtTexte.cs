@@ -28,6 +28,13 @@ public static class EchtTexte
     public const string SatzErsetzt = "Dieser Prüfungssatz wurde durch neue Sätze ersetzt. Du kannst die gespeicherte Prüfung "
         + "noch zu Ende bearbeiten und abschließen, dein Stand bleibt erhalten. Danach wird der Satz nicht mehr angeboten.";
 
+    /// <summary>
+    /// A 1.18.0 (L0, Weisung P12-424 Nico 5a, Wortlaut P12-437): offene Pruefung eines geloeschten Satzes oder einer
+    /// geloeschten aelteren Fassung (geloescht.json) wird beendet und nicht gewertet.
+    /// </summary>
+    public const string SatzEntfernt = "Dieser Prüfungssatz wurde aus dem Programm entfernt. Die offene Prüfung ist beendet und "
+        + "wird nicht gewertet. Deine fertigen Prüfungen bleiben im Verlauf.";
+
     /// <summary>A 1.8.0 (Weisung P12-372): gespeicherte Pruefung eines Satzes, von dem es eine neue Fassung gibt.</summary>
     public const string TeilNeuGefasst = "Zu diesem Prüfungssatz gibt es eine neue Fassung: einzelne Teilaufgaben werden jetzt "
         + "im Baukasten gezeichnet. Deine Antworten zu diesen Teilaufgaben bleiben gespeichert, werden aber nicht mehr gezeigt; "

@@ -129,7 +129,7 @@ public class LerntexteTests
     }
 
     private static UebernahmeBericht Bericht(int neu, int nichtUebernommen = 0, int entfernt = 0) =>
-        new(UebernahmeQuelle.Sicherung, false, neu, neu, 0, entfernt, 0, nichtUebernommen, 0, 0, 0, 0, 0,
+        new(UebernahmeQuelle.Sicherung, false, neu, neu, 0, entfernt, 0, nichtUebernommen, 0, 0, 0, 0,
             new Dictionary<string, string>(), [], null);
 
     [Fact]

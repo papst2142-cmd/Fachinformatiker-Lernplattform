@@ -25,7 +25,6 @@ public static class UebernahmeTexte
     public const string Vorschau = "Vorschau";
     public const string QuelleSicherung = "Quelle: Sicherung der Lernplattform";
     public const string QuelleAbgleich = "Quelle: Abgleich-Datei";
-    public const string QuelleAlteDb = "Quelle: Datenbank der alten App";
     public const string ZeileNeu = "Neu auf diesem Gerät: %s";
     public const string ZeileVorhanden = "Schon vorhanden: %s";
     public const string ZeileEntfernt = "Wegen einer Löschung entfernt: %s";
@@ -37,7 +36,6 @@ public static class UebernahmeTexte
     // 3. Ergebnis
     public const string EinleitungSicherung = "Sicherung eingespielt:";   // (Py)
     public const string EinleitungAbgleich = "Abgleich-Datei eingelesen:";
-    public const string EinleitungAlteDb = "Alte Datenbank eingelesen:";
     public const string KernUebernommen = "%s übernommen.";                   // (Py)
     public const string KernNichts = "Nichts übernommen.";                    // (Py)
     public const string KernAllesDa = "Es fehlte nichts, alles war schon da."; // (Py)
@@ -53,13 +51,12 @@ public static class UebernahmeTexte
     public const string ZukunftAbgleich = "Die Abgleich-Datei enthält eine Löschmarke in der Zukunft. Sie wurde nicht angewendet."; // (V)
 
     // 5. Fehlermeldungen
-    public const string KeineSicherung = "Diese Datei ist weder eine Sicherung der Lernplattform noch eine Abgleich-Datei noch die Datenbank der alten App.";
+    public const string KeineSicherung = "Diese Datei ist weder eine Sicherung der Lernplattform noch eine Abgleich-Datei.";
     public const string ZuNeu = "Die Sicherung stammt aus Version %s. Bitte zuerst die App aktualisieren.";   // (Py) MSG_NEWER
     public const string PruefsummeFalsch = "Die Sicherung ist beschädigt (Prüfsumme stimmt nicht).";           // (Py) MSG_DAMAGED
     public const string InhaltKaputt = "Die Sicherung ist beschädigt (der Inhalt hat ein unerwartetes Format)."; // (Py) MSG_BROKEN
     public const string AbgleichDateiKaputt = "Die Abgleich-Datei ist beschädigt oder hat ein unerwartetes Format.";
-    public const string DatenbankNichtLesbar = "Die Datenbank der alten App lässt sich nicht lesen. Sie ist vermutlich beschädigt.";
-    public const string GleicheDatei = "Du hast die Lerndatenbank dieses Geräts selbst gewählt. Wähle eine Sicherung, eine Abgleich-Datei oder eine Kopie der alten Datenbank.";
+    public const string GleicheDatei = "Du hast die Lerndatenbank dieses Geräts selbst gewählt. Wähle eine Sicherung oder eine Abgleich-Datei.";
     public const string DateiNichtLesbar = "Die Datei lässt sich nicht öffnen oder lesen.";
     public const string NurLesen = "Der Lernstand lässt sich nicht übernehmen. %s";
     public const string VorschauGescheitert = "Die Vorschau ließ sich nicht berechnen. Es wurde nichts geändert.";
@@ -78,12 +75,7 @@ public static class UebernahmeTexte
     public static string Eintraege(int anzahl) => DashboardTexte.Plural(anzahl, "Eintrag", "Einträge");
 
     /// <summary>Zeile "Quelle: …" der Vorschau.</summary>
-    public static string QuelleZeile(UebernahmeQuelle quelle) => quelle switch
-    {
-        UebernahmeQuelle.Sicherung => QuelleSicherung,
-        UebernahmeQuelle.AbgleichDatei => QuelleAbgleich,
-        _ => QuelleAlteDb,
-    };
+    public static string QuelleZeile(UebernahmeQuelle quelle) => quelle == UebernahmeQuelle.Sicherung ? QuelleSicherung : QuelleAbgleich;
 
     /// <summary>Die vier Zahlzeilen der Vorschau (immer alle, in dieser Reihenfolge).</summary>
     public static IReadOnlyList<string> Zahlzeilen(UebernahmeBericht bericht) =>
@@ -94,15 +86,11 @@ public static class UebernahmeTexte
         Beschriftungen.Einsetzen(ZeileBleibtGeloescht, Eintraege(bericht.NichtUebernommen)),
     ];
 
-    /// <summary>Hinweise zu Loeschmarken je Quelle (alte Datenbank: keiner).</summary>
+    /// <summary>Hinweise zu Loeschmarken je Quelle.</summary>
     /// <param name="ungueltigInDatei">Ungueltige Marken der Datei selbst (nicht die eigenen).</param>
     public static IReadOnlyList<string> Hinweise(UebernahmeQuelle quelle, int ungueltigInDatei, int zukunft)
     {
         var hinweise = new List<string>();
-        if (quelle == UebernahmeQuelle.AlteDatenbank)
-        {
-            return hinweise;
-        }
         var sicherung = quelle == UebernahmeQuelle.Sicherung;
         if (ungueltigInDatei > 0)
         {
@@ -120,12 +108,7 @@ public static class UebernahmeTexte
     {
         var teile = new List<string>
         {
-            bericht.Quelle switch
-            {
-                UebernahmeQuelle.Sicherung => EinleitungSicherung,
-                UebernahmeQuelle.AbgleichDatei => EinleitungAbgleich,
-                _ => EinleitungAlteDb,
-            },
+            bericht.Quelle == UebernahmeQuelle.Sicherung ? EinleitungSicherung : EinleitungAbgleich,
             bericht.Neu > 0 ? Beschriftungen.Einsetzen(KernUebernommen, Eintraege(bericht.Neu))
                 : bericht.NichtUebernommen > 0 ? KernNichts : KernAllesDa,
         };
@@ -157,7 +140,6 @@ public static class UebernahmeTexte
         UebernahmeFehler.PruefsummeFalsch => PruefsummeFalsch,
         UebernahmeFehler.InhaltKaputt => InhaltKaputt,
         UebernahmeFehler.AbgleichDateiKaputt => AbgleichDateiKaputt,
-        UebernahmeFehler.DatenbankNichtLesbar => DatenbankNichtLesbar,
         UebernahmeFehler.GleicheDatei => GleicheDatei,
         UebernahmeFehler.NurLesen => NurLesenText(nurLesenGrund),
         UebernahmeFehler.SicherungGescheitert => SicherungGescheitert,

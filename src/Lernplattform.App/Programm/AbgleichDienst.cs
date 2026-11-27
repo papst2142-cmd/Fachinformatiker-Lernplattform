@@ -44,7 +44,7 @@ public static class AbgleichDienst
     {
         Core.Spiel.Spielschlange.AlleLeeren();   // Weisung P7-17: Spielschritte zuerst fertig schreiben
         using var netz = new GitHubZugang();
-        return Abgleich.Ausfuehren(Zustand.Lernstand, Zustand.Einstellungen, Geraet(), netz, Zustand.Umbenennungen);
+        return Abgleich.Ausfuehren(Zustand.Lernstand, Zustand.Einstellungen, Geraet(), netz);
     }
 
     /// <summary>auto_start.</summary>

@@ -127,12 +127,12 @@ public sealed class UebernahmeTeil
         UebernahmeBericht vorschau;
         try
         {
-            daten = await Task.Run(() => UebernahmeAblauf.Lesen(inhalt, pfad, ordner));
+            daten = await Task.Run(() => UebernahmeAblauf.Lesen(inhalt, pfad));
             vorschau = await Task.Run(() =>
             {
                 try
                 {
-                    return Uebernahme.Vorschau(lernstand, daten, Zustand.Umbenennungen);
+                    return Uebernahme.Vorschau(lernstand, daten);
                 }
                 catch (Exception fehler) when (fehler is not UebernahmeAusnahme)
                 {
@@ -160,7 +160,7 @@ public sealed class UebernahmeTeil
             {
                 try
                 {
-                    return Uebernahme.Uebernehmen(lernstand, daten, Zustand.Umbenennungen);
+                    return Uebernahme.Uebernehmen(lernstand, daten);
                 }
                 catch (Exception fehler) when (fehler is not UebernahmeAusnahme)
                 {

@@ -22,15 +22,16 @@ namespace Lernplattform.Tests;
 /// </summary>
 public sealed class FachrichtungsPaketTests : IDisposable
 {
-    /// <summary>A 1.12.0 (Weisung P12-390): Version der App in den Tests (vorher A 1.8.0; das FIAE-Paket Stand 3 braucht A 1.12.0).</summary>
-    private const string App = "A 1.12.0";
+    /// <summary>A 1.18.0 (L0, Weisung P12-424): Version der App in den Tests (vorher A 1.12.0; die Pakete nach dem Loeschen brauchen A 1.18.0).</summary>
+    private const string App = "A 1.18.0";
 
     /// <summary>
     /// A 1.8.0: Stand und braucht_app des echten Pakets je Fachrichtung, gleich paket_bauen.LERNEN_TESTDATEIEN (FIAE Stand 2 mit
     /// den neuen Fassungen der Pruefungssaetze, FIDP und FIDV Stand 1); seit A 1.12.0 FIAE Stand 3 (Struktogramm, Format 5).
-    /// Die Dateien lernen_ae_1 und lernen_ae_2 bleiben als echte Testdateien liegen.
+    /// Seit A 1.18.0 (L0) FIAE Stand 4, FIDP und FIDV Stand 2 (Stellen nach dem Loeschen, braucht A 1.18.0).
+    /// Die Dateien lernen_ae_1 bis lernen_ae_3, lernen_dpa_1 und lernen_dv_1 bleiben als echte Testdateien liegen.
     /// </summary>
-    private static (long Stand, string Braucht) Echtes(string fr) => fr == "ae" ? (3, "A 1.12.0") : (1, "A 1.5.0");
+    private static (long Stand, string Braucht) Echtes(string fr) => fr == "ae" ? (4, "A 1.18.0") : (2, "A 1.18.0");
 
     private static string EchtDatei(string fr) => Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, Echtes(fr).Stand));
     private static readonly string Lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
@@ -195,10 +196,29 @@ public sealed class FachrichtungsPaketTests : IDisposable
         Assert.Equal(nachbau.Lernen!.Saetze.Select(s => s.Stelle), e.Lernen!.Saetze.Select(s => s.Stelle));
         // A 0.94.0 (P12-304): 10 alte und 10 neue FIAE-Saetze; die 10 alten stehen mit Stelle und Kennung im Ausschluss;
         // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen (gleiche Kennung, hinten angehaengt); A 1.12.0 (P12-390): dazu 1 (P12-393)
-        Assert.Equal(26, e.Lernen.Saetze.Count); // A 1.12.0: 25 + 1 Struktogramm-Fassung (ae_b2_08, P12-393)
-        Assert.Equal(EchtInhalteAeTests.Ae, e.Lernen.Ausschluss.Where(a => a.Datei == "pruefungssaetze").Select(a => a.Frage).Order(StringComparer.Ordinal));
+        // A 1.12.0: 25 + 1 Struktogramm-Fassung (ae_b2_08, P12-393) = 26; A 1.18.0 (L0, Nico 1b): die 10 alten Saetze und die
+        // 6 aelteren Fassungen sind geloescht, es bleiben 10, und das Paket traegt keinen Ausschluss mehr
+        Assert.Equal(10, e.Lernen.Saetze.Count);
+        Assert.Empty(e.Lernen.Ausschluss);
         Assert.Equal(1500, e.Lernen.Listen["karteikarten"].Count);
         Assert.Equal(330, e.Lernen.Listen["szenarien_ap2"].Count);
+    }
+
+    /// <summary>
+    /// A 1.18.0 (L0, Nico 1b): die Pakete bis A 1.17.0 (lernen_ae_3, lernen_dpa_1, lernen_dv_1) tragen die geloeschten
+    /// Eintraege noch; diese App nimmt sie darum nicht (rot mit Grund, nichts geladen). Gegenprobe: die neuen Pakete sind gut.
+    /// </summary>
+    [Theory]
+    [InlineData("ae", 3)]
+    [InlineData("dpa", 1)]
+    [InlineData("dv", 1)]
+    public void A1_PaketeVorL0_PassenNichtMehr_NeueGut(string fr, int alt)
+    {
+        var e = Paket.PruefenArchiv(File.OpenRead(Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, alt))), App, RepoOrdner.Value);
+        Assert.False(e.Gut);
+        Assert.Null(e.Lernen);
+        Assert.StartsWith("Das Paket ", e.Grund, StringComparison.Ordinal);
+        Assert.True(Paket.PruefenArchiv(File.OpenRead(EchtDatei(fr)), App, RepoOrdner.Value).Gut, fr);
     }
 
     [Fact]
@@ -250,7 +270,8 @@ public sealed class FachrichtungsPaketTests : IDisposable
             l["listen"]!["quizfragen"]![1]!["stelle"] = (int)l["listen"]!["quizfragen"]![0]!["stelle"]!)).Grund, StringComparison.Ordinal);
         // Satz geaendert / Satz einer anderen Fachrichtung
         Assert.Equal(PaketTexte.Format(PaketTexte.EintragAnders, FachrichtungsPaket.SaetzeDatei, SatzStelle("ae", 0)),
-            Pruefen(Schnitt("ae", aendern: (_, s) => s["saetze"]![0]!["satz"]!["firma"] = "Andere GmbH")).Grund);
+            // A 1.18.0 (L0): der erste FIAE-Satz ist jetzt ein Satzpaar (andere Firma oder Zeit waere ein Aufbaufehler), darum der Text
+            Pruefen(Schnitt("ae", aendern: (_, s) => s["saetze"]![0]!["satz"]!["ausgangssituation"]![0] = "geaendert")).Grund);
         // Pruefsumme falsch, Datei fehlt
         var d = Schnitt("ae");
         var kaputt = new Dictionary<string, byte[]>(d) { [FachrichtungsPaket.LernenDatei] = [.. d[FachrichtungsPaket.LernenDatei].Append((byte)' ')] };
@@ -497,7 +518,8 @@ public sealed class FachrichtungsPaketTests : IDisposable
         // Gegenprobe (A 1.5.0, Nico 3a): eine aeltere App (A 1.4.1, auch A 0.91.0) nimmt es nicht: „braucht A 1.5.0“;
         // A 1.8.0: das FIAE-Paket Stand 2 braucht A 1.8.0 (Saetze Format 4), auch A 1.7.0 nimmt es nicht;
         // A 1.12.0: Stand 3 braucht A 1.12.0 (Saetze Format 5), auch A 1.11.0 und A 1.8.0 nehmen es nicht
-        foreach (var alt in new[] { "A 1.4.1", "A 0.91.0", "A 0.90.0" }.Concat(fr == "ae" ? ["A 1.11.0", "A 1.8.0", "A 1.7.0", "A 1.5.0"] : []))
+        // A 1.18.0: alle drei Pakete nach dem Loeschen brauchen A 1.18.0, auch A 1.17.0 nimmt sie nicht
+        foreach (var alt in new[] { "A 1.17.0", "A 1.4.1", "A 0.91.0", "A 0.90.0" }.Concat(fr == "ae" ? ["A 1.11.0", "A 1.8.0", "A 1.7.0", "A 1.5.0"] : []))
         {
             Assert.Equal(PaketTexte.Format(PaketTexte.AppAlt, Echtes(fr).Braucht), Paket.PruefenArchiv(File.OpenRead(EchtDatei(fr)), alt).Grund);
         }
@@ -517,7 +539,8 @@ public sealed class FachrichtungsPaketTests : IDisposable
         var mit = ohne.MitPaketen([paket.Lernen!]);
         var bisher = Lerninhalte.Laden(Pfade.Inhalte);
         var soll = string.Join("\n", Abdruck(Lerninhalte.MitLernen(bisher, ohne, ["si", "ae"]), "ae"));
-        var offen = new JsonObject { ["art"] = "echt_ae_b1", ["satz"] = "ae_b1_01", ["eingaben"] = new JsonObject { ["1a"] = "Antwort" } };
+        // A 1.18.0 (L0): ae_b1_01 ist geloescht, der offene Lauf nimmt den heutigen Satz ae_b1_06
+        var offen = new JsonObject { ["art"] = "echt_ae_b1", ["satz"] = "ae_b1_06", ["eingaben"] = new JsonObject { ["1a"] = "Antwort" } };
         var offenVorher = offen.ToJsonString();
         var sicht = Lerninhalte.MitLernen(bisher, ohne, ["si", "ae"]).Fuer("ae");
         using var stopp = new CancellationTokenSource();
@@ -652,7 +675,8 @@ public sealed class FachrichtungsPaketTests : IDisposable
         }
         // Kurzplan P12-225: 4 500 Karteikarten, 6 361 Quizfragen, 990 AP2-Szenarien, 150 Testprojekte, 54 Fachfragen, 40 Saetze;
         // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen der FIAE-Saetze; A 1.12.0 (P12-390, P12-393): dazu die 1 Struktogramm-Fassung (ae_b2_08)
-        Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40 + 5 + 1, platzhalter);
+        // A 1.18.0 (L0, Nico 1b): geloescht 1 FIAE-Quizfrage, 10 alte FIAE-Saetze und 6 aeltere Fassungen
+        Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40 + 5 + 1 - 1 - 10 - 6, platzhalter);
         Assert.DoesNotContain(bau.Keys, k => Geschnitten.Any(fr => k.Contains("." + fr + ".", StringComparison.Ordinal)));
         var ordner = AppOrdner();
         Assert.All(Geschnitten, fr => Assert.True(ordner.Fehlt(fr), fr));

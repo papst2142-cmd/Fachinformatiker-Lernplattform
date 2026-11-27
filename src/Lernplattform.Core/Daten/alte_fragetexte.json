@@ -1,6 +1,7 @@
 {
   "_hinweis": [
-    "Alte Fragetexte -> neue Fragetexte (ab 0.53), damit der Lernstand erhalten bleibt. Nur anhaengen."
+    "Welle A 1.18.0 (L0, Weisung P12-424): alte Fragetexte -> heutige, nur fuer das einmalige Umschreiben des Lernstands beim Start (AlteFragetexte.cs).",
+    "Inhalt: die 55 Zuordnungen aus inhalte/umbenennungen.json (Python v0.63.2) in derselben Reihenfolge, dazu die FIAE-Quizfrage Fabrikmethode (alte Fassung quizfragen.json Stelle 231, neue Stelle 6360). Nie erweitern."
   ],
   "karte": {
     "Was ist ein Hot Aisle / Cold Aisle Konzept im Rechenzentrum?": "Was ist ein Hot-Aisle-/Cold-Aisle-Konzept im Rechenzentrum?",
@@ -59,6 +60,7 @@
     "Wie lange muss ein Unternehmen per E-Mail empfangene Handelsbriefe, z.B. eine Auftragsbestätigung ohne Rechnungsfunktion, aufbewahren?": "Wie lange muss ein Unternehmen per E-Mail empfangene Handelsbriefe, z. B. eine Auftragsbestätigung ohne Rechnungsfunktion, aufbewahren?",
     "Ein Onlineshop leitet Kunden zum Bezahlen an einen Zahlungsdienstleister weiter. Dieser prüft die Zahlungsdaten auch nach eigenen gesetzlichen Pflichten, z.B. zur Geldwäsche. Welche Rolle hat er?": "Ein Onlineshop leitet Kunden zum Bezahlen an einen Zahlungsdienstleister weiter. Dieser prüft die Zahlungsdaten auch nach eigenen gesetzlichen Pflichten, z. B. zur Geldwäsche. Welche Rolle hat er?",
     "Sie dokumentieren das Netz eines Kunden. Ein Laptop hat die Adresse 172.16.9.155/27. Welche Netz- und Broadcastadresse tragen Sie ein?": "Sie dokumentieren das Netz eines Kunden. Ein Laptop hat die Adresse 172.16.9.155/27. Welche Netz- und Broadcast-Adresse tragen Sie ein?",
-    "Ein PC mit 10.44.7.201/26 soll per Wake-on-LAN geweckt werden. Das Tool verlangt die Broadcastadresse seines Subnetzes. Welche tragen Sie ein?": "Ein PC mit 10.44.7.201/26 soll per Wake-on-LAN geweckt werden. Das Tool verlangt die Broadcast-Adresse seines Subnetzes. Welche tragen Sie ein?"
+    "Ein PC mit 10.44.7.201/26 soll per Wake-on-LAN geweckt werden. Das Tool verlangt die Broadcastadresse seines Subnetzes. Welche tragen Sie ein?": "Ein PC mit 10.44.7.201/26 soll per Wake-on-LAN geweckt werden. Das Tool verlangt die Broadcast-Adresse seines Subnetzes. Welche tragen Sie ein?",
+    "Ein Importprogramm soll je nach Dateiendung (.csv, .json, .xml) das passende Leseobjekt liefern. Der restliche Code soll nur das Interface ILeser kennen. Welches Muster passt?": "Ein Importprogramm hat eine abstrakte Basisklasse Importer mit dem festen Ablauf importiere(). Welches Leseobjekt (ILeser) gebraucht wird, legen die Unterklassen CsvImporter, JsonImporter und XmlImporter in der überschriebenen Methode erzeugeLeser() fest. Welches Muster ist das?"
   }
 }

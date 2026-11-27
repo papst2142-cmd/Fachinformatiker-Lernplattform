@@ -15,46 +15,35 @@ public class UebernahmeAblaufTests
 
     private static byte[] Datei(string name) => UebernahmeTests.Gzip(G20.GetProperty("dateien").GetProperty(name).GetString()!);
 
-    private static byte[] AlteDatenbank(TempOrdner ordner)
-    {
-        var pfad = UebernahmeTests.BaueDatenbank(G20.GetProperty("quelle_db"), Path.Combine(ordner.Pfad, "alt.db"));
-        return File.ReadAllBytes(pfad);
-    }
-
     [Fact]
     public void QuelleAmInhaltErkannt()
     {
         using var ordner = new TempOrdner();
         Assert.Equal(UebernahmeQuelle.Sicherung, UebernahmeAblauf.Erkennen(Datei("a")));
         Assert.Equal(UebernahmeQuelle.AbgleichDatei, UebernahmeAblauf.Erkennen(Datei("d")));
-        Assert.Equal(UebernahmeQuelle.AlteDatenbank, UebernahmeAblauf.Erkennen(AlteDatenbank(ordner)));
+        // Seit A 1.18.0 (Nico 3a) ist eine Datenbank keine Quelle mehr: auch die Datenbank der alten App gilt als "keine Sicherung"
+        Assert.Null(UebernahmeAblauf.Erkennen(PythonDatenbank(ordner)));
         Assert.Null(UebernahmeAblauf.Erkennen([]));
         Assert.Null(UebernahmeAblauf.Erkennen("Hallo"u8.ToArray()));
         Assert.Null(UebernahmeAblauf.Erkennen([0x1F, 0x8B, 0, 1, 2]));             // kein gzip
         Assert.Null(UebernahmeAblauf.Erkennen(UebernahmeTests.Gzip("[1, 2]")));    // kein Objekt
         Assert.Null(UebernahmeAblauf.Erkennen(UebernahmeTests.Gzip("{kaputt")));
         Assert.Equal(UebernahmeFehler.KeineSicherung,
-            Assert.Throws<UebernahmeAusnahme>(() => UebernahmeAblauf.Lesen("Hallo"u8.ToArray(), null, ordner.Pfad)).Fehler);
+            Assert.Throws<UebernahmeAusnahme>(() => UebernahmeAblauf.Lesen("Hallo"u8.ToArray(), null)).Fehler);
+        Assert.Equal(UebernahmeFehler.KeineSicherung,
+            Assert.Throws<UebernahmeAusnahme>(() => UebernahmeAblauf.Lesen(PythonDatenbank(ordner), null)).Fehler);
     }
 
-    /// <summary>Alte Datenbank ohne Pfad (Android): kurze Arbeitskopie, danach kein Rest im Ordner.</summary>
-    [Fact]
-    public void AlteDatenbankOhnePfadLaesstNichtsLiegen()
+    /// <summary>Eine SQLite-Datenbank mit dem Aufbau der alten App (eine Tabelle genuegt fuer den Kopf "SQLite format 3").</summary>
+    private static byte[] PythonDatenbank(TempOrdner ordner)
     {
-        using var ordner = new TempOrdner();
-        var inhalt = AlteDatenbank(ordner);
-        var arbeit = Directory.CreateDirectory(Path.Combine(ordner.Pfad, "daten")).FullName;
-        var daten = UebernahmeAblauf.Lesen(inhalt, null, arbeit);
-        var vergleich = Uebernahme.LeseAlteDatenbank(Path.Combine(ordner.Pfad, "alt.db"));
-        Assert.Null(daten.QuellPfad);
-        Assert.Equal(vergleich.Tabellen.Keys.Order(), daten.Tabellen.Keys.Order());
-        Assert.Equal(vergleich.Tabellen.Sum(t => t.Value.Count), daten.Tabellen.Sum(t => t.Value.Count));
-        Assert.Empty(Directory.GetFileSystemEntries(arbeit));
-        // Kaputte Datenbank: Fehlercode, ebenfalls kein Rest
-        byte[] kaputt = [.. inhalt.Take(100), .. new byte[4000]];
-        Assert.Equal(UebernahmeFehler.DatenbankNichtLesbar,
-            Assert.Throws<UebernahmeAusnahme>(() => UebernahmeAblauf.Lesen(kaputt, null, arbeit)).Fehler);
-        Assert.Empty(Directory.GetFileSystemEntries(arbeit));
+        var pfad = Path.Combine(ordner.Pfad, "fisi_lernplattform.db");
+        using (var db = VergleichsHilfe.Oeffnen(pfad))
+        {
+            VergleichsHilfe.Ausfuehren(db, "CREATE TABLE IF NOT EXISTS card_events (id INTEGER PRIMARY KEY, timestamp TEXT, category TEXT, question TEXT, mode TEXT, correct INTEGER, uid TEXT)");
+        }
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        return File.ReadAllBytes(pfad);
     }
 
     [Fact]
@@ -63,8 +52,8 @@ public class UebernahmeAblaufTests
         using var ordner = new TempOrdner();
         var pfad = Path.Combine(ordner.Pfad, "a.fisisicherung");
         File.WriteAllBytes(pfad, Datei("a"));
-        Assert.Equal(pfad, UebernahmeAblauf.Lesen(File.ReadAllBytes(pfad), pfad, ordner.Pfad).QuellPfad);
-        Assert.Null(UebernahmeAblauf.Lesen(File.ReadAllBytes(pfad), null, ordner.Pfad).QuellPfad);
+        Assert.Equal(pfad, UebernahmeAblauf.Lesen(File.ReadAllBytes(pfad), pfad).QuellPfad);
+        Assert.Null(UebernahmeAblauf.Lesen(File.ReadAllBytes(pfad), null).QuellPfad);
     }
 
     [Fact]
@@ -80,7 +69,7 @@ public class UebernahmeAblaufTests
 
     private static UebernahmeBericht Bericht(UebernahmeQuelle quelle, int neu = 0, int vorhanden = 0, int entfernt = 0,
         int bleibt = 0, int ungueltig = 0, int zukunft = 0) =>
-        new(quelle, false, neu, neu, vorhanden, entfernt, 0, bleibt, 0, 0, ungueltig, zukunft, 0,
+        new(quelle, false, neu, neu, vorhanden, entfernt, 0, bleibt, 0, 0, ungueltig, zukunft,
             new Dictionary<string, string>(), [], null, ungueltig);
 
     [Fact]
@@ -100,7 +89,6 @@ public class UebernahmeAblaufTests
             UebernahmeTexte.Hinweise(UebernahmeQuelle.Sicherung, 1, 2));
         Assert.Equal([UebernahmeTexte.UngueltigAbgleich, UebernahmeTexte.ZukunftAbgleich],
             UebernahmeTexte.Hinweise(UebernahmeQuelle.AbgleichDatei, 3, 1));
-        Assert.Empty(UebernahmeTexte.Hinweise(UebernahmeQuelle.AlteDatenbank, 1, 1));
         Assert.Empty(UebernahmeTexte.Hinweise(UebernahmeQuelle.Sicherung, 0, 0));
     }
 
@@ -114,8 +102,8 @@ public class UebernahmeAblaufTests
         Assert.Equal("Abgleich-Datei eingelesen: Nichts übernommen. 4 Einträge bleiben gelöscht, weil sie auf diesem Gerät gelöscht wurden."
             + " Die Abgleich-Datei enthält eine Löschmarke in der Zukunft. Sie wurde nicht angewendet.",
             UebernahmeTexte.Ergebnis(Bericht(UebernahmeQuelle.AbgleichDatei, 0, 5, 0, 4, 0, 1), null));
-        Assert.Equal("Alte Datenbank eingelesen: Es fehlte nichts, alles war schon da.",
-            UebernahmeTexte.Ergebnis(Bericht(UebernahmeQuelle.AlteDatenbank, 0, 7, 0, 0, 1, 1), null));
+        Assert.Equal("Sicherung eingespielt: Es fehlte nichts, alles war schon da.",
+            UebernahmeTexte.Ergebnis(Bericht(UebernahmeQuelle.Sicherung, 0, 7, 0, 0, 0, 0), null));
     }
 
     /// <summary>Weisung P2-6 A3: unsichtbares Trennzeichen nur am Handy, am PC bleibt der Name kopierbar.</summary>

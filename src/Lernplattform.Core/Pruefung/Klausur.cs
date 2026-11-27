@@ -18,30 +18,22 @@ public sealed record KlausurArt(string Art, string Kurz, int Minuten, string Que
 public sealed record KlausurEintrag(string Zeit, string? Art, double? Punkte, string? Note, JsonNode? Daten, string? Kennung);
 
 /// <summary>
-/// Lerninhalte fuer die Pruefung (QUIZ_QUESTIONS, AP1_SZENARIEN, SZENARIEN, QUESTION_RENAMES);
+/// Lerninhalte fuer die Pruefung (QUIZ_QUESTIONS, AP1_SZENARIEN, SZENARIEN; seit A 1.18.0 ohne QUESTION_RENAMES);
 /// die aufbereiteten Aufgaben werden je Szenario einmal gerechnet und behalten.
 /// </summary>
 public sealed class KlausurInhalte
 {
     private readonly Dictionary<(string, int), Aufgabe?> _teile = [];
     private readonly Dictionary<string, Lerninhalt> _frage = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _umbenennung = new(StringComparer.Ordinal);
     private readonly Lock _sperre = new();
 
-    public KlausurInhalte(Lerninhalte inhalte, IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen)
+    public KlausurInhalte(Lerninhalte inhalte)
     {
         Inhalte = inhalte;
         // Phase 9 W2: auch Fragen, die die gewaehlte Fachrichtung nicht sieht (Pruefungen von vor einem Wechsel)
         foreach (var frage in inhalte.Alle.Quizfragen)
         {
             _frage[frage.Frage ?? ""] = frage;      // {q["q"]: q} - die letzte gewinnt
-        }
-        foreach (var (tabelle, alt, neu) in umbenennungen)
-        {
-            if (tabelle == "quiz_answers")
-            {
-                _umbenennung[alt] = neu;
-            }
         }
     }
 
@@ -131,16 +123,11 @@ public sealed class KlausurInhalte
     /// <summary>by_question[frage] oder null.</summary>
     public Lerninhalt? Quizfrage(string? frage) => frage is not null && _frage.TryGetValue(frage, out var q) ? q : null;
 
-    /// <summary>current_question: heutiger Fragetext (auch ueber mehrere Umbenennungen).</summary>
-    public string? AktuelleFrage(string? frage)
-    {
-        var gesehen = new HashSet<string>(StringComparer.Ordinal);
-        while (frage is not null && _umbenennung.TryGetValue(frage, out var neu) && gesehen.Add(frage))
-        {
-            frage = neu;
-        }
-        return frage;
-    }
+    /// <summary>
+    /// current_question: heutiger Fragetext. Seit A 1.18.0 (L0, Weisung P12-424 Nico 2b) gibt es keine Umbenennungen mehr,
+    /// alte Texte im Lernstand und in einer laufenden Pruefung schreibt <see cref="Daten.AlteFragetexte"/> beim Start um.
+    /// </summary>
+    public string? AktuelleFrage(string? frage) => frage;
 
     /// <summary>wiso_pool: Fragetexte mit Thema aus quiz_themen, Reihenfolge der Inhalte.</summary>
     public List<string> WisoPool(KlausurArt art) =>
