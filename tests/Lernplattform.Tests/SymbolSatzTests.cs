@@ -157,16 +157,29 @@ public class SymbolSatzTests
     }
 
     /// <summary>
-    /// Weisung P12-434: Teile mit sich ueberlagernden Teilformen (Kreuz in „Mehr“) werden wie im SVG mit nonzero gefuellt; die
-    /// Oberflaeche liest jeden Pfad mit <see cref="SymbolSatz.Fuellregel"/> davor. Das Kreuz besteht aus zwei sich kreuzenden Balken,
-    /// genau dort wuerde evenodd ein Loch lassen.
+    /// Weisung P12-435 (Nico 27.11.2026 14:21 MEZ): das Symbol „Mehr“ bleibt genau wie gebaut, mit dem hellen Punkt in der Mitte
+    /// des Kreuzes. Der Punkt entsteht, weil die Oberflaeche den Pfad mit der Fuellregel von Avalonia (evenodd, ohne „F1“) liest
+    /// und sich die zwei Balken in der Mitte ueberlagern. Darum: Kreuz aus genau zwei sich kreuzenden Balken, wortgleich, und
+    /// <c>SatzSymbol</c> liest die Pfade ohne Vorsatz „F1“.
     /// </summary>
-    [Fact]
-    public void FuellregelWieImEntwurf()
+    private static string Wurzel()
     {
-        Assert.Equal("F1 ", SymbolSatz.Fuellregel);
+        var ordner = new DirectoryInfo(AppContext.BaseDirectory);
+        while (ordner is not null && !File.Exists(Path.Combine(ordner.FullName, "Directory.Build.props")))
+        {
+            ordner = ordner.Parent;
+        }
+        return ordner!.FullName;
+    }
+
+    [Fact]
+    public void MehrBehaeltDenHellenPunktInDerMitte()
+    {
         var kreuz = SymbolSatz.Satz3["MEHR"].Single(t => t.Art == SymbolTeilArt.Akzent).Pfad;
-        Assert.Equal(2, kreuz.Count(c => c == 'M'));
+        Assert.Equal("M10.8 6.8h2.4v10.4h-2.4zM6.8 10.8h10.4v2.4H6.8z", kreuz);
+        var quelle = File.ReadAllText(Path.Combine(Wurzel(), "src", "Lernplattform.App", "Views", "SatzSymbol.cs"));
+        Assert.Contains("Geometry.Parse(teil.Pfad)", quelle, StringComparison.Ordinal);
+        Assert.DoesNotContain("F1", quelle, StringComparison.Ordinal);
     }
 
     [Fact]

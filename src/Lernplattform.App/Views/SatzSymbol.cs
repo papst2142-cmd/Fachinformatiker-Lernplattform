@@ -31,9 +31,7 @@ public sealed class SatzSymbol : Control
     {
         if (!Umrisse.TryGetValue(teil.Pfad, out var g))
         {
-            // P12-434: Fuellregel wie SVG (nonzero, „F1“); Avalonia nimmt sonst evenodd, dann wird die Ueberlagerung zweier Teilformen
-            // (Kreuz im Symbol Mehr) zum Loch, im Entwurf ist sie gefuellt
-            g = Geometry.Parse(Core.Design.SymbolSatz.Fuellregel + teil.Pfad);
+            g = Geometry.Parse(teil.Pfad);
             Umrisse[teil.Pfad] = g;
         }
         return g;
