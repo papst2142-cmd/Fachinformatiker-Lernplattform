@@ -48,10 +48,8 @@ public static partial class AutoMessung
         {
             var name = Pruefungsteile.BereichKurz(rolle);
             yield return (leiste2, Zu2(ueben + Pruefungsteile.Pruefungsfragen + " " + name), Seiten.Trainer, null, t2);
-            if (rolle != Pruefungsteile.Wiso)
-            {
-                yield return (leiste2, Zu2(ueben + Pruefungsteile.Szenarien + " " + name), Seiten.Ap2Szenarien, null, t2);
-            }
+            // Weisung P12-442 (Nico 2b): WiSo zeigt die AP1-Fallaufgaben zur WiSo (Seite der AP1-Szenarien, eingebettet in AP2)
+            yield return (leiste2, Zu2(ueben + Pruefungsteile.Szenarien + " " + name), rolle == Pruefungsteile.Wiso ? Seiten.Ap1Szenarien : Seiten.Ap2Szenarien, null, t2);
         }
         if (handy)
         {
@@ -219,7 +217,8 @@ public static partial class AutoMessung
 
     /// <summary>Wege in Pruefungsfragen und Szenarien ausserhalb der Leisten (Weisung P12-440, Nico 5a).</summary>
     internal static readonly IReadOnlyList<string> AndereWege =
-        ["suche-frage", "suche-ap1", "suche-ap2", "spiel-frage", "notizblock-frage", "notizblock-ap1", "notizblock-ap2", "fortschritt-jetzt-ueben"];
+        ["suche-frage", "suche-ap1", "suche-ap2", "suche-ap1-wiso", "spiel-frage", "notizblock-frage", "notizblock-ap1", "notizblock-ap2",
+            "notizblock-ap1-wiso", "fortschritt-jetzt-ueben"];
 
     /// <summary>
     /// A 1.19.0 (Weisung P12-440, Tests): Suche, Spiel-Tafel, Notizblock und Fortschritt „Jetzt üben“ oeffnen Pruefungsfragen und
@@ -234,7 +233,10 @@ public static partial class AutoMessung
             await ansicht.ZeigeAsync(Seiten.Dashboard);
             var herkunft = await ansicht.AndererWegFuerTestsAsync(weg);
             await ansicht.BildFertigAsync();
-            var fund = NurMitLeiste.Contains(ansicht.AktuelleSeite) ? LeisteFund(ansicht, null) : ansicht.AktuelleSeite + " ist keine Seite mit Leiste AP1 | AP2";
+            // AP1-Szenarien in AP1, AP2-Szenarien und die AP1-Fallaufgaben zur WiSo in AP2 (Weisung P12-442, Nico 2b)
+            var haelfte = weg.EndsWith("-wiso", StringComparison.Ordinal) || weg.EndsWith("-ap2", StringComparison.Ordinal) ? Pruefungsteile.Teil2
+                : weg.EndsWith("-ap1", StringComparison.Ordinal) ? Pruefungsteile.Teil1 : null;
+            var fund = NurMitLeiste.Contains(ansicht.AktuelleSeite) ? LeisteFund(ansicht, haelfte) : ansicht.AktuelleSeite + " ist keine Seite mit Leiste AP1 | AP2";
             if (fund.Length > 0)
             {
                 Messwerte.Notiere($"  FEHLER: Weg {weg}: {fund}");
@@ -320,6 +322,8 @@ public static partial class AutoMessung
             (Pruefungsteile.Teil1, Pruefungsteile.Ueben + " " + Pruefungsteile.Szenarien + " " + Pruefungsteile.Teil1Kurz, "teil1/szenarien-eingebettet"),
             (Pruefungsteile.Teil2, Pruefungsteile.Ueben + " " + Pruefungsteile.Pruefungsfragen + " " + Pruefungsteile.BereichKurz(Pruefungsteile.B1), "teil2/fragen-eingebettet"),
             (Pruefungsteile.Teil2, Pruefungsteile.Ueben + " " + Pruefungsteile.Szenarien + " " + Pruefungsteile.BereichKurz(Pruefungsteile.B1), "teil2/szenarien-eingebettet"),
+            // Weisung P12-442 (Nico 2b): die AP1-Fallaufgaben zur WiSo unter AP2 › Üben › WiSo
+            (Pruefungsteile.Teil2, Pruefungsteile.Ueben + " " + Pruefungsteile.Szenarien + " " + Pruefungsteile.BereichKurz(Pruefungsteile.Wiso), "teil2/wiso-uebungsaufgaben-eingebettet"),
         })
         {
             var s = await Teil(id, Pruefungsteile.Ueben);

@@ -974,9 +974,18 @@ public partial class MainView : UserControl
         EingebettetAsync(Seiten.Trainer, LetzteHaelfte, Core.Texte.Pruefungsteile.Ueben, titel, zurueck, LetzteHaelfte);
 
     /// <summary>A 1.19.0 (Nico 5a): Szenarien einer Quelle eingebettet in AP1 bzw. AP2, ganze Liste dieser Quelle.</summary>
-    private async Task SzenarienEingebettetAsync(string quelle, string titel, Func<Task> zurueck)
+    /// <param name="passt">das gesuchte Szenario: gehoert es zu den AP1-Fallaufgaben unter AP2 › WiSo (Weisung P12-442, Nico 2b),
+    /// erscheint es in AP2</param>
+    private async Task SzenarienEingebettetAsync(string quelle, string titel, Func<Task> zurueck, Func<Core.Inhalte.Lerninhalt, bool>? passt = null)
     {
         var haelfte = HaelfteFuerQuelle(quelle);
+        if (quelle == Core.Lernen.Quellen.Ap1 && passt is not null
+            && await PruefungsteilDaten.Fuer(Programm.Zustand.Sicht, Programm.Zustand.Inhalte) is { } daten
+            && daten.Teile.TryGetValue(Core.Texte.Pruefungsteile.Wiso, out var wiso)
+            && wiso.SzenarienQuelle == Core.Lernen.Quellen.Ap1 && wiso.Szenarien.Any(passt))
+        {
+            haelfte = Core.Texte.Pruefungsteile.Teil2;
+        }
         var ziel = quelle == Core.Lernen.Quellen.Ap1 ? Seiten.Ap1Szenarien : Seiten.Ap2Szenarien;
         await EingebettetAsync(ziel, haelfte, Core.Texte.Pruefungsteile.Ueben, titel, zurueck, haelfte);
         ((SzenarioSeite)_seiten[ziel]).AlleZeigen();
@@ -1223,8 +1232,15 @@ public partial class MainView : UserControl
         var frage = inhalte.Quizfragen.First(q => q.Frage is not null).Frage!;
         var ap1 = inhalte.Ap1Szenarien[0].Titel ?? "";
         var ap2 = inhalte.Ap2Szenarien[0].Titel ?? "";
+        var wiso = (await PruefungsteilDaten.Fuer(Programm.Zustand.Sicht, Programm.Zustand.Inhalte))!.Teile[Core.Texte.Pruefungsteile.Wiso].Szenarien[0];
         switch (weg)
         {
+            case "suche-ap1-wiso":
+                await TrefferOeffnenAsync(new(Core.Texte.SucheTexte.ArtAp1, null, wiso.Titel ?? "", ""), wiso.Titel ?? "");
+                return Seiten.Suche;
+            case "notizblock-ap1-wiso":
+                await NotizblockUebenAsync(Core.Lernen.Quellen.Ap1, [(long)(wiso.Nummer - 1)], null);
+                return Seiten.Notizblock;
             case "suche-frage":
                 await TrefferOeffnenAsync(new(Core.Texte.SucheTexte.ArtQuiz, null, frage, ""), frage);
                 return Seiten.Suche;
@@ -1287,7 +1303,7 @@ public partial class MainView : UserControl
                 break;
             case Core.Texte.SucheTexte.ArtAp1:
                 // das erste Szenario mit gleichem Titel (Phase 4, W1)
-                await SzenarienEingebettetAsync(Core.Lernen.Quellen.Ap1, ZurueckTitel(herkunft, Core.Texte.Pruefungsteile.Szenario), zurueck);
+                await SzenarienEingebettetAsync(Core.Lernen.Quellen.Ap1, ZurueckTitel(herkunft, Core.Texte.Pruefungsteile.Szenario), zurueck, s => s.Titel == treffer.Titel);
                 ((SzenarioSeite)_seiten[Seiten.Ap1Szenarien]).Springen(treffer.Titel);
                 break;
             default:
@@ -1327,7 +1343,9 @@ public partial class MainView : UserControl
                 }
                 else
                 {
-                    await SzenarienEingebettetAsync(quelle, ZurueckTitel(Core.Texte.Pruefungsteile.HerkunftNotizblock, Core.Texte.Pruefungsteile.Szenarien), () => ZeigeAsync(Seiten.Notizblock));
+                    var nummer = (int)Convert.ToInt64(schluessel[0], CultureInfo.InvariantCulture) + 1;
+                    await SzenarienEingebettetAsync(quelle, ZurueckTitel(Core.Texte.Pruefungsteile.HerkunftNotizblock, Core.Texte.Pruefungsteile.Szenarien), () => ZeigeAsync(Seiten.Notizblock),
+                        s => s.Nummer == nummer);
                 }
                 ((SzenarioSeite)_seiten[ziel]).Oeffnen((int)Convert.ToInt64(schluessel[0], CultureInfo.InvariantCulture));
                 break;

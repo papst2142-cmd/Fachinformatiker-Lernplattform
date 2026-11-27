@@ -222,15 +222,16 @@ public static class Pruefungsteile
     public const string UebenTitel = "ÜBEN · OHNE UHR, OHNE NOTE";
     public const string Pruefungsfragen = "Prüfungsfragen";
     public const string FragenAngabe = "%d Fragen zu den Themen dieses Bereichs";
-    /// <summary>A 1.19.0 (Nico 1a): Zeile „Szenarien“ in AP1 und in jedem Bereich von AP2 (statt „AP1-/AP2-Szenarien“).</summary>
-    public const string Szenarien = "Szenarien";
+    /// <summary>A 1.19.0 (Nico 1a): Zeile in AP1 und in jedem Bereich von AP2 (statt „AP1-/AP2-Szenarien“); Name „Übungsaufgaben“
+    /// (Weisung P12-442, Nico 27.11.2026 19:34 MEZ, statt „Szenarien“ im Entwurf P12-278), auch in Zurück- und Stand-Zeile.</summary>
+    public const string Szenarien = "Übungsaufgaben";
     public const string SzenarienAngabe = "%d Fallaufgaben";
     public const string Einzelaufgabe = "Einzelne Aufgabe im echten Format";
     public const string EinzelaufgabeAngabe = "eine Aufgabe aus einem Satz, mit Musterlösung";
     public const string AufgabeWaehlen = "Aufgabe wählen";
     public const string StandTitel = "DEIN STAND";
     public const string Stand = "%d Fragen: %d bearbeitet, %d %% richtig";
-    public const string StandSzenarien = " · Szenarien %d von %d";
+    public const string StandSzenarien = " · " + Szenarien + " %d von %d";
     public const string NurTeil = "Nur %s";
     public const string KeineFragen = "Zu diesem Bereich gibt es noch keine Fragen.";
 

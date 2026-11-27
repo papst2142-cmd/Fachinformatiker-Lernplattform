@@ -18,9 +18,9 @@ public sealed record TeilStand(int Fragen, int Bearbeitet, int Richtig, int Szen
 /// Punkt mit dem Kurznamen des Bereichs in „ap2“ (FISI „Konzeption“, „Netzwerke“, „WiSo“; FIAE/FIDP/FIDV ihre Bereiche aus
 /// rahmenplan_zusatz.json). Die WiSo-Fragen der Probeklausur (Themen recht und arbeitswelt) zaehlen immer zu WiSo.</item>
 /// <item>Szenarien: die Aufgaben, aus denen die Probeklausur dieses Teils zieht (<see cref="KlausurInhalte.Nutzbar"/> je Thema).
-/// A 1.19.0 (Weisung P12-440, Nico „AP1 unter AP1“): Teil 1 zeigt alle AP1-Szenarien der Sicht, auch die 50 zur
-/// Wirtschafts- und Sozialkunde, aus denen die Probeklausur AP1 nicht zieht; sonst waeren sie ohne die Seite „AP1-Szenarien“
-/// nur noch ueber die Suche zu finden.</item>
+/// A 1.19.0 (Weisung P12-442, Nico Frage 2 = b, wie P12-420 Antwort 2a / K3): WiSo zeigt die AP1-Fallaufgaben, aus denen die
+/// Probeklausur AP1 nicht zieht (die 50 zur Wirtschafts- und Sozialkunde), <see cref="WisoAp1Szenarien"/>; sonst waeren sie ohne
+/// die Seite „AP1-Szenarien“ nur noch ueber die Suche zu finden. Nur die Anzeige, die Probeklausuren ziehen wie bisher.</item>
 /// </list>
 /// Eine Frage kann zu mehreren Teilen gehoeren (ein Rahmenplan-Punkt zaehlt oft fuer mehrere Bereiche).
 /// </summary>
@@ -55,14 +55,29 @@ public static class TeilUeben
         {
             var themen = a.Themen?.SelectMany(w => w) ?? a.Pool ?? [];
             var liste = klausur.Quelle(a.Quelle);
-            if (a.Quelle == "ap1")
-            {
-                return new TeilInhalte(fragen, Quellen.Ap1, [.. inhalte.Ap1Szenarien]);
-            }
             var indizes = themen.Distinct(StringComparer.Ordinal).SelectMany(t => klausur.Nutzbar(a.Quelle, t)).Distinct().Order();
-            return new TeilInhalte(fragen, Quellen.Ap2, [.. indizes.Select(i => liste[i])]);
+            return new TeilInhalte(fragen, a.Quelle == "ap1" ? Quellen.Ap1 : Quellen.Ap2, [.. indizes.Select(i => liste[i])]);
+        }
+        if (rolle == Wiso && WisoAp1Szenarien(inhalte, klausur, fachrichtung) is { Count: > 0 } wiso)
+        {
+            return new TeilInhalte(fragen, Quellen.Ap1, wiso);
         }
         return new TeilInhalte(fragen, "", []);
+    }
+
+    private const string Wiso = "wiso";
+
+    /// <summary>AP1-Szenarien der Sicht, aus denen die Probeklausur AP1 nicht zieht (FISI: die 50 zur Wirtschafts- und Sozialkunde).</summary>
+    public static IReadOnlyList<Lerninhalt> WisoAp1Szenarien(Lerninhalte inhalte, KlausurInhalte klausur, Fachrichtung fachrichtung)
+    {
+        if (klausur.Art(fachrichtung.Bereich("ap1").Art) is not { Quelle: "ap1" } ap1)
+        {
+            return [];
+        }
+        var themen = ap1.Themen?.SelectMany(w => w) ?? ap1.Pool ?? [];
+        var gezogen = themen.Distinct(StringComparer.Ordinal).SelectMany(t => klausur.Nutzbar("ap1", t)).ToHashSet();
+        var liste = klausur.Quelle("ap1");
+        return [.. Enumerable.Range(0, liste.Count).Where(i => !gezogen.Contains(i)).Select(i => liste[i])];
     }
 
     /// <summary>Rahmenplan-Punkte, die zu einem Bereich zaehlen (Teil 1: „ap1“, sonst Kurzname in „ap2“).</summary>

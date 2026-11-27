@@ -152,20 +152,19 @@ public class PruefungsteileTests
                 var wiso = art?.QuizThemen is { } themen && eintrag.Thema is { } t && themen.Contains(t);
                 Assert.True(wiso || gewicht.Punkte(Quellen.Quiz, frage).Any(punkte.Contains), rolle + ": " + frage);
             }
-            // Szenarien: AP1 alle AP1-Szenarien der Sicht (A 1.19.0, auch die zur WiSo, aus denen die Probeklausur AP1 nicht zieht),
-            // AP2 genau die, aus denen die Probeklausur des Bereichs zieht
-            if (rolle == "ap1")
-            {
-                Assert.Equal(sicht.Ap1Szenarien, teil.Szenarien);
-            }
-            else if (rolle != "wiso")
+            // Szenarien: genau die, aus denen die Probeklausur des Teils zieht; WiSo (A 1.19.0, Weisung P12-442, Nico 2b) die
+            // AP1-Fallaufgaben, aus denen die Probeklausur AP1 nicht zieht
+            if (rolle != "wiso")
             {
                 Assert.NotEmpty(teil.Szenarien);
                 Assert.All(teil.Szenarien, s => Assert.Contains(s.SzenarioThema, art!.Themen?.SelectMany(w => w) ?? art.Pool ?? []));
             }
             else
             {
-                Assert.Empty(teil.Szenarien);
+                var ap1 = TeilUeben.Inhalte(sicht, gewicht, klausur, f, "ap1").Szenarien;
+                Assert.Equal(Quellen.Ap1, teil.SzenarienQuelle);
+                Assert.Equal(sicht.Ap1Szenarien.Except(ap1), teil.Szenarien);
+                Assert.All(teil.Szenarien, s => Assert.Equal("Wirtschafts- und Sozialkunde", s.SzenarioThema));
             }
         }
         // Teil 1 zieht aus den AP1-Szenarien, Teil 2 aus den AP2-Szenarien
@@ -176,14 +175,14 @@ public class PruefungsteileTests
     /// <summary>
     /// A 1.19.0 (Weisung P12-440, Fund 1 von Chat): die Szenarien je Bereich ergeben zusammen genau alle AP2-Szenarien der Sicht
     /// (keine Aufgabe geht verloren); FISI hat 46 Szenarien in Bereich 1 und Bereich 2 (beide Probeklausuren ziehen aus ihnen),
-    /// die anderen Fachrichtungen keine. Der Lernstand zaehlt je Szenario-Nummer, also jedes nur einmal. AP1 zeigt alle AP1-Szenarien.
+    /// die anderen Fachrichtungen keine. Der Lernstand zaehlt je Szenario-Nummer, also jedes nur einmal.
     /// </summary>
     [Theory]
-    [InlineData("si", 241, 135, 46)]
-    [InlineData("ae", 165, 165, 0)]
-    [InlineData("dpa", 165, 165, 0)]
-    [InlineData("dv", 165, 165, 0)]
-    public void SzenarienJeBereichOhneVerlust(string fr, int b1, int b2, int beide)
+    [InlineData("si", 241, 135, 46, 215, 50)]
+    [InlineData("ae", 165, 165, 0, 215, 50)]
+    [InlineData("dpa", 165, 165, 0, 215, 50)]
+    [InlineData("dv", 165, 165, 0, 215, 50)]
+    public void SzenarienJeBereichOhneVerlust(string fr, int b1, int b2, int beide, int ap1, int wiso)
     {
         var sicht = Alle.Value.Fuer(fr);
         var f = Fachrichtung.Nach(fr);
@@ -193,9 +192,12 @@ public class PruefungsteileTests
         var eins = Nummern("b1");
         var zwei = Nummern("b2");
         Assert.Equal((b1, b2, beide), (eins.Count, zwei.Count, eins.Intersect(zwei).Count()));
-        Assert.Empty(Nummern("wiso"));
         Assert.Equal(sicht.Ap2Szenarien.Select(s => s.Nummer).Order(), eins.Union(zwei).Order());
-        Assert.Equal(sicht.Ap1Szenarien.Select(s => s.Nummer).Order(), Nummern("ap1").Order());
+        // AP1 (Probeklausur AP1) und AP2 › WiSo (die AP1-Fallaufgaben zur WiSo, Weisung P12-442 Nico 2b) ergeben alle AP1-Szenarien
+        var teil1 = Nummern("ap1");
+        var unterWiso = Nummern("wiso");
+        Assert.Equal((ap1, wiso, 0), (teil1.Count, unterWiso.Count, teil1.Intersect(unterWiso).Count()));
+        Assert.Equal(sicht.Ap1Szenarien.Select(s => s.Nummer).Order(), teil1.Union(unterWiso).Order());
         // Stand: ein bearbeitetes Szenario aus beiden Bereichen zaehlt im Lernstand einmal (Nummer), in jeder Bereich-Zeile einmal
         Assert.Equal(eins.Count + zwei.Count - beide, sicht.Ap2Szenarien.Count);
     }
