@@ -1,25 +1,20 @@
-Der Bereich „Prüfung“ ist jetzt einheitlich aufgebaut: Alles, was du dort öffnest, bleibt innerhalb derselben Seite.
+Das Spiel läuft auf schwächeren Tablets und Handys wieder flüssig, auch mit einem langen Spielstand.
 
-- Oben steht immer der Schalter AP1 | AP2, darunter Üben | Prüfen. Öffnest du Prüfungsfragen, Szenarien, einen Prüfungssatz oder eine einzelne Aufgabe, bleiben beide Schalter sichtbar. Eine Zeile „← Zurück“ mit dem Namen des Teils bringt dich einen Schritt zurück.
-- Bei AP2 › Üben hat jeder Bereich (Bereich 1, Bereich 2, Wirtschafts- und Sozialkunde) eine eigene Karte mit Prüfungsfragen, Übungsaufgaben und einzelnen Aufgaben. Dein Stand in diesem Bereich steht klein darunter.
-- Bei AP2 › Prüfen findest du je Bereich die Probeklausur und die Prüfung im echten Format.
-- Die eigenen Seiten „AP1-Szenarien“ und „AP2-Szenarien“ gibt es nicht mehr. Die Fallaufgaben heißen jetzt „Übungsaufgaben“ und stehen unter Üben beim passenden Teil. Die Fallaufgaben zur Wirtschafts- und Sozialkunde aus AP1 findest du bei AP2 unter „Wirtschafts- und Sozialkunde“. Was du schon bearbeitet hast, zählt weiter.
-- Die Karte zum Abschlussprojekt unter AP2 ist nur noch ein Hinweis. Testprojekte und „Mein Projekt“ findest du unter „Mehr“, am PC jetzt auch als eigener Punkt „Mehr“ in der Seitenleiste.
-- Am PC steht die Zeile mit der Version jetzt oben neben dem Logo unter „Lernplattform“, damit sie immer zu sehen ist.
-- Auch Suche, Notizblock, „Jetzt üben“ im Fortschritt, „Wiederholen“ auf der Startseite und die Tafel im Spiel öffnen Fragen und Szenarien jetzt innerhalb der Prüfungsseite.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+- Auf manchen Geräten, zum Beispiel einem Galaxy Tab A8, ruckelte die Stadt stark, und auch in Gebäuden. Der Grund: Das Programm hat zweimal in jeder Sekunde und nach jedem Schritt deinen ganzen bisherigen Spielverlauf neu durchgerechnet, um Uhrzeit, Ort und die Zahl der offenen Aufgaben oben anzuzeigen. Je länger du spielst, desto länger wird dieser Verlauf, und desto mehr Arbeit fiel dabei an.
+- Jetzt merkt sich das Programm das Ergebnis und rechnet nur neu, wenn im Spiel wirklich etwas passiert ist. Am PC braucht die Anzeige oben dadurch weniger als ein Zehntel der Zeit und des Speichers.
+- Was du im Spiel siehst und wie es sich verhält, bleibt genau gleich. Dein Spielstand und dein Lernstand bleiben erhalten.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.19.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.19.1**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.19.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.19.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.19.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.19.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.19.1-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.19.1-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.19.1-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.19.1-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

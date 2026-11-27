@@ -70,11 +70,43 @@ public sealed partial class SpielSeite
         {
             return;
         }
-        var zahl = Questlog.ZahlOffen(spiel);
+        var zahl = OffenZahl(spiel);
         _questZahl.Text = zahl.ToString(CultureInfo.InvariantCulture);
         _questZahlRand.IsVisible = zahl > 0;
         Avalonia.Automation.AutomationProperties.SetName(_questKnopf, string.Format(CultureInfo.InvariantCulture, VorleseTexte.Auftraege, zahl));
         _questKnopf.IsVisible = !spiel.Einrichten;
+    }
+
+    private (Spielstand Stand, List<SpielEreignis> Verlauf, int Anzahl, SpielEreignis? Letzte, long Tag, Stadt Stadt, int Zahl)? _offenMerker;
+
+    /// <summary>Nur Gegenprobe (Patch A 1.19.1): die Zahl der offenen Auftraege bei jedem Beschriften neu rechnen (wie bis A 1.19.0).</summary>
+    internal static bool OffenOhneMerkerFuerTests { get => OffenOhneMerker.Value; set => OffenOhneMerker.Value = value; }
+
+    private static readonly AsyncLocal<bool> OffenOhneMerker = new();
+
+    /// <summary>Patch A 1.19.1: wie oft die Zahl der offenen Auftraege wirklich gerechnet wurde (Start-Test).</summary>
+    internal long OffenGerechnet { get; private set; }
+
+    /// <summary>
+    /// Patch A 1.19.1 (Sammelliste 473): Zahl der offenen Auftraege fuer Knopf und Daumen. Sie rechnet ueber alle Auftraege des
+    /// Spiels (442, je Vorlage mit Wuerfel) und aendert sich nur mit einer neuen Zeile im Verlauf (oder einem anderen Stand bzw.
+    /// einer anderen Stadt). Das Beschriften der Spielseite laeuft zweimal je Sekunde und nach jedem Halt; die Zahl kommt dann
+    /// aus dem Merker (gleicher Wert).
+    /// </summary>
+    private int OffenZahl(StadtSpiel spiel)
+    {
+        var stand = spiel.Ablauf.Stand;
+        var verlauf = stand.Verlauf;
+        var letzte = verlauf.Count > 0 ? verlauf[^1] : null;
+        if (!OffenOhneMerkerFuerTests && _offenMerker is { } m && ReferenceEquals(m.Stand, stand) && ReferenceEquals(m.Verlauf, verlauf)
+            && m.Anzahl == verlauf.Count && ReferenceEquals(m.Letzte, letzte) && m.Tag == stand.Tag && ReferenceEquals(m.Stadt, spiel.Stadt))
+        {
+            return m.Zahl;
+        }
+        var zahl = Questlog.ZahlOffen(spiel);
+        OffenGerechnet++;
+        _offenMerker = (stand, verlauf, verlauf.Count, letzte, stand.Tag, spiel.Stadt, zahl);
+        return zahl;
     }
 
     /// <summary>Das Questlog oeffnen (Knopf, Taste); <paramref name="erledigt"/> = gleich den Reiter „Erledigt“ zeigen.</summary>

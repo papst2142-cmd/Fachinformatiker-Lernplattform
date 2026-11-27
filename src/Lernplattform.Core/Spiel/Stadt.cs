@@ -527,6 +527,42 @@ public sealed partial class Stadt : Probe.IStadtSicht
     /// </summary>
     private (StadtStand Stand, bool Fremd) GlobalUndHerkunft(Spielstand stand)
     {
+        // Patch A 1.19.1 (Sammelliste 473): der Stand haengt nur am Verlauf (angehaengte Zeilen), am Tag und an der Zuordnung
+        // der Geraete. Die Spielseite fragt ihn bei jedem Beschriften mehrmals ab (Kopfzeile, Betreten, Warten, Ortszeile); jede
+        // Abfrage lief durch den ganzen Verlauf (am Tablet mit 549 Spielereignissen viele Megabytes je Sekunde). Ein Merker je
+        // Stadt gibt das Ergebnis zurueck, solange sich nichts davon geaendert hat; jede neue Zeile rechnet neu (gleiches Ergebnis).
+        var zuordnungJetzt = SpielGeraete.Von(stand);
+        var verlauf = stand.Verlauf;
+        var letzte = verlauf.Count > 0 ? verlauf[^1] : null;
+        if (!StandOhneMerkerFuerTests && _standMerker is { } m && ReferenceEquals(m.Stand, stand) && ReferenceEquals(m.Verlauf, verlauf)
+            && m.Anzahl == verlauf.Count && ReferenceEquals(m.Letzte, letzte) && m.Tag == stand.Tag && ReferenceEquals(m.Zuordnung, zuordnungJetzt))
+        {
+            StandGerechnet = m.Gerechnet;
+            return m.Ergebnis;
+        }
+        var ergebnis = GlobalUndHerkunftRechnen(stand);
+        var gerechnet = (_standMerker?.Gerechnet ?? 0) + 1;
+        _standMerker = new StandMerker(stand, verlauf, verlauf.Count, letzte, stand.Tag, zuordnungJetzt, ergebnis, gerechnet);
+        StandGerechnet = gerechnet;
+        return ergebnis;
+    }
+
+    private sealed record StandMerker(Spielstand Stand, List<SpielEreignis> Verlauf, int Anzahl, SpielEreignis? Letzte, long Tag,
+        SpielGeraete? Zuordnung, (StadtStand Stand, bool Fremd) Ergebnis, long Gerechnet);
+
+    // eine Referenz, die nur als Ganzes ersetzt wird (auch aus einem Hintergrund-Faden sicher zu lesen)
+    private StandMerker? _standMerker;
+
+    /// <summary>Patch A 1.19.1: wie oft der Stand dieser Stadt bisher wirklich durch den Verlauf gerechnet wurde (Tests).</summary>
+    public long StandGerechnet { get; private set; }
+
+    private static readonly AsyncLocal<bool> OhneMerker = new();
+
+    /// <summary>Nur Gegenprobe (Patch A 1.19.1): jede Abfrage rechnet den Stand neu durch den ganzen Verlauf (wie bis A 1.19.0).</summary>
+    public static bool StandOhneMerkerFuerTests { get => OhneMerker.Value; set => OhneMerker.Value = value; }
+
+    private (StadtStand Stand, bool Fremd) GlobalUndHerkunftRechnen(Spielstand stand)
+    {
         var haupt = Haupt ?? this;
         var tag = stand.Tag;
         var zuordnung = SpielGeraete.Von(stand);

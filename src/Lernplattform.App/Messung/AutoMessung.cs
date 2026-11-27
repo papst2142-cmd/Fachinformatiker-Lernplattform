@@ -236,6 +236,13 @@ public static partial class AutoMessung
         {
             return funde + await P11W3LayoutLaufAsync(ansicht);
         }
+        // Patch A 1.19.1 (Sammelliste 473): nur Speicher je Bild im Spiel (lokaler schneller Lauf; im Teil spiel immer dabei)
+        if (Teil == TeilSpeicher)
+        {
+            var n = funde + await Speicher473Async(ansicht);
+            Messwerte.Notiere(n == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({n} Funde)"));
+            return n;
+        }
         // Sammelliste 106 (Weisung P8-2): die CI startet Lernteil und Spielansichten als eigene Schritte
         Messwerte.Notiere("Start-Test Teil: " + (MitLernen && MitSpiel ? "alles" : MitLernen ? TeilLernen : TeilSpiel));
         // Phase 8 W6 (Teilplan P8-11 Abschnitt 4): festes Datum aus lauf.sh; ein ungueltiger Wert bricht den Start-Test ab
@@ -322,6 +329,8 @@ public static partial class AutoMessung
             funde += await PaketStaedteAsync(ansicht);         // Welle A 0.88.0: Paket-Staedte, Zugfahrt, Sperre, zweites Geraet
             Zeitplan("PaketGithubAsync");
             funde += await PaketGithubAsync(ansicht);          // Welle A 0.89.0: echtes Laden ueber das GitHub-Format, Quest in der Paket-Stadt
+            Zeitplan("Speicher473Async");
+            funde += await Speicher473Async(ansicht);          // Patch A 1.19.1: Speicher je Bild und je Beschriften (Sammelliste 473)
             if (Teil is null)
             {
                 // lokal (ohne Teil) auch der Teil der Testkarte; die CI misst ihn als eigenen Schritt

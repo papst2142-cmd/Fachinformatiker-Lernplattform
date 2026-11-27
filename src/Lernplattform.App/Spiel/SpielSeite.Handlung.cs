@@ -535,7 +535,7 @@ public sealed partial class SpielSeite
             {
                 return;
             }
-            var zahl = Questlog.ZahlOffen(spiel);
+            var zahl = OffenZahl(spiel);
             _handyRund.Setzen(kHandy, DaumenSymbol.Telefon, false,
                 SpielProbeTexte.KnopfTelefon + ", " + string.Format(CultureInfo.InvariantCulture, VorleseTexte.Auftraege, zahl), treffer: Treffer(kHandy));
             Legen(_handyRund, m, kHandy);
