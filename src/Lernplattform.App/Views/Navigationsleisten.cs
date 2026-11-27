@@ -352,7 +352,10 @@ public sealed class Navigationsleisten
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Child = symbol,
                 Background = Brushes.Transparent,
-            }.Breite(64);
+                // A 1.17.0 (Entwurf P12-271: Breite hoechstens 64): die Pille waechst nur in der Hoehe mit der Schrift; breiter als
+                // 64 passte sie bei fuenf Spalten am schmalen Handy (384 / 5 = 76,8) ab Stufe „sehr gross“ nicht mehr in ihren Knopf
+                Width = 64,
+            };
             pille.Bind(Layoutable.HeightProperty, pille.GetResourceObservable("Schrift.Normal", v => v is double d ? 32 * d / Schrift.Grundgroessen["Normal"] : 32));
             var knopf = new Button
             {
