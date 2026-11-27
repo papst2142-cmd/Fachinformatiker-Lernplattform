@@ -203,14 +203,35 @@ public sealed class TrainerSeite : UserControl
     /// Welle A 1.15.0 (Reiter „Prüfen“ der Pruefungsteile): Art „Prüfung“ zeigen und dort starten (Probeklausur oder Satz im
     /// echten Format, mit der bisherigen Rueckfrage); eine laufende Uebung endet wie beim Klick auf „Prüfung“.
     /// </summary>
-    internal void Pruefen(Func<KlausurTeil, Task> starten) => Mit(u =>
+    /// <param name="ohneStart">A 1.19.0: laeuft danach nichts (Rueckfrage mit „Nein“ beantwortet), zurueck zur Seite des Teils,
+    /// damit eingebettet nie die alte Liste aller Pruefungen stehen bleibt</param>
+    internal void Pruefen(Func<KlausurTeil, Task> starten, Action? ohneStart = null) => Mit(u =>
     {
         if (_art.Wert != TrainerTexte.Pruefung)
         {
             _art.Waehle(TrainerTexte.Pruefung);
             ArtZeigen(TrainerTexte.Pruefung);
         }
-        _ = starten(_klausur!);
+        _ = StartenAsync();
+
+        async Task StartenAsync()
+        {
+            await starten(_klausur!);
+            if (ohneStart is not null && !_klausur!.Laeuft)
+            {
+                ohneStart();
+            }
+        }
+    });
+
+    /// <summary>
+    /// A 1.19.0 (Weisung P12-440, Nico 1a): eingebettet in AP1/AP2 ohne die Pillen „Übung | Prüfung“ und ohne den Kasten
+    /// „Test-Session“ (Fachbereich, Status, Thema, Fragenanzahl); die Art waehlt der Reiter Üben | Prüfen der Seite.
+    /// </summary>
+    internal void Eingebettet(bool ja) => Mit(_ =>
+    {
+        _art.IsVisible = !ja;
+        _uebungTeil.Children[0].IsVisible = !ja;
     });
 
     /// <summary>Laeuft gerade eine Runde (fuer "Jetzt üben": nur dann gibt es einen zweiten Teil)?</summary>

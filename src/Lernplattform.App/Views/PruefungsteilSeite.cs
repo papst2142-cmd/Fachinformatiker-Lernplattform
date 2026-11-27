@@ -12,7 +12,7 @@ using Lernplattform.Programm;
 
 namespace Lernplattform.Views;
 
-/// <summary>Wohin die Knoepfe der Pruefungsteile fuehren (MainView).</summary>
+/// <summary>Wohin die Knoepfe der Pruefungsteile fuehren (MainView). Der erste Wert ist immer der Teil (teil1, b1, b2, wiso).</summary>
 public sealed record PruefungsteilWege(
     Action<string, IReadOnlyList<string>> FragenUeben,
     Action<string, string, IReadOnlyList<Lerninhalt>> SzenarienUeben,
@@ -21,33 +21,48 @@ public sealed record PruefungsteilWege(
     Action<string, string?> Oeffnen);
 
 /// <summary>
-/// Welle A 1.15.0 (Weisungen P12-406/P12-407, „genau wie die Entwurfsbilder“ Variante B aus Meldung P12-261):
+/// Seiten AP1 und AP2 der Pruefung.
+/// <para>A 1.19.0 (Weisung P12-440, Nico 1a–5a, „genau wie der Entwurf“ aus Meldung P12-278): AP1 und AP2 gleich aufgebaut.
+/// Oben immer die Segment-Leiste AP1 | AP2, darunter immer die Pillen Üben | Prüfen; alles, was ein Knopf oeffnet, erscheint in
+/// dieser Seite unter beiden Leisten mit der Zeile „← Zurück · &lt;Teil&gt; · &lt;Ziel&gt;“ (<see cref="ZurueckZeile"/>):</para>
 /// <list type="bullet">
-/// <item>Teil 2: Hinweis und je Bereich eine Karte (BEREICH n · Gewicht, Name, Angabe, Üben und Prüfen), dazu PROJEKT mit
-/// Testprojekte und Mein Projekt.</item>
-/// <item>Teil 1 und die drei schriftlichen Bereiche: Reiter Üben/Prüfen. Üben: Prüfungsfragen, Szenarien, einzelne Aufgabe im
-/// echten Format, darunter DEIN STAND. Prüfen: PROBEKLAUSUR und ECHTES FORMAT (Nächster Satz, Satz wählen).</item>
+/// <item>AP1: Üben mit Prüfungsfragen, Szenarien, einzelner Aufgabe im echten Format und DEIN STAND; Prüfen mit PROBEKLAUSUR und
+/// ECHTES FORMAT (wie seit A 1.15.0).</item>
+/// <item>AP2: je Bereich (Bereich 1, Bereich 2, WiSo) eine Karte „BEREICH n · Gewicht“ mit dem Namen; unter Üben die Zeilen
+/// Prüfungsfragen, Szenarien, Einzelne Aufgabe und klein der Stand, unter Prüfen Probeklausur und Echtes Format; darunter die Karte
+/// „PROJEKT · 50 %“ als Hinweis ohne Knoepfe (Nico 2a; Testprojekte und Mein Projekt nur unter „Mehr“, Nico 3).</item>
 /// </list>
-/// Breit (ab <see cref="BreitAb"/>) wie das PC-Bild, schmal wie das Handy-Bild (Name als Ueberschrift, Knoepfe darunter).
+/// Prüfungsfragen, Szenarien und Probeklausur laufen in der alten Seite (Pruefungstrainer bzw. Szenarien), die MainView unter
+/// <see cref="RahmenKopf"/> einbettet. Breit (ab <see cref="BreitAb"/>) wie das PC-Bild, schmal wie das Handy-Bild.
 /// </summary>
 public sealed class PruefungsteilSeite : UserControl
 {
     /// <summary>Ab dieser Breite der Seite stehen Text und Knoepfe nebeneinander (PC-Bild), darunter wie am Handy.</summary>
     public const double BreitAb = 600;
 
+    /// <summary>Bereiche von AP2 in der Reihenfolge der Karten.</summary>
+    public static readonly IReadOnlyList<string> Bereiche = [Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso];
+
     private readonly string _seite;
     private readonly PruefungsteilWege _wege;
     private readonly StackPanel _inhalt = new() { Spacing = 12, Margin = new Thickness(16, 4, 16, 24) };
     private readonly ScrollViewer _rollen;
+    private readonly Dictionary<string, Control> _bereichKarten = new(StringComparer.Ordinal);
     private PruefungsteilDaten.Daten? _daten;
     private bool? _breit;
     private string _reiter = Pruefungsteile.Ueben;
     // Unteransicht im Reiter: null = Karten, sonst Satz- bzw. Aufgabenliste oder eine Aufgabe
     private Func<IEnumerable<Control>>? _unter;
+    // Teil (teil1, b1, b2, wiso), zu dem die Unteransicht gehoert
+    private string _teil;
+    // Bereich, zu dem nach dem Malen gerollt wird (Unterpunkt der PC-Seitenleiste, Nico 4a)
+    private string? _sprung;
 
+    /// <param name="seite"><see cref="Pruefungsteile.Teil1"/> oder <see cref="Pruefungsteile.Teil2"/></param>
     public PruefungsteilSeite(string seite, PruefungsteilWege wege)
     {
         _seite = seite;
+        _teil = seite == Pruefungsteile.Teil1 ? seite : Pruefungsteile.B1;
         _wege = wege;
         _rollen = new ScrollViewer { Content = _inhalt, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };
         Content = _rollen;
@@ -67,7 +82,7 @@ public sealed class PruefungsteilSeite : UserControl
     /// <summary>Daten der Sicht stehen, Seite ist gemalt.</summary>
     public Task Geladen { get; }
 
-    /// <summary>Kennung der Seite (teil1, teil2, b1, b2, wiso).</summary>
+    /// <summary>Kennung der Seite (teil1 oder teil2).</summary>
     public string Kennung => _seite;
 
     /// <summary>Gewaehlter Reiter (Üben oder Prüfen).</summary>
@@ -83,21 +98,28 @@ public sealed class PruefungsteilSeite : UserControl
         });
     }
 
-    /// <summary>Beim erneuten Zeigen: Stand neu lesen, zurueck zu den Karten.</summary>
-    public void Gezeigt(string? reiter = null)
+    /// <summary>Beim erneuten Zeigen: Stand neu lesen, zurueck zu den Karten; <paramref name="bereich"/>: zu dieser Bereich-Karte rollen.</summary>
+    public void Gezeigt(string? reiter = null, string? bereich = null)
     {
         if (reiter is not null)
         {
             _reiter = reiter;
         }
         _unter = null;
+        _sprung = bereich;
         Malen();
     }
 
     private bool Breit => _breit ?? true;
 
-    /// <summary>A 1.17.0: Segment-Leiste AP1 | AP2 (nur auf den Seiten AP1 und AP2, sonst null).</summary>
+    /// <summary>A 1.17.0: Segment-Leiste AP1 | AP2.</summary>
     public SegmentLeiste? Segment { get; private set; }
+
+    /// <summary>A 1.19.0: Pillen Üben | Prüfen (immer unter der Segment-Leiste).</summary>
+    public Pillen? ReiterPillen { get; private set; }
+
+    /// <summary>A 1.19.0: Zeile „← Zurück · …“ der offenen Unteransicht (null = Karten).</summary>
+    public Control? Zurueck { get; private set; }
 
     private void Malen()
     {
@@ -106,64 +128,137 @@ public sealed class PruefungsteilSeite : UserControl
             return;
         }
         _inhalt.Children.Clear();
-        Segment = null;
-        if (_seite is Pruefungsteile.Teil1 or Pruefungsteile.Teil2)
+        _bereichKarten.Clear();
+        Zurueck = null;
+        // A 1.17.0 (Weisung P12-430 B1, Reiter B): oben die Segment-Leiste AP1 | AP2
+        Segment = new SegmentLeiste(_seite, Gewichte(d.Fachrichtung), Breit, ziel => _wege.Oeffnen(ziel, null));
+        _inhalt.Children.Add(Segment);
+        // A 1.19.0 (Nico 1): darunter immer Üben | Prüfen, auch auf AP2
+        ReiterPillen = ReiterLeiste(_reiter, w =>
         {
-            // A 1.17.0 (Weisung P12-430 B1, Reiter B): oben die Segment-Leiste AP1 | AP2 statt „Teil 2 zählt 80 %“
-            var fr = d.Fachrichtung;
-            var ap2 = Fachrichtung.Teil2.Sum(r => fr.Bereich(r).Gewicht);
-            Segment = new SegmentLeiste(_seite, (fr.Bereich("ap1").Gewicht, ap2), Breit, ziel => _wege.Oeffnen(ziel, null));
-            _inhalt.Children.Add(Segment);
+            _reiter = w;
+            _unter = null;
+            Malen();
+        });
+        _inhalt.Children.Add(ReiterPillen);
+        if (_unter is { } unter)
+        {
+            foreach (var teil in unter())
+            {
+                _inhalt.Children.Add(teil);
+            }
         }
-        if (_seite == Pruefungsteile.Teil2)
+        else if (_seite == Pruefungsteile.Teil1)
         {
-            Teil2(d);
+            if (_reiter == Pruefungsteile.Ueben)
+            {
+                UebenKarten(d);
+            }
+            else
+            {
+                PruefenKarten(d);
+            }
         }
         else
         {
-            ReiterSeite(d);
+            Ap2Karten(d);
         }
         _rollen.Offset = default;
+        if (_sprung is { } sprung && _bereichKarten.TryGetValue(sprung, out var karte))
+        {
+            _sprung = null;
+            Dispatcher.UIThread.Post(() => karte.BringIntoView(), DispatcherPriority.Loaded);
+        }
     }
 
-    // -- Teil 2 --------------------------------------------------------------------------------------------
+    private static (int Ap1, int Ap2) Gewichte(Fachrichtung fr) => (fr.Bereich("ap1").Gewicht, Fachrichtung.Teil2.Sum(r => fr.Bereich(r).Gewicht));
 
-    private void Teil2(PruefungsteilDaten.Daten d)
+    private static Pillen ReiterLeiste(string reiter, Action<string> waehlen) =>
+        new([(Pruefungsteile.Ueben, Pruefungsteile.Ueben), (Pruefungsteile.Pruefen, Pruefungsteile.Pruefen)], reiter, waehlen);
+
+    // -- AP2: je Bereich eine Karte, dazu der Hinweis Projekt --------------------------------------------------
+
+    private void Ap2Karten(PruefungsteilDaten.Daten d)
     {
         var fr = d.Fachrichtung;
-        foreach (var rolle in (string[])[Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso])
+        foreach (var b in Bereiche)
         {
-            var bereich = fr.Bereich(rolle);
-            var teil = d.Teile[rolle];
-            var saetze = d.Saetze[rolle].Count;
-            var angabe = rolle == Pruefungsteile.Wiso
-                ? Beschriftungen.Einsetzen(Pruefungsteile.AngabeWiso, teil.Fragen.Count, Pruefungsteile.Aufgaben(rolle), bereich.Minuten)
-                : saetze > 0 ? Beschriftungen.Einsetzen(Pruefungsteile.AngabeTeil, teil.Fragen.Count, teil.Szenarien.Count, saetze)
-                : Beschriftungen.Einsetzen(Pruefungsteile.AngabeTeilOhneSaetze, teil.Fragen.Count, teil.Szenarien.Count);
-            var titel = Beschriftungen.Einsetzen(Pruefungsteile.KarteBereich, Pruefungsteile.BereichKurz(rolle), bereich.Gewicht);
-            var ueben = Knopf(Pruefungsteile.Ueben, false, () => _wege.Oeffnen(rolle, Pruefungsteile.Ueben), Pruefungsteile.BereichKurz(rolle));
-            var pruefen = Knopf(Pruefungsteile.Pruefen, true, () => _wege.Oeffnen(rolle, Pruefungsteile.Pruefen), Pruefungsteile.BereichKurz(rolle));
-            _inhalt.Children.Add(Karte(titel, "Pinsel.pink", Pruefungsteile.Deckblattname(fr, rolle), Breit ? angabe : null, ueben, pruefen));
+            var titel = Beschriftungen.Einsetzen(Pruefungsteile.KarteBereich, Pruefungsteile.BereichKurz(b), fr.Bereich(b).Gewicht);
+            var panel = new StackPanel { Spacing = 8 };
+            panel.Children.Add(new LernText(Pruefungsteile.Deckblattname(fr, b), "Mittel", FontWeight.Bold, "Pinsel.text"));
+            foreach (var zeile in _reiter == Pruefungsteile.Ueben ? UebenZeilen(d, b, mitStand: true) : PruefenZeilen(d, b))
+            {
+                panel.Children.Add(zeile);
+            }
+            var karte = Schrift.KopfKarte(titel, null, panel, "Pinsel.pink");
+            _bereichKarten[b] = karte;
+            _inhalt.Children.Add(karte);
         }
+        // Nico 2a: Karte bleibt als Hinweis ohne Knoepfe
         var projekt = fr.Bereich("projekt");
-        var testprojekte = Knopf(Pruefungsteile.Testprojekte, false, () => _wege.Oeffnen(Seiten.Testprojekt, null));
-        var mein = Knopf(Pruefungsteile.MeinProjekt, true, () => _wege.Oeffnen(Seiten.Abschluss, null));
-        _inhalt.Children.Add(Karte(Beschriftungen.Einsetzen(Pruefungsteile.KarteBereich, Pruefungsteile.Projekt, projekt.Gewicht),
-            "Pinsel.green", Pruefungsteile.ProjektName, Breit ? Beschriftungen.Einsetzen(Pruefungsteile.ProjektAngabe, d.Testprojekte) : null,
-            testprojekte, mein));
+        _inhalt.Children.Add(Schrift.KopfKarte(Beschriftungen.Einsetzen(Pruefungsteile.KarteBereich, Pruefungsteile.Projekt, projekt.Gewicht), null,
+            new LernText(Pruefungsteile.ProjektName, "Mittel", FontWeight.Bold, "Pinsel.text"), "Pinsel.green"));
     }
 
-    /// <summary>Karte mit Kopf, Name (fett), Angabe und Knoepfen; breit in einer Zeile wie im PC-Bild, schmal untereinander.</summary>
-    private Border Karte(string titel, string akzent, string name, string? angabe, params Button[] knoepfe)
+    /// <summary>Zeilen „Üben“ eines Teils: Prüfungsfragen, Szenarien (falls es welche gibt), einzelne Aufgabe (falls es Saetze gibt).</summary>
+    private List<Control> UebenZeilen(PruefungsteilDaten.Daten d, string t, bool mitStand)
     {
-        var text = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
-        text.Children.Add(new LernText(name, "Mittel", FontWeight.Bold, "Pinsel.text"));
-        if (angabe is not null)
+        var teil = d.Teile[t];
+        var name = Pruefungsteile.BereichKurz(t);
+        var zeilen = new List<Control>();
+        var fragen = Knopf(Pruefungsteile.Ueben, true, () => _wege.FragenUeben(t, teil.Fragen), Pruefungsteile.Pruefungsfragen + " " + name);
+        fragen.IsEnabled = teil.Fragen.Count > 0;
+        zeilen.Add(UebenZeile(Pruefungsteile.Pruefungsfragen,
+            teil.Fragen.Count > 0 ? Beschriftungen.Einsetzen(Pruefungsteile.FragenAngabe, teil.Fragen.Count) : Pruefungsteile.KeineFragen, fragen));
+        if (teil.Szenarien.Count > 0)
         {
-            text.Children.Add(new LernText(angabe, "Klein", FontWeight.Normal, "Pinsel.muted"));
+            var szenarien = Knopf(Pruefungsteile.Ueben, true, () => _wege.SzenarienUeben(t, teil.SzenarienQuelle, teil.Szenarien),
+                Pruefungsteile.Szenarien + " " + name);
+            zeilen.Add(UebenZeile(Pruefungsteile.Szenarien, Beschriftungen.Einsetzen(Pruefungsteile.SzenarienAngabe, teil.Szenarien.Count), szenarien));
         }
-        return Schrift.KopfKarte(titel, null, Breit ? Zeile(text, knoepfe) : Untereinander(text, knoepfe), akzent);
+        if (d.Saetze[t].Count > 0)
+        {
+            var waehlen = Knopf(Pruefungsteile.AufgabeWaehlen, false, () => Unter(t, () => SatzListe(d, einzeln: true)), name);
+            zeilen.Add(UebenZeile(Pruefungsteile.Einzelaufgabe, Pruefungsteile.EinzelaufgabeAngabe, waehlen));
+        }
+        if (mitStand)
+        {
+            zeilen.Add(new LernText(StandZeile(teil), "Klein", FontWeight.Normal, "Pinsel.muted"));
+        }
+        return zeilen;
     }
+
+    private static string StandZeile(TeilInhalte teil)
+    {
+        var stand = TeilUeben.Stand(teil, Zustand.BuchLesen());
+        return Beschriftungen.Einsetzen(Pruefungsteile.Stand, stand.Fragen, stand.Bearbeitet, stand.Richtig)
+            + (stand.Szenarien > 0 ? Beschriftungen.Einsetzen(Pruefungsteile.StandSzenarien, stand.SzenarienBearbeitet, stand.Szenarien) : "");
+    }
+
+    /// <summary>Zeilen „Prüfen“ eines Bereichs von AP2: Probeklausur, Echtes Format (falls es Saetze gibt).</summary>
+    private List<Control> PruefenZeilen(PruefungsteilDaten.Daten d, string t)
+    {
+        var zeilen = new List<Control>();
+        var bereich = d.Fachrichtung.Bereich(t);
+        var name = Pruefungsteile.BereichKurz(t);
+        var starten = Knopf(Pruefungsteile.Starten, true, () => _wege.KlausurStarten(t, bereich.Art), Pruefungsteile.ProbeklausurZeile + " " + name);
+        starten.IsEnabled = Klausur.Art(bereich.Art) is not null && bereich.Quelle != "keine";
+        zeilen.Add(UebenZeile(Pruefungsteile.ProbeklausurZeile,
+            Beschriftungen.Einsetzen(Pruefungsteile.ProbeAngabe, bereich.Minuten, Pruefungsteile.Aufgaben(t)), starten));
+        var saetze = d.Saetze[t];
+        if (saetze.Count > 0)
+        {
+            var bearbeitet = PruefungsteilDaten.Bearbeitet(d.Fachrichtung, t, Gesamtstand.Verlauf(Zustand.Lernstand));
+            var naechster = Knopf(Pruefungsteile.NaechsterSatz, true, () => _wege.EchtStarten(t, null), name);
+            var waehlen = Knopf(Pruefungsteile.SatzWaehlen, false, () => Unter(t, () => SatzListe(d, einzeln: false)), name);
+            var text = ZeilenText(Pruefungsteile.EchtesFormatZeile,
+                Beschriftungen.Einsetzen(Pruefungsteile.EchtAngabe, saetze.Count, saetze.Count(s => bearbeitet.Contains(s.Kennung))));
+            zeilen.Add(Breit ? Zeile(text, [naechster, waehlen]) : Untereinander(text, [naechster, waehlen]));
+        }
+        return zeilen;
+    }
+
+    // -- Bausteine ----------------------------------------------------------------------------------------
 
     private static Control Untereinander(Control text, Button[] knoepfe)
     {
@@ -212,86 +307,37 @@ public sealed class PruefungsteilSeite : UserControl
         return knopf;
     }
 
-    // -- Teil 1 und die schriftlichen Bereiche ----------------------------------------------------------------
-
-    private void ReiterSeite(PruefungsteilDaten.Daten d)
+    private static StackPanel ZeilenText(string name, string angabe) => new()
     {
-        var fr = d.Fachrichtung;
-        var rolle = Pruefungsteile.Rolle(_seite);
-        if (!Breit && _seite != Pruefungsteile.Teil1)
+        Spacing = 2,
+        VerticalAlignment = VerticalAlignment.Center,
+        Children =
         {
-            // Handy-Bild: der Name steht als Ueberschrift, die Brotkrumen nennen nur „BEREICH n“
-            _inhalt.Children.Add(new LernText(Pruefungsteile.Deckblattname(fr, rolle), "Gross", FontWeight.Bold, "Pinsel.text"));
-        }
-        var pillen = new Pillen([(Pruefungsteile.Ueben, Pruefungsteile.Ueben), (Pruefungsteile.Pruefen, Pruefungsteile.Pruefen)], _reiter, w =>
-        {
-            _reiter = w;
-            _unter = null;
-            Malen();
-        });
-        _inhalt.Children.Add(pillen);
-        if (_unter is { } unter)
-        {
-            foreach (var teil in unter())
-            {
-                _inhalt.Children.Add(teil);
-            }
-            return;
-        }
-        if (_reiter == Pruefungsteile.Ueben)
-        {
-            UebenKarten(d, rolle);
-        }
-        else
-        {
-            PruefenKarten(d, rolle);
-        }
-    }
+            new LernText(name, "Mittel", FontWeight.Bold, "Pinsel.text"),
+            new LernText(angabe, "Klein", FontWeight.Normal, "Pinsel.muted"),
+        },
+    };
 
-    private void UebenKarten(PruefungsteilDaten.Daten d, string rolle)
+    private Control UebenZeile(string name, string angabe, Button knopf) =>
+        Breit ? Zeile(ZeilenText(name, angabe), [knopf]) : Untereinander(ZeilenText(name, angabe), [knopf]);
+
+    // -- AP1 ------------------------------------------------------------------------------------------------
+
+    private void UebenKarten(PruefungsteilDaten.Daten d)
     {
-        var teil = d.Teile[_seite];
         var zeilen = new StackPanel { Spacing = 8 };
-        var fragen = Knopf(Pruefungsteile.Ueben, true, () => _wege.FragenUeben(_seite, teil.Fragen), Pruefungsteile.Pruefungsfragen);
-        fragen.IsEnabled = teil.Fragen.Count > 0;
-        zeilen.Children.Add(UebenZeile(Pruefungsteile.Pruefungsfragen,
-            teil.Fragen.Count > 0 ? Beschriftungen.Einsetzen(Pruefungsteile.FragenAngabe, teil.Fragen.Count) : Pruefungsteile.KeineFragen, fragen));
-        if (teil.Szenarien.Count > 0)
+        foreach (var zeile in UebenZeilen(d, _seite, mitStand: false))
         {
-            var name = teil.SzenarienQuelle == Core.Lernen.Quellen.Ap1 ? Pruefungsteile.Ap1Szenarien : Pruefungsteile.Ap2Szenarien;
-            var szenarien = Knopf(Pruefungsteile.Ueben, true, () => _wege.SzenarienUeben(_seite, teil.SzenarienQuelle, teil.Szenarien), name);
-            zeilen.Children.Add(UebenZeile(name, Beschriftungen.Einsetzen(Pruefungsteile.SzenarienAngabe, teil.Szenarien.Count), szenarien));
-        }
-        if (d.Saetze[_seite].Count > 0)
-        {
-            var waehlen = Knopf(Pruefungsteile.AufgabeWaehlen, false, () => Unter(() => SatzListe(d, einzeln: true)));
-            zeilen.Children.Add(UebenZeile(Pruefungsteile.Einzelaufgabe, Pruefungsteile.EinzelaufgabeAngabe, waehlen));
+            zeilen.Children.Add(zeile);
         }
         _inhalt.Children.Add(Schrift.KopfKarte(Pruefungsteile.UebenTitel, null, zeilen, "Pinsel.green"));
-        var stand = TeilUeben.Stand(teil, Zustand.BuchLesen());
-        var zeile = Beschriftungen.Einsetzen(Pruefungsteile.Stand, stand.Fragen, stand.Bearbeitet, stand.Richtig)
-            + (stand.Szenarien > 0 ? Beschriftungen.Einsetzen(Pruefungsteile.StandSzenarien, stand.SzenarienBearbeitet, stand.Szenarien) : "");
-        _inhalt.Children.Add(Schrift.KopfKarte(Pruefungsteile.StandTitel, null, new LernText(zeile, "Klein", FontWeight.Normal, "Pinsel.text_soft"),
-            "Pinsel.yellow"));
+        _inhalt.Children.Add(Schrift.KopfKarte(Pruefungsteile.StandTitel, null,
+            new LernText(StandZeile(d.Teile[_seite]), "Klein", FontWeight.Normal, "Pinsel.text_soft"), "Pinsel.yellow"));
     }
 
-    private Control UebenZeile(string name, string angabe, Button knopf)
+    private void PruefenKarten(PruefungsteilDaten.Daten d)
     {
-        var text = new StackPanel
-        {
-            Spacing = 2,
-            VerticalAlignment = VerticalAlignment.Center,
-            Children =
-            {
-                new LernText(name, "Mittel", FontWeight.Bold, "Pinsel.text"),
-                new LernText(angabe, "Klein", FontWeight.Normal, "Pinsel.muted"),
-            },
-        };
-        return Breit ? Zeile(text, [knopf]) : Untereinander(text, [knopf]);
-    }
-
-    private void PruefenKarten(PruefungsteilDaten.Daten d, string rolle)
-    {
+        var rolle = Pruefungsteile.Rolle(_seite);
         var bereich = d.Fachrichtung.Bereich(rolle);
         var art = Klausur.Art(bereich.Art);
         var starten = Knopf(Pruefungsteile.Starten, true, () => _wege.KlausurStarten(_seite, bereich.Art), Pruefungsteile.Probeklausur);
@@ -303,13 +349,13 @@ public sealed class PruefungsteilSeite : UserControl
         {
             var bearbeitet = PruefungsteilDaten.Bearbeitet(d.Fachrichtung, _seite, Gesamtstand.Verlauf(Zustand.Lernstand));
             var naechster = Knopf(Pruefungsteile.NaechsterSatz, true, () => _wege.EchtStarten(_seite, null));
-            var waehlen = Knopf(Pruefungsteile.SatzWaehlen, false, () => Unter(() => SatzListe(d, einzeln: false)));
+            var waehlen = Knopf(Pruefungsteile.SatzWaehlen, false, () => Unter(_seite, () => SatzListe(d, einzeln: false)));
             _inhalt.Children.Add(PruefKarte(Pruefungsteile.EchtesFormat, "Pinsel.pink",
                 Beschriftungen.Einsetzen(Pruefungsteile.EchtAngabe, saetze.Count, saetze.Count(s => bearbeitet.Contains(s.Kennung))), naechster, waehlen));
         }
     }
 
-    /// <summary>Karte ohne Namen (Prüfen-Reiter): Kopf, Angabe, Knoepfe; breit in einer Zeile, schmal untereinander.</summary>
+    /// <summary>Karte ohne Namen (Prüfen-Reiter AP1): Kopf, Angabe, Knoepfe; breit in einer Zeile, schmal untereinander.</summary>
     private Border PruefKarte(string titel, string akzent, string angabe, params Button[] knoepfe)
     {
         var text = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
@@ -318,33 +364,82 @@ public sealed class PruefungsteilSeite : UserControl
         return Schrift.KopfKarte(titel, null, inhalt, akzent);
     }
 
+    // -- Zurück-Zeile und Rahmen fuer eingebettete Seiten ---------------------------------------------------
+
+    /// <summary>
+    /// A 1.19.0 (Nico 1a, „Neu gestaltet“ in P12-278): Kopf ueber jeder geoeffneten Ansicht: Knopf „← Zurück“, daneben fett, wohin
+    /// man gerade schaut (<see cref="Pruefungsteile.ZurueckTitel"/>).
+    /// </summary>
+    public static Control ZurueckZeile(string titel, Action zurueck)
+    {
+        var knopf = LernTeile.Knopf("← " + Pruefungsteile.Zurueck, false);
+        Avalonia.Automation.AutomationProperties.SetName(knopf, Pruefungsteile.Zurueck);
+        knopf.VerticalAlignment = VerticalAlignment.Center;
+        knopf.Margin = new Thickness(0, 0, 12, 0);
+        knopf.Click += (_, _) => zurueck();
+        DockPanel.SetDock(knopf, Dock.Left);
+        var text = new LernText(titel, "Normal", FontWeight.Bold, "Pinsel.text_soft") { VerticalAlignment = VerticalAlignment.Center };
+        return new DockPanel { LastChildFill = true, Children = { knopf, text } };
+    }
+
+    /// <summary>
+    /// A 1.19.0 (Nico 1): Rahmen oben ueber einer eingebetteten alten Seite (Pruefungstrainer, Szenarien): Segment-Leiste AP1 | AP2,
+    /// Pillen Üben | Prüfen und die Zurück-Zeile. <paramref name="zeigen"/> oeffnet eine Haelfte mit Reiter (null = Üben). Breit
+    /// wie die Seite selbst (ab <see cref="BreitAb"/>), bei einer Aenderung der Breite neu gebaut.
+    /// </summary>
+    public static Control RahmenKopf(string haelfte, string reiter, string titel, bool breit, Action<string, string?> zeigen, Action zurueck)
+    {
+        var huelle = new ContentControl();
+        void Bauen(bool b)
+        {
+            var kopf = new StackPanel { Spacing = 12, Margin = new Thickness(16, 4, 16, 4) };
+            kopf.Children.Add(new SegmentLeiste(haelfte, Gewichte(Fachrichtung.Nach(Zustand.Sicht)), b, ziel => zeigen(ziel, null)));
+            kopf.Children.Add(ReiterLeiste(reiter, w => zeigen(haelfte, w)));
+            kopf.Children.Add(ZurueckZeile(titel, zurueck));
+            huelle.Content = kopf;
+        }
+        var jetzt = breit;
+        Bauen(jetzt);
+        huelle.SizeChanged += (_, e) =>
+        {
+            var b = e.NewSize.Width >= BreitAb;
+            if (b != jetzt)
+            {
+                jetzt = b;
+                Bauen(b);
+            }
+        };
+        return huelle;
+    }
+
     // -- Satz wählen, Aufgabe wählen, einzelne Aufgabe ---------------------------------------------------------
 
-    private void Unter(Func<IEnumerable<Control>> unter)
+    private void Unter(string teil, Func<IEnumerable<Control>> unter)
     {
+        _teil = teil;
         _unter = unter;
         Malen();
     }
 
-    private Button ZurueckKnopf(Action zurueck)
+    private Control ZurueckZu(string ziel, Action zurueck)
     {
-        var knopf = Knopf("← " + Pruefungsteile.Zurueck, false, zurueck);
-        Avalonia.Automation.AutomationProperties.SetName(knopf, Pruefungsteile.Zurueck);
-        knopf.HorizontalAlignment = HorizontalAlignment.Left;
-        return knopf;
+        var zeile = ZurueckZeile(Beschriftungen.Einsetzen(Pruefungsteile.ZurueckTitel, Pruefungsteile.BereichKurz(_teil), ziel), zurueck);
+        Zurueck = zeile;
+        return zeile;
     }
 
     /// <summary>Liste der Saetze: im Prüfen-Reiter startet ein Klick den Satz, beim Üben folgt die Liste seiner Aufgaben.</summary>
     private IEnumerable<Control> SatzListe(PruefungsteilDaten.Daten d, bool einzeln)
     {
-        yield return ZurueckKnopf(() =>
+        yield return ZurueckZu(einzeln ? Pruefungsteile.EinzelaufgabeKurz : Pruefungsteile.SatzWaehlen, () =>
         {
             _unter = null;
             Malen();
         });
-        var bearbeitet = PruefungsteilDaten.Bearbeitet(d.Fachrichtung, _seite, Gesamtstand.Verlauf(Zustand.Lernstand));
+        var bearbeitet = PruefungsteilDaten.Bearbeitet(d.Fachrichtung, _teil, Gesamtstand.Verlauf(Zustand.Lernstand));
         var liste = new StackPanel { Spacing = 8 };
-        var saetze = d.Saetze[_seite];
+        var saetze = d.Saetze[_teil];
+        var teil = _teil;
         for (var i = 0; i < saetze.Count; i++)
         {
             var satz = saetze[i];
@@ -354,11 +449,11 @@ public sealed class PruefungsteilSeite : UserControl
                 {
                     if (einzeln)
                     {
-                        Unter(() => AufgabenListe(d, satz));
+                        Unter(teil, () => AufgabenListe(d, satz));
                     }
                     else
                     {
-                        _wege.EchtStarten(_seite, satz);
+                        _wege.EchtStarten(teil, satz);
                     }
                 }, text);
             liste.Children.Add(UebenZeile(text, Beschriftungen.Einsetzen(Pruefungsteile.SatzAngabe, satz.Minuten, satz.Aufgaben.Count), knopf));
@@ -368,14 +463,15 @@ public sealed class PruefungsteilSeite : UserControl
 
     private IEnumerable<Control> AufgabenListe(PruefungsteilDaten.Daten d, EchtSatz satz)
     {
-        yield return ZurueckKnopf(() => Unter(() => SatzListe(d, einzeln: true)));
+        var teil = _teil;
+        yield return ZurueckZu(satz.Firma, () => Unter(teil, () => SatzListe(d, einzeln: true)));
         var liste = new StackPanel { Spacing = 8 };
         for (var i = 0; i < satz.Aufgaben.Count; i++)
         {
             var n = i + 1;
             var aufgabe = satz.Aufgaben[i];
             var kopf = Beschriftungen.Einsetzen(Pruefungsteile.AufgabeZeile, n, aufgabe.Punkte);
-            var knopf = Knopf(Pruefungsteile.Ueben, true, () => Unter(() => Einzelaufgabe(d, satz, n, false)), kopf);
+            var knopf = Knopf(Pruefungsteile.Ueben, true, () => Unter(teil, () => Einzelaufgabe(d, satz, n, false)), kopf);
             liste.Children.Add(UebenZeile(kopf, aufgabe.Titel, knopf));
         }
         yield return Schrift.KopfKarte(Pruefungsteile.AufgabeWaehlenTitel, satz.Firma, liste, "Pinsel.pink");
@@ -384,37 +480,45 @@ public sealed class PruefungsteilSeite : UserControl
     /// <summary>Eine Aufgabe im echten Format zum Lesen (ohne Uhr, ohne Note), mit Anlagen; die Musterloesung auf Knopfdruck.</summary>
     private IEnumerable<Control> Einzelaufgabe(PruefungsteilDaten.Daten d, EchtSatz satz, int n, bool loesung)
     {
-        yield return ZurueckKnopf(() => Unter(() => AufgabenListe(d, satz)));
-        foreach (var teil in EchtFormatTeil.Einzelaufgabe(satz, n, loesung))
+        var teil = _teil;
+        yield return ZurueckZu(Beschriftungen.Einsetzen(Pruefungsteile.AufgabeKurz, n), () => Unter(teil, () => AufgabenListe(d, satz)));
+        foreach (var stueck in EchtFormatTeil.Einzelaufgabe(satz, n, loesung))
         {
-            yield return teil;
+            yield return stueck;
         }
         if (!loesung)
         {
-            var zeigen = Knopf(Pruefungsteile.Musterloesung, true, () => Unter(() => Einzelaufgabe(d, satz, n, true)));
+            var zeigen = Knopf(Pruefungsteile.Musterloesung, true, () => Unter(teil, () => Einzelaufgabe(d, satz, n, true)));
             zeigen.HorizontalAlignment = HorizontalAlignment.Left;
             yield return zeigen;
         }
     }
 
-    /// <summary>Start-Test: hat dieser Teil Saetze im echten Format (Satz- und Aufgabenliste)?</summary>
-    internal bool HatSaetze => _daten is { } d && d.Saetze[_seite].Count > 0;
+    // -- Start-Test ------------------------------------------------------------------------------------------
 
-    /// <summary>Start-Test: Unteransicht „Satz wählen“ (einzeln = false) bzw. „Aufgabe wählen“ zeigen.</summary>
-    internal void ListeFuerTests(bool einzeln)
+    /// <summary>Start-Test: hat dieser Teil (AP1 bzw. Bereich 1 von AP2) Saetze im echten Format?</summary>
+    internal bool HatSaetze => _daten is { } d && d.Saetze[TeilFuerTests].Count > 0;
+
+    private string TeilFuerTests => _seite == Pruefungsteile.Teil1 ? _seite : Pruefungsteile.B1;
+
+    /// <summary>Start-Test: Unteransicht „Satz wählen“ (einzeln = false) bzw. „Aufgabe wählen“ zeigen (AP2: Bereich 1 oder <paramref name="teil"/>).</summary>
+    internal void ListeFuerTests(bool einzeln, string? teil = null)
     {
         if (_daten is { } d)
         {
-            Unter(() => SatzListe(d, einzeln));
+            _reiter = einzeln ? Pruefungsteile.Ueben : Pruefungsteile.Pruefen;
+            Unter(teil ?? TeilFuerTests, () => SatzListe(d, einzeln));
         }
     }
 
     /// <summary>Start-Test: Aufgabe n des ersten Satzes zeigen (mit oder ohne Musterloesung).</summary>
     internal void AufgabeFuerTests(int n, bool loesung)
     {
-        if (_daten is { } d && d.Saetze[_seite].Count > 0)
+        var teil = TeilFuerTests;
+        if (_daten is { } d && d.Saetze[teil].Count > 0)
         {
-            Unter(() => Einzelaufgabe(d, d.Saetze[_seite][0], n, loesung));
+            _reiter = Pruefungsteile.Ueben;
+            Unter(teil, () => Einzelaufgabe(d, d.Saetze[teil][0], n, loesung));
         }
     }
 
@@ -425,4 +529,10 @@ public sealed class PruefungsteilSeite : UserControl
         _unter = null;
         Malen();
     }
+
+    /// <summary>Start-Test und Fotos: ganz nach unten rollen (AP2: Karte Projekt).</summary>
+    internal void NachUnten() => _rollen.ScrollToEnd();
+
+    /// <summary>Start-Test: Karte eines Bereichs von AP2 (null = nicht gemalt).</summary>
+    internal Control? BereichKarte(string bereich) => _bereichKarten.GetValueOrDefault(bereich);
 }

@@ -424,6 +424,7 @@ public static partial class AutoMessung
         funde += await P11SeitenleisteAsync(ansicht);   // A 1.15.0: Seitenleiste nach Pruefungsteilen (Variante B)
         Zeitplan("PruefungsteilKlicksAsync");
         funde += await PruefungsteilKlicksAsync(ansicht);   // A 1.15.0: jede bisherige Seite in hoechstens zwei Klicks
+        funde += await AndereWegeAsync(ansicht);   // A 1.19.0: Suche, Spiel, Notizblock, Fortschritt eingebettet mit Leiste AP1 | AP2
         Zeitplan("P8W8OptionenAsync");
         funde += await P8W8OptionenAsync(ansicht);      // Phase 8 W8: Tastenbelegung und Vollbild bedienen
         Zeitplan("PaketeAsync");

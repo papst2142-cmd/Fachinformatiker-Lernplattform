@@ -764,7 +764,7 @@ public partial class MainView : UserControl
                 Seiten.Abschluss => new AbschlussprojektSeite(),
                 // Phase 7, W4: begehbare 3D-Stadt im Vollbild (W1 war die Stichprobe), "Spiel verlassen" fuehrt zurueck
                 Seiten.Spiel => new Lernplattform.Spiel.SpielSeite(Lernplattform.Spiel.SpielStart.Laden, () => _ = ZeigeAsync(_vorSpiel),
-                    new Lernplattform.Spiel.Tafel.SpielWege((fach, thema) => _ = SpielKartenAsync(fach, thema), t => _ = TrefferOeffnenAsync(t, ""))),
+                    new Lernplattform.Spiel.Tafel.SpielWege((fach, thema) => _ = SpielKartenAsync(fach, thema), t => _ = TrefferOeffnenAsync(t, "", ausSpiel: true))),
                 // Welle A 1.15.0 (Weisungen P12-406/P12-407, Variante B): Seiten der Pruefungsteile und Sammelseite „Mehr“
                 Core.Texte.Pruefungsteile.Teil1 or Core.Texte.Pruefungsteile.Teil2 or Core.Texte.Pruefungsteile.B1 or Core.Texte.Pruefungsteile.B2
                     or Core.Texte.Pruefungsteile.Wiso => new PruefungsteilSeite(id, PruefungsteilWege()),
@@ -793,7 +793,38 @@ public partial class MainView : UserControl
         AktuelleSeite = id;
         var gebaut = _seiten.ContainsKey(id);
         VollbildSetzen(id == Seiten.Spiel);
+        if (_rahmenDock is { } altDock)
+        {
+            _inhalt.Content = null;
+            altDock.Children.Clear();
+            _rahmenDock = null;
+        }
+        if (id != _herkunftSeite || id is not (Seiten.Trainer or Seiten.Ap1Szenarien or Seiten.Ap2Szenarien))
+        {
+            _rahmen = null;
+        }
         _inhalt.Content = Seite(id);
+        if (_rahmen is { } r)
+        {
+            // A 1.19.0 (Nico 1): die alte Seite erscheint in AP1 bzw. AP2 unter AP1 | AP2, Üben | Prüfen und der Zurück-Zeile
+            var seiteDrin = (Control)_inhalt.Content;
+            _inhalt.Content = null;
+            var breite = _inhalt.Bounds.Width > 0 ? _inhalt.Bounds.Width : Bounds.Width;
+            var kopf = PruefungsteilSeite.RahmenKopf(r.Haelfte, r.Reiter, r.Titel, breite >= PruefungsteilSeite.BreitAb,
+                (ziel, reiter) => _ = ZeigeTeilAsync(ziel, reiter), () => _ = r.Zurueck());
+            DockPanel.SetDock(kopf, Dock.Top);
+            _rahmenDock = new DockPanel { Children = { kopf, seiteDrin } };
+            _inhalt.Content = _rahmenDock;
+            RahmenKopf = kopf;
+        }
+        else
+        {
+            RahmenKopf = null;
+        }
+        if (_seiten[id] is TrainerSeite trainerArt)
+        {
+            trainerArt.Eingebettet(_rahmen is not null);
+        }
         if (gebaut && _seiten[id] is DashboardSeite dashboard)
         {
             dashboard.Neu();
@@ -812,9 +843,16 @@ public partial class MainView : UserControl
         if (gebaut && _seiten[id] is PruefungsteilSeite teil)
         {
             // aus Leiste, Startseite oder Brotkrumen immer zuerst „Üben“ (wie der Entwurf), so bleibt jede Seite in zwei Klicks
-            teil.Gezeigt(_reiterBeimZeigen ?? Core.Texte.Pruefungsteile.Ueben);
+            teil.Gezeigt(_reiterBeimZeigen ?? Core.Texte.Pruefungsteile.Ueben, _bereichBeimZeigen);
+        }
+        else if (_seiten[id] is PruefungsteilSeite neu && _bereichBeimZeigen is { } bereich)
+        {
+            _ = neu.Geladen.ContinueWith(_ => Dispatcher.UIThread.Post(() => neu.Gezeigt(Core.Texte.Pruefungsteile.Ueben, bereich)),
+                TaskScheduler.Default);
         }
         _reiterBeimZeigen = null;
+        var bereichMarke = _bereichBeimZeigen;
+        _bereichBeimZeigen = null;
         if (gebaut && _seiten[id] is TrainerSeite trainer)
         {
             trainer.Gezeigt();
@@ -847,14 +885,15 @@ public partial class MainView : UserControl
         {
             suche.Fokus();
         }
-        Brotkrumen(id);
+        // eingebettet: Kopfzeile der Haelfte („PRÜFUNG / AP1“) statt „LERNEN / PRÜFUNGSTRAINER“
+        Brotkrumen(_rahmen?.Haelfte ?? id);
         // A 1.15.0: Uebung oder Pruefung aus einem Pruefungsteil markiert diesen Teil (sonst bleibt die Herkunft stehen,
         // solange dieselbe Seite gezeigt wird)
         if (id != _herkunftSeite)
         {
             _herkunft = null;
         }
-        _leisten.Markiere(id, _herkunft);
+        _leisten.Markiere(bereichMarke ?? id, _herkunft);
         Core.Diagnose.Haenger.Seite(id);   // Phase 5 W2: Seite fuer die Haenger-Diagnose
     }
 
@@ -900,11 +939,64 @@ public partial class MainView : UserControl
     // -- Welle A 1.15.0: Wege der Pruefungsteile ---------------------------------------------------------
 
     private string? _reiterBeimZeigen;
+    private string? _bereichBeimZeigen;
 
     /// <summary>A 1.17.0: zuletzt gezeigte Haelfte der Pruefung (AP1 oder AP2), dorthin fuehrt „Prüfung“ in den Leisten.</summary>
     public string LetzteHaelfte { get; private set; } = Core.Texte.Pruefungsteile.Teil1;
     private string? _herkunft;
     private string? _herkunftSeite;
+    // A 1.19.0 (Weisung P12-440): eingebettete alte Seite (Haelfte, Reiter, Titel der Zurück-Zeile, wohin „Zurück“ fuehrt) und ihr Rahmen
+    private (string Haelfte, string Reiter, string Titel, Func<Task> Zurueck)? _rahmen;
+    private DockPanel? _rahmenDock;
+
+    /// <summary>A 1.19.0: Rahmen der eingebetteten Seite (null = keine eingebettet); fuer den Start-Test.</summary>
+    internal Control? RahmenKopf { get; private set; }
+
+    /// <summary>A 1.19.0: eingebettet zeigt gerade AP1 bzw. AP2 (null = keine eingebettete Seite).</summary>
+    internal string? RahmenHaelfte => _rahmen?.Haelfte;
+
+    private static string HaelfteVon(string teil) => teil == Core.Texte.Pruefungsteile.Teil1 ? Core.Texte.Pruefungsteile.Teil1 : Core.Texte.Pruefungsteile.Teil2;
+
+    /// <summary>
+    /// A 1.19.0 (Nico 1, 5a): <paramref name="ziel"/> (Pruefungstrainer oder Szenarien) eingebettet in <paramref name="haelfte"/> zeigen;
+    /// die Zurück-Zeile nennt <paramref name="titel"/>, „Zurück“ fuehrt nach <paramref name="zurueck"/>. <paramref name="herkunft"/>
+    /// markiert die Leisten (Teil bzw. Haelfte).
+    /// </summary>
+    private async Task EingebettetAsync(string ziel, string haelfte, string reiter, string titel, Func<Task> zurueck, string herkunft)
+    {
+        _rahmen = (haelfte, reiter, titel, zurueck);
+        LetzteHaelfte = haelfte;
+        await MitHerkunftAsync(ziel, herkunft);
+    }
+
+    /// <summary>A 1.19.0 (Nico 5a): Pruefungstrainer eingebettet in die zuletzt gewaehlte Haelfte (Suche, Notizblock, Fortschritt, Start).</summary>
+    private Task TrainerEingebettetAsync(string titel, Func<Task> zurueck) =>
+        EingebettetAsync(Seiten.Trainer, LetzteHaelfte, Core.Texte.Pruefungsteile.Ueben, titel, zurueck, LetzteHaelfte);
+
+    /// <summary>A 1.19.0 (Nico 5a): Szenarien einer Quelle eingebettet in AP1 bzw. AP2, ganze Liste dieser Quelle.</summary>
+    /// <param name="passt">das gesuchte Szenario: gehoert es zu den AP1-Fallaufgaben unter AP2 › WiSo (Weisung P12-442, Nico 2b),
+    /// erscheint es in AP2</param>
+    private async Task SzenarienEingebettetAsync(string quelle, string titel, Func<Task> zurueck, Func<Core.Inhalte.Lerninhalt, bool>? passt = null)
+    {
+        var haelfte = HaelfteFuerQuelle(quelle);
+        if (quelle == Core.Lernen.Quellen.Ap1 && passt is not null
+            && await PruefungsteilDaten.Fuer(Programm.Zustand.Sicht, Programm.Zustand.Inhalte) is { } daten
+            && daten.Teile.TryGetValue(Core.Texte.Pruefungsteile.Wiso, out var wiso)
+            && wiso.SzenarienQuelle == Core.Lernen.Quellen.Ap1 && wiso.Szenarien.Any(passt))
+        {
+            haelfte = Core.Texte.Pruefungsteile.Teil2;
+        }
+        var ziel = quelle == Core.Lernen.Quellen.Ap1 ? Seiten.Ap1Szenarien : Seiten.Ap2Szenarien;
+        await EingebettetAsync(ziel, haelfte, Core.Texte.Pruefungsteile.Ueben, titel, zurueck, haelfte);
+        ((SzenarioSeite)_seiten[ziel]).AlleZeigen();
+    }
+
+    private static string ZurueckTitel(string teil, string ziel) =>
+        Core.Texte.Beschriftungen.Einsetzen(Core.Texte.Pruefungsteile.ZurueckTitel, teil, ziel);
+
+    /// <summary>Haelfte fuer Szenarien einer Quelle (AP1 bzw. AP2).</summary>
+    private static string HaelfteFuerQuelle(string quelle) =>
+        quelle == Core.Lernen.Quellen.Ap1 ? Core.Texte.Pruefungsteile.Teil1 : Core.Texte.Pruefungsteile.Teil2;
 
     /// <summary>Seite eines Pruefungsteils mit gewaehltem Reiter zeigen (Teil 2: Karten „Üben“ und „Prüfen“).</summary>
     internal async Task ZeigeTeilAsync(string id, string? reiter)
@@ -928,31 +1020,39 @@ public partial class MainView : UserControl
     private PruefungsteilWege PruefungsteilWege() => new(
         (seite, fragen) => _ = TeilFragenAsync(seite, fragen),
         (seite, quelle, eintraege) => _ = TeilSzenarienAsync(seite, quelle, eintraege),
-        (seite, art) => _ = TeilPruefenAsync(seite, k => k.ArtStartenAsync(art)),
-        (seite, satz) => _ = TeilPruefenAsync(seite, k =>
+        (seite, art) => _ = TeilPruefenAsync(seite, Core.Texte.Pruefungsteile.ProbeklausurZeile, k => k.ArtStartenAsync(art)),
+        (seite, satz) => _ = TeilPruefenAsync(seite, Core.Texte.Pruefungsteile.EchtesFormatZeile, k =>
             k.Echt.SatzStartenAsync(Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht), Core.Texte.Pruefungsteile.Rolle(seite), satz)),
         (ziel, reiter) => _ = ZeigeTeilAsync(ziel, reiter));
 
     private async Task TeilFragenAsync(string seite, IReadOnlyList<string> fragen)
     {
-        await MitHerkunftAsync(Seiten.Trainer, seite);
+        var haelfte = HaelfteVon(seite);
+        await EingebettetAsync(Seiten.Trainer, haelfte, Core.Texte.Pruefungsteile.Ueben,
+            ZurueckTitel(Core.Texte.Pruefungsteile.BereichKurz(seite), Core.Texte.Pruefungsteile.Pruefungsfragen),
+            () => ZeigeTeilAsync(haelfte, Core.Texte.Pruefungsteile.Ueben), seite);
         ((TrainerSeite)_seiten[Seiten.Trainer]).Ueben(fragen);
     }
 
     private async Task TeilSzenarienAsync(string seite, string quelle, IReadOnlyList<Core.Inhalte.Lerninhalt> eintraege)
     {
         var ziel = quelle == Core.Lernen.Quellen.Ap1 ? Seiten.Ap1Szenarien : Seiten.Ap2Szenarien;
-        await MitHerkunftAsync(ziel, seite);
+        var haelfte = HaelfteVon(seite);
+        await EingebettetAsync(ziel, haelfte, Core.Texte.Pruefungsteile.Ueben,
+            ZurueckTitel(Core.Texte.Pruefungsteile.BereichKurz(seite), Core.Texte.Pruefungsteile.Szenarien),
+            () => ZeigeTeilAsync(haelfte, Core.Texte.Pruefungsteile.Ueben), seite);
         var fr = Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht);
         var name = seite == Core.Texte.Pruefungsteile.Teil1 ? Core.Texte.Pruefungsteile.Teil1Titel
             : Core.Texte.Pruefungsteile.Deckblattname(fr, Core.Texte.Pruefungsteile.Rolle(seite));
         ((SzenarioSeite)_seiten[ziel]).NurTeil(eintraege, name);
     }
 
-    private async Task TeilPruefenAsync(string seite, Func<KlausurTeil, Task> starten)
+    private async Task TeilPruefenAsync(string seite, string was, Func<KlausurTeil, Task> starten)
     {
-        await MitHerkunftAsync(Seiten.Trainer, seite);
-        ((TrainerSeite)_seiten[Seiten.Trainer]).Pruefen(starten);
+        var haelfte = HaelfteVon(seite);
+        await EingebettetAsync(Seiten.Trainer, haelfte, Core.Texte.Pruefungsteile.Pruefen,
+            ZurueckTitel(Core.Texte.Pruefungsteile.BereichKurz(seite), was), () => ZeigeTeilAsync(haelfte, Core.Texte.Pruefungsteile.Pruefen), seite);
+        ((TrainerSeite)_seiten[Seiten.Trainer]).Pruefen(starten, () => _ = ZeigeTeilAsync(haelfte, Core.Texte.Pruefungsteile.Pruefen));
     }
 
     public async Task ZeigeAsync(string id)
@@ -961,6 +1061,14 @@ public partial class MainView : UserControl
         if (id == Core.Texte.Pruefungsteile.Pruefung)
         {
             id = LetzteHaelfte;
+        }
+        else if (id is Core.Texte.Pruefungsteile.B1 or Core.Texte.Pruefungsteile.B2 or Core.Texte.Pruefungsteile.Wiso)
+        {
+            // A 1.19.0 (Nico 4a): die Bereiche haben keine eigene Seite mehr; ihr Unterpunkt am PC oeffnet AP2 › Üben bei diesem Bereich
+            _bereichBeimZeigen = id;
+            _reiterBeimZeigen ??= Core.Texte.Pruefungsteile.Ueben;
+            id = Core.Texte.Pruefungsteile.Teil2;
+            LetzteHaelfte = id;
         }
         else if (id is Core.Texte.Pruefungsteile.Teil1 or Core.Texte.Pruefungsteile.Teil2)
         {
@@ -1024,7 +1132,15 @@ public partial class MainView : UserControl
             return;
         }
         var ziel = quelle == Core.Lernen.Quellen.Karte ? Seiten.Karteikarten : Seiten.Trainer;
-        await ZeigeAsync(ziel);
+        if (ziel == Seiten.Trainer)
+        {
+            // A 1.19.0 (Nico 5a): Pruefungsfragen eingebettet in die zuletzt gewaehlte Haelfte, Zurück zur Startseite
+            await TrainerEingebettetAsync(ZurueckTitel(Core.Texte.Pruefungsteile.HerkunftStart, Core.Texte.Pruefungsteile.Wiederholen), () => ZeigeAsync(Seiten.Dashboard));
+        }
+        else
+        {
+            await ZeigeAsync(ziel);
+        }
         switch (_seiten[ziel])
         {
             case KarteikartenSeite karten:
@@ -1041,7 +1157,12 @@ public partial class MainView : UserControl
     /// Teil Karteikarten -> Karteikarten ueben; erster Teil Pruefungsfragen -> Pruefungstrainer in
     /// fester Reihenfolge und nach der Runde Rueckfrage zum naechsten Teil.
     /// </summary>
-    private async Task JetztUebenAsync(List<(string Quelle, List<string> Schluessel)> teile)
+    private Task JetztUebenAsync(List<(string Quelle, List<string> Schluessel)> teile) =>
+        JetztUebenAsync(teile, ZurueckTitel(Core.Texte.Pruefungsteile.HerkunftFortschritt, Core.Texte.Pruefungsteile.Pruefungsfragen), () => ZeigeAsync(Seiten.Fortschritt));
+
+    /// <param name="titel">Zurück-Zeile, wenn die Pruefungsfragen eingebettet erscheinen (A 1.19.0, Nico 5a)</param>
+    /// <param name="zurueck">wohin „Zurück“ fuehrt</param>
+    private async Task JetztUebenAsync(List<(string Quelle, List<string> Schluessel)> teile, string titel, Func<Task> zurueck)
     {
         if (teile.Count == 0)
         {
@@ -1056,7 +1177,7 @@ public partial class MainView : UserControl
             ((KarteikartenSeite)_seiten[Seiten.Karteikarten]).Ueben(schluessel);
             return;
         }
-        await ZeigeAsync(Seiten.Trainer);
+        await TrainerEingebettetAsync(titel, zurueck);
         var trainer = (TrainerSeite)_seiten[Seiten.Trainer];
         Func<Task>? nachher = null;
         if (rest.Count > 0)
@@ -1079,7 +1200,9 @@ public partial class MainView : UserControl
     {
         if (await FortschrittSeite.ThemaTeileAsync(name) is { } teile)
         {
-            await JetztUebenAsync(teile);
+            var haelfte = _rahmen?.Haelfte ?? LetzteHaelfte;
+            await JetztUebenAsync(teile, ZurueckTitel(haelfte == Core.Texte.Pruefungsteile.Teil1 ? Core.Texte.Pruefungsteile.Teil1Titel : Core.Texte.Pruefungsteile.Teil2Titel, Core.Texte.Pruefungsteile.Pruefungsfragen),
+                () => ZeigeTeilAsync(haelfte, Core.Texte.Pruefungsteile.Pruefen));
         }
     }
 
@@ -1099,8 +1222,59 @@ public partial class MainView : UserControl
         }
     }
 
-    private async Task TrefferOeffnenAsync(Core.Suche.SuchTreffer treffer, string anfrage)
+    /// <summary>
+    /// A 1.19.0 (Weisung P12-440, Test „andere Wege“): oeffnet Pruefungsfragen bzw. Szenarien ueber Suche, Spiel-Tafel,
+    /// Notizblock und Fortschritt genau wie ein Klick dort. Rueckgabe: die Seite, zu der „Zurück“ fuehren muss.
+    /// </summary>
+    internal async Task<string> AndererWegFuerTestsAsync(string weg)
     {
+        var inhalte = (await Programm.Zustand.Inhalte)!;
+        var frage = inhalte.Quizfragen.First(q => q.Frage is not null).Frage!;
+        var ap1 = inhalte.Ap1Szenarien[0].Titel ?? "";
+        var ap2 = inhalte.Ap2Szenarien[0].Titel ?? "";
+        var wiso = (await PruefungsteilDaten.Fuer(Programm.Zustand.Sicht, Programm.Zustand.Inhalte))!.Teile[Core.Texte.Pruefungsteile.Wiso].Szenarien[0];
+        switch (weg)
+        {
+            case "suche-ap1-wiso":
+                await TrefferOeffnenAsync(new(Core.Texte.SucheTexte.ArtAp1, null, wiso.Titel ?? "", ""), wiso.Titel ?? "");
+                return Seiten.Suche;
+            case "notizblock-ap1-wiso":
+                await NotizblockUebenAsync(Core.Lernen.Quellen.Ap1, [(long)(wiso.Nummer - 1)], null);
+                return Seiten.Notizblock;
+            case "suche-frage":
+                await TrefferOeffnenAsync(new(Core.Texte.SucheTexte.ArtQuiz, null, frage, ""), frage);
+                return Seiten.Suche;
+            case "suche-ap1":
+                await TrefferOeffnenAsync(new(Core.Texte.SucheTexte.ArtAp1, null, ap1, ""), ap1);
+                return Seiten.Suche;
+            case "suche-ap2":
+                await TrefferOeffnenAsync(new(Core.Texte.SucheTexte.ArtAp2, null, ap2, ""), ap2);
+                return Seiten.Suche;
+            case "spiel-frage":
+                await TrefferOeffnenAsync(new(Core.Texte.SucheTexte.ArtQuiz, null, frage, ""), frage, ausSpiel: true);
+                return Seiten.Spiel;
+            case "notizblock-frage":
+                await NotizblockUebenAsync(Core.Lernen.Quellen.Quiz, [frage], null);
+                return Seiten.Notizblock;
+            case "notizblock-ap1":
+                await NotizblockUebenAsync(Core.Lernen.Quellen.Ap1, [0L], null);
+                return Seiten.Notizblock;
+            case "notizblock-ap2":
+                await NotizblockUebenAsync(Core.Lernen.Quellen.Ap2, [0L], null);
+                return Seiten.Notizblock;
+            case "fortschritt-jetzt-ueben":
+                await JetztUebenAsync([(Core.Lernen.Quellen.Quiz, [frage])]);
+                return Seiten.Fortschritt;
+            default:
+                throw new ArgumentException(weg, nameof(weg));
+        }
+    }
+
+    private async Task TrefferOeffnenAsync(Core.Suche.SuchTreffer treffer, string anfrage, bool ausSpiel = false)
+    {
+        // A 1.19.0 (Nico 5a): Pruefungsfragen und Szenarien eingebettet, „Zurück“ fuehrt zur Suche bzw. ins Spiel
+        var herkunft = ausSpiel ? Core.Texte.Pruefungsteile.HerkunftSpiel : Core.Texte.Pruefungsteile.HerkunftSuche;
+        Func<Task> zurueck = ausSpiel ? () => ZeigeAsync(Seiten.Spiel) : () => ZeigeAsync(Seiten.Suche);
         switch (treffer.Art)
         {
             case Core.Hilfe.RundgangTexte.SucheArt:
@@ -1124,16 +1298,16 @@ public partial class MainView : UserControl
                 ((KarteikartenSeite)_seiten[Seiten.Karteikarten]).Springen(treffer.Titel);
                 break;
             case Core.Texte.SucheTexte.ArtQuiz:
-                await ZeigeAsync(Seiten.Trainer);
+                await TrainerEingebettetAsync(ZurueckTitel(herkunft, Core.Texte.Pruefungsteile.Pruefungsfrage), zurueck);
                 ((TrainerSeite)_seiten[Seiten.Trainer]).Springen(treffer.Titel);
                 break;
             case Core.Texte.SucheTexte.ArtAp1:
                 // das erste Szenario mit gleichem Titel (Phase 4, W1)
-                await ZeigeAsync(Seiten.Ap1Szenarien);
+                await SzenarienEingebettetAsync(Core.Lernen.Quellen.Ap1, ZurueckTitel(herkunft, Core.Texte.Pruefungsteile.Szenario), zurueck, s => s.Titel == treffer.Titel);
                 ((SzenarioSeite)_seiten[Seiten.Ap1Szenarien]).Springen(treffer.Titel);
                 break;
             default:
-                await ZeigeAsync(Seiten.Ap2Szenarien);
+                await SzenarienEingebettetAsync(Core.Lernen.Quellen.Ap2, ZurueckTitel(herkunft, Core.Texte.Pruefungsteile.Szenario), zurueck);
                 ((SzenarioSeite)_seiten[Seiten.Ap2Szenarien]).Springen(treffer.Titel);
                 break;
         }
@@ -1153,7 +1327,7 @@ public partial class MainView : UserControl
                 ((KarteikartenSeite)_seiten[Seiten.Karteikarten]).Ueben(schluessel.Cast<string>());
                 break;
             case Core.Lernen.Quellen.Quiz:
-                await ZeigeAsync(Seiten.Trainer);
+                await TrainerEingebettetAsync(ZurueckTitel(Core.Texte.Pruefungsteile.HerkunftNotizblock, Core.Texte.Pruefungsteile.Pruefungsfragen), () => ZeigeAsync(Seiten.Notizblock));
                 ((TrainerSeite)_seiten[Seiten.Trainer]).Ueben(schluessel.Cast<string>(), reihenfolgeBehalten: erste is not null);
                 break;
             default:
@@ -1163,7 +1337,16 @@ public partial class MainView : UserControl
                     Core.Lernen.Quellen.Ap2 => Seiten.Ap2Szenarien,
                     _ => Seiten.Testprojekt,
                 };
-                await ZeigeAsync(ziel);
+                if (ziel == Seiten.Testprojekt)
+                {
+                    await ZeigeAsync(ziel);
+                }
+                else
+                {
+                    var nummer = (int)Convert.ToInt64(schluessel[0], CultureInfo.InvariantCulture) + 1;
+                    await SzenarienEingebettetAsync(quelle, ZurueckTitel(Core.Texte.Pruefungsteile.HerkunftNotizblock, Core.Texte.Pruefungsteile.Szenarien), () => ZeigeAsync(Seiten.Notizblock),
+                        s => s.Nummer == nummer);
+                }
                 ((SzenarioSeite)_seiten[ziel]).Oeffnen((int)Convert.ToInt64(schluessel[0], CultureInfo.InvariantCulture));
                 break;
         }

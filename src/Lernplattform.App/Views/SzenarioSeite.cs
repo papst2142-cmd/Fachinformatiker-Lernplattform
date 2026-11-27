@@ -179,6 +179,9 @@ public sealed class SzenarioSeite : UserControl
         Laden(positionen[0]);
     });
 
+    /// <summary>A 1.19.0: Einschraenkung auf einen Teil aufheben (Suche, Notizblock zeigen die ganze Liste dieser Quelle).</summary>
+    public void AlleZeigen() => Mit(() => _liste.Nur(null, null));
+
     /// <summary>Suchtreffer: das erste Szenario mit gleichem Titel (open_search_hit).</summary>
     public void Springen(string titel) => Mit(() =>
     {

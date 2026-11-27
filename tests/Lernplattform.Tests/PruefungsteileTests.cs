@@ -75,8 +75,14 @@ public class PruefungsteileTests
         var sicht = Alle.Value.Fuer(fr);
         var klausur = new KlausurInhalte(sicht);
         var gewicht = new RahmenplanGewicht(sicht);
-        bool MitSzenarien(string seite) => Pruefungsteile.ReiterSeiten.Contains(seite == Pruefungsteile.Pruefung ? Pruefungsteile.Teil1 : seite)
-            && TeilUeben.Inhalte(sicht, gewicht, klausur, f, Pruefungsteile.Rolle(seite == Pruefungsteile.Pruefung ? Pruefungsteile.Teil1 : seite)).Szenarien.Count > 0;
+        // A 1.19.0: AP2 zeigt die Szenarien je Bereich (Bereich 1, Bereich 2, WiSo); die Zeile gibt es, wenn ein Bereich welche hat
+        bool MitSzenarien(string seite) => (seite == Pruefungsteile.Pruefung ? Pruefungsteile.Teil1 : seite) switch
+        {
+            Pruefungsteile.Teil1 => TeilUeben.Inhalte(sicht, gewicht, klausur, f, "ap1").Szenarien.Count > 0,
+            Pruefungsteile.Teil2 or Pruefungsteile.B1 or Pruefungsteile.B2 or Pruefungsteile.Wiso => new[] { Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso }
+                .Any(b => TeilUeben.Inhalte(sicht, gewicht, klausur, f, b).Szenarien.Count > 0),
+            _ => false,
+        };
         var pc = Pruefungsteile.Seitenleiste(f).Concat(Pruefungsteile.SeitenleisteUnten).Where(z => z.Id is not null).Select(z => z.Id!).ToList();
         var handy = Navigation.Handy.Select(h => h.Id).ToList();
         var funde = new List<string>();
@@ -84,11 +90,14 @@ public class PruefungsteileTests
         {
             foreach (var seite in BisherigeSeiten.Where(s => geraet == "Handy" || s != "learn"))
             {
-                // Weisung P12-432 (Nico 2b): ueberall wieder hoechstens zwei Klicks (Testprojekte und Mein Projekt auch unter „Mehr“)
+                // Weisung P12-432 (Nico 2b): ueberall wieder hoechstens zwei Klicks (Testprojekte und Mein Projekt auch unter „Mehr“).
+                // Ausnahme A 1.19.0 (Weisung P12-440, Nico 1a, Anlage P12-278 Zeile „AP2-Szenarien fällt weg“): die ganze Liste
+                // AP2-Szenarien unter „Mehr“ entfaellt; am Handy sind sie Prüfung, AP2, Szenarien = drei Klicks, am PC zwei (Bereich-Unterpunkt)
+                var grenze = geraet == "Handy" && seite == "scenarios" ? 3 : 2;
                 var ist = Klicks(leiste, seite, MitSzenarien);
-                if (ist > 2)
+                if (ist > grenze)
                 {
-                    funde.Add(geraet + ": " + seite + " in " + ist + " statt hoechstens 2 Klicks");
+                    funde.Add(geraet + ": " + seite + " in " + ist + " statt hoechstens " + grenze + " Klicks");
                 }
             }
         }
@@ -98,11 +107,16 @@ public class PruefungsteileTests
     [Fact]
     public void PruefungZeigtAp1UndAp2PerSegment()
     {
-        // Gegenprobe: ohne Segment (AP2 nicht von AP1 aus erreichbar) waeren Testprojekte und Abschlussprojekt ueber „Prüfung“
-        // nicht erreichbar; mit Segment drei Klicks (Prüfung, AP2, Seite), ueber „Mehr“ zwei (Weisung P12-432)
+        // Gegenprobe: ohne Segment (AP2 nicht von AP1 aus erreichbar) waeren die AP2-Szenarien ueber „Prüfung“ nicht erreichbar;
+        // mit Segment drei Klicks (Prüfung, AP2, Szenarien); Testprojekte und Mein Projekt ueber „Mehr“ zwei (Weisung P12-432)
         Assert.Contains(Pruefungsteile.Teil2, Pruefungsteile.Ziele(Pruefungsteile.Pruefung));
         Assert.Contains(Pruefungsteile.Teil1, Pruefungsteile.Ziele(Pruefungsteile.Teil2));
-        Assert.Equal(3, Klicks([Pruefungsteile.Pruefung], "abschluss", _ => true));
+        // A 1.19.0 (Nico 2a, 3a): die Projekt-Karte unter AP2 ist nur ein Hinweis ohne Knoepfe; Testprojekte und Mein Projekt nur unter „Mehr“
+        Assert.Equal(int.MaxValue, Klicks([Pruefungsteile.Pruefung], "abschluss", _ => true));
+        Assert.Equal(int.MaxValue, Klicks([Pruefungsteile.Pruefung], "testproject", _ => true));
+        // AP2-Szenarien: Prüfung, AP2, Szenarien (eingebettet, die eigene Seite unter „Mehr“ faellt weg)
+        Assert.Equal(3, Klicks([Pruefungsteile.Pruefung], "scenarios", _ => true));
+        Assert.Equal(int.MaxValue, Klicks([Pruefungsteile.Mehr], "scenarios", _ => true));
         Assert.Equal(2, Klicks([Pruefungsteile.Pruefung], "quiz", _ => true));
         Assert.Equal(int.MaxValue, Klicks([Pruefungsteile.Pruefung], "settings", _ => true));
         Assert.Equal(2, Klicks([Pruefungsteile.Mehr], "abschluss", _ => true));
@@ -138,7 +152,8 @@ public class PruefungsteileTests
                 var wiso = art?.QuizThemen is { } themen && eintrag.Thema is { } t && themen.Contains(t);
                 Assert.True(wiso || gewicht.Punkte(Quellen.Quiz, frage).Any(punkte.Contains), rolle + ": " + frage);
             }
-            // Szenarien: genau die, aus denen die Probeklausur des Teils zieht
+            // Szenarien: genau die, aus denen die Probeklausur des Teils zieht; WiSo (A 1.19.0, Weisung P12-442, Nico 2b) die
+            // AP1-Fallaufgaben, aus denen die Probeklausur AP1 nicht zieht
             if (rolle != "wiso")
             {
                 Assert.NotEmpty(teil.Szenarien);
@@ -146,12 +161,45 @@ public class PruefungsteileTests
             }
             else
             {
-                Assert.Empty(teil.Szenarien);
+                var ap1 = TeilUeben.Inhalte(sicht, gewicht, klausur, f, "ap1").Szenarien;
+                Assert.Equal(Quellen.Ap1, teil.SzenarienQuelle);
+                Assert.Equal(sicht.Ap1Szenarien.Except(ap1), teil.Szenarien);
+                Assert.All(teil.Szenarien, s => Assert.Equal("Wirtschafts- und Sozialkunde", s.SzenarioThema));
             }
         }
         // Teil 1 zieht aus den AP1-Szenarien, Teil 2 aus den AP2-Szenarien
         Assert.Equal(Quellen.Ap1, TeilUeben.Inhalte(sicht, gewicht, klausur, f, "ap1").SzenarienQuelle);
         Assert.Equal(Quellen.Ap2, TeilUeben.Inhalte(sicht, gewicht, klausur, f, "b1").SzenarienQuelle);
+    }
+
+    /// <summary>
+    /// A 1.19.0 (Weisung P12-440, Fund 1 von Chat): die Szenarien je Bereich ergeben zusammen genau alle AP2-Szenarien der Sicht
+    /// (keine Aufgabe geht verloren); FISI hat 46 Szenarien in Bereich 1 und Bereich 2 (beide Probeklausuren ziehen aus ihnen),
+    /// die anderen Fachrichtungen keine. Der Lernstand zaehlt je Szenario-Nummer, also jedes nur einmal.
+    /// </summary>
+    [Theory]
+    [InlineData("si", 241, 135, 46, 215, 50)]
+    [InlineData("ae", 165, 165, 0, 215, 50)]
+    [InlineData("dpa", 165, 165, 0, 215, 50)]
+    [InlineData("dv", 165, 165, 0, 215, 50)]
+    public void SzenarienJeBereichOhneVerlust(string fr, int b1, int b2, int beide, int ap1, int wiso)
+    {
+        var sicht = Alle.Value.Fuer(fr);
+        var f = Fachrichtung.Nach(fr);
+        var klausur = new KlausurInhalte(sicht);
+        var gewicht = new RahmenplanGewicht(sicht);
+        List<int> Nummern(string rolle) => [.. TeilUeben.Inhalte(sicht, gewicht, klausur, f, rolle).Szenarien.Select(s => s.Nummer)];
+        var eins = Nummern("b1");
+        var zwei = Nummern("b2");
+        Assert.Equal((b1, b2, beide), (eins.Count, zwei.Count, eins.Intersect(zwei).Count()));
+        Assert.Equal(sicht.Ap2Szenarien.Select(s => s.Nummer).Order(), eins.Union(zwei).Order());
+        // AP1 (Probeklausur AP1) und AP2 › WiSo (die AP1-Fallaufgaben zur WiSo, Weisung P12-442 Nico 2b) ergeben alle AP1-Szenarien
+        var teil1 = Nummern("ap1");
+        var unterWiso = Nummern("wiso");
+        Assert.Equal((ap1, wiso, 0), (teil1.Count, unterWiso.Count, teil1.Intersect(unterWiso).Count()));
+        Assert.Equal(sicht.Ap1Szenarien.Select(s => s.Nummer).Order(), teil1.Union(unterWiso).Order());
+        // Stand: ein bearbeitetes Szenario aus beiden Bereichen zaehlt im Lernstand einmal (Nummer), in jeder Bereich-Zeile einmal
+        Assert.Equal(eins.Count + zwei.Count - beide, sicht.Ap2Szenarien.Count);
     }
 
     [Fact]

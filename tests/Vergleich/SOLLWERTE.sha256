@@ -1,7 +1,7 @@
 # Sollwerte Stand C# A 0.41.1 (main 71de14c), Welle Sammelliste 217 (Weisung P12-14)
 # Aendern nur mit Nicos Freigabe: neuer Abschnitt in AENDERUNGEN_SOLLWERTE.md, dann
 # python3 -I werkzeuge/vergleich/sollwerte.py schreiben <n> (nie von Hand)
-# Aenderung: 28
+# Aenderung: 29
 403c51cbd4e86c41f86456f4f0a74ecf54b7a39ebd46db9b245326eaafdc075e  inhalte/fachgespraech.json
 f26e665baf88f4c2d7c4bb834cf90ffaf6d7ff4fd6f9188c8a38d3fdd5735645  inhalte/karteikarten.json
 446598838cc3acdd956ef284fa11bdd210e64cf5868d97a00a3d7871423d5658  inhalte/projektarbeiten.json
@@ -38,7 +38,7 @@ b27d3bdebc7a9e0eca261528828a72a0e6de33529a02dc337cd4920b0cc237c3  src/Lernplattf
 e7b0b9d199218b4ce9b801475bc082163eb3bffff799d8bab77d1f46d0f8c993  tests/Vergleich/abgleich.json
 2208f4d716034486af9eaf287b55cd3f47abb1099794092356b233a8a2d173e2  tests/Vergleich/abschlussprojekt.json
 f9008b3e8b729786e33ee6c16aee9f163498c231b550f1e9ad3cadab59ab4b6b  tests/Vergleich/auswertung.json
-776349e7508022637cdaa8f13e35b3f218626f11a8274e60ad45a444a3f6c244  tests/Vergleich/beschriftungen.json
+4d72880a043f943783748240222690075f05b87a136caf8986784191cd57573f  tests/Vergleich/beschriftungen.json
 591256c080fb38b3e6af6fff6f021c81903e3ef7cb36396969aa6dbeaf3057a0  tests/Vergleich/dashboard.json
 fb38d53717533b7e71502c4ae0446e43cbc2060750ad0bbb4d59a23dcfcf8c65  tests/Vergleich/datenbank.json
 28397537fc0ace2a564ebd638d217372b317030e63544ab214c3e04760e8578f  tests/Vergleich/datenmengen.json
