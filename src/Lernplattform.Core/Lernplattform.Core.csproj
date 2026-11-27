@@ -21,6 +21,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Lernen/rahmenplan_vorab.json" LogicalName="Lernplattform.Core.Lernen.rahmenplan_vorab.json" Condition="Exists('Lernen/rahmenplan_vorab.json')" />
   </ItemGroup>
+  <!-- Welle A 1.18.0 (L0, Weisung P12-424): alte Fragetexte nur fuer das Umschreiben des Lernstands beim Start (AlteFragetexte.cs) -->
+  <ItemGroup>
+    <EmbeddedResource Include="Daten/alte_fragetexte.json" LogicalName="Lernplattform.Core.Daten.alte_fragetexte.json" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lernplattform.Tests" />
     <InternalsVisibleTo Include="Stadtbau.Tests" />
