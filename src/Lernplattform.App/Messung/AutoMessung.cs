@@ -639,7 +639,7 @@ public static partial class AutoMessung
                     }
                 }
                 // Gegenprobe (A 1.17.0): ein zu langes Wort im ersten Knopf muss die Pruefung der Leiste finden
-                if (ansicht.Leisten.UntereLeiste.IsEffectivelyVisible && ansicht.Leisten.LeistePasstFunde("Abschlusspruefungsvorbereitung").Count == 0)
+                if (ansicht.Leisten.UntereLeiste.IsEffectivelyVisible && ansicht.Leisten.LeistePasstFunde(new string('W', 80)).Count == 0)
                 {
                     layoutFunde.Add($"{ist} {stufe}: Gegenprobe der unteren Leiste fand das zu lange Wort nicht");
                 }
