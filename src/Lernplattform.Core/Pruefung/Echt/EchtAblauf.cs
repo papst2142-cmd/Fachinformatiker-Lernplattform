@@ -225,6 +225,15 @@ public sealed class EchtAblauf(Func<EchtBestand> bestand, EchtAblage ablage, Fun
         {
             return new(EchtAnsicht.Auswahl);
         }
+        // A 1.18.0 (L0, Nico 5a, P12-437 4a): offener Lauf eines geloeschten Satzes oder einer geloeschten aelteren Fassung:
+        // beenden, nicht werten, Hinweis (fertige Pruefungen bleiben im Verlauf)
+        var stand = Json.Zahl(Zustand[FassungSchluessel]) is { } gespeichert ? (int)gespeichert : 1;
+        if (Bestand.IstGeloescht(Json.Text(Zustand["satz"]), stand))
+        {
+            ablage.Loeschen();
+            Zustand = null;
+            return new(EchtAnsicht.Auswahl, KartenTexte.HinweisTitel, EchtTexte.SatzEntfernt);
+        }
         if (Satz is null)
         {
             // Welle A 0.91.0: gehoert der Satz zu einem Fachrichtungs-Paket, nennt der Hinweis das Paket; der Stand bleibt gespeichert

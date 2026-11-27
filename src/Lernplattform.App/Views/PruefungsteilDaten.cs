@@ -55,7 +55,7 @@ public static class PruefungsteilDaten
             }
             var gewicht = await Zustand.Gewicht;
             var fachrichtung = Fachrichtung.Nach(sicht);
-            var klausur = new KlausurInhalte(inhalte, Zustand.Umbenennungen);
+            var klausur = new KlausurInhalte(inhalte);
             var teile = new Dictionary<string, TeilInhalte>(StringComparer.Ordinal);
             var saetze = new Dictionary<string, IReadOnlyList<EchtSatz>>(StringComparer.Ordinal);
             foreach (var seite in Pruefungsteile.ReiterSeiten)

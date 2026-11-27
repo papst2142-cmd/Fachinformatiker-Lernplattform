@@ -201,7 +201,9 @@ public sealed class InhalteLadenSchnellTests
     [Fact]
     public void Ausschluss_Nachschlagetabelle_GleichDerAltenSucheAufAllenEintraegen()
     {
-        var alle = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), Quelle);
+        // A 1.18.0 (L0): ausschluss.json der App entfaellt, die Suche bleibt fuer aeltere Pakete: gerechnet auf dem Stand vor L0
+        var quelle = L0Vorher.Ordner();
+        var alle = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), quelle);
         var ausschluss = alle.Ausschluss;
         Assert.True(ausschluss.Count > 50, "Ausschluesse: " + ausschluss.Count);
         var tabelle = Lerninhalte.AusschlussTabelle.Aus(ausschluss);
@@ -209,7 +211,7 @@ public sealed class InhalteLadenSchnellTests
         var geprueft = 0;
         foreach (var name in LernenTeiler.Listen)
         {
-            var datei = JsonNode.Parse(Quelle(name)!)!.AsArray();
+            var datei = JsonNode.Parse(quelle(name)!)!.AsArray();
             for (var i = 0; i < datei.Count; i++)
             {
                 if (datei[i] is not JsonObject daten)

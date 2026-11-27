@@ -58,7 +58,8 @@ public class DatenTests(ITestOutputHelper ausgabe)
     public void DatenbankGleichWiePython()
     {
         var soll = Lade("testdaten.json").GetProperty("tabellen");
-        var ist = AlterLernstand.LeseDatenbank(Pfade.Vergleich("testdaten.db"));
+        // A 1.18.0 (L0): das Programm liest die Python-Datenbank nicht mehr; die Testdatenbank bleibt Grundlage vieler Tests
+        var ist = LeseDatenbank(Pfade.Vergleich("testdaten.db"));
         Assert.Equal(13, ist.Count);
         Assert.Equal(soll.EnumerateObject().Select(p => p.Name).Order(StringComparer.Ordinal),
             ist.Select(t => t.Name).Order(StringComparer.Ordinal));
@@ -131,5 +132,44 @@ public class DatenTests(ITestOutputHelper ausgabe)
         Assert.True(AlterLernstand.PruefsummeStimmt(gut));
         using var veraendert = System.Text.Json.JsonDocument.Parse(text.Replace("cyan_pink", "cyan_pinK"));
         Assert.False(AlterLernstand.PruefsummeStimmt(veraendert));
+    }
+
+    private sealed record Tabelle(string Name, IReadOnlyList<string> Spalten, IReadOnlyList<object?[]> Zeilen);
+
+    /// <summary>Alle Tabellen einer Datenbank, nur lesend (bis A 1.17.0 AlterLernstand.LeseDatenbank).</summary>
+    private static List<Tabelle> LeseDatenbank(string pfad)
+    {
+        using var db = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={pfad};Mode=ReadOnly;Pooling=False");
+        db.Open();
+        var namen = new List<string>();
+        using (var befehl = db.CreateCommand())
+        {
+            befehl.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name";
+            using var leser = befehl.ExecuteReader();
+            while (leser.Read())
+            {
+                namen.Add(leser.GetString(0));
+            }
+        }
+        var ergebnis = new List<Tabelle>();
+        foreach (var name in namen)
+        {
+            using var befehl = db.CreateCommand();
+            befehl.CommandText = $"SELECT * FROM \"{name.Replace("\"", "\"\"")}\" ORDER BY rowid";
+            using var leser = befehl.ExecuteReader();
+            var spalten = Enumerable.Range(0, leser.FieldCount).Select(leser.GetName).ToList();
+            var zeilen = new List<object?[]>();
+            while (leser.Read())
+            {
+                var zeile = new object?[leser.FieldCount];
+                for (var i = 0; i < leser.FieldCount; i++)
+                {
+                    zeile[i] = leser.IsDBNull(i) ? null : leser.GetValue(i);
+                }
+                zeilen.Add(zeile);
+            }
+            ergebnis.Add(new Tabelle(name, spalten, zeilen));
+        }
+        return ergebnis;
     }
 }

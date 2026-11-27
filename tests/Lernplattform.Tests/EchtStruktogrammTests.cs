@@ -32,7 +32,7 @@ public class EchtStruktogrammTests
 
     private const string Anw = "{\"typ\": \"anweisung\", \"text\": \"x ← 1\"}";
 
-    private static JsonObject Roh(string kennung, int fassung) => JsonNode.Parse(File.ReadAllBytes(EchtTestDatei.Datei))!["saetze"]!.AsArray()
+    private static JsonObject Roh(string kennung, int fassung) => JsonNode.Parse(EchtTestDatei.Vorher)!["saetze"]!.AsArray()
         .Select(s => s!.AsObject()).Single(s => (string?)s["kennung"] == kennung && ((int?)s["fassung"] ?? 1) == fassung).DeepClone().AsObject();
 
     private static byte[] Datei(int format, params JsonObject[] saetze) =>
@@ -87,7 +87,7 @@ public class EchtStruktogrammTests
     [Fact]
     public void EineFassung_NurAngehaengt_AlteBytegleich_GenauDieserTeil()
     {
-        var echt = File.ReadAllBytes(EchtTestDatei.Datei);
+        var echt = EchtTestDatei.Vorher;
         Assert.Equal(5, (int)JsonNode.Parse(echt)!["format"]!);
         var vorher = File.ReadAllBytes(Format4);
         var laenge = vorher.Length - "\n ]\n}".Length;

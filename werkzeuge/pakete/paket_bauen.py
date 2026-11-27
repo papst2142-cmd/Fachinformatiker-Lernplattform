@@ -45,7 +45,9 @@ LERNEN_ORDNER = os.path.join("inhalte_csharp", "lernen")
 # A 1.8.0 (Weisung P12-372): Stand und braucht_app je Fachrichtung; FIAE Stand 2 mit den neuen Fassungen (Saetze Format 4)
 # braucht A 1.8.0. Die Testdatei des vorigen Stands bleibt als echte Testdatei liegen (nie loeschen).
 # A 1.12.0 (Weisung P12-390): FIAE Stand 3 mit den Struktogramm-Fassungen (Saetze Format 5) braucht A 1.12.0.
-LERNEN_TESTDATEIEN = {"ae": (3, "A 1.12.0"), "dpa": (1, "A 1.5.0"), "dv": (1, "A 1.5.0")}
+# A 1.18.0 (L0, Weisung P12-424): geloeschte Eintraege verschieben die Stellen aller drei Fachrichtungen; neuer Stand je Paket,
+# braucht A 1.18.0 (aeltere Apps tragen die geloeschten Eintraege noch und lehnten das Paket nach „nur angehaengt“ ab).
+LERNEN_TESTDATEIEN = {"ae": (4, "A 1.18.0"), "dpa": (2, "A 1.18.0"), "dv": (2, "A 1.18.0")}
 
 
 def lernen_testdatei(fr):
@@ -120,6 +122,13 @@ def _laden(repo, name):
         return json.load(f)
 
 
+def _ausschluss(repo):
+    """A 1.18.0 (L0, Weisung P12-437 3a): lernen/ausschluss.json gibt es nicht mehr (geloeschte Eintraege stehen in
+    geloescht.json); fehlt sie, schliesst sie nichts aus. Gelesen wird sie nur noch fuer Staende davor."""
+    pfad = os.path.join(repo, LERNEN_ORDNER, "ausschluss.json")
+    return _laden(repo, "ausschluss")["eintraege"] if os.path.exists(pfad) else []
+
+
 def _liste(repo, name):
     daten = _laden(repo, name)
     return daten["fragen"] if name == "fachgespraech" else daten
@@ -136,13 +145,13 @@ def lernen_schnitt(repo, fr):
         if eintraege:
             listen[name] = eintraege
     stellen = {name: {e["stelle"]: e["eintrag"] for e in liste} for name, liste in listen.items()}
-    ausschluss = [a for a in _laden(repo, "ausschluss")["eintraege"]
+    ausschluss = [a for a in _ausschluss(repo)
                   if a["stelle"] in stellen.get(a["datei"], {}) and stellen[a["datei"]][a["stelle"]].get("q") == a["q"]]
     lernen = {"format": 1, "fachrichtung": fr, "listen": listen}
     saetze_quelle = _laden(repo, "pruefungssaetze")
     # A 0.94.0 (Weisung P12-304): ersetzte Pruefungssaetze dieser Fachrichtung (Stelle und Kennung) kommen mit
     satz_stellen = {i: s for i, s in enumerate(saetze_quelle["saetze"]) if isinstance(s, dict) and s.get("fachrichtung") == fr}
-    ausschluss += [a for a in _laden(repo, "ausschluss")["eintraege"]
+    ausschluss += [a for a in _ausschluss(repo)
                    if a["datei"] == "pruefungssaetze" and a["stelle"] in satz_stellen
                    and satz_stellen[a["stelle"]].get("kennung") == a.get("kennung")]
     if ausschluss:

@@ -82,12 +82,6 @@ public static class Zustand
         BeimBeenden?.Invoke();
     }
 
-    private static IReadOnlyList<(string Tabelle, string Alt, string Neu)>? _umbenennungen;
-
-    /// <summary>inhalte/umbenennungen.json (apply_question_renames bei der Uebernahme).</summary>
-    public static IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen =>
-        _umbenennungen ??= Core.Daten.Umbenennungen.Laden(EingebauteDatei);
-
     /// <summary>StatusBook(db): Antworten neu lesen.</summary>
     public static StatusBuch BuchLesen() => new(Antwortbuch.Lesen(Lernstand));
 
@@ -581,8 +575,9 @@ public static class Zustand
     private static Lazy<Core.Pruefung.Echt.EchtBestand> NeuerBestand()
     {
         var ordner = Aktuell;
-        // A 0.94.0: ersetzte Saetze (ausschluss.json) bleiben fuer offene Laeufe im Bestand, werden aber nicht mehr angeboten
-        return new(() => Core.Pruefung.Echt.EchtSaetze.Laden(ordner.Saetze(), ordner.AusgeschlosseneSaetze()));
+        // A 0.94.0: ersetzte Saetze (ausschluss.json eines aelteren Pakets) bleiben fuer offene Laeufe im Bestand, werden aber
+        // nicht mehr angeboten; A 1.18.0: geloeschte Saetze (geloescht.json) beenden einen offenen Lauf
+        return new(() => Core.Pruefung.Echt.EchtSaetze.Laden(ordner.Saetze(), ordner.AusgeschlosseneSaetze(), ordner.GeloeschteSaetze()));
     }
 
     public static Core.Pruefung.Echt.EchtBestand EchtBestand => _echt.Value;

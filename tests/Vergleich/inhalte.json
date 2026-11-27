@@ -161,13 +161,6 @@
    "eintraege": 2,
    "texte": 111,
    "text_bytes_utf8": 1875
-  },
-  "umbenennungen.json": {
-   "sha256": "16a2beccae1e4cba2efb81d8d34a7e3e5032cbeef3beacb27f21c4b449a6e983",
-   "art": "objekt",
-   "eintraege": 3,
-   "texte": 56,
-   "text_bytes_utf8": 5558
   }
  }
 }

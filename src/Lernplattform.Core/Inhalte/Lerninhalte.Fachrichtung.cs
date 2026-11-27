@@ -203,6 +203,14 @@ public sealed partial class Lerninhalte
     /// </summary>
     public const string AusschlussDatei = "ausschluss";
 
+    /// <summary>
+    /// A 1.18.0 (L0, Weisung P12-424 Nico 1b): Loeschliste inhalte_csharp/lernen/geloescht.json. Eine neue Fassung ersetzt die
+    /// alte sofort: die alte wird geloescht und hier eingetragen (Datei, Stelle vor dem Loeschen, Text bzw. Kennung und Fassung,
+    /// hash16, Grund, Datum, Weisung). ausschluss.json der App entfaellt; gelesen wird sie nur noch, weil schon geladene
+    /// aeltere Fachrichtungs-Pakete eine eigene Ausschluss-Liste tragen (Weisung P12-437 Antwort 3a).
+    /// </summary>
+    public const string GeloeschtDatei = "geloescht";
+
     /// <summary>Phase 11 FW5b: die Eintraege aus <see cref="AusschlussDatei"/> (leer ohne Datei).</summary>
     public IReadOnlyList<(string Datei, int Stelle, string Frage)> Ausschluss { get; private init; } = [];
 
@@ -943,6 +951,29 @@ public sealed class LernenOrdner
         return eintraege.Where(e => e.Eintrag.ValueKind == JsonValueKind.Object && e.Eintrag.TryGetProperty("kennung", out var k)
                 && k.ValueKind == JsonValueKind.String && saetze.Any(a => a.Stelle == e.Index && a.Frage == k.GetString()))
             .Select(e => e.Eintrag.GetProperty("kennung").GetString()!).ToList();
+    }
+
+    /// <summary>
+    /// A 1.18.0 (L0, Weisung P12-424 Nico 1b und 5a): geloeschte Pruefungssaetze (Kennung, Fassung) laut
+    /// <see cref="Lerninhalte.GeloeschtDatei"/> der App; leer ohne Datei oder bei einem Lesefehler (dann bleibt ein offener Lauf).
+    /// </summary>
+    public IReadOnlyList<(string Kennung, int Fassung)> GeloeschteSaetze()
+    {
+        if (Lesen(Lerninhalte.GeloeschtDatei) is not { } roh)
+        {
+            return [];
+        }
+        try
+        {
+            using var dokument = JsonDocument.Parse(roh);
+            return [.. dokument.RootElement.GetProperty("eintraege").EnumerateArray()
+                .Where(e => e.GetProperty("datei").GetString() == Pruefung.Echt.EchtSaetze.DateiName)
+                .Select(e => (e.GetProperty("kennung").GetString()!, e.TryGetProperty("fassung", out var f) ? f.GetInt32() : 1))];
+        }
+        catch (Exception e) when (e is JsonException or KeyNotFoundException or InvalidOperationException or FormatException)
+        {
+            return [];
+        }
     }
 
     /// <summary>Ausschluesse aus den Paketen (zu denen aus ausschluss.json der App).</summary>

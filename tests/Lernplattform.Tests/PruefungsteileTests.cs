@@ -73,7 +73,7 @@ public class PruefungsteileTests
     {
         var f = Fachrichtung.Nach(fr);
         var sicht = Alle.Value.Fuer(fr);
-        var klausur = new KlausurInhalte(sicht, []);
+        var klausur = new KlausurInhalte(sicht);
         var gewicht = new RahmenplanGewicht(sicht);
         bool MitSzenarien(string seite) => Pruefungsteile.ReiterSeiten.Contains(seite == Pruefungsteile.Pruefung ? Pruefungsteile.Teil1 : seite)
             && TeilUeben.Inhalte(sicht, gewicht, klausur, f, Pruefungsteile.Rolle(seite == Pruefungsteile.Pruefung ? Pruefungsteile.Teil1 : seite)).Szenarien.Count > 0;
@@ -123,7 +123,7 @@ public class PruefungsteileTests
     {
         var sicht = Alle.Value.Fuer("si");
         var f = Fachrichtung.Nach("si");
-        var klausur = new KlausurInhalte(sicht, []);
+        var klausur = new KlausurInhalte(sicht);
         var gewicht = new RahmenplanGewicht(sicht);
         foreach (var rolle in new[] { "ap1", "b1", "b2", "wiso" })
         {
@@ -160,7 +160,7 @@ public class PruefungsteileTests
         // ohne Rahmenplan-Zuordnung bleiben nur die WiSo-Fragen der Probeklausur (Themen recht und arbeitswelt)
         var sicht = Alle.Value.Fuer("si");
         var f = Fachrichtung.Nach("si");
-        var klausur = new KlausurInhalte(sicht, []);
+        var klausur = new KlausurInhalte(sicht);
         Assert.Empty(TeilUeben.Inhalte(sicht, null, klausur, f, "b1").Fragen);
         Assert.NotEmpty(TeilUeben.Inhalte(sicht, null, klausur, f, "wiso").Fragen);
     }

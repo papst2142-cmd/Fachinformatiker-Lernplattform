@@ -1,24 +1,23 @@
-Die Leisten zum Wechseln der Seiten sind neu geordnet und haben neue, zweifarbige Symbole.
+Eine Aufräum-Version: alte, längst ersetzte Lerninhalte sind jetzt ganz aus dem Programm entfernt.
 
-- Am Handy hat die untere Leiste jetzt fünf Knöpfe: Start, Prüfung, Lernen, Spiel und Mehr. „Prüfung“ öffnet deine Abschlussprüfung. Oben auf dieser Seite wählst du mit einem Schalter „AP1 20 %“ oder „AP2 80 %“. Das Programm merkt sich, welchen Teil du zuletzt offen hattest.
-- Am PC steht in der Seitenleiste unter „ABSCHLUSSPRÜFUNG“ der Punkt „Prüfung“ mit AP1, AP2, den Bereichen von AP2 und dem Abschlussprojekt darunter. Unter „Lernen“ findest du Karteikarten, Notizblock und Rechner, danach Spiel und Fortschritt. Logo, Fachrichtung, Versionszeile und „Programm beenden“ bleiben, wo sie waren.
-- Teil 1 und Teil 2 heißen jetzt überall so wie in der echten Prüfung: AP1 und AP2, auch im Feld „Deine Abschlussprüfung“ auf der Startseite.
-- Unter „Mehr“ findest du am Handy jetzt auch die Testprojekte und dein eigenes Projekt.
-- Neue Symbole: ein Sonnenaufgang für Start, eine Stoppuhr für Prüfung, ein Chip für Lernen, eine Stadt für das Spiel, ein Berg mit Flagge für den Fortschritt, ein Wegweiser für die Hilfe, ein Drehregler für die Optionen, ein Plus in einer Kachel für Mehr und ein Stecker für „Programm beenden“. Jedes Symbol hat einen kleinen Teil in der Akzentfarbe deiner Farbwelt. Die Lupe der Suche bleibt.
-- Der gewählte Knopf ist deutlicher zu sehen: am Handy mit einer hellen Fläche hinter Symbol und Wort, am PC mit einer hinterlegten Zeile und einem farbigen Rand links.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+- Gelöscht sind 47 Karteikarten und 81 Quizfragen in einer älteren Fassung, die schon seit früheren Versionen durch eine verbesserte Fassung ersetzt und nicht mehr zu sehen waren, dazu die 10 alten Prüfungssätze für Anwendungsentwicklung (FIAE) und die 6 älteren Fassungen einzelner FIAE-Sätze. Was du beim Lernen siehst, bleibt gleich: dieselben Karten, Fragen und Prüfungssätze in derselben Reihenfolge.
+- Dein Lernstand bleibt erhalten. Steht darin noch ein Eintrag mit dem alten Text einer Frage, schreibt das Programm ihn beim ersten Start einmal auf den heutigen Text um. Vorher legt es eine Kopie deines Lernstands an. Diese Prüfung läuft bei jedem Start mit; sie fällt erst in einer späteren Version weg, wenn alle Geräte mindestens diese Version haben.
+- Gleichst du deinen Lernstand zwischen mehreren Geräten ab, aktualisiere bitte alle Geräte auf diese Version, bevor du wieder abgleichst.
+- Hattest du eine Prüfung im echten Format mit einem der gelöschten Sätze offen, wird sie beim Öffnen beendet und nicht gewertet. Ein Hinweis sagt dir das. Deine fertigen Prüfungen bleiben im Verlauf.
+- „Lernstand übernehmen“ nimmt jetzt eine Sicherung der Lernplattform oder eine Abgleich-Datei. Die Datenbank der früheren App lässt sich dort nicht mehr wählen.
+- Für FIAE, FIDP und FIDV gibt es passend zu dieser Version neue Fachrichtungs-Pakete. Ältere Pakete passen nicht mehr zu ihr.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.17.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.18.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.17.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.17.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.17.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.17.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.18.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.18.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.18.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.18.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

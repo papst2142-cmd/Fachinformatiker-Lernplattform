@@ -1,5 +1,15 @@
 # Änderungen
 
+## A 1.18.0
+Eine Aufräum-Version: alte, längst ersetzte Lerninhalte sind jetzt ganz aus dem Programm entfernt.
+
+- Gelöscht sind 47 Karteikarten und 81 Quizfragen in einer älteren Fassung, die schon seit früheren Versionen durch eine verbesserte Fassung ersetzt und nicht mehr zu sehen waren, dazu die 10 alten Prüfungssätze für Anwendungsentwicklung (FIAE) und die 6 älteren Fassungen einzelner FIAE-Sätze. Was du beim Lernen siehst, bleibt gleich: dieselben Karten, Fragen und Prüfungssätze in derselben Reihenfolge.
+- Dein Lernstand bleibt erhalten. Steht darin noch ein Eintrag mit dem alten Text einer Frage, schreibt das Programm ihn beim ersten Start einmal auf den heutigen Text um. Vorher legt es eine Kopie deines Lernstands an. Diese Prüfung läuft bei jedem Start mit; sie fällt erst in einer späteren Version weg, wenn alle Geräte mindestens diese Version haben.
+- Gleichst du deinen Lernstand zwischen mehreren Geräten ab, aktualisiere bitte alle Geräte auf diese Version, bevor du wieder abgleichst.
+- Hattest du eine Prüfung im echten Format mit einem der gelöschten Sätze offen, wird sie beim Öffnen beendet und nicht gewertet. Ein Hinweis sagt dir das. Deine fertigen Prüfungen bleiben im Verlauf.
+- „Lernstand übernehmen“ nimmt jetzt eine Sicherung der Lernplattform oder eine Abgleich-Datei. Die Datenbank der früheren App lässt sich dort nicht mehr wählen.
+- Für FIAE, FIDP und FIDV gibt es passend zu dieser Version neue Fachrichtungs-Pakete. Ältere Pakete passen nicht mehr zu ihr.
+
 ## A 1.17.0
 Die Leisten zum Wechseln der Seiten sind neu geordnet und haben neue, zweifarbige Symbole.
 

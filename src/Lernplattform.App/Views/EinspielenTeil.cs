@@ -167,7 +167,7 @@ public sealed class EinspielenTeil
             {
                 try
                 {
-                    return Uebernahme.Uebernehmen(lernstand, sicherung.Daten, Zustand.Umbenennungen);
+                    return Uebernahme.Uebernehmen(lernstand, sicherung.Daten);
                 }
                 catch (Exception fehler) when (fehler is not UebernahmeAusnahme)
                 {

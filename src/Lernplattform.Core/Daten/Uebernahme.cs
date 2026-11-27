@@ -17,8 +17,7 @@ public enum UebernahmeQuelle
     /// <summary>Abgleich-Datei lernstand.json.gz (nur das Austauschformat 2, ohne Huelle und Pruefsumme).</summary>
     AbgleichDatei,
 
-    /// <summary>Datenbank fisi_lernplattform.db der Python-Linie (nur lesen).</summary>
-    AlteDatenbank,
+    // Welle A 1.18.0 (L0, Weisung P12-424 Nico 3a): die Quelle "Datenbank der alten App" (fisi_lernplattform.db) entfaellt
 }
 
 /// <summary>Warum eine Uebernahme nicht stattfindet (Code, keine Nutzertexte in Welle 1).</summary>
@@ -38,9 +37,6 @@ public enum UebernahmeFehler
 
     /// <summary>Abgleich-Datei beschaedigt (wie Python beim Abgleich).</summary>
     AbgleichDateiKaputt,
-
-    /// <summary>Alte Datenbank nicht lesbar.</summary>
-    DatenbankNichtLesbar,
 
     /// <summary>Quelle ist die eigene Datenbank.</summary>
     GleicheDatei,
@@ -120,7 +116,7 @@ public sealed record TabellenZahlen(string Tabelle, int Vorher, int Nachher, int
 /// <param name="Weg">W4: Eintraege (Tabelle, uid), die eine Loeschmarke entfernt oder nicht hereingelassen hat (Pythons stats.gone, „wegen einer Löschung entfernt“).</param>
 public sealed record UebernahmeBericht(UebernahmeQuelle Quelle, bool Vorschau, int Neu, int Uebernommen, int SchonVorhanden,
     int EntferntDurchLoeschmarke, int EntferntSonst, int NichtUebernommen, int Uebersprungen, int Abgelehnt,
-    int UngueltigeMarken, int ZukunftsMarken, int Umbenannt, IReadOnlyDictionary<string, string> MarkenNachher,
+    int UngueltigeMarken, int ZukunftsMarken, IReadOnlyDictionary<string, string> MarkenNachher,
     IReadOnlyList<TabellenZahlen> Tabellen, string? Sicherungsdatei, int UngueltigInDatei = 0, int Weg = 0);
 
 /// <summary>
@@ -129,49 +125,11 @@ public sealed record UebernahmeBericht(UebernahmeQuelle Quelle, bool Vorschau, i
 /// </summary>
 internal sealed record AbgleichModus(bool Mischbetrieb, DateTimeOffset? GitHubJetzt);
 
-/// <summary>Korrigierte Fragetexte (inhalte/umbenennungen.json, fisi_core.load_question_renames).</summary>
-public static class Umbenennungen
-{
-    /// <summary>(Tabelle, alter Text, neuer Text) in der Reihenfolge der Datei; bei Lesefehler leer.</summary>
-    public static IReadOnlyList<(string Tabelle, string Alt, string Neu)> Laden(Func<string, byte[]> lesen)
-    {
-        try
-        {
-            if (JsonNode.Parse(lesen("umbenennungen")) is not JsonObject daten)
-            {
-                return [];
-            }
-            var liste = new List<(string, string, string)>();
-            foreach (var (quelle, tabelle) in new[] { ("karte", "card_events"), ("quiz", "quiz_answers") })
-            {
-                if (daten[quelle] is JsonObject paare)
-                {
-                    foreach (var (alt, neu) in paare)
-                    {
-                        if (neu is JsonValue v && v.TryGetValue<string>(out var text))
-                        {
-                            liste.Add((tabelle, alt, text));
-                        }
-                    }
-                }
-            }
-            return liste;
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
-        {
-            return [];
-        }
-    }
-
-    public static IReadOnlyList<(string Tabelle, string Alt, string Neu)> Laden(string inhalteOrdner) =>
-        Laden(name => File.ReadAllBytes(Path.Combine(inhalteOrdner, name + ".json")));
-}
-
 /// <summary>
 /// Uebernahme des Lernstands der Python-Linie (Paket L3) wie "Sicherung zusammenfuehren"
 /// (fisi_sicherung.read_backup, merge_backup, fisi_sync.merge_into_local mit check_future):
 /// neue Eintraege kommen dazu, vorhandene bleiben (Kennung uid), Loeschmarken gelten wie
-/// in Python, Fragetexte werden nach umbenennungen.json korrigiert. Vor jeder Uebernahme
+/// in Python (Fragetexte bleiben, wie sie sind; seit A 1.18.0 ohne umbenennungen.json). Vor jeder Uebernahme
 /// entsteht automatisch eine Sicherung der C#-Datenbank; scheitert sie, wird nichts
 /// uebernommen. Alles in einer Transaktion: ganz oder gar nicht. Die Quelle wird nur gelesen.
 /// AlterLernstand.cs und SicherungsPruefung.cs bleiben unveraendert (nur die Pruefsumme wird genutzt).
@@ -224,13 +182,10 @@ public static partial class Uebernahme
 
     // -- Lesen ---------------------------------------------------------------
 
-    /// <summary>Datei lesen und pruefen (Sicherung oder Abgleich-Datei) bzw. alte Datenbank lesen. Schreibt nichts.</summary>
-    public static Austausch Lesen(UebernahmeQuelle quelle, string pfad) => (quelle switch
-    {
-        UebernahmeQuelle.Sicherung => LeseSicherung(LeseDatei(pfad, UebernahmeFehler.KeineSicherung)),
-        UebernahmeQuelle.AbgleichDatei => LeseAbgleichDatei(LeseDatei(pfad, UebernahmeFehler.AbgleichDateiKaputt)),
-        _ => LeseAlteDatenbank(pfad),
-    }).MitPfad(pfad);
+    /// <summary>Datei lesen und pruefen (Sicherung oder Abgleich-Datei). Schreibt nichts.</summary>
+    public static Austausch Lesen(UebernahmeQuelle quelle, string pfad) => (quelle == UebernahmeQuelle.Sicherung
+        ? LeseSicherung(LeseDatei(pfad, UebernahmeFehler.KeineSicherung))
+        : LeseAbgleichDatei(LeseDatei(pfad, UebernahmeFehler.AbgleichDateiKaputt))).MitPfad(pfad);
 
     private static byte[] LeseDatei(string pfad, UebernahmeFehler fehler)
     {
@@ -556,72 +511,6 @@ public static partial class Uebernahme
         catch (FormatException)
         {
             throw new UebernahmeAusnahme(UebernahmeFehler.AbgleichDateiKaputt);
-        }
-    }
-
-    /// <summary>
-    /// Alte Python-Datenbank wie export_local lesen: nur lesend geoeffnet (query_only), je Tabelle
-    /// SELECT uid, Spalten ORDER BY timestamp, id; Marken und Aufhebungen aus sync_meta.
-    /// Spalten, die Python beim Oeffnen nachtragen wuerde (optional), gelten als leer; Zeilen
-    /// ohne Kennung (uid) werden nicht uebernommen (Python 0.63.2 hat sie immer).
-    /// </summary>
-    public static Austausch LeseAlteDatenbank(string pfad)
-    {
-        if (!File.Exists(pfad))
-        {
-            throw new UebernahmeAusnahme(UebernahmeFehler.DatenbankNichtLesbar);
-        }
-        try
-        {
-            using var db = new SqliteConnection(new SqliteConnectionStringBuilder
-            {
-                DataSource = pfad,
-                Mode = SqliteOpenMode.ReadOnly,
-                Pooling = false,
-                DefaultTimeout = Lernstand.Wartezeit,
-            }.ToString());
-            db.Open();
-            Ausfuehren(db, null, "PRAGMA query_only = ON");
-            using var lesen = db.BeginTransaction(deferred: true);   // ein Lesestand fuer alles
-            var vorhanden = Abfrage(db, lesen, "SELECT name FROM sqlite_master WHERE type = 'table'").Select(z => (string)z[0]!).ToHashSet();
-            var tabellen = new Dictionary<string, IReadOnlyList<object?[]>>();
-            foreach (var (tabelle, spalten) in Tabellen)
-            {
-                if (!vorhanden.Contains(tabelle))
-                {
-                    tabellen[tabelle] = [];
-                    continue;
-                }
-                var da = Abfrage(db, lesen, $"PRAGMA table_info({tabelle})").Select(z => (string)z[1]!).ToHashSet();
-                var optional = Optional.GetValueOrDefault(tabelle, []);
-                if (spalten.Any(s => !da.Contains(s) && !optional.Contains(s)) || !da.Contains("id") || !da.Contains("timestamp") || !da.Contains("uid"))
-                {
-                    throw new UebernahmeAusnahme(UebernahmeFehler.DatenbankNichtLesbar);
-                }
-                var auswahl = string.Join(", ", new[] { "uid" }.Concat(spalten).Select(s => da.Contains(s) ? s : "NULL"));
-                tabellen[tabelle] = Abfrage(db, lesen, $"SELECT {auswahl} FROM {tabelle} ORDER BY timestamp, id");
-            }
-            var meta = vorhanden.Contains("sync_meta")
-                ? Abfrage(db, lesen, "SELECT key, value FROM sync_meta").Where(z => z[0] is string)
-                    .GroupBy(z => (string)z[0]!).ToDictionary(g => g.Key, g => g.Last()[1])
-                : [];
-            var marken = Loeschmarken.Schluessel.Where(k => Loeschmarken.Wahr(meta.GetValueOrDefault(k)))
-                .ToDictionary(k => k, k => meta[k]);
-            var aufhebungen = Loeschmarken.AufhebungenZusammen(
-                Loeschmarken.Schluessel.ToDictionary(k => k, k => meta.GetValueOrDefault(Loeschmarken.AufhebungPraefix + k)), null, true, null);
-            return new Austausch
-            {
-                Quelle = UebernahmeQuelle.AlteDatenbank,
-                MitSchreiber = true,    // export_local schreibt immer "schreiber"
-                Marken = marken,
-                Aufhebungen = aufhebungen.Count > 0 ? aufhebungen.ToDictionary(p => p.Key, p => (object?)p.Value) : null,
-                Spalten = Tabellen.ToDictionary(t => t.Tabelle, t => (IReadOnlyList<string>)t.Spalten),   // wie export_local
-                Tabellen = tabellen,
-            };
-        }
-        catch (SqliteException)
-        {
-            throw new UebernahmeAusnahme(UebernahmeFehler.DatenbankNichtLesbar);
         }
     }
 

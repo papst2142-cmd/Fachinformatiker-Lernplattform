@@ -155,7 +155,7 @@ public class LerninhalteNachladenTests(ITestOutputHelper ausgabe)
         // eine Pruefung mit Quelle ap2_<fr> wird gelesen, waehrend FISI gewaehlt ist (nicht geladen)
         var si = Start(Lernen, "si").Fuer("si");
         var soll = Voll(Lernen).Ap2SzenarienFuer(fr);
-        var klausur = new KlausurInhalte(si, Core.Daten.Umbenennungen.Laden(Pfade.Inhalte));
+        var klausur = new KlausurInhalte(si);
         var ist = klausur.Quelle("ap2_" + fr);
         Assert.Equal(330, soll.Count);
         Assert.Equal(Schluessel(soll), Schluessel(ist));

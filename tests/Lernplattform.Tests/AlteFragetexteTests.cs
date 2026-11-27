@@ -110,6 +110,8 @@ public class AlteFragetexteTests
         {
             { "fragen", new List<object?> { quiz[0].Alt, Heute, new PyObjekt { { "q", quiz[1].Alt } } } },
             { "antworten", new PyObjekt { { quiz[0].Alt, "A" }, { Heute, "B" } } },
+            // Z2 (Weisung P12-437): ein alter Text als Schluessel in optionen wird wie als Wert umgeschrieben
+            { "optionen", new PyObjekt { { quiz[3].Alt, new List<object?> { "a", "b" } } } },
             { "hinweis", "Text mit \"" + quiz[2].Alt + "\" mitten drin bleibt" },
         });
         Ausfuehren(pfad, "INSERT INTO pruefungen (timestamp, utc_offset, art, punkte, note, dauer, daten, uid) VALUES ('2026-10-04 10:00:00', 60, 'wiso', 50.0, '3', 60, $d, 'p1')",
@@ -166,6 +168,11 @@ public class AlteFragetexteTests
         Assert.Equal(quiz[0].Neu, p1["fragen"]![0]!.GetValue<string>());
         Assert.Equal(quiz[1].Neu, p1["fragen"]![2]!["q"]!.GetValue<string>());
         Assert.Equal("A", p1["antworten"]![quiz[0].Neu]!.GetValue<string>());
+        // Z2: Schluessel in antworten und optionen umgeschrieben, der alte Schluessel ist weg, der Wert bleibt
+        Assert.False(p1["antworten"]!.AsObject().ContainsKey(quiz[0].Alt));
+        Assert.Equal("B", p1["antworten"]![Heute]!.GetValue<string>());
+        Assert.Equal(["a", "b"], p1["optionen"]![quiz[3].Neu]!.AsArray().Select(o => o!.GetValue<string>()));
+        Assert.False(p1["optionen"]!.AsObject().ContainsKey(quiz[3].Alt));
         Assert.Contains(quiz[2].Alt, p1["hinweis"]!.GetValue<string>(), StringComparison.Ordinal);
         Assert.Equal(vorher.Single(z => z.Contains("|p2|", StringComparison.Ordinal)), nachher.Single(z => z.Contains("|p2|", StringComparison.Ordinal)));
 
@@ -242,5 +249,78 @@ public class AlteFragetexteTests
         var andere = new JsonObject { [LaufendePruefung.Schluessel] = new JsonObject { ["art"] = "konzeption", ["fragen"] = new JsonArray(quiz[0].Alt) } };
         Assert.False(AlteFragetexte.LaufendeUmschreiben(andere));
         Assert.Equal(quiz[0].Alt, andere[LaufendePruefung.Schluessel]!["fragen"]![0]!.GetValue<string>());
+    }
+
+    /// <summary>
+    /// Fuer Vergleiche mit Sollwerten von vor A 1.18.0: ersetzt in einem JSON-Text jeden ganzen Text, der als alter
+    /// Fragetext in alte_fragetexte.json steht, durch den heutigen (geschrieben wie PythonJson.Text).
+    /// </summary>
+    internal static string MitHeutigenTexten(string json)
+    {
+        foreach (var (_, alt, neu) in AlteFragetexte.Zuordnungen)
+        {
+            json = json.Replace(PythonJson.Text(alt), PythonJson.Text(neu), StringComparison.Ordinal);
+        }
+        return json;
+    }
+
+    /// <summary>Wie <see cref="MitHeutigenTexten(string)"/> fuer einen Stand aus den Sollwerten (als JSON-Text).</summary>
+    internal static string MitHeutigenTexten(System.Text.Json.JsonElement stand) =>
+        MitHeutigenTexten(JsonNode.Parse(stand.GetRawText()))!.ToJsonString();
+
+    /// <summary>
+    /// Wie der Start (AlteFragetexte) fuer Sollwerte von vor A 1.18.0: in einer Kopie wird jeder JSON-Text, der genau ein alter
+    /// Fragetext ist, zum heutigen, als Wert und als Schluessel (ein schon vorhandener heutiger Schluessel bleibt, wie
+    /// migrate_running); Zahlen und alles andere bleiben.
+    /// </summary>
+    internal static JsonNode? MitHeutigenTexten(JsonNode? knoten)
+    {
+        var neu = AlteFragetexte.Zuordnungen.GroupBy(z => z.Alt).ToDictionary(g => g.Key, g => g.First().Neu, StringComparer.Ordinal);
+        var kopie = knoten?.DeepClone();
+        return kopie is JsonValue w0 && w0.TryGetValue<string>(out var t0) && neu.TryGetValue(t0, out var e0) ? JsonValue.Create(e0) : Ersetzen(kopie);
+
+        JsonNode? Ersetzen(JsonNode? n)
+        {
+            switch (n)
+            {
+                case JsonObject o:
+                    foreach (var (k, v) in o.ToList())
+                    {
+                        if (v is JsonValue w && w.TryGetValue<string>(out var t) && neu.TryGetValue(t, out var ersatz))
+                        {
+                            o[k] = ersatz;
+                        }
+                        else
+                        {
+                            Ersetzen(v);
+                        }
+                    }
+                    foreach (var k in o.Select(p => p.Key).ToList())
+                    {
+                        if (neu.TryGetValue(k, out var nk) && !o.ContainsKey(nk))
+                        {
+                            var wert = o[k];
+                            var stelle = o.IndexOf(k);
+                            o.Remove(k);
+                            o.Insert(stelle, nk, wert);
+                        }
+                    }
+                    break;
+                case JsonArray a:
+                    for (var i = 0; i < a.Count; i++)
+                    {
+                        if (a[i] is JsonValue w && w.TryGetValue<string>(out var t) && neu.TryGetValue(t, out var ersatz))
+                        {
+                            a[i] = ersatz;
+                        }
+                        else
+                        {
+                            Ersetzen(a[i]);
+                        }
+                    }
+                    break;
+            }
+            return n;
+        }
     }
 }

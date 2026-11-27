@@ -212,7 +212,9 @@ public class Phase11FW5bTests
     [Fact]
     public void Quizfrage231_AlteNichtMehrGezogen_NeueAngehaengt_NummernBleiben()
     {
-        var datei = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, "quizfragen.json")))!.AsArray();
+        // A 1.18.0 (L0, Nico 1b): die alte Fassung ist geloescht (geloescht.json); dieser Test rechnet auf dem Stand vor L0
+        // (L0Vorher), der Teil nach L0 steht am Ende
+        var datei = JsonNode.Parse(L0Vorher.Datei("quizfragen"))!.AsArray();
         // die Datei bleibt nur angehaengt: die alte Fassung steht weiter an Stelle 231, die neue am Ende (6360)
         Assert.Equal(Alt231, datei[231]!["q"]!.GetValue<string>());
         // seit A 0.53.0 (Weisung P12-97) haengen danach 1 561 FISI-Fragen an: 6 361 + 1 561; seit A 0.53.1 (Weisung P12-106,
@@ -222,13 +224,13 @@ public class Phase11FW5bTests
         Assert.Equal(("ae", "ae_oop", "Fabrikmethode"), (neu["fachrichtung"]!.GetValue<string>(), neu["thema"]!.GetValue<string>(), neu["a"]!.GetValue<string>()));
         Assert.Contains("überschriebenen Methode erzeugeLeser()", neu["q"]!.GetValue<string>(), StringComparison.Ordinal);
 
-        var alle = Echt();
+        var alle = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), L0Vorher.Ordner());
         // fester Ausschluss: dieser Eintrag zuerst, Text gleich der Datei; danach nur die 127 aus Sammelliste 248
         // (47 Karten, 80 Fragen, alle hinter Stelle 6360, siehe LerninhalteTests.Grossschrift248_...)
         Assert.Equal(("quizfragen", 231, Alt231), alle.Ausschluss[0]);
         Assert.Equal(128, alle.Ausschluss.Count);
         Assert.All(alle.Ausschluss.Skip(1), a => Assert.True(a.Stelle > 6360 || a.Datei == "karteikarten", a.ToString()));
-        Assert.All(alle.Ausschluss, a => Assert.Equal(a.Frage, JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, a.Datei + ".json")))![a.Stelle]!["q"]!.GetValue<string>()));
+        Assert.All(alle.Ausschluss, a => Assert.Equal(a.Frage, JsonNode.Parse(L0Vorher.Datei(a.Datei))![a.Stelle]!["q"]!.GetValue<string>()));
         Assert.DoesNotContain(alle.Quizfragen, q => q.Frage == Alt231);
         Assert.Single(alle.Quizfragen, q => q.Frage == neu["q"]!.GetValue<string>());
         foreach (var fr in new[] { "si", "ae", "dpa", "dv" })
@@ -243,8 +245,8 @@ public class Phase11FW5bTests
         Assert.Equal(basis + 6361, alle.Quizfragen.Single(q => q.Frage == neu["q"]!.GetValue<string>()).Nummer);
 
         // Gegenprobe: ohne ausschluss.json waere die alte Fassung wieder dabei
-        var ohne = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte),
-            name => name != Lerninhalte.AusschlussDatei && Path.Combine(Lernen, name + ".json") is var pfad && File.Exists(pfad) ? File.ReadAllBytes(pfad) : null);
+        var vorher = L0Vorher.Ordner();
+        var ohne = Lerninhalte.MitLernen(Lerninhalte.Laden(Pfade.Inhalte), name => name != Lerninhalte.AusschlussDatei ? vorher(name) : null);
         Assert.Single(ohne.Quizfragen, q => q.Frage == Alt231);
         Assert.Equal(alle.Quizfragen.Count + 1 + 80, ohne.Quizfragen.Count);
         // steht an der Stelle ein anderer Text, wirkt der Ausschluss nicht
@@ -252,6 +254,18 @@ public class Phase11FW5bTests
         Assert.False(Lerninhalte.Ausgeschlossen(alle.Ausschluss, "quizfragen", 231, anders));
         Assert.False(Lerninhalte.Ausgeschlossen(alle.Ausschluss, "quizfragen", 230, datei[231]!.AsObject()));
         Assert.True(Lerninhalte.Ausgeschlossen(alle.Ausschluss, "quizfragen", 231, datei[231]!.AsObject()));
+
+        // nach L0: die alte Fassung ist aus der Datei geloescht und steht in der Loeschliste, die neue steht an Stelle 6359
+        var heute = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Lernen, "quizfragen.json")))!.AsArray();
+        Assert.Single(LerninhalteTests.GeloeschtListe(), g => g is { Datei: "quizfragen", Stelle: 231 } && g.Frage == Alt231);
+        Assert.DoesNotContain(heute, e => (string?)e!["q"] == Alt231);
+        Assert.Equal(6359, L0Vorher.StelleHeute("quizfragen", 6360));
+        Assert.Equal(neu["q"]!.GetValue<string>(), heute[6359]!["q"]!.GetValue<string>());
+        var jetzt = Echt();
+        Assert.Empty(jetzt.Ausschluss);
+        Assert.DoesNotContain(jetzt.Quizfragen, q => q.Frage == Alt231);
+        Assert.Equal(basis + 6360, jetzt.Quizfragen.Single(q => q.Frage == neu["q"]!.GetValue<string>()).Nummer);
+        Assert.Equal(alle.Quizfragen.Count, jetzt.Quizfragen.Count);
     }
 
     // -- 24 Hilfe-Text --------------------------------------------------------------------------

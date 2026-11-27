@@ -8,26 +8,24 @@ namespace Lernplattform.Core.Daten;
 /// <summary>
 /// Phase 2, L5: Teile des Dialogs "Lernstand übernehmen" ohne Oberflaeche: Quelle am Inhalt
 /// erkennen, gewaehlte Datei lesen (auch ohne Dateipfad, z. B. Android) und die Zeilen der
-/// Vorschau einer Sicherung (fisi_sicherung.backup_summary).
+/// Vorschau einer Sicherung (fisi_sicherung.backup_summary). Seit A 1.18.0 (L0, Nico 3a) ohne
+/// die Datenbank der alten App: eine SQLite-Datei ist keine Sicherung.
 /// </summary>
 public static class UebernahmeAblauf
 {
-    private static readonly byte[] SqliteKopf = "SQLite format 3\0"u8.ToArray();
-
-    /// <summary>Name der Arbeitskopie einer alten Datenbank ohne Dateipfad (Datenordner, wird sofort geloescht).</summary>
+    /// <summary>
+    /// Name der Arbeitskopie einer alten Datenbank ohne Dateipfad bis A 1.17.0 (Datenordner); wird seit A 1.18.0 nicht mehr
+    /// angelegt, ein Rest einer abgebrochenen Uebernahme wird beim Oeffnen des Dialogs weiter entfernt.
+    /// </summary>
     public const string ArbeitsKopie = "uebernahme_quelle.tmp";
 
     /// <summary>
-    /// Quelle am Inhalt erkennen, nicht an der Endung: SQLite-Kopf = alte Datenbank, gzip mit
-    /// JSON-Objekt und Feld "art" = Sicherung, gzip mit JSON-Objekt ohne "art" = Abgleich-Datei.
-    /// Alles andere (fremd, nicht entpackbar, kein Objekt): null (KeineSicherung).
+    /// Quelle am Inhalt erkennen, nicht an der Endung: gzip mit JSON-Objekt und Feld "art" = Sicherung,
+    /// gzip mit JSON-Objekt ohne "art" = Abgleich-Datei. Alles andere (fremd, nicht entpackbar, kein Objekt,
+    /// auch eine Datenbank): null (KeineSicherung).
     /// </summary>
     public static UebernahmeQuelle? Erkennen(byte[] inhalt)
     {
-        if (inhalt.AsSpan().StartsWith(SqliteKopf))
-        {
-            return UebernahmeQuelle.AlteDatenbank;
-        }
         if (inhalt.Length < 2 || inhalt[0] != 0x1F || inhalt[1] != 0x8B)
         {
             return null;
@@ -49,52 +47,11 @@ public static class UebernahmeAblauf
 
     /// <summary>
     /// Gewaehlte Datei lesen und pruefen. lokalerPfad: Pfad, wenn das System einen liefert
-    /// (dann prueft die Uebernahme auch "eigene Datei gewaehlt"). Eine alte Datenbank ohne
-    /// Pfad wird kurz als Datei mit Rechten nur fuer den Benutzer in den Datenordner kopiert,
-    /// gelesen und sofort wieder geloescht. Schreibt nichts in den Lernstand.
+    /// (dann prueft die Uebernahme auch "eigene Datei gewaehlt"). Schreibt nichts in den Lernstand.
     /// </summary>
-    public static Austausch Lesen(byte[] inhalt, string? lokalerPfad, string arbeitsordner)
+    public static Austausch Lesen(byte[] inhalt, string? lokalerPfad)
     {
         var quelle = Erkennen(inhalt) ?? throw new UebernahmeAusnahme(UebernahmeFehler.KeineSicherung);
-        if (quelle == UebernahmeQuelle.AlteDatenbank)
-        {
-            if (lokalerPfad is not null && File.Exists(lokalerPfad))
-            {
-                return Uebernahme.LeseAlteDatenbank(lokalerPfad).MitPfad(lokalerPfad);
-            }
-            var kopie = Path.Combine(arbeitsordner, ArbeitsKopie);
-            try
-            {
-                Directory.CreateDirectory(arbeitsordner);
-                var optionen = new FileStreamOptions { Mode = FileMode.Create, Access = FileAccess.Write };
-                if (!OperatingSystem.IsWindows())
-                {
-                    optionen.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-                }
-                using (var datei = new FileStream(kopie, optionen))
-                {
-                    datei.Write(inhalt);
-                }
-                return Uebernahme.LeseAlteDatenbank(kopie);
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-            {
-                throw new UebernahmeAusnahme(UebernahmeFehler.DatenbankNichtLesbar);
-            }
-            finally
-            {
-                foreach (var rest in new[] { kopie, kopie + "-journal", kopie + "-wal", kopie + "-shm" })
-                {
-                    try
-                    {
-                        File.Delete(rest);
-                    }
-                    catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-                    {
-                    }
-                }
-            }
-        }
         var daten = quelle == UebernahmeQuelle.Sicherung ? Uebernahme.LeseSicherung(inhalt) : Uebernahme.LeseAbgleichDatei(inhalt);
         return lokalerPfad is null ? daten : daten.MitPfad(lokalerPfad);
     }

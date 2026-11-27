@@ -54,7 +54,7 @@ public class AusbildungTests
         public void Abgleichen(GitHubAttrappe attrappe)
         {
             using var netz = new GitHubZugang(attrappe.Basis, TimeSpan.FromSeconds(10));
-            Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, KeineUmbenennungen, Uhr);
+            Abgleich.Ausfuehren(Lernstand, Einstellungen, Name, netz, Uhr);
         }
 
         public List<object?[]> Zeilen() =>
@@ -74,7 +74,7 @@ public class AusbildungTests
     {
         var datei = Path.Combine(g.Ordner, "einspielen" + Ruecksicherung.Endung);
         File.WriteAllBytes(datei, sicherung);
-        return Uebernahme.Uebernehmen(g.Lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, datei), KeineUmbenennungen, g.Uhr);
+        return Uebernahme.Uebernehmen(g.Lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, datei), g.Uhr);
     }
 
     private static byte[] Sicherung(Geraet g) => Ruecksicherung.Erstellen(g.Lernstand, [], "A 0.9.0", g.Name, new DateTime(2026, 10, 22, 12, 0, 0));
@@ -227,14 +227,10 @@ public class AusbildungTests
         Assert.True(Ausbildung.Waehlen(g.Schreiber, "dv"));
         var python = Path.Combine(g.Ordner, "python" + Ruecksicherung.Endung);
         File.Copy(Pfade.Vergleich("sicherung_test.json.gz"), python);
-        var bericht = Uebernahme.Uebernehmen(g.Lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, python), KeineUmbenennungen, g.Uhr);
+        var bericht = Uebernahme.Uebernehmen(g.Lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, python), g.Uhr);
         Assert.True(bericht.Neu > 0);
         Assert.Equal("dv", Ausbildung.Aktuell(g.Schreiber));
-
-        var alt = UebernahmeTests.BaueDatenbank(VergleichsHilfe.Lade("uebernahme.json").GetProperty("quelle_db"),
-            Path.Combine(Directory.CreateDirectory(Path.Combine(g.Ordner, "alt")).FullName, "fisi_lernplattform.db"));
-        Uebernahme.Uebernehmen(g.Lernstand, Uebernahme.Lesen(UebernahmeQuelle.AlteDatenbank, alt), KeineUmbenennungen, g.Uhr);
-        Assert.Equal("dv", Ausbildung.Aktuell(g.Schreiber));
+        // Der Teil "alte Datenbank" entfiel mit A 1.18.0 (die Python-Datenbank ist keine Quelle mehr, Nico 3a)
         Assert.Single(g.Zeilen());
     }
 
@@ -342,7 +338,7 @@ public class AusbildungTests
         {
             var datei = Path.Combine(leer.Ordner, Guid.NewGuid().ToString("N") + Ruecksicherung.Endung);
             File.WriteAllBytes(datei, s);
-            return Uebernahme.Vorschau(leer.Lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, datei), KeineUmbenennungen, leer.Uhr).Neu;
+            return Uebernahme.Vorschau(leer.Lernstand, Uebernahme.Lesen(UebernahmeQuelle.Sicherung, datei), leer.Uhr).Neu;
         }
         Assert.Equal(Neu(sicherungOhne) + 1, Neu(sicherungMit));
     }

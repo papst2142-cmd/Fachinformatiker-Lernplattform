@@ -411,8 +411,8 @@ public sealed class Lernstand
                 Ausfuehren(sql);
             }
             // Nachruesten wie Python _migrate (Aufbau). Das Nachtragen fehlender uid-Werte
-            // alter Zeilen und die Fragetext-Umbenennungen gehoeren zur Uebernahme des alten
-            // Lernstands (Phase 2); eine neue Datenbank hat keine solchen Zeilen.
+            // alter Zeilen gehoerte zur Uebernahme des alten Lernstands (Phase 2), alte Fragetexte
+            // schreibt AlteFragetexte beim Start um (A 1.18.0); eine neue Datenbank hat keine solchen Zeilen.
             foreach (var tabelle in AbgleichTabellen)
             {
                 if (!Spalten(tabelle).Contains("uid"))

@@ -80,7 +80,7 @@ public class EchtInhalteAePaareTests
         Assert.All(EchtInhalteAeTests.Ae, k => Assert.NotNull(bestand.Satz(k)));
         Assert.All(EchtInhalteAeTests.Ae, k => Assert.True(bestand.IstAusgeschlossen(k)));
         // Gegenprobe: ohne Ausschluss boete die App alle zehn FIAE-Saetze je Bereich an
-        var ohne = EchtSaetze.Laden(File.ReadAllBytes(EchtTestDatei.Datei));
+        var ohne = EchtSaetze.Laden(EchtTestDatei.Vorher);
         Assert.Equal(10, ohne.Fuer(EchtSaetze.B1, "ae").Count);
         Assert.Empty(ohne.Ausgeschlossen);
     }
@@ -89,7 +89,9 @@ public class EchtInhalteAePaareTests
     public void AE_Ausschluss_WirktNurMitStelleUndKennung()
     {
         var ordner = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
+        // A 1.18.0: auf der Datei vor L0 (dort steht ae_b1_01 an Stelle 17; der Leseweg gilt weiter fuer aeltere Pakete)
         byte[]? Lesen(string n, string? ausschluss) => n == "ausschluss" && ausschluss is not null ? Encoding.UTF8.GetBytes(ausschluss)
+            : n == EchtSaetze.DateiName ? EchtTestDatei.Vorher
             : File.Exists(Path.Combine(ordner, n + ".json")) ? File.ReadAllBytes(Path.Combine(ordner, n + ".json")) : null;
         string Eintrag(int stelle, string kennung) => "{\"eintraege\": [{\"datei\": \"pruefungssaetze\", \"stelle\": "
             + stelle.ToString(CultureInfo.InvariantCulture) + ", \"kennung\": \"" + kennung + "\"}]}";
@@ -104,7 +106,7 @@ public class EchtInhalteAePaareTests
     [Fact]
     public void AE_NurAngehaengt_DateiDavorBytegleich_Format3()
     {
-        var echt = File.ReadAllBytes(EchtTestDatei.Datei);
+        var echt = EchtTestDatei.Vorher;
         // A 1.8.0 (Weisung P12-372): die Datei traegt Format 4 (neue Fassungen), seit A 1.12.0 Format 5 (Struktogramm, P12-390);
         // geprueft wird weiter der Teil bis A 0.93.0
         Assert.Equal(5, (int)JsonNode.Parse(echt)!["format"]!);
@@ -331,7 +333,7 @@ public class EchtInhalteAePaareTests
     // ---- (3) Ladepruefung der Paar-Regeln: je Regel ein verdorbenes Paar -----------------------------------------------------
 
     /// <summary>Ein Satz des Paars 06 aus der eingebauten Datei als JSON.</summary>
-    private static JsonObject Roh(string kennung) => JsonNode.Parse(File.ReadAllBytes(EchtTestDatei.Datei))!["saetze"]!.AsArray()
+    private static JsonObject Roh(string kennung) => JsonNode.Parse(EchtTestDatei.Vorher)!["saetze"]!.AsArray()
         .Select(s => s!.AsObject()).First(s => (string?)s["kennung"] == kennung).DeepClone().AsObject();
 
     private static EchtBestand LadenPaar(JsonObject b1, JsonObject b2, int format = 3) => EchtSaetze.Laden(Encoding.UTF8.GetBytes(
@@ -503,7 +505,7 @@ public class EchtInhalteAePaareTests
             werte = neu;
             return true;
         }
-        var ohneAusschluss = EchtSaetze.Laden(File.ReadAllBytes(EchtTestDatei.Datei));
+        var ohneAusschluss = EchtSaetze.Laden(EchtTestDatei.Vorher);
         var art = EchtArten.Art(Fachrichtung.Nach("ae"), EchtSaetze.B1);
         // vor dem Update: Lauf des alten Satzes ae_b1_01 begonnen und eine Antwort gespeichert
         var vorher = new EchtAblauf(() => ohneAusschluss, new EchtAblage(() => werte.DeepClone().AsObject(), Aendern), () => schreiber, () => jetzt, KlausurTests.Berlin);
@@ -539,7 +541,7 @@ public class EchtInhalteAePaareTests
     {
         LadeTeile.Zuruecksetzen();
         Assert.Equal(0, LadeTeile.DateiMs);
-        var bytes = LadeTeile.Datei(() => File.ReadAllBytes(EchtTestDatei.Datei));
+        var bytes = LadeTeile.Datei(() => EchtTestDatei.Vorher);
         var json = LadeTeile.Json(() => JsonNode.Parse(bytes));
         Assert.NotNull(json);
         Assert.True(LadeTeile.DateiMs > 0 && LadeTeile.JsonMs > 0);
@@ -555,7 +557,7 @@ public class EchtInhalteAePaareTests
     {
         // Welle A 0.97.0 (Weisung P12-312 Punkt 6, E1): Arbeit im Hintergrund zaehlt nur bei "alle Threads"
         LadeTeile.Zuruecksetzen();
-        var bytes = LadeTeile.Datei(() => File.ReadAllBytes(EchtTestDatei.Datei));
+        var bytes = LadeTeile.Datei(() => EchtTestDatei.Vorher);
         // eigener Faden (Task.Wait koennte die Aufgabe im wartenden Faden ausfuehren)
         var faden = new Thread(() => LadeTeile.Json(() => JsonNode.Parse(bytes)));
         faden.Start();

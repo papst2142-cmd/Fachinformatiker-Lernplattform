@@ -38,8 +38,7 @@ public static partial class Uebernahme
     /// Vorschau: dieselbe Rechnung auf einer Kopie der Datenbank im Arbeitsspeicher
     /// (keine Datei, auch nicht im Temp-Ordner; Auflage P2-3). Die eigene Datenbank wird nur gelesen.
     /// </summary>
-    public static UebernahmeBericht Vorschau(Lernstand ziel, Austausch daten,
-        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr? uhr = null)
+    public static UebernahmeBericht Vorschau(Lernstand ziel, Austausch daten, Uhr? uhr = null)
     {
         Pruefen(ziel, daten);
         using var sperre = Vorgaenge.Sperren();   // W4: nicht neben Abgleich oder Ruecksicherung
@@ -58,7 +57,7 @@ public static partial class Uebernahme
                 quelle.BackupDatabase(db);
             }
             using var tx = db.BeginTransaction();
-            var bericht = Zusammenfuehren(db, tx, daten, umbenennungen, uhr ?? Uhr.System, true);
+            var bericht = Zusammenfuehren(db, tx, daten, uhr ?? Uhr.System, true);
             tx.Rollback();
             return bericht;
         }
@@ -79,7 +78,7 @@ public static partial class Uebernahme
     /// </summary>
     /// <param name="sicherungsordner">Vorgabe: Ordner "sicherungen" neben der Datenbank.</param>
     public static UebernahmeBericht Uebernehmen(Lernstand ziel, Austausch daten,
-        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr? uhr = null, string? sicherungsordner = null)
+        Uhr? uhr = null, string? sicherungsordner = null)
     {
         uhr ??= Uhr.System;
         Pruefen(ziel, daten);
@@ -90,7 +89,7 @@ public static partial class Uebernahme
         {
             using var db = ziel.Verbindung();
             using var tx = db.BeginTransaction();
-            var bericht = Zusammenfuehren(db, tx, daten, umbenennungen, uhr, false);
+            var bericht = Zusammenfuehren(db, tx, daten, uhr, false);
             tx.Commit();
             return bericht with { Sicherungsdatei = sicherung };
         }
@@ -185,7 +184,7 @@ public static partial class Uebernahme
     /// Weg, die der Abgleich ueber seine Versuche vereinigt wie Pythons stats.gone).
     /// </summary>
     internal static UebernahmeBericht Zusammenfuehren(SqliteConnection db, SqliteTransaction tx, Austausch daten,
-        IReadOnlyList<(string Tabelle, string Alt, string Neu)> umbenennungen, Uhr uhr, bool vorschau, AbgleichModus? abgleich = null,
+        Uhr uhr, bool vorschau, AbgleichModus? abgleich = null,
         HashSet<(string, object?)>? wegSammeln = null)
     {
         // Lokaler Stand wie export_local (Marken, Aufhebungen) und _mixed_recent
@@ -341,12 +340,8 @@ public static partial class Uebernahme
             + " AND (neu.timestamp > abschlussprojekt.timestamp"
             + "  OR (neu.timestamp = abschlussprojekt.timestamp"
             + "      AND neu.uid > abschlussprojekt.uid)))");
-        // apply_question_renames: alte Fragetexte auf die neuen (uid und Zeit bleiben)
-        var umbenannt = 0;
-        foreach (var (tabelle, alt, neu) in umbenennungen)
-        {
-            umbenannt += Ausfuehren(db, tx, $"UPDATE {tabelle} SET question = $0 WHERE question = $1", neu, alt);
-        }
+        // Welle A 1.18.0 (L0, Weisung P12-424 Nico 2b): keine Fragetext-Umbenennungen mehr (apply_question_renames entfaellt);
+        // alte Texte schreibt AlteFragetexte beim naechsten Start um
 
         wegSammeln?.UnionWith(weg);
         var nachher = new HashSet<(string, object?)>();
@@ -376,7 +371,6 @@ public static partial class Uebernahme
             Abgelehnt: tabellenZahlen.Sum(t => t.Abgelehnt),
             UngueltigeMarken: ungueltig,
             ZukunftsMarken: zukunft,
-            Umbenannt: umbenannt,
             MarkenNachher: markenNachher,
             Tabellen: tabellenZahlen,
             Sicherungsdatei: null,

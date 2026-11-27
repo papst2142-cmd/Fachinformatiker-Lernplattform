@@ -60,7 +60,7 @@ public class ProjektSicherungTests
         public bool OhneText(string projekt) => Zeilen(projekt).All(z => z.Wert == "" || (z.Feld == "_geloescht" && z.Wert == "1"));
 
         public void Uebernehmen(Austausch daten) =>
-            Uebernahme.Uebernehmen(Lernstand, daten, Umbenennungen.Laden(Pfade.Inhalte), null, Path.Combine(Ordner, "sicherungen"));
+            Uebernahme.Uebernehmen(Lernstand, daten, null, Path.Combine(Ordner, "sicherungen"));
     }
 
     private static string Spaeter(string stempel, double stunden) =>
@@ -78,37 +78,32 @@ public class ProjektSicherungTests
         return Encoding.UTF8.GetString(aus.ToArray());
     }
 
-    /// <summary>E10: Sicherung bzw. alte Datenbank mit spaeterem Text eines hier geloeschten Projekts zusammenfuehren.</summary>
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void E10_GeloeschtesProjektBleibtOhneText(bool sicherung)
+    /// <summary>E10: Sicherung mit spaeterem Text eines hier geloeschten Projekts zusammenfuehren
+    /// (der Fall „alte Datenbank“ entfiel mit A 1.18.0, die Python-Datenbank ist keine Quelle mehr).</summary>
+    [Fact]
+    public void E10_GeloeschtesProjektBleibtOhneText()
     {
         using var ziel = new Db();
         var projekt = ziel.Projekt();
         Assert.True(Abschlussprojekt.Loeschen(ziel.Schreiber, projekt));
         using var quelle = new Db();
         quelle.Zeile("fremd-e10", Spaeter(ziel.Loeschzeit(projekt), 2), projekt, "ziel", Geheim + " aus Sicherung");
-        ziel.Uebernehmen(sicherung ? Uebernahme.LeseSicherung(Sicherung(quelle.Lernstand))
-            : Uebernahme.LeseAlteDatenbank(quelle.Lernstand.Pfad));
+        ziel.Uebernehmen(Uebernahme.LeseSicherung(Sicherung(quelle.Lernstand)));
         Assert.True(ziel.OhneText(projekt), string.Join("; ", ziel.Zeilen(projekt)));
         Assert.False(Abschlussprojekt.Projekte(ziel.Schreiber.ProjektFelder()).ContainsKey(projekt));
     }
 
     /// <summary>E10 umgekehrt: die Quelle hat geloescht, das Ziel haelt das Projekt noch.</summary>
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void E10_LoeschungAusDerQuelleGilt(bool sicherung)
+    [Fact]
+    public void E10_LoeschungAusDerQuelleGilt()
     {
         using var quelle = new Db();
         var projekt = quelle.Projekt();
         using var ziel = new Db();
-        ziel.Uebernehmen(Uebernahme.LeseAlteDatenbank(quelle.Lernstand.Pfad));
+        ziel.Uebernehmen(Uebernahme.LeseSicherung(Sicherung(quelle.Lernstand)));
         Assert.True(Abschlussprojekt.Projekte(ziel.Schreiber.ProjektFelder()).ContainsKey(projekt));
         Assert.True(Abschlussprojekt.Loeschen(quelle.Schreiber, projekt));
-        ziel.Uebernehmen(sicherung ? Uebernahme.LeseSicherung(Sicherung(quelle.Lernstand))
-            : Uebernahme.LeseAlteDatenbank(quelle.Lernstand.Pfad));
+        ziel.Uebernehmen(Uebernahme.LeseSicherung(Sicherung(quelle.Lernstand)));
         Assert.True(ziel.OhneText(projekt), string.Join("; ", ziel.Zeilen(projekt)));
         Assert.Empty(Abschlussprojekt.Projekte(ziel.Schreiber.ProjektFelder()));
     }
@@ -135,7 +130,7 @@ public class ProjektSicherungTests
         Assert.True(Abschlussprojekt.Loeschen(ziel.Schreiber, projekt));
         using var quelle = new Db();
         quelle.Zeile("fremd-e12", Spaeter(ziel.Loeschzeit(projekt), 2), projekt, "ausgangslage", Geheim + " spaeter");
-        ziel.Uebernehmen(Uebernahme.LeseAlteDatenbank(quelle.Lernstand.Pfad));
+        ziel.Uebernehmen(Uebernahme.LeseSicherung(Sicherung(quelle.Lernstand)));
         using (var db = ziel.Lernstand.Verbindung())
         {
             Assert.DoesNotContain(Geheim, PythonJson.Text(Ruecksicherung.Austausch(db, null)), StringComparison.Ordinal);

@@ -9,23 +9,24 @@ namespace Lernplattform.Tests;
 
 /// <summary>
 /// Phase 2, L3 "Uebernahme" (Variante b, Nico P2-2): Zusammenfuehren wie Pythons
-/// "Sicherung zusammenfuehren" (G20) aus Sicherung, Abgleich-Datei und alter Python-Datenbank,
-/// mit Vorschau und automatischer Sicherung. Nur synthetische Daten (A3).
+/// "Sicherung zusammenfuehren" (G20) aus Sicherung und Abgleich-Datei (die alte Python-Datenbank ist
+/// seit A 1.18.0 keine Quelle mehr, Nico 3a), mit Vorschau und automatischer Sicherung. Nur synthetische Daten (A3).
 /// Pflichttests: zweite Uebernahme ohne neue Zeilen, Vorschau aendert nichts und nennt die
 /// Loeschmarken-Zahl, Sicherung scheitert = keine Uebernahme, Absturz mitten in der
-/// Uebernahme, nur lesen, gleiche Datei, Python-Datenordner bleibt unveraendert.
+/// Uebernahme, nur lesen, gleiche Datei.
 /// </summary>
 public class UebernahmeTests
 {
     private static readonly JsonElement G20 = VergleichsHilfe.Lade("uebernahme.json");
-    private static readonly IReadOnlyList<(string Tabelle, string Alt, string Neu)> Umbenennungen = Core.Daten.Umbenennungen.Laden(Pfade.Inhalte);
 
     private static Uhr Uhr => SpeichernTests.FesteUhr(G20.GetProperty("jetzt_utc").GetString()!);
 
     public static TheoryData<string> Faelle()
     {
         var daten = new TheoryData<string>();
-        foreach (var fall in G20.GetProperty("faelle").EnumerateArray())
+        // Die Faelle mit Quelle "e" (alte Python-Datenbank) rechnet C# seit A 1.18.0 nicht mehr (Nico 3a); G20 bleibt
+        // unveraendert, weil quelle_db weiter als gefuellter Test-Lernstand dient (LoeschenTests, G40).
+        foreach (var fall in G20.GetProperty("faelle").EnumerateArray().Where(f => f.GetProperty("quelle").GetString() != "e"))
         {
             daten.Add(fall.GetProperty("name").GetString()!);
         }
@@ -66,7 +67,14 @@ public class UebernahmeTests
         return ausgabe.ToArray();
     }
 
-    /// <summary>Datei der Quelle wie im Erzeuger: a/b/c Sicherung, d Abgleich-Datei, e alte Datenbank.</summary>
+    /// <summary>
+    /// Wie der naechste Programmstart (A 1.18.0, L0): alte Fragetexte schreibt nicht mehr die Uebernahme um,
+    /// sondern der Start (<see cref="AlteFragetexte"/>). G20 zeigt den Stand nach Pythons apply_question_renames;
+    /// Uebernahme plus Start muss genau diesen Stand ergeben.
+    /// </summary>
+    internal static void WieNaechsterStart(string pfad) => AlteFragetexte.Ausfuehren(new Lernstand(pfad), Uhr);
+
+    /// <summary>Datei der Quelle wie im Erzeuger: a/b/c Sicherung, d Abgleich-Datei (e alte Datenbank entfiel mit A 1.18.0).</summary>
     private static Austausch Quelle(string quelle, string ordner)
     {
         switch (quelle)
@@ -80,12 +88,7 @@ public class UebernahmeTests
                 File.WriteAllBytes(abgleich, Gzip(G20.GetProperty("dateien").GetProperty("d").GetString()!));
                 return Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, abgleich);
             default:
-                var alt = Path.Combine(Directory.CreateDirectory(Path.Combine(ordner, "python")).FullName, "fisi_lernplattform.db");
-                if (!File.Exists(alt))
-                {
-                    BaueDatenbank(G20.GetProperty("quelle_db"), alt);
-                }
-                return Uebernahme.Lesen(UebernahmeQuelle.AlteDatenbank, alt);
+                throw new ArgumentException(quelle);
         }
     }
 
@@ -99,29 +102,6 @@ public class UebernahmeTests
             _ = new Lernstand(pfad);    // Oeffnen aendert nichts
             Assert.Equal(VergleichsHilfe.Stand(ziel.Value), VergleichsHilfe.Stand(pfad, ziel.Value));
         }
-        var quelle = BaueDatenbank(G20.GetProperty("quelle_db"), Path.Combine(ordner.Pfad, "quelle.db"));
-        Assert.Equal(VergleichsHilfe.Stand(G20.GetProperty("quelle_db")), VergleichsHilfe.Stand(quelle, G20.GetProperty("quelle_db")));
-    }
-
-    /// <summary>Die alte Datenbank wird gelesen wie Pythons export_local (gleicher Inhalt wie austausch_e).</summary>
-    [Fact]
-    public void AlteDatenbankWieExportLocal()
-    {
-        using var ordner = new TempOrdner();
-        var daten = Quelle("e", ordner.Pfad);
-        var erwartet = G20.GetProperty("austausch_e");
-        Assert.True(daten.MitSchreiber);
-        foreach (var tabelle in erwartet.GetProperty("tables").EnumerateObject())
-        {
-            Assert.Equal(erwartet.GetProperty("columns").GetProperty(tabelle.Name).EnumerateArray().Select(s => s.GetString()!), daten.Spalten.GetValueOrDefault(tabelle.Name, []));
-            Assert.Equal(tabelle.Value.EnumerateArray().Select(VergleichsHilfe.Zeile).ToList(),
-                daten.Tabellen.GetValueOrDefault(tabelle.Name, []).Select(z => VergleichsHilfe.Zeile(z)).ToList());
-        }
-        foreach (var marke in erwartet.GetProperty("markers").EnumerateObject())
-        {
-            Assert.Equal(VergleichsHilfe.Text(marke.Value), VergleichsHilfe.Text(daten.Marken[marke.Name]));
-        }
-        Assert.Equal(erwartet.GetProperty("markers").EnumerateObject().Count(), daten.Marken.Count);
     }
 
     [Theory]
@@ -136,12 +116,14 @@ public class UebernahmeTests
         if (fall.GetProperty("start").ValueKind != JsonValueKind.Null)
         {
             // zweimal: erst der Vorgaenger-Fall, dann dieselbe Datei noch einmal
-            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr);
+            WieNaechsterStart(pfad);
             Assert.Equal(VergleichsHilfe.Stand(Fall(fall.GetProperty("start").GetString()!).GetProperty("nachher")),
                 VergleichsHilfe.Stand(pfad, fall.GetProperty("nachher")));
         }
-        var vorschau = Uebernahme.Vorschau(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
-        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+        var vorschau = Uebernahme.Vorschau(new Lernstand(pfad), quelle, Uhr);
+        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr);
+        WieNaechsterStart(pfad);
         var erwartet = VergleichsHilfe.Stand(fall.GetProperty("nachher"));
         var ist = VergleichsHilfe.Stand(pfad, fall.GetProperty("nachher"));
         Assert.True(erwartet.SequenceEqual(ist), VergleichsHilfe.Unterschied(erwartet, ist));
@@ -182,10 +164,10 @@ public class UebernahmeTests
         var vorherStand = G20.GetProperty("ziele").GetProperty(fall.GetProperty("ziel").GetString()!);
         if (fall.GetProperty("start").ValueKind != JsonValueKind.Null)
         {
-            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr);
             vorherStand = Fall(fall.GetProperty("start").GetString()!).GetProperty("nachher");
         }
-        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr);
 
         // Neue Kennungen im Stand nachher (G20 aus Python), ohne Platz-Zeilen des Spiels
         var vorher = Kennungen(vorherStand);
@@ -255,12 +237,12 @@ public class UebernahmeTests
     {
         using var ordner = new TempOrdner();
         var pfad = BaueDatenbank(G20.GetProperty("ziele").GetProperty("gefuellt"), Path.Combine(ordner.Pfad, Lernstand.DateiName));
-        foreach (var q in new[] { "a", "d", "e" })
+        foreach (var q in new[] { "a", "d" })
         {
             var quelle = Quelle(q, ordner.Pfad);
-            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+            Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr);
             var zeilen = Zeilen(pfad);
-            var zweite = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+            var zweite = Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr);
             Assert.Equal(0, zweite.Neu);
             Assert.Equal(zeilen, Zeilen(pfad));
         }
@@ -287,7 +269,7 @@ public class UebernahmeTests
         var quelle = Quelle("a", ordner.Pfad);
         var vorher = Sha(pfad);
         var dateien = Dateien(daten);
-        var vorschau = Uebernahme.Vorschau(new Lernstand(pfad), quelle, Umbenennungen, Uhr);
+        var vorschau = Uebernahme.Vorschau(new Lernstand(pfad), quelle, Uhr);
         Assert.True(vorschau.Vorschau);
         Assert.Equal(vorher, Sha(pfad));
         Assert.Equal(dateien, Dateien(daten));
@@ -307,12 +289,12 @@ public class UebernahmeTests
         var daten = Directory.CreateDirectory(Path.Combine(ordner.Pfad, "daten")).FullName;
         var pfad = BaueDatenbank(G20.GetProperty("ziele").GetProperty("gefuellt"), Path.Combine(daten, Lernstand.DateiName));
         var vorherStand = VergleichsHilfe.Stand(G20.GetProperty("ziele").GetProperty("gefuellt"));
-        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), Quelle("a", ordner.Pfad), Umbenennungen, Uhr);
+        var bericht = Uebernahme.Uebernehmen(new Lernstand(pfad), Quelle("a", ordner.Pfad), Uhr);
         Assert.NotNull(bericht.Sicherungsdatei);
         Assert.Equal(Path.Combine(daten, Uebernahme.SicherungsOrdner, "vor_uebernahme_2026-10-20_120000.db"), bericht.Sicherungsdatei);
         Assert.Equal(vorherStand, VergleichsHilfe.Stand(bericht.Sicherungsdatei!, G20.GetProperty("ziele").GetProperty("gefuellt")));
         // Zweite Uebernahme in derselben Sekunde: eigener Name, nichts ueberschrieben
-        var zweite = Uebernahme.Uebernehmen(new Lernstand(pfad), Quelle("a", ordner.Pfad), Umbenennungen, Uhr);
+        var zweite = Uebernahme.Uebernehmen(new Lernstand(pfad), Quelle("a", ordner.Pfad), Uhr);
         Assert.Equal(Path.Combine(daten, Uebernahme.SicherungsOrdner, "vor_uebernahme_2026-10-20_120000_2.db"), zweite.Sicherungsdatei);
         Assert.Equal(vorherStand, VergleichsHilfe.Stand(bericht.Sicherungsdatei!, G20.GetProperty("ziele").GetProperty("gefuellt")));
     }
@@ -326,7 +308,7 @@ public class UebernahmeTests
         File.WriteAllText(Path.Combine(daten, Uebernahme.SicherungsOrdner), "eine Datei statt eines Ordners");
         var vorher = Sha(pfad);
         var quelle = Quelle("a", ordner.Pfad);
-        var fehler = Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr));
+        var fehler = Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr));
         Assert.Equal(UebernahmeFehler.SicherungGescheitert, fehler.Fehler);
         Assert.Equal(vorher, Sha(pfad));
     }
@@ -340,9 +322,9 @@ public class UebernahmeTests
         var vorher = Sha(pfad);
         var quelle = Quelle("a", ordner.Pfad);
         Assert.Equal(UebernahmeFehler.NurLesen,
-            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr)).Fehler);
+            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr)).Fehler);
         Assert.Equal(UebernahmeFehler.NurLesen,
-            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Vorschau(new Lernstand(pfad), quelle, Umbenennungen, Uhr)).Fehler);
+            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Vorschau(new Lernstand(pfad), quelle, Uhr)).Fehler);
         Assert.Equal(vorher, Sha(pfad));
         Assert.False(Directory.Exists(Path.Combine(ordner.Pfad, Uebernahme.SicherungsOrdner)));
     }
@@ -353,28 +335,13 @@ public class UebernahmeTests
         using var ordner = new TempOrdner();
         var pfad = BaueDatenbank(G20.GetProperty("ziele").GetProperty("gefuellt"), Path.Combine(ordner.Pfad, Lernstand.DateiName));
         var vorher = Sha(pfad);
-        var quelle = Uebernahme.Lesen(UebernahmeQuelle.AlteDatenbank, pfad);
+        // Seit A 1.18.0 ist eine Datenbank keine Quelle mehr; die Pruefung "eigene Datei" bleibt fuer jede Quelle mit Pfad
+        var sicherung = Path.Combine(ordner.Pfad, "a.fisisicherung");
+        File.WriteAllBytes(sicherung, Gzip(G20.GetProperty("dateien").GetProperty("a").GetString()!));
+        var quelle = UebernahmeAblauf.Lesen(File.ReadAllBytes(sicherung), pfad);
         Assert.Equal(UebernahmeFehler.GleicheDatei,
-            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr)).Fehler);
+            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr)).Fehler);
         Assert.Equal(vorher, Sha(pfad));
-    }
-
-    /// <summary>Mischbetrieb: der Datenordner der Python-App wird nur gelesen (bytegleich, keine neuen Dateien).</summary>
-    [Fact]
-    public void PythonDatenordnerBleibtUnveraendert()
-    {
-        using var ordner = new TempOrdner();
-        var ziel = BaueDatenbank(G20.GetProperty("ziele").GetProperty("gefuellt"), Path.Combine(ordner.Pfad, Lernstand.DateiName));
-        _ = Quelle("e", ordner.Pfad);     // legt python/fisi_lernplattform.db an
-        var python = Path.Combine(ordner.Pfad, "python");
-        var alt = Path.Combine(python, "fisi_lernplattform.db");
-        var vorher = Sha(alt);
-        var dateien = Dateien(python);
-        var daten = Uebernahme.Lesen(UebernahmeQuelle.AlteDatenbank, alt);
-        Uebernahme.Vorschau(new Lernstand(ziel), daten, Umbenennungen, Uhr);
-        Uebernahme.Uebernehmen(new Lernstand(ziel), daten, Umbenennungen, Uhr);
-        Assert.Equal(vorher, Sha(alt));
-        Assert.Equal(dateien, Dateien(python));
     }
 
     /// <summary>
@@ -397,32 +364,18 @@ public class UebernahmeTests
         Assert.Equal(VergleichsHilfe.Stand(ziel), VergleichsHilfe.Stand(pfad, ziel));
         Assert.Single(Directory.GetFiles(Path.Combine(ordner.Pfad, Uebernahme.SicherungsOrdner)));
         // Danach gelingt die Uebernahme normal und ergibt den Stand von Python
-        Uebernahme.Uebernehmen(new Lernstand(pfad), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, abgleich), Umbenennungen, Uhr);
+        Uebernahme.Uebernehmen(new Lernstand(pfad), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, abgleich), Uhr);
+        WieNaechsterStart(pfad);
         Assert.Equal(VergleichsHilfe.Stand(Fall("d_gefuellt").GetProperty("nachher")), VergleichsHilfe.Stand(pfad, Fall("d_gefuellt").GetProperty("nachher")));
     }
 
-    /// <summary>Umbenennungen aus inhalte/umbenennungen.json wie Python (Paare aus G20 sind enthalten).</summary>
+    /// <summary>Die Paare aus G20 (Pythons umbenennungen.json) stehen in alte_fragetexte.json (A 1.18.0, nur fuer das Umschreiben beim Start).</summary>
     [Fact]
     public void UmbenennungenWiePython()
     {
         var u = G20.GetProperty("umbenennungen");
-        Assert.Contains(("card_events", u.GetProperty("karte")[0].GetString()!, u.GetProperty("karte")[1].GetString()!), Umbenennungen);
-        Assert.Contains(("quiz_answers", u.GetProperty("quiz")[0].GetString()!, u.GetProperty("quiz")[1].GetString()!), Umbenennungen);
-    }
-
-    /// <summary>Alte Datenbank ohne Spalte uid: Fehler statt still uebersprungener Zeilen (Gegenpruefung W1, Fund 6).</summary>
-    [Fact]
-    public void AlteDatenbankOhneUidIstNichtLesbar()
-    {
-        using var ordner = new TempOrdner();
-        var alt = Path.Combine(ordner.Pfad, "fisi_lernplattform.db");
-        using (var db = VergleichsHilfe.Oeffnen(alt))
-        {
-            VergleichsHilfe.Ausfuehren(db, "CREATE TABLE card_events (id INTEGER PRIMARY KEY, timestamp TEXT, category TEXT, question TEXT, mode TEXT, correct INTEGER)");
-            VergleichsHilfe.Ausfuehren(db, "INSERT INTO card_events (timestamp, category, question, mode, correct) VALUES ('2026-10-01 10:00:00', 'a', 'b', 'lernen', 1)");
-        }
-        Assert.Equal(UebernahmeFehler.DatenbankNichtLesbar,
-            Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Lesen(UebernahmeQuelle.AlteDatenbank, alt)).Fehler);
+        Assert.Contains(("card_events", u.GetProperty("karte")[0].GetString()!, u.GetProperty("karte")[1].GetString()!), AlteFragetexte.Zuordnungen);
+        Assert.Contains(("quiz_answers", u.GetProperty("quiz")[0].GetString()!, u.GetProperty("quiz")[1].GetString()!), AlteFragetexte.Zuordnungen);
     }
 
     /// <summary>Zeit mit Zeilenumbruch am Ende ist wie bei Pythons strptime/fromisoformat kein Datum (Gegenpruefung W1, Fund 1).</summary>
@@ -483,11 +436,11 @@ public class UebernahmeTests
         try
         {
             Assert.Equal(UebernahmeFehler.SchreibenGescheitert,
-                Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr)).Fehler);
+                Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr)).Fehler);
             Assert.Equal(vorher, Sha(pfad));
             Assert.Single(Directory.GetFiles(Path.Combine(daten, Uebernahme.SicherungsOrdner)));
             Assert.Equal(UebernahmeFehler.SchreibenGescheitert,
-                Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Vorschau(new Lernstand(pfad), quelle, Umbenennungen, Uhr)).Fehler);
+                Assert.Throws<UebernahmeAusnahme>(() => Uebernahme.Vorschau(new Lernstand(pfad), quelle, Uhr)).Fehler);
             Assert.Equal(vorher, Sha(pfad));
         }
         finally
@@ -495,7 +448,7 @@ public class UebernahmeTests
             Uebernahme.Haltepunkt = null;
         }
         // Ohne Stoerung gelingt es danach normal
-        Assert.True(Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Umbenennungen, Uhr).Neu > 0);
+        Assert.True(Uebernahme.Uebernehmen(new Lernstand(pfad), quelle, Uhr).Neu > 0);
         Assert.NotEqual(vorher, Sha(pfad));
     }
 
@@ -518,7 +471,7 @@ public class UebernahmeTests
             var pfad = BaueDatenbank(ziel, Path.Combine(ordner.Pfad, Lernstand.DateiName));
             var datei = Path.Combine(ordner.Pfad, "lernstand.json.gz");
             File.WriteAllBytes(datei, Gzip(original.Replace(marke, ersatz, StringComparison.Ordinal)));
-            berichte.Add(Uebernahme.Uebernehmen(new Lernstand(pfad), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, datei), Umbenennungen, Uhr));
+            berichte.Add(Uebernahme.Uebernehmen(new Lernstand(pfad), Uebernahme.Lesen(UebernahmeQuelle.AbgleichDatei, datei), Uhr));
             stand.Add(VergleichsHilfe.Stand(pfad, Fall("d_gefuellt").GetProperty("nachher")));
         }
         // 12:05:01 Ortszeit = 10:05:01 UTC (Uhr 10:00 UTC), eine Sekunde ueber der Toleranz: nicht angewendet

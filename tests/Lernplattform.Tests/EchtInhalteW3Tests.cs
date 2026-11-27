@@ -15,7 +15,7 @@ public class EchtInhalteW3Tests
 {
     private static readonly string Datei = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen", EchtSaetze.Datei);
 
-    private static EchtBestand Bestand => EchtSaetze.Laden(File.ReadAllBytes(Datei));
+    private static EchtBestand Bestand => EchtSaetze.Laden(EchtTestDatei.Vorher);
 
     /// <summary>Die 15 Saetze der Welle in der Reihenfolge der Datei (hinter den Probesaetzen alle_ap1_01 und si_b1_01).</summary>
     public static readonly string[] Neu =
@@ -31,7 +31,7 @@ public class EchtInhalteW3Tests
     /// </summary>
     public static byte[] NurProbesaetze()
     {
-        var wurzel = JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
+        var wurzel = JsonNode.Parse(EchtTestDatei.Vorher)!.AsObject();
         var liste = wurzel["saetze"]!.AsArray();
         for (var i = liste.Count - 1; i >= 0; i--)
         {
@@ -150,8 +150,9 @@ public class EchtInhalteW3Tests
     public void G52_Pruefungssaetze_GleichDerUnabhaengigenPruefung()
     {
         var soll = JsonNode.Parse(VergleichsHilfe.Lade("lerninhalte_pruefung.json").GetProperty("pruefungssaetze").GetRawText())!;
-        // A 0.94.0: wie in der App mit den ausgeschlossenen Saetzen (ausschluss.json), die nicht mehr in den Sichten stehen
-        var bestand = EchtTestDatei.App();
+        // A 0.94.0: wie in der App mit den ausgeschlossenen Saetzen (ausschluss.json), die nicht mehr in den Sichten stehen;
+        // seit A 1.18.0 (L0, Sollwert-Aenderung Nr. 28) die heutige Datei ohne ausschluss.json (alte Saetze geloescht)
+        var bestand = EchtTestDatei.AppHeute();
         var saetze = new JsonObject();
         foreach (var s in bestand.Saetze)
         {
@@ -208,7 +209,7 @@ public class EchtInhalteW3Tests
     [Fact]
     public void G52_Gegenprobe_EinVerdorbenerSatzWaereAnders()
     {
-        var wurzel = JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
+        var wurzel = JsonNode.Parse(EchtTestDatei.Vorher)!.AsObject();
         var liste = wurzel["saetze"]!.AsArray();
         // A 1.8.0 (Weisung P12-372): die letzten fuenf Eintraege sind neue Fassungen; der letzte Satz der ersten Fassung ist Nr. 57
         var stelle = liste.Select((s, i) => (s, i)).Last(x => x.s!["fassung"] is null).i;
@@ -219,7 +220,7 @@ public class EchtInhalteW3Tests
         var bestand = EchtSaetze.Laden(System.Text.Encoding.UTF8.GetBytes(wurzel.ToJsonString()));
         Assert.Equal([letzter, EchtSaetze.Partner(letzter)], bestand.Fehler.Select(f => f.Kennung));
         // A 1.8.0: faellt eine neue Fassung, meldet die Ladepruefung sie, und die vorige Fassung bleibt (nie still, nie ohne Satz)
-        var neu = JsonNode.Parse(File.ReadAllBytes(Datei))!.AsObject();
+        var neu = JsonNode.Parse(EchtTestDatei.Vorher)!.AsObject();
         var neuListe = neu["saetze"]!.AsArray();
         var fassung = (string)neuListe[^1]!["kennung"]!;
         neuListe[^1]!["aufgaben"]![0]!["punkte"] = 31;

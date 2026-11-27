@@ -48,7 +48,7 @@ public class EchtW1BaukastenTests
     /// <summary>Die Datei mit nur den ersten <paramref name="anzahl"/> Saetzen (sonst unveraendert), geladen wie in der App.</summary>
     internal static EchtBestand Bis(int anzahl)
     {
-        var wurzel = JsonNode.Parse(File.ReadAllBytes(EchtTestDatei.Datei))!.AsObject();
+        var wurzel = JsonNode.Parse(EchtTestDatei.Vorher)!.AsObject();
         var liste = wurzel["saetze"]!.AsArray();
         while (liste.Count > anzahl)
         {
@@ -57,7 +57,7 @@ public class EchtW1BaukastenTests
         return EchtSaetze.Laden(Encoding.UTF8.GetBytes(wurzel.ToJsonString()), EchtTestDatei.Ausgeschlossen());
     }
 
-    private static JsonObject Roh(string kennung, int fassung) => JsonNode.Parse(File.ReadAllBytes(EchtTestDatei.Datei))!["saetze"]!.AsArray()
+    private static JsonObject Roh(string kennung, int fassung) => JsonNode.Parse(EchtTestDatei.Vorher)!["saetze"]!.AsArray()
         .Select(s => s!.AsObject()).Single(s => (string?)s["kennung"] == kennung && ((int?)s["fassung"] ?? 1) == fassung).DeepClone().AsObject();
 
     private static byte[] Datei(int format, params JsonObject[] saetze) =>
@@ -156,7 +156,7 @@ public class EchtW1BaukastenTests
     [Fact]
     public void FuenfFassungen_NurAngehaengt_AlteBytegleich_Format4()
     {
-        var echt = File.ReadAllBytes(EchtTestDatei.Datei);
+        var echt = EchtTestDatei.Vorher;
         Assert.Equal(EchtSaetze.Format, (int)JsonNode.Parse(echt)!["format"]!);
         var roh = EchtTestDatei.AlsFormat(echt, 3);
         Assert.True(roh.Length > VorherLaenge);

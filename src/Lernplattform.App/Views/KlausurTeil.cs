@@ -42,7 +42,7 @@ public sealed class KlausurTeil
 
     public KlausurTeil(Lerninhalte inhalte, Func<string, Task> themaUeben)
     {
-        _a = new KlausurAblauf(new KlausurInhalte(inhalte, Zustand.Umbenennungen),
+        _a = new KlausurAblauf(new KlausurInhalte(inhalte),
             new LaufendePruefung(() => Zustand.Einstellungen.Laden(), Zustand.Aendere), () => Zustand.Schreiber,
             () => DateTimeOffset.Now, TimeZoneInfo.Local);
         _themaUeben = themaUeben;
