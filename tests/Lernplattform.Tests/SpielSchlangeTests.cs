@@ -45,63 +45,71 @@ public class SpielSchlangeTests
         [.. l.Abfragen("SELECT id, timestamp, typ, daten, uid FROM spiel_ereignisse ORDER BY id").Select(z => PythonJson.Text(z.ToList()))];
 
     /// <summary>
-    /// Fingerabdruck f2b59ce8 im Hintergrund unter Last (der Schreiber ist langsamer als das Spiel, die
-    /// Schlange fuellt sich): alle Zeilen beider Tabellen genau wie beim sofortigen Schreiben, gleicher
-    /// Hash, gleich viele schrittweise Aktionen, keine Abweichung.
+    /// Engine festigen 3 (A 1.16.0, Weisung P12-399 Antwort 2a): laeuft allein wie <see cref="SpielDatenbankTests.Allein"/>
+    /// (Lauf 1249 Windows 90,2 s). Fall, Sperre und Pruefungen sind unveraendert.
     /// </summary>
-    [Fact]
-    public void FingerabdruckImHintergrundUnterLast()
+    [Collection("Fingerabdruck allein")]
+    public class Allein
     {
-        using var ordner = new TempOrdner();
-        var sofortStand = Neu(ordner, "sofort.db");
-        // Sammelliste 457 (Weisung P12-380, W7): das sofortige Spiel (eigene Datenbank, eigener Ablauf) laeuft auf einem eigenen
-        // Faden neben dem Spiel mit Schlange; beide Ergebnisse werden danach genau wie vorher verglichen.
-        Spielablauf? sofort = null;
-        Exception? sofortFehler = null;
-        var sofortFaden = new Thread(() =>
+        /// <summary>
+        /// Fingerabdruck f2b59ce8 im Hintergrund unter Last (der Schreiber ist langsamer als das Spiel, die
+        /// Schlange fuellt sich): alle Zeilen beider Tabellen genau wie beim sofortigen Schreiben, gleicher
+        /// Hash, gleich viele schrittweise Aktionen, keine Abweichung.
+        /// </summary>
+        [Fact]
+        public void FingerabdruckImHintergrundUnterLast()
         {
-            try
+            using var ordner = new TempOrdner();
+            var sofortStand = Neu(ordner, "sofort.db");
+            // Sammelliste 457 (Weisung P12-380, W7): das sofortige Spiel (eigene Datenbank, eigener Ablauf) laeuft auf einem eigenen
+            // Faden neben dem Spiel mit Schlange; beide Ergebnisse werden danach genau wie vorher verglichen.
+            Spielablauf? sofort = null;
+            Exception? sofortFehler = null;
+            var sofortFaden = new Thread(() =>
             {
-                sofort = SpielFingerabdruckTests.Spielen(new SpielDatenbank(Schreiber(sofortStand), "PC", Lauf, Vorgaenge.Sperren));
-            }
-            catch (Exception e)
-            {
-                sofortFehler = e;
-            }
-        }) { IsBackground = true };
-        sofortFaden.Start();
+                try
+                {
+                    sofort = SpielFingerabdruckTests.Spielen(new SpielDatenbank(Schreiber(sofortStand), "PC", Lauf, Vorgaenge.Sperren));
+                }
+                catch (Exception e)
+                {
+                    sofortFehler = e;
+                }
+            }) { IsBackground = true };
+            sofortFaden.Start();
 
-        var lernstand = Neu(ordner);
-        var schlange = new Spielschlange();
-        var hoechstens = 0;
-        var zeilen = 0;
-        schlange.VorZeile = _ =>
-        {
-            hoechstens = Math.Max(hoechstens, schlange.Anzahl);
-            if (++zeilen % 25 == 0)
+            var lernstand = Neu(ordner);
+            var schlange = new Spielschlange();
+            var hoechstens = 0;
+            var zeilen = 0;
+            schlange.VorZeile = _ =>
             {
-                Thread.Sleep(5);   // Last: der Schreiber haengt hinterher
+                hoechstens = Math.Max(hoechstens, schlange.Anzahl);
+                if (++zeilen % 25 == 0)
+                {
+                    Thread.Sleep(5);   // Last: der Schreiber haengt hinterher
+                }
+                return true;
+            };
+            var spiel = SpielFingerabdruckTests.Spielen(new SpielDatenbank(Schreiber(lernstand), "PC", Lauf, Vorgaenge.Sperren, schlange));
+            schlange.Leeren();
+            sofortFaden.Join();
+            if (sofortFehler is not null)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sofortFehler).Throw();
             }
-            return true;
-        };
-        var spiel = SpielFingerabdruckTests.Spielen(new SpielDatenbank(Schreiber(lernstand), "PC", Lauf, Vorgaenge.Sperren, schlange));
-        schlange.Leeren();
-        sofortFaden.Join();
-        if (sofortFehler is not null)
-        {
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sofortFehler).Throw();
+            Assert.NotNull(sofort);
+
+            Assert.Equal(SpielFingerabdruckTests.SollHash, SpielFingerabdruckTests.Hash(spiel.Stand));
+            Assert.Equal(0, spiel.Abweichungen);
+            Assert.Equal(0, spiel.NichtGespeichert);
+            Assert.Equal(Tabellen(sofortStand), Tabellen(lernstand));
+            Assert.True(hoechstens > 10, "die Schlange hat sich nicht gefuellt: " + hoechstens);
+            Assert.Equal(0, schlange.Anzahl);
+            // der Stand aus der Datenbank ist derselbe
+            Assert.Empty(spiel.Stand.Unterschiede(new Spielstand(spiel.Speicher.Ereignisse(), Inhalt)));
+            Assert.Equal(sofort!.Stand.Verlauf.Count, spiel.Stand.Verlauf.Count);
         }
-        Assert.NotNull(sofort);
-
-        Assert.Equal(SpielFingerabdruckTests.SollHash, SpielFingerabdruckTests.Hash(spiel.Stand));
-        Assert.Equal(0, spiel.Abweichungen);
-        Assert.Equal(0, spiel.NichtGespeichert);
-        Assert.Equal(Tabellen(sofortStand), Tabellen(lernstand));
-        Assert.True(hoechstens > 10, "die Schlange hat sich nicht gefuellt: " + hoechstens);
-        Assert.Equal(0, schlange.Anzahl);
-        // der Stand aus der Datenbank ist derselbe
-        Assert.Empty(spiel.Stand.Unterschiede(new Spielstand(spiel.Speicher.Ereignisse(), Inhalt)));
-        Assert.Equal(sofort!.Stand.Verlauf.Count, spiel.Stand.Verlauf.Count);
     }
 
     /// <summary>Zweiter Fingerabdruck 86ac8f19 (Stadt) in der Datenbank im Hintergrund, Zeilen wie sofort.</summary>

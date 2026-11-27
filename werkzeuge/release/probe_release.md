@@ -1,24 +1,21 @@
-Die Lernplattform ist jetzt so aufgebaut wie deine Abschlussprüfung: Teil 1, Teil 2 mit seinen Prüfungsbereichen und das Abschlussprojekt.
+Eine Pflege-Version für den Unterbau der 3D-Stadt.
 
-- Die Seitenleiste am PC zeigt oben „ABSCHLUSSPRÜFUNG“ mit dem Kürzel deiner Fachrichtung. Darunter stehen Teil 1 und Teil 2 und die Bereiche von Teil 2 mit denselben Namen wie auf dem Deckblatt der echten Prüfung, dazu das Abschlussprojekt. Unter „LERNEN“ findest du Karteikarten, Notizblock und Rechner, unter „SONSTIGES“ das Spiel und deinen Fortschritt. Hilfe, Optionen und „Programm beenden“ stehen unten.
-- Am Handy hat die untere Leiste jetzt die Knöpfe Start, Teil 1, Teil 2, Lernen, Spiel und Mehr. Unter „Mehr“ findest du Fortschritt, Optionen, Hilfe und die ganze Liste der AP2-Szenarien.
-- Jeder Teil und jeder Bereich hat zwei Reiter. Unter „Üben“ übst du die Prüfungsfragen und Szenarien, die zu diesem Teil gehören, und siehst deinen Stand. Einzelne Aufgaben aus den Prüfungssätzen kannst du mit Musterlösung ansehen. Unter „Prüfen“ startest du die Probeklausur dieses Teils oder einen Satz im echten Format.
-- Teil 2 zeigt seine Bereiche als Karten mit Gewicht, jeweils mit „Üben“ und „Prüfen“. Die Karte des Projekts führt zu den Testprojekten und zu deinem eigenen Projekt.
-- Die Startseite zeigt statt der vier Ringe das Feld „Deine Abschlussprüfung“ mit Teil 1 und Teil 2. Ein Tipp auf „Öffnen“ bringt dich direkt hin.
-- Jede Seite, die es bisher gab, erreichst du mit höchstens zwei Klicks.
-- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+- Der Programmteil, der die Stadt baut und zeichnet, ist jetzt in kleinere, nach Themen geordnete Dateien aufgeteilt. Am Programm selbst hat sich dadurch nichts geändert: Die Stadt, die Innenräume und jedes Bild sehen genau gleich aus wie vorher.
+- Zwei sehr lange Prüfungen des Spiels laufen beim Testen jetzt allein statt neben anderen. Sie prüfen dasselbe wie vorher, sind unter Windows aber deutlich schneller fertig.
+- Neu ist eine eigene Messreihe, die misst, wie schnell die Stadt beim allerersten Öffnen gebaut wird. Sie ändert keine Einstellung des Programms.
+- Aussehen, Bedienung, dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.15.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.16.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.15.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.15.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.15.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.15.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.16.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.16.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.16.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.16.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

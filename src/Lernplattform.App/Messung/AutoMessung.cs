@@ -224,6 +224,13 @@ public static partial class AutoMessung
             Messwerte.Notiere(n == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({n} Funde)"));
             return n;
         }
+        // Engine festigen 3 (A 1.16.0, Sammelliste 438): kurzer Teil nur fuer die Messreihe (messreihe.yml), misst den kalten Bau
+        if (Teil == TeilKaltbau)
+        {
+            var n = funde + await KaltbauTeilAsync(ansicht);
+            Messwerte.Notiere(n == 0 ? "URTEIL: gruen" : string.Create(inv, $"URTEIL: rot ({n} Funde)"));
+            return n;
+        }
         // Phase 11 W3 (Weisung P11-21): nur die Layoutpruefung, z. B. mit Windows-Skalierung 150 % (ci.yml)
         if (Teil == TeilLayout)
         {

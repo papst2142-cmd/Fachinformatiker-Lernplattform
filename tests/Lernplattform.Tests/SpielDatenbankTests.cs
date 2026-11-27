@@ -37,40 +37,49 @@ public class SpielDatenbankTests
     private static List<object?[]> Zeilen(Lernstand lernstand, string tabelle, string spalten) =>
         lernstand.Abfragen("SELECT " + spalten + " FROM " + tabelle + " ORDER BY rowid");
 
-    /// <summary>Das Szenario des Fingerabdrucks in der Datenbank: gleiche Ereignisse, gleiche Bestenliste, Hash f2b59ce8.</summary>
-    [Fact]
-    public void FingerabdruckInDerDatenbank()
+    /// <summary>
+    /// Engine festigen 3 (A 1.16.0, Weisung P12-399 Antwort 2a): der Fingerabdruck in der Datenbank laeuft allein (Sammlung
+    /// <c>Fingerabdruck allein</c>, ohne Nebenlaeufer). Unter Windows wartete er im vollen Lauf auf die Sperre der Vorgaenge und
+    /// die Platte der anderen Tests (Lauf 1249: 252 s, allein unter Linux rund 50 s). Fall, Sperre und Pruefungen sind unveraendert.
+    /// </summary>
+    [Collection("Fingerabdruck allein")]
+    public class Allein
     {
-        using var ordner = new TempOrdner();
-        var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
-        var spiel = SpielFingerabdruckTests.Spielen(Datenbank(Schreiber(lernstand)));
-        var speicher = SpielFingerabdruckTests.Gespielt.Value;
-
-        Assert.Equal(SpielFingerabdruckTests.SollHash, SpielFingerabdruckTests.Hash(spiel.Stand));
-        Assert.Equal(0, spiel.Abweichungen);
-        Assert.Equal(0, spiel.NichtGespeichert);
-        Assert.Equal(PythonJson.Text(speicher.Stand.Verlauf.Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList()),
-            PythonJson.Text(spiel.Stand.Verlauf.Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList()));
-        Assert.Equal(PythonJson.Text(speicher.Speicher.Bestenliste().Select(z => (object?)new List<object?> { z.Lauf.Length > 0, z.Art, z.Schluessel, z.Wert, z.Daten }).ToList()),
-            PythonJson.Text(spiel.Speicher.Bestenliste().Select(z => (object?)new List<object?> { z.Lauf.Length > 0, z.Art, z.Schluessel, z.Wert, z.Daten }).ToList()));
-
-        // Jede Zeile wie Python: Geraet, Durchgang, utc_offset, eigene uid; die Daten sind der JSON-Text
-        var zeilen = Zeilen(lernstand, "spiel_ereignisse", "timestamp, utc_offset, typ, daten, geraet, uid, lauf");
-        var ereignisse = ((SpielSpeicher)speicher.Speicher).Geschrieben;
-        Assert.Equal(ereignisse.Count, zeilen.Count);
-        for (var i = 0; i < zeilen.Count; i++)
+        /// <summary>Das Szenario des Fingerabdrucks in der Datenbank: gleiche Ereignisse, gleiche Bestenliste, Hash f2b59ce8.</summary>
+        [Fact]
+        public void FingerabdruckInDerDatenbank()
         {
-            Assert.Equal((ereignisse[i].Art, ereignisse[i].Daten), ((string)zeilen[i][2]!, (string)zeilen[i][3]!));
-            Assert.Equal(120L, zeilen[i][1]);
-            Assert.Equal("PC", zeilen[i][4]);
-            Assert.Equal(Lauf, zeilen[i][6]);
+            using var ordner = new TempOrdner();
+            var lernstand = new Lernstand(Path.Combine(ordner.Pfad, Lernstand.DateiName));
+            var spiel = SpielFingerabdruckTests.Spielen(Datenbank(Schreiber(lernstand)));
+            var speicher = SpielFingerabdruckTests.Gespielt.Value;
+
+            Assert.Equal(SpielFingerabdruckTests.SollHash, SpielFingerabdruckTests.Hash(spiel.Stand));
+            Assert.Equal(0, spiel.Abweichungen);
+            Assert.Equal(0, spiel.NichtGespeichert);
+            Assert.Equal(PythonJson.Text(speicher.Stand.Verlauf.Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList()),
+                PythonJson.Text(spiel.Stand.Verlauf.Select(e => (object?)new List<object?> { e.Art, e.Daten }).ToList()));
+            Assert.Equal(PythonJson.Text(speicher.Speicher.Bestenliste().Select(z => (object?)new List<object?> { z.Lauf.Length > 0, z.Art, z.Schluessel, z.Wert, z.Daten }).ToList()),
+                PythonJson.Text(spiel.Speicher.Bestenliste().Select(z => (object?)new List<object?> { z.Lauf.Length > 0, z.Art, z.Schluessel, z.Wert, z.Daten }).ToList()));
+
+            // Jede Zeile wie Python: Geraet, Durchgang, utc_offset, eigene uid; die Daten sind der JSON-Text
+            var zeilen = Zeilen(lernstand, "spiel_ereignisse", "timestamp, utc_offset, typ, daten, geraet, uid, lauf");
+            var ereignisse = ((SpielSpeicher)speicher.Speicher).Geschrieben;
+            Assert.Equal(ereignisse.Count, zeilen.Count);
+            for (var i = 0; i < zeilen.Count; i++)
+            {
+                Assert.Equal((ereignisse[i].Art, ereignisse[i].Daten), ((string)zeilen[i][2]!, (string)zeilen[i][3]!));
+                Assert.Equal(120L, zeilen[i][1]);
+                Assert.Equal("PC", zeilen[i][4]);
+                Assert.Equal(Lauf, zeilen[i][6]);
+            }
+            Assert.Equal(zeilen.Count, zeilen.Select(z => z[5]).Distinct().Count());
+            Assert.All(Zeilen(lernstand, "spiel_bestenliste", "durchgang, utc_offset, uid"), z =>
+            {
+                Assert.Equal(spiel.Stand.ErstesEreignis, z[0]);
+                Assert.Equal(120L, z[1]);
+            });
         }
-        Assert.Equal(zeilen.Count, zeilen.Select(z => z[5]).Distinct().Count());
-        Assert.All(Zeilen(lernstand, "spiel_bestenliste", "durchgang, utc_offset, uid"), z =>
-        {
-            Assert.Equal(spiel.Stand.ErstesEreignis, z[0]);
-            Assert.Equal(120L, z[1]);
-        });
     }
 
     /// <summary>
@@ -231,3 +240,10 @@ public class SpielDatenbankTests
         Assert.Matches(@"^2026-10-02 10:00:\d\d\+02:00$", (string)meta[1]!);
     }
 }
+
+/// <summary>
+/// Engine festigen 3 (A 1.16.0): Fingerabdruck-Tests mit der Datenbank laufen ohne Nebenlaeufer (keine Wartezeit auf die Sperre
+/// der Vorgaenge oder die Platte anderer Tests); die Pruefungen bleiben dieselben.
+/// </summary>
+[CollectionDefinition("Fingerabdruck allein", DisableParallelization = true)]
+public class FingerabdruckAlleinSammlung;

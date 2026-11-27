@@ -143,7 +143,7 @@ public sealed class SpielMitfahrtFreiTests
     /// <summary>Der Kreis um die Figur in der Oberflaeche ist so gross wie hier angenommen.</summary>
     [Fact]
     public void RingRadius_GleichDerOberflaeche() =>
-        Assert.Contains("public const float RingRadius = 0.22f;", File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Spiel", "StadtFlaeche.cs")), StringComparison.Ordinal);
+        Assert.Contains("public const float RingRadius = 0.22f;", File.ReadAllText(Path.Combine(Pfade.Wurzel, "src", "Lernplattform.App", "Spiel", "StadtFlaeche.Netze.cs")), StringComparison.Ordinal);
 
     /// <summary>Die Stelle des Wartplatzes bis Weisung P12-240 (0,1 vor der Mitte der Haltestelle), nur fuer die Gegenprobe.</summary>
     internal static Vector2 WartplatzAlt(Haltestelle h) =>
