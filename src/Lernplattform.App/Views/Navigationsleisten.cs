@@ -312,6 +312,9 @@ public sealed class Navigationsleisten
     /// <summary>Symbolgroesse der unteren Leiste (waechst mit der Schrift).</summary>
     public const double SymbolUnten = 24;
 
+    /// <summary>Weisung P12-432: Masse der Pille wie im Entwurf P12-271 (Breite 60 x Faktor bis 64, Hoehe 32 x Faktor bis 1,5).</summary>
+    public const double PilleBreite = 60, PilleBreiteHoechstens = 64, PilleHoehe = 32;
+
     /// <summary>
     /// A 1.17.0 (Weisung P12-430): Symbol der unteren Leiste aus Satz 3 (<see cref="Symbole.Satz3"/>), nicht gewaehlt Form
     /// muted auf sidebar; die Hervorhebung setzt Form accent auf card_hi (<see cref="Markiere"/>). Groesse 24, waechst mit der Schrift.
@@ -323,9 +326,16 @@ public sealed class Navigationsleisten
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        Mitwachsen(symbol, SymbolUnten);
+        // Weisung P12-432 (Nico: Pille breit wie im Entwurf): das Symbol waechst wie im Entwurf nur bis zum 1,35-fachen
+        Unten(symbol, Layoutable.WidthProperty, f => SymbolUnten * Math.Min(f, 1.35));
+        Unten(symbol, Layoutable.HeightProperty, f => SymbolUnten * Math.Min(f, 1.35));
         return symbol;
     }
+
+    /// <summary>Bindet eine Groesse der unteren Leiste an den Schriftfaktor (Faktor 1 = Stufe Normal).</summary>
+    private static void Unten(Control element, AvaloniaProperty<double> eigenschaft, Func<double, double> wert) =>
+        element.Bind(eigenschaft, element.GetResourceObservable("Schrift.Normal",
+            v => wert(v is double d ? d / Schrift.Grundgroessen["Normal"] : 1)));
 
     private Control BaueUntereLeiste()
     {
@@ -352,11 +362,11 @@ public sealed class Navigationsleisten
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Child = symbol,
                 Background = Brushes.Transparent,
-                // A 1.17.0 (Entwurf P12-271: Breite hoechstens 64): die Pille waechst nur in der Hoehe mit der Schrift; breiter als
-                // 64 passte sie bei fuenf Spalten am schmalen Handy (384 / 5 = 76,8) ab Stufe „sehr gross“ nicht mehr in ihren Knopf
-                Width = 64,
             };
-            pille.Bind(Layoutable.HeightProperty, pille.GetResourceObservable("Schrift.Normal", v => v is double d ? 32 * d / Schrift.Grundgroessen["Normal"] : 32));
+            // Weisung P12-432 (Nico: „breit wie im Entwurf“, nie rund): Masse genau wie der Entwurf P12-271, Breite min(60 x f, 64),
+            // Hoehe 32 x min(f, 1,5); in jeder Schriftstufe breiter als hoch (hoechstens 64 x 48) und am schmalen Handy in der Spalte
+            Unten(pille, Layoutable.WidthProperty, f => Math.Min(PilleBreite * f, PilleBreiteHoechstens));
+            Unten(pille, Layoutable.HeightProperty, f => PilleHoehe * Math.Min(f, 1.5));
             var knopf = new Button
             {
                 Content = new StackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center, Children = { pille, beschriftung } },
@@ -459,6 +469,11 @@ public sealed class Navigationsleisten
             if (breit > platz)
             {
                 funde.Add($"untere Leiste „{probe.Text}“: Wort {breit:0} breiter als die Spalte {platz:0}");
+            }
+            // Weisung P12-432 (Nico: „breit wie im Entwurf“, nie rund): die Pille ist in jeder Stufe deutlich breiter als hoch
+            if (pille.Bounds.Width < 1.3 * pille.Bounds.Height)
+            {
+                funde.Add($"untere Leiste „{wort.Text}“: Pille nicht breit ({pille.Bounds.Width:0.#} x {pille.Bounds.Height:0.#})");
             }
             foreach (var (name, teil) in new (string, Control)[] { ("Wort", wort), ("Pille", pille) })
             {

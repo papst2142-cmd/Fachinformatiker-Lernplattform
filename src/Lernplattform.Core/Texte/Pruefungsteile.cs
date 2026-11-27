@@ -142,6 +142,9 @@ public static class Pruefungsteile
         new("help", "HELP_OUTLINE_ROUNDED", Navigation.Hilfe, "Erklärungen und Rundgang", ["success"]),
         // die ganze Liste der AP2-Szenarien (in den Bereichen gefiltert), damit sie am Handy in zwei Klicks erreichbar bleibt
         new("scenarios", "DIAMOND_ROUNDED", "AP2-Szenarien", "%d Aufgaben aus allen Bereichen von AP2", ["#DB2777", "#FB923C"]),
+        // Weisung P12-432 (Nico 2b): Testprojekte und das eigene Projekt auch hier, damit sie am Handy wieder in zwei Klicks erreichbar sind
+        new("testproject", "FLAG_ROUNDED", Testprojekte, "%d Kundenaufträge zum Üben", ["success"]),
+        new("abschluss", "WORKSPACE_PREMIUM_ROUNDED", MeinProjekt, "Dein IHK-Projekt vom Antrag bis zum Fachgespräch", ["#7C3AED", "#22D3EE"]),
     ];
 
     public static readonly Kopftitel MehrKopf = new(Mehr, "MEHR", "ÜBERSICHT");
@@ -254,8 +257,8 @@ public static class Pruefungsteile
     // -- Start: Feld „Deine Abschlussprüfung“ (Nico 4a) ---------------------------------------------
     public const string StartTitel = "Deine Abschlussprüfung";
     public const string StartUntertitel = "%s · aufgebaut wie die echte Prüfung";
-    public const string StartTeil1 = "TEIL 1 · AP1 · 20 %";
-    public const string StartTeil2 = "TEIL 2 · AP2 · 80 %";
+    public const string StartTeil1 = "AP1 · 20 %";
+    public const string StartTeil2 = "AP2 · 80 %";
     public const string StartTeil2Name = "%s, %s, Wirtschafts- und Sozialkunde und Projekt";
     public const string StartOeffnen = "Öffnen";
 }

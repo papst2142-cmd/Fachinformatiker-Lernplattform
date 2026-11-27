@@ -25,8 +25,9 @@ public static partial class AutoMessung
 
     /// <summary>
     /// Klickweg je bisheriger Seite: Eintrag der Leiste, dann Knoepfe der gezeigten Seiten (nach Namen). A 1.17.0 (Weisung
-    /// P12-430, Reiter B): am Handy fuehrt „Prüfung“ zu AP1 (zuerst), AP2 ist ein Klick auf die Segment-Leiste; darum brauchen
-    /// die Seiten unter AP2 am Handy drei Klicks (feste Liste <c>PruefungsteileTests.HandyDreiKlicks</c> und die Bereiche).
+    /// P12-430, Reiter B): am Handy fuehrt „Prüfung“ zu AP1 (zuerst), AP2 ist ein Klick auf die Segment-Leiste; die Wege ueber
+    /// AP2 haben darum drei Klicks. Seit Weisung P12-432 (Nico 2b) stehen Testprojekte und Mein Projekt auch unter „Mehr“ (zwei
+    /// Klicks, Wege aus <see cref="Pruefungsteile.MehrEintraege"/>); jede bisherige Seite hat so einen Weg mit hoechstens zwei.
     /// </summary>
     private static IEnumerable<(string Leiste, string[] Knoepfe, string Ziel, string? Reiter)> Klickwege(bool handy)
     {

@@ -5,7 +5,8 @@ Die Leisten zum Wechseln der Seiten sind neu geordnet und haben neue, zweifarbig
 
 - Am Handy hat die untere Leiste jetzt fünf Knöpfe: Start, Prüfung, Lernen, Spiel und Mehr. „Prüfung“ öffnet deine Abschlussprüfung. Oben auf dieser Seite wählst du mit einem Schalter „AP1 20 %“ oder „AP2 80 %“. Das Programm merkt sich, welchen Teil du zuletzt offen hattest.
 - Am PC steht in der Seitenleiste unter „ABSCHLUSSPRÜFUNG“ der Punkt „Prüfung“ mit AP1, AP2, den Bereichen von AP2 und dem Abschlussprojekt darunter. Unter „Lernen“ findest du Karteikarten, Notizblock und Rechner, danach Spiel und Fortschritt. Logo, Fachrichtung, Versionszeile und „Programm beenden“ bleiben, wo sie waren.
-- Teil 1 und Teil 2 heißen jetzt überall so wie in der echten Prüfung: AP1 und AP2.
+- Teil 1 und Teil 2 heißen jetzt überall so wie in der echten Prüfung: AP1 und AP2, auch im Feld „Deine Abschlussprüfung“ auf der Startseite.
+- Unter „Mehr“ findest du am Handy jetzt auch die Testprojekte und dein eigenes Projekt.
 - Neue Symbole: ein Sonnenaufgang für Start, eine Stoppuhr für Prüfung, ein Chip für Lernen, eine Stadt für das Spiel, ein Berg mit Flagge für den Fortschritt, ein Wegweiser für die Hilfe, ein Drehregler für die Optionen, ein Plus in einer Kachel für Mehr und ein Stecker für „Programm beenden“. Jedes Symbol hat einen kleinen Teil in der Akzentfarbe deiner Farbwelt. Die Lupe der Suche bleibt.
 - Der gewählte Knopf ist deutlicher zu sehen: am Handy mit einer hellen Fläche hinter Symbol und Wort, am PC mit einer hinterlegten Zeile und einem farbigen Rand links.
 - Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
