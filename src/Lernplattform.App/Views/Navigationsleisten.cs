@@ -367,18 +367,20 @@ public sealed class Navigationsleisten
             // Hoehe 32 x min(f, 1,5); in jeder Schriftstufe breiter als hoch (hoechstens 64 x 48) und am schmalen Handy in der Spalte
             Unten(pille, Layoutable.WidthProperty, f => Math.Min(PilleBreite * f, PilleBreiteHoechstens));
             Unten(pille, Layoutable.HeightProperty, f => PilleHoehe * Math.Min(f, 1.5));
+            // Weisung P12-433 (Entwurf gilt woertlich): Abstand Pille-Wort 4 x f, Rand oben 8 und unten 12, keine Mindesthoehe
+            var stapel = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { pille, beschriftung } };
+            Unten(stapel, StackPanel.SpacingProperty, f => 4 * f);
             var knopf = new Button
             {
-                Content = new StackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center, Children = { pille, beschriftung } },
+                Content = stapel,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
-                Padding = new Thickness(0, 12, 0, 16),
+                Padding = new Thickness(0, 8, 0, 12),
                 Background = Brushes.Transparent,
                 CornerRadius = new CornerRadius(0),
             };
-            knopf.Bind(Layoutable.MinHeightProperty, knopf.GetResourceObservable("Schrift.Normal", v => v is double d ? 80 * d / Schrift.Grundgroessen["Normal"] : 80));
             Avalonia.Automation.AutomationProperties.SetName(knopf, punkt.Titel);
             knopf.Click += (_, _) => _oeffnen(punkt.Id);
             _untenKnoepfe[punkt.Id] = knopf;
@@ -386,7 +388,9 @@ public sealed class Navigationsleisten
             Grid.SetColumn(knopf, raster.Children.Count);
             raster.Children.Add(knopf);
         }
-        var leiste = new Border { Child = raster, IsVisible = false };
+        // Entwurf P12-271: Strich 1 oben in der Randfarbe
+        var leiste = new Border { Child = raster, IsVisible = false, BorderThickness = new Thickness(0, 1, 0, 0) };
+        leiste.Farbe(Border.BorderBrushProperty, "Pinsel.border");
         return leiste.Farbe(Border.BackgroundProperty, "Pinsel.sidebar");
     }
 

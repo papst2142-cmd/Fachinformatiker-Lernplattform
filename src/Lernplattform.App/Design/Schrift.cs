@@ -38,8 +38,9 @@ public static class Schrift
         ["Zahl"] = 36,
     };
 
-    /// <summary>Beschriftung der unteren Leiste: waechst hoechstens bis 12 Punkte (wie NAV_LABEL_MAX am Handy).</summary>
-    public const double LeisteHoechstens = 12;
+    /// <summary>Beschriftung der unteren Leiste: waechst wie im freigegebenen Entwurf P12-271 bis 150 % (11 x min(Faktor, 1,5)),
+    /// Weisung P12-433 „Entwurf gilt woertlich“; vorher hoechstens 12 Punkte wie NAV_LABEL_MAX der Python-Linie.</summary>
+    public const double LeisteHoechstensFaktor = 1.5;
     public const double LeisteGrund = 11;
 
     public static double Faktor { get; private set; } = 1.0;
@@ -55,7 +56,7 @@ public static class Schrift
         {
             res["Schrift." + name] = Hoechstens.TryGetValue(name, out var grenze) ? Math.Max(groesse, Math.Min(grenze, groesse * faktor)) : groesse * faktor;
         }
-        res["Schrift.Leiste"] = Math.Min(LeisteHoechstens, LeisteGrund * faktor);
+        res["Schrift.Leiste"] = LeisteGrund * Math.Min(faktor, LeisteHoechstensFaktor);
         // Fluent-Steuerelemente (Knoepfe, Eingabefelder, Klappbereiche) nehmen diese Groesse
         res["ControlContentThemeFontSize"] = Grundgroessen["Normal"] * faktor;
         Faktor = faktor;
