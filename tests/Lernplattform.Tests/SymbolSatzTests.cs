@@ -104,6 +104,16 @@ public class SymbolSatzTests
         Pruefe("text_dim", "sidebar", Farbwelt.MindestKontrast);
         // Segment-Leiste: nicht gewaehlte Haelfte text_dim auf card_alt
         Pruefe("text_dim", "card_alt", Farbwelt.MindestKontrast);
+        // P12-434: Symbol gewaehlt (accent, Akzent accent2) auf der Pille der unteren Leiste
+        var pille = Leistenpille.Farbe(p);
+        foreach (var farbe in new[] { "accent", "accent2" })
+        {
+            var k = Farbwelt.Kontrast(p.Farben[farbe], pille);
+            if (k < Farbwelt.BedienKontrast)
+            {
+                funde.Add($"{(p.Hell ? "hell" : "dunkel")} {farbe} auf Pille {pille}: {k:F2} < {Farbwelt.BedienKontrast}");
+            }
+        }
         return funde;
     }
 
@@ -114,6 +124,49 @@ public class SymbolSatzTests
         Assert.Equal(72, welten.Count);
         var funde = welten.SelectMany(Kontrastfunde).ToList();
         Assert.Empty(funde);
+    }
+
+    /// <summary>
+    /// Weisung P12-434 (Frage 4 = a): die Pille hinter dem gewaehlten Knopf unten hebt sich in jeder hellen Farbwelt mindestens so
+    /// deutlich von der Leiste ab wie im Entwurf P12-271 (#E3D9F5 auf #EBE4F7); im Dunklen bleibt card_hi.
+    /// </summary>
+    [Fact]
+    public void PilleUntenSoDeutlichWieImEntwurf()
+    {
+        Assert.InRange(Leistenpille.EntwurfKontrast, 1.09, 1.10);
+        var welten = Farbwelten().ToList();
+        Assert.Equal(36, welten.Count(p => p.Hell));
+        foreach (var p in welten)
+        {
+            var pille = Leistenpille.Farbe(p);
+            if (p.Hell)
+            {
+                Assert.True(Farbwelt.Kontrast(p.Farben["sidebar"], pille) >= Leistenpille.EntwurfKontrast,
+                    $"hell {p.Farben["sidebar"]}: Pille {pille} zu blass");
+                // aus der Farbwelt abgeleitet: liegt zwischen Leiste und Rand, nicht fest
+                Assert.True(Farbwelt.Kontrast(p.Farben["sidebar"], pille) <= Farbwelt.Kontrast(p.Farben["sidebar"], p.Farben["border"]) + 1e-9);
+            }
+            else
+            {
+                Assert.Equal(p.Farben["card_hi"], pille);
+            }
+        }
+        // Gegenprobe: die bisherige Farbe card_hi war im Hellen zu blass (violett 1,03 statt 1,09)
+        var violett = Farbwelt.Berechne(Farbwelt.Hell, Farbwelt.StandardGrundfarbe, "violett");
+        Assert.True(Farbwelt.Kontrast(violett.Farben["sidebar"], violett.Farben["card_hi"]) < Leistenpille.EntwurfKontrast);
+    }
+
+    /// <summary>
+    /// Weisung P12-434: Teile mit sich ueberlagernden Teilformen (Kreuz in „Mehr“) werden wie im SVG mit nonzero gefuellt; die
+    /// Oberflaeche liest jeden Pfad mit <see cref="SymbolSatz.Fuellregel"/> davor. Das Kreuz besteht aus zwei sich kreuzenden Balken,
+    /// genau dort wuerde evenodd ein Loch lassen.
+    /// </summary>
+    [Fact]
+    public void FuellregelWieImEntwurf()
+    {
+        Assert.Equal("F1 ", SymbolSatz.Fuellregel);
+        var kreuz = SymbolSatz.Satz3["MEHR"].Single(t => t.Art == SymbolTeilArt.Akzent).Pfad;
+        Assert.Equal(2, kreuz.Count(c => c == 'M'));
     }
 
     [Fact]

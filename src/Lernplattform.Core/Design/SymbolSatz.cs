@@ -95,4 +95,10 @@ public static class SymbolSatz
 
     /// <summary>Breite des Spalts um Akzent-Teile (Strich in der Farbe der Flaeche, unter dem Akzent gezeichnet).</summary>
     public const double AkzentSpalt = 1.5;
+
+    /// <summary>
+    /// Weisung P12-434: Fuellregel aller Teile wie im SVG des Entwurfs (nonzero; in der Pfad-Schreibweise von Avalonia „F1“, ohne sie
+    /// gilt dort evenodd). Mit evenodd wurde die Ueberlagerung der zwei Balken im Kreuz von „Mehr“ zum hellen Fleck.
+    /// </summary>
+    public const string Fuellregel = "F1 ";
 }

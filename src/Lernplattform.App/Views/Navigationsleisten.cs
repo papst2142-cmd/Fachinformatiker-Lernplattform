@@ -398,12 +398,13 @@ public sealed class Navigationsleisten
     /// Sammelliste 341 (Start-Test): welche Eintraege gerade markiert aussehen, je Teil die Kennungen, deren Farbe genau die
     /// Ressource der Markierung der aktuellen Farbwelt ist. A 1.17.0 (Entwurf P12-271): Knopf card_hi, Strich (Rand links)
     /// accent und Symbol accent am Hauptpunkt; Text fett in text am Unterpunkt; unten Pille card_hi, Symbol accent und Wort
-    /// text. Nur fuer Tests.
+    /// text; seit P12-434 Pille und Grund des Symbols unten Pinsel.pille (<see cref="Core.Design.Leistenpille"/>). Nur fuer Tests.
     /// </summary>
     public IReadOnlyDictionary<string, IReadOnlyList<string>> MarkiertFuerTests()
     {
         object? Res(string schluessel) => Seitenleiste.TryFindResource(schluessel, out var wert) ? wert : null;
         var hi = Res("Pinsel.card_hi");
+        var pille = Res("Pinsel.pille");
         var akzent = Res("Pinsel.accent");
         var text = Res("Pinsel.text");
         IReadOnlyList<string> Wo<T>(IEnumerable<KeyValuePair<string, T>> quelle, Func<T, bool> markiert) =>
@@ -414,8 +415,8 @@ public sealed class Navigationsleisten
             ["Strich"] = akzent is null ? [] : Wo(_seitenTeile, t => !t.Unter && ReferenceEquals(t.Strich.BorderBrush, akzent)),
             ["Symbol"] = akzent is null ? [] : Wo(_symbole, y => ReferenceEquals(y.Form, akzent)),
             ["Text"] = text is null ? [] : Wo(_seitenTeile, t => t.Unter && ReferenceEquals(t.Text.Foreground, text) && t.Text.FontWeight == FontWeight.Bold),
-            ["Pille"] = hi is null ? [] : Wo(_untenTeile, t => ReferenceEquals(t.Pille.Background, hi)),
-            ["SymbolUnten"] = akzent is null ? [] : Wo(_untenTeile, t => ReferenceEquals(t.Symbol.Form, akzent) && ReferenceEquals(t.Symbol.Grund, hi)),
+            ["Pille"] = pille is null ? [] : Wo(_untenTeile, t => ReferenceEquals(t.Pille.Background, pille)),
+            ["SymbolUnten"] = akzent is null ? [] : Wo(_untenTeile, t => ReferenceEquals(t.Symbol.Form, akzent) && ReferenceEquals(t.Symbol.Grund, pille)),
             ["WortUnten"] = text is null ? [] : Wo(_untenTeile, t => ReferenceEquals(t.Text.Foreground, text) && t.Text.FontWeight == FontWeight.SemiBold),
         };
     }
@@ -525,7 +526,7 @@ public sealed class Navigationsleisten
             var aktiv = kennung == unten;
             if (aktiv)
             {
-                pille.FarbeNeu(Border.BackgroundProperty, "Pinsel.card_hi");
+                pille.FarbeNeu(Border.BackgroundProperty, "Pinsel.pille");
             }
             else
             {
@@ -533,7 +534,7 @@ public sealed class Navigationsleisten
                 Markierung.Loesen(pille, Border.BackgroundProperty);
                 pille.Background = Brushes.Transparent;
             }
-            symbol.FarbenSetzen(aktiv ? "Pinsel.accent" : "Pinsel.muted", aktiv ? "Pinsel.card_hi" : "Pinsel.sidebar");
+            symbol.FarbenSetzen(aktiv ? "Pinsel.accent" : "Pinsel.muted", aktiv ? "Pinsel.pille" : "Pinsel.sidebar");
             wort.FarbeNeu(TextBlock.ForegroundProperty, aktiv ? "Pinsel.text" : "Pinsel.muted");
             wort.FontWeight = aktiv ? FontWeight.SemiBold : FontWeight.Normal;
         }
