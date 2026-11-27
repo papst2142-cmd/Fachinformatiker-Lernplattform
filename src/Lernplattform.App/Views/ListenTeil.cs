@@ -79,13 +79,12 @@ public sealed class ListenTeil : StackPanel
         Children.Add(Ueberschrift(SzenarienTexte.Status).Fuer(_status));
         Children.Add(_status);
 
-        // Welle A 1.15.0: Einschraenkung auf einen Pruefungsteil (Üben aus Teil 1 bzw. einem Bereich), mit „Alle zeigen“
+        // Welle A 1.15.0: Einschraenkung auf einen Pruefungsteil (Üben aus Teil 1 bzw. einem Bereich); seit A 1.19.0 ohne
+        // „Alle zeigen“ (Nico 1a, Entwurf P12-278: die Szenarien stehen nur noch eingebettet je Teil bzw. Bereich)
         _nurText = Schrift.Text("", "Klein", FontWeight.Bold, "Pinsel.accent");
         _nurText.TextWrapping = TextWrapping.Wrap;
         _nurText.VerticalAlignment = VerticalAlignment.Center;
-        var alle = LernTeile.Knopf(Pruefungsteile.AlleZeigen);
-        alle.Click += (_, _) => Nur(null, null);
-        _nurZeile = new NebenOderUnter(120, 10) { Children = { _nurText, alle }, Margin = new Thickness(0, 12, 0, 0), IsVisible = false };
+        _nurZeile = new Border { Child = _nurText, Margin = new Thickness(0, 12, 0, 0), IsVisible = false };
         Children.Add(_nurZeile);
         _zaehler.Margin = new Thickness(0, 12, 0, 2);
         Children.Add(_zaehler);
@@ -107,7 +106,7 @@ public sealed class ListenTeil : StackPanel
     }
 
     private readonly TextBlock _nurText;
-    private readonly NebenOderUnter _nurZeile;
+    private readonly Border _nurZeile;
     private HashSet<int>? _nur;
 
     /// <summary>Welle A 1.15.0: nur diese Positionen zeigen (null = alle); <paramref name="name"/> steht ueber der Liste.</summary>

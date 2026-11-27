@@ -90,13 +90,16 @@ public static class Pruefungsteile
         new(LeistenArt.Unter, B1, Seitenleistenname(fachrichtung, B1)),
         new(LeistenArt.Unter, B2, Seitenleistenname(fachrichtung, B2)),
         new(LeistenArt.Unter, Wiso, Deckblattname(fachrichtung, Wiso)),
-        new(LeistenArt.Unter, "abschluss", Abschlussprojekt),
         new(LeistenArt.Eintrag, Navigation.LernenId, LernenTitel),
         new(LeistenArt.Unter, "cards", "Karteikarten"),
         new(LeistenArt.Unter, "notebook", "Notizblock"),
         new(LeistenArt.Unter, "calc", "Rechner"),
         new(LeistenArt.Eintrag, "game", "Spiel"),
         new(LeistenArt.Eintrag, "progress", "Fortschritt"),
+        // ENTWURF P12-439 (Frage 3a): am PC Hauptpunkt „Mehr“ mit Testprojekte und Mein Projekt
+        new(LeistenArt.Eintrag, Mehr, MehrTitel),
+        new(LeistenArt.Unter, "testproject", Testprojekte),
+        new(LeistenArt.Unter, "abschluss", MeinProjekt),
     ];
 
     /// <summary>Kennung des Symbols „Programm beenden“ in <see cref="Symbole"/>.</summary>
@@ -122,7 +125,8 @@ public static class Pruefungsteile
     /// <summary>Hauptpunkt der Seitenleiste zu einem Unterpunkt (null = kein Unterpunkt).</summary>
     public static string? Oberpunkt(string id) => id switch
     {
-        Teil1 or Teil2 or B1 or B2 or Wiso or "abschluss" => Pruefung,
+        Teil1 or Teil2 or B1 or B2 or Wiso => Pruefung,
+        "testproject" or "abschluss" => Mehr,
         "cards" or "notebook" or "calc" => Navigation.LernenId,
         _ => null,
     };
@@ -140,8 +144,6 @@ public static class Pruefungsteile
         new("progress", "INSIGHTS_ROUNDED", "Fortschritt", "Rahmenplan, Prüfungen und Lerntage", ["#7C3AED", "#22D3EE"]),
         new("settings", "SETTINGS_ROUNDED", "Optionen", "Aussehen, Fachrichtung, Sicherung und Updates", ["primary"]),
         new("help", "HELP_OUTLINE_ROUNDED", Navigation.Hilfe, "Erklärungen und Rundgang", ["success"]),
-        // die ganze Liste der AP2-Szenarien (in den Bereichen gefiltert), damit sie am Handy in zwei Klicks erreichbar bleibt
-        new("scenarios", "DIAMOND_ROUNDED", "AP2-Szenarien", "%d Aufgaben aus allen Bereichen von AP2", ["#DB2777", "#FB923C"]),
         // Weisung P12-432 (Nico 2b): Testprojekte und das eigene Projekt auch hier, damit sie am Handy wieder in zwei Klicks erreichbar sind
         new("testproject", "FLAG_ROUNDED", Testprojekte, "%d Kundenaufträge zum Üben", ["success"]),
         new("abschluss", "WORKSPACE_PREMIUM_ROUNDED", MeinProjekt, "Dein IHK-Projekt vom Antrag bis zum Fachgespräch", ["#7C3AED", "#22D3EE"]),
@@ -152,9 +154,10 @@ public static class Pruefungsteile
     /// <summary>Welche Seite der Seitenleiste bzw. der unteren Leiste zu einer Seite gehoert, die sie selbst nicht zeigt.</summary>
     public static string? Eltern(string id, bool unten) => id switch
     {
-        Teil1 or Teil2 or B1 or B2 or Wiso or "abschluss" when unten => Pruefung,
+        Teil1 or Teil2 or B1 or B2 or Wiso when unten => Pruefung,
         "ap1scenarios" => unten ? Pruefung : Teil1,
-        "scenarios" or "testproject" => unten ? Pruefung : Teil2,
+        "scenarios" => unten ? Pruefung : Teil2,
+        "testproject" or "abschluss" => Mehr,
         "cards" or "notebook" or "calc" when unten => Navigation.LernenId,
         "progress" or "settings" or "help" when unten => Mehr,
         _ when Fachbereiche.Alle.Contains(id) => unten ? Navigation.LernenId : "cards",
@@ -163,8 +166,8 @@ public static class Pruefungsteile
 
     /// <summary>
     /// Seiten, die eine Seite mit einem Knopf oeffnet (Weisung P12-406, Abnahmesatz „jede bisherige Seite in hoechstens zwei
-    /// Klicks“): Teil 1 und die Bereiche den Pruefungstrainer (Üben, Probeklausur, echtes Format) und ihre Szenarien, Teil 2 die
-    /// Bereiche und das Projekt, die Sammelseiten ihre Eintraege, Karteikarten die Fachbereiche. <paramref name="mitSzenarien"/>:
+    /// Klicks“): AP1 und AP2 die andere Haelfte, den Pruefungstrainer (eingebettet: Üben, Probeklausur, echtes Format) und ihre
+    /// Szenarien (eingebettet), die Sammelseiten ihre Eintraege, Karteikarten die Fachbereiche. <paramref name="mitSzenarien"/>:
     /// hat der Teil Szenarien (sonst fehlt die Zeile).
     /// </summary>
     public static IReadOnlyList<string> Ziele(string seite, bool mitSzenarien = true) => seite switch
@@ -172,8 +175,10 @@ public static class Pruefungsteile
         // A 1.17.0: „Prüfung“ zeigt zuerst AP1 mit der Segment-Leiste; die andere Haelfte ist ein Klick auf das Segment
         Pruefung => Ziele(Teil1, mitSzenarien),
         Teil1 => mitSzenarien ? [Teil2, "quiz", "ap1scenarios"] : [Teil2, "quiz"],
-        Teil2 => [Teil1, B1, B2, Wiso, "testproject", "abschluss"],
-        B1 or B2 or Wiso => mitSzenarien ? ["quiz", "scenarios"] : ["quiz"],
+        // A 1.19.0 (Nico 1, 3): AP2 wie AP1, Pruefungstrainer und Szenarien eingebettet; Testprojekte und Mein Projekt nur unter „Mehr“
+        Teil2 => mitSzenarien ? [Teil1, "quiz", "scenarios"] : [Teil1, "quiz"],
+        // die Bereiche haben keine eigene Seite mehr, sie oeffnen AP2 (Nico 4a)
+        B1 or B2 or Wiso => Ziele(Teil2, mitSzenarien),
         Navigation.LernenId => [.. Navigation.Lernen.Select(e => e.Id)],
         Mehr => [.. MehrEintraege.Select(e => e.Id)],
         "cards" => Fachbereiche.Alle,
@@ -211,18 +216,14 @@ public static class Pruefungsteile
     public const string KarteBereich = "%s · %d %%";
     public const string Projekt = "PROJEKT";
     public const string ProjektName = "Betriebliche Projektarbeit";
-    public const string ProjektAngabe = "Antrag, Dokumentation, Präsentation, Fachgespräch · %d Testprojekte zum Üben";
     public const string Testprojekte = "Testprojekte";
     public const string MeinProjekt = "Mein Projekt";
-    public const string AngabeTeil = "Üben: %d Fragen, %d Szenarien · Prüfen: Probeklausur, %d Sätze im echten Format";
-    public const string AngabeTeilOhneSaetze = "Üben: %d Fragen, %d Szenarien · Prüfen: Probeklausur";
-    public const string AngabeWiso = "Üben: %d Fragen · Prüfen: %d Aufgaben in %d Minuten";
 
     public const string UebenTitel = "ÜBEN · OHNE UHR, OHNE NOTE";
     public const string Pruefungsfragen = "Prüfungsfragen";
     public const string FragenAngabe = "%d Fragen zu den Themen dieses Bereichs";
-    public const string Ap1Szenarien = "AP1-Szenarien";
-    public const string Ap2Szenarien = "AP2-Szenarien";
+    /// <summary>A 1.19.0 (Nico 1a): Zeile „Szenarien“ in AP1 und in jedem Bereich von AP2 (statt „AP1-/AP2-Szenarien“).</summary>
+    public const string Szenarien = "Szenarien";
     public const string SzenarienAngabe = "%d Fallaufgaben";
     public const string Einzelaufgabe = "Einzelne Aufgabe im echten Format";
     public const string EinzelaufgabeAngabe = "eine Aufgabe aus einem Satz, mit Musterlösung";
@@ -230,7 +231,6 @@ public static class Pruefungsteile
     public const string StandTitel = "DEIN STAND";
     public const string Stand = "%d Fragen: %d bearbeitet, %d %% richtig";
     public const string StandSzenarien = " · Szenarien %d von %d";
-    public const string AlleZeigen = "Alle zeigen";
     public const string NurTeil = "Nur %s";
     public const string KeineFragen = "Zu diesem Bereich gibt es noch keine Fragen.";
 
@@ -250,6 +250,23 @@ public static class Pruefungsteile
     public const string Musterloesung = "Musterlösung zeigen";
     public const string MusterloesungTitel = "MUSTERLÖSUNG";
     public const string Zurueck = "Zurück";
+
+    // -- A 1.19.0 (Weisung P12-440, Entwurf P12-278): AP2-Zeilen, Zurück-Zeile, eingebettete Seiten -----------------
+    public const string ProbeklausurZeile = "Probeklausur";
+    public const string EchtesFormatZeile = "Echtes Format";
+    /// <summary>Zurück-Zeile: „&lt;Teil&gt; · &lt;Ziel&gt;“, z. B. „Bereich 1 · Prüfungsfragen“.</summary>
+    public const string ZurueckTitel = "%s · %s";
+    public const string EinzelaufgabeKurz = "Einzelne Aufgabe";
+    public const string AufgabeKurz = "Aufgabe %d";
+    /// <summary>Zurück-Zeile eingebetteter Seiten, die nicht aus AP1/AP2 kommen (Weisung P12-440 5a, Anlage P12-278 Abschnitt 4).</summary>
+    public const string HerkunftSuche = "Suche";
+    public const string HerkunftNotizblock = "Notizblock";
+    public const string HerkunftFortschritt = "Fortschritt";
+    public const string HerkunftStart = "Start";
+    public const string HerkunftSpiel = "Spiel";
+    public const string Pruefungsfrage = "Prüfungsfrage";
+    public const string Szenario = "Szenario";
+    public const string Wiederholen = "Wiederholen";
 
     /// <summary>Aufgaben einer Probeklausur: WiSo 30, sonst 4.</summary>
     public static int Aufgaben(string rolle) => rolle == Wiso ? Klausur.WisoAnzahl : 4;

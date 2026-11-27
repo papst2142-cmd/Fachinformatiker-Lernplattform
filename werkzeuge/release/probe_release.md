@@ -1,23 +1,25 @@
-Eine Aufräum-Version: alte, längst ersetzte Lerninhalte sind jetzt ganz aus dem Programm entfernt.
+Der Bereich „Prüfung“ ist jetzt einheitlich aufgebaut: Alles, was du dort öffnest, bleibt innerhalb derselben Seite.
 
-- Gelöscht sind 47 Karteikarten und 81 Quizfragen in einer älteren Fassung, die schon seit früheren Versionen durch eine verbesserte Fassung ersetzt und nicht mehr zu sehen waren, dazu die 10 alten Prüfungssätze für Anwendungsentwicklung (FIAE) und die 6 älteren Fassungen einzelner FIAE-Sätze. Was du beim Lernen siehst, bleibt gleich: dieselben Karten, Fragen und Prüfungssätze in derselben Reihenfolge.
-- Dein Lernstand bleibt erhalten. Steht darin noch ein Eintrag mit dem alten Text einer Frage, schreibt das Programm ihn beim ersten Start einmal auf den heutigen Text um. Vorher legt es eine Kopie deines Lernstands an. Diese Prüfung läuft bei jedem Start mit; sie fällt erst in einer späteren Version weg, wenn alle Geräte mindestens diese Version haben.
-- Gleichst du deinen Lernstand zwischen mehreren Geräten ab, aktualisiere bitte alle Geräte auf diese Version, bevor du wieder abgleichst.
-- Hattest du eine Prüfung im echten Format mit einem der gelöschten Sätze offen, wird sie beim Öffnen beendet und nicht gewertet. Ein Hinweis sagt dir das. Deine fertigen Prüfungen bleiben im Verlauf.
-- „Lernstand übernehmen“ nimmt jetzt eine Sicherung der Lernplattform oder eine Abgleich-Datei. Die Datenbank der früheren App lässt sich dort nicht mehr wählen.
-- Für FIAE, FIDP und FIDV gibt es passend zu dieser Version neue Fachrichtungs-Pakete. Ältere Pakete passen nicht mehr zu ihr.
+- Oben steht immer der Schalter AP1 | AP2, darunter Üben | Prüfen. Öffnest du Prüfungsfragen, Szenarien, einen Prüfungssatz oder eine einzelne Aufgabe, bleiben beide Schalter sichtbar. Eine Zeile „← Zurück“ mit dem Namen des Teils bringt dich einen Schritt zurück.
+- Bei AP2 › Üben hat jeder Bereich (Bereich 1, Bereich 2, Wirtschafts- und Sozialkunde) eine eigene Karte mit Prüfungsfragen, Szenarien und einzelnen Aufgaben. Dein Stand in diesem Bereich steht klein darunter.
+- Bei AP2 › Prüfen findest du je Bereich die Probeklausur und die Prüfung im echten Format.
+- Die eigenen Seiten „AP1-Szenarien“ und „AP2-Szenarien“ gibt es nicht mehr. Die Szenarien findest du unter Üben beim passenden Teil, bei AP1 in der Zeile „Szenarien“.
+- Die Karte zum Abschlussprojekt unter AP2 ist nur noch ein Hinweis. Testprojekte und „Mein Projekt“ findest du unter „Mehr“, am PC jetzt auch als eigener Punkt „Mehr“ in der Seitenleiste.
+- Am PC steht die Zeile mit der Version jetzt oben neben dem Logo unter „Lernplattform“, damit sie immer zu sehen ist.
+- Auch Suche, Notizblock, „Jetzt üben“ im Fortschritt, „Wiederholen“ auf der Startseite und die Tafel im Spiel öffnen Fragen und Szenarien jetzt innerhalb der Prüfungsseite.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
 
 ### Herunterladen
 
-**Fachinformatiker Lernplattform A 1.18.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
+**Fachinformatiker Lernplattform A 1.19.0**: privates Lernprogramm für die Ausbildung Fachinformatiker/in (Alphaversion „A“). Copyright Nico H, alle Rechte vorbehalten (siehe `LICENSE.txt`).
 
 ## Welche Datei für welches Gerät?
 
 - **Windows:** `Fachinformatiker-Lernplattform-win-Setup.exe` herunterladen und starten. Das Programm ist nicht digital signiert. Erscheint „Der Computer wurde durch Windows geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.
-- **Linux:** `Fachinformatiker-Lernplattform-A-1.18.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
-- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.18.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
-- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.18.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
-- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.18.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **Linux:** `Fachinformatiker-Lernplattform-A-1.19.0-AppImage.tar.gz` herunterladen und entpacken, dann `Fachinformatiker-Lernplattform.AppImage` doppelklicken. Die einzelne Datei `Fachinformatiker-Lernplattform.AppImage` braucht das Update im Programm; lädst du sie direkt, fehlt ihr das Recht „Als Programm ausführen“.
+- **Android** (64-Bit, arm64-v8a): `Fachinformatiker-Lernplattform-A-1.19.0-android-arm64.apk` am Handy herunterladen und öffnen. Android fragt, ob der Browser Apps installieren darf.
+- **macOS mit Apple-Chip (M1 bis M4):** `Fachinformatiker-Lernplattform-A-1.19.0-osx-arm64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
+- **macOS mit Intel-Prozessor (macOS 14 oder neuer):** `Fachinformatiker-Lernplattform-A-1.19.0-osx-x64.pkg`. Nicht signiert: nach dem ersten Öffnen unter „Systemeinstellungen“ → „Datenschutz & Sicherheit“ „Dennoch öffnen“ wählen. Neue Versionen kommen danach über das Update im Programm („Optionen“ → „Updates“).
 - Die übrigen Dateien (`.nupkg`, `RELEASES…`, `releases.*.json`) braucht das Update im Programm. Lizenzen der Fremdbestandteile: `THIRD_PARTY_NOTICES.txt` (Übersicht) und `THIRD_PARTY_LICENSES.txt` (volle Texte).
 
 ## Prüfsummen (SHA-256)

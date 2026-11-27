@@ -17,7 +17,10 @@ public sealed record TeilStand(int Fragen, int Bearbeitet, int Richtig, int Szen
 /// Fortschritt, <see cref="RahmenplanGewicht.Punkte"/>) zu diesem Teil zaehlt: Teil 1 = Punkt mit „ap1“, ein Bereich von Teil 2 =
 /// Punkt mit dem Kurznamen des Bereichs in „ap2“ (FISI „Konzeption“, „Netzwerke“, „WiSo“; FIAE/FIDP/FIDV ihre Bereiche aus
 /// rahmenplan_zusatz.json). Die WiSo-Fragen der Probeklausur (Themen recht und arbeitswelt) zaehlen immer zu WiSo.</item>
-/// <item>Szenarien: die Aufgaben, aus denen die Probeklausur dieses Teils zieht (<see cref="KlausurInhalte.Nutzbar"/> je Thema).</item>
+/// <item>Szenarien: die Aufgaben, aus denen die Probeklausur dieses Teils zieht (<see cref="KlausurInhalte.Nutzbar"/> je Thema).
+/// A 1.19.0 (Weisung P12-440, Nico „AP1 unter AP1“): Teil 1 zeigt alle AP1-Szenarien der Sicht, auch die 50 zur
+/// Wirtschafts- und Sozialkunde, aus denen die Probeklausur AP1 nicht zieht; sonst waeren sie ohne die Seite „AP1-Szenarien“
+/// nur noch ueber die Suche zu finden.</item>
 /// </list>
 /// Eine Frage kann zu mehreren Teilen gehoeren (ein Rahmenplan-Punkt zaehlt oft fuer mehrere Bereiche).
 /// </summary>
@@ -52,8 +55,12 @@ public static class TeilUeben
         {
             var themen = a.Themen?.SelectMany(w => w) ?? a.Pool ?? [];
             var liste = klausur.Quelle(a.Quelle);
+            if (a.Quelle == "ap1")
+            {
+                return new TeilInhalte(fragen, Quellen.Ap1, [.. inhalte.Ap1Szenarien]);
+            }
             var indizes = themen.Distinct(StringComparer.Ordinal).SelectMany(t => klausur.Nutzbar(a.Quelle, t)).Distinct().Order();
-            return new TeilInhalte(fragen, a.Quelle == "ap1" ? Quellen.Ap1 : Quellen.Ap2, [.. indizes.Select(i => liste[i])]);
+            return new TeilInhalte(fragen, Quellen.Ap2, [.. indizes.Select(i => liste[i])]);
         }
         return new TeilInhalte(fragen, "", []);
     }

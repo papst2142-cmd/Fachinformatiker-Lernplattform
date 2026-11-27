@@ -38,14 +38,16 @@ public static partial class AutoMessung
         {
             await Klick(zeile.Id!);
             // A 1.17.0: „Prüfung“ zeigt die zuletzt gewaehlte Haelfte (hier AP1 oder AP2), alles andere seine Seite
-            var seite = zeile.Id == Pruefungsteile.Pruefung ? ansicht.LetzteHaelfte : zeile.Id!;
+            // A 1.19.0 (Weisung P12-440, Nico 4a): ein Bereich oeffnet AP2 › Üben bei diesem Bereich, markiert bleibt der Bereich
+            var bereich = PruefungsteilSeite.Bereiche.Contains(zeile.Id!);
+            var seite = zeile.Id == Pruefungsteile.Pruefung ? ansicht.LetzteHaelfte : bereich ? Pruefungsteile.Teil2 : zeile.Id!;
             if (ansicht.AktuelleSeite != seite)
             {
                 Fehler("Seitenleiste: Klick auf " + zeile.Titel + " zeigt " + ansicht.AktuelleSeite);
             }
             var markiert = leisten.MarkiertFuerTests();
-            var sollMarkiert = leisten.SollMarkiertFuerTests(seite);
-            var haupt = Pruefungsteile.Oberpunkt(seite) ?? zeile.Id!;
+            var sollMarkiert = leisten.SollMarkiertFuerTests(bereich ? zeile.Id! : seite);
+            var haupt = Pruefungsteile.Oberpunkt(bereich ? zeile.Id! : seite) ?? zeile.Id!;
             if (!markiert["Knopf"].SequenceEqual([haupt]) || sollMarkiert.Any(s => !s.Value.SequenceEqual(markiert[s.Key])))
             {
                 Fehler("Seitenleiste: nach Klick auf " + zeile.Titel + " markiert " + string.Join("; ", markiert.Select(m => m.Key + " [" + string.Join(", ", m.Value) + "]")));

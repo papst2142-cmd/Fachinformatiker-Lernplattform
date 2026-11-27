@@ -40,8 +40,10 @@ public class SeitenleisteOptionenTests
         List<string?> Unter(string haupt) =>
             [.. leiste.SkipWhile(z => z.Id != haupt).Skip(1).TakeWhile(z => z.Art == LeistenArt.Unter).Select(z => z.Id)];
         Assert.Equal(Navigation.Lernen.Select(l => (string?)l.Id), Unter(Navigation.LernenId));
-        Assert.Equal([Pruefungsteile.Teil1, Pruefungsteile.Teil2, Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso, "abschluss"],
+        // A 1.19.0 (Weisung P12-440, Nico 3a, 4a): Bereiche bleiben unter Prüfung, Testprojekte und Mein Projekt unter dem neuen Hauptpunkt „Mehr“
+        Assert.Equal([Pruefungsteile.Teil1, Pruefungsteile.Teil2, Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso],
             Unter(Pruefungsteile.Pruefung));
+        Assert.Equal(["testproject", "abschluss"], Unter(Pruefungsteile.Mehr));
         Assert.Equal(["AP1", "AP2"], leiste.Where(z => z.Id is Pruefungsteile.Teil1 or Pruefungsteile.Teil2).Select(z => z.Titel));
         // jeder Unterpunkt hat seinen Hauptpunkt, jeder Hauptpunkt ein Symbol
         Assert.All(leiste.Where(z => z.Art == LeistenArt.Unter), z => Assert.Equal(

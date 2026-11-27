@@ -57,12 +57,13 @@ public sealed class Navigationsleisten
         // Weisung P8-56: "Programm beenden" immer; Patch A 0.37.0 (Sammelliste 206, Antwort 4a) auch auf Android (Tablet quer)
         BeendenKnopf = BeendenEintrag();
         unten.Children.Add(BeendenKnopf);
-        // A 1.15.0: unten angeheftet nur Hilfe, Optionen und Programm beenden (wie im Entwurf Hilfe und Optionen); LERNSTATUS und
-        // Version stehen am Ende des Bildlaufs, damit bei 1280 x 800 alle Eintraege bis Fortschritt ohne Rollen zu sehen sind
+        // A 1.15.0: unten angeheftet nur Hilfe, Optionen und Programm beenden (wie im Entwurf Hilfe und Optionen). A 1.19.0
+        // (Weisung P12-440, Fund Chat 2): die Version steht im Kopf unter „Lernplattform“ (<see cref="LogoZeile"/>), sonst
+        // schob „Mehr“ mit Testprojekte und Mein Projekt sie bei 1280 x 800 aus dem Bild
         var fuss = new StackPanel { Margin = new Thickness(0, 0, 0, 12), Children = { unten } };
         var rollen = new ScrollViewer
         {
-            Content = new StackPanel { Children = { oben, Version() } },
+            Content = new StackPanel { Children = { oben } },
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
         };
         var aufbau = new DockPanel();
@@ -134,7 +135,10 @@ public sealed class Navigationsleisten
         var zusatz = Schrift.Pt(Navigation.LogoZusatz, 11, FontWeight.Normal, "Pinsel.muted");
         zusatz.VerticalAlignment = VerticalAlignment.Center;
         zusatz.Margin = new Thickness(7, 7, 0, 0);
-        var zeile = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(20, 22, 20, 20), Children = { marke, name, zusatz } };
+        // A 1.19.0: Version unter „Lernplattform“, immer sichtbar (Befund P12-425: Logo, Version, Programm beenden bleiben)
+        zusatz.Margin = new Thickness(7, 0, 0, 0);
+        var rechts = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Children = { zusatz, Version() } };
+        var zeile = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(20, 22, 20, 20), Children = { marke, name, rechts } };
         Avalonia.Automation.AutomationProperties.SetName(zeile, Texte.Programmname);
         return zeile;
     }
@@ -272,11 +276,11 @@ public sealed class Navigationsleisten
         return knopf;
     }
 
-    private static Control Version()
+    /// <summary>Zeile „Version A x.y.z“ (11 muted), seit A 1.19.0 im Kopf unter „Lernplattform“.</summary>
+    private static TextBlock Version()
     {
         var text = Schrift.Pt(Beschriftungen.Einsetzen(Navigation.Fusszeile, Aktualisierung.Aktualisierung.Anzeige), 11, FontWeight.Normal, "Pinsel.muted");
-        text.HorizontalAlignment = HorizontalAlignment.Center;
-        text.Margin = new Thickness(0, 8, 0, 14);
+        text.Margin = new Thickness(7, 0, 0, 0);
         return text;
     }
 

@@ -1,5 +1,17 @@
 # Änderungen
 
+## A 1.19.0
+Der Bereich „Prüfung“ ist jetzt einheitlich aufgebaut: Alles, was du dort öffnest, bleibt innerhalb derselben Seite.
+
+- Oben steht immer der Schalter AP1 | AP2, darunter Üben | Prüfen. Öffnest du Prüfungsfragen, Szenarien, einen Prüfungssatz oder eine einzelne Aufgabe, bleiben beide Schalter sichtbar. Eine Zeile „← Zurück“ mit dem Namen des Teils bringt dich einen Schritt zurück.
+- Bei AP2 › Üben hat jeder Bereich (Bereich 1, Bereich 2, Wirtschafts- und Sozialkunde) eine eigene Karte mit Prüfungsfragen, Szenarien und einzelnen Aufgaben. Dein Stand in diesem Bereich steht klein darunter.
+- Bei AP2 › Prüfen findest du je Bereich die Probeklausur und die Prüfung im echten Format.
+- Die eigenen Seiten „AP1-Szenarien“ und „AP2-Szenarien“ gibt es nicht mehr. Die Szenarien findest du unter Üben beim passenden Teil, bei AP1 in der Zeile „Szenarien“.
+- Die Karte zum Abschlussprojekt unter AP2 ist nur noch ein Hinweis. Testprojekte und „Mein Projekt“ findest du unter „Mehr“, am PC jetzt auch als eigener Punkt „Mehr“ in der Seitenleiste.
+- Am PC steht die Zeile mit der Version jetzt oben neben dem Logo unter „Lernplattform“, damit sie immer zu sehen ist.
+- Auch Suche, Notizblock, „Jetzt üben“ im Fortschritt, „Wiederholen“ auf der Startseite und die Tafel im Spiel öffnen Fragen und Szenarien jetzt innerhalb der Prüfungsseite.
+- Dein Lernstand, die Lerninhalte, die Prüfungen und deine Spielstände bleiben genau gleich.
+
 ## A 1.18.0
 Eine Aufräum-Version: alte, längst ersetzte Lerninhalte sind jetzt ganz aus dem Programm entfernt.
 
