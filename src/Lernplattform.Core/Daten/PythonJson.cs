@@ -12,7 +12,25 @@ public sealed class PyObjekt : List<KeyValuePair<string, object?>>
 {
     public void Add(string schluessel, object? wert) => Add(new KeyValuePair<string, object?>(schluessel, wert));
 
-    public object? this[string schluessel] => this.FirstOrDefault(p => p.Key == schluessel).Value;
+    /// <summary>
+    /// Wert zum Schluessel (der erste Treffer), null = fehlt. Patch A 1.19.1 (Sammelliste 473): als Schleife ueber die Eintraege
+    /// statt <c>FirstOrDefault</c> mit Lambda; gleiches Ergebnis, aber ohne neuen Speicher je Abfrage (am Tablet waren das
+    /// Megabytes je Sekunde und damit viele Speicherbereinigungen im Spiel).
+    /// </summary>
+    public object? this[string schluessel]
+    {
+        get
+        {
+            foreach (var paar in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(this))
+            {
+                if (paar.Key == schluessel)
+                {
+                    return paar.Value;
+                }
+            }
+            return null;
+        }
+    }
 }
 
 /// <summary>

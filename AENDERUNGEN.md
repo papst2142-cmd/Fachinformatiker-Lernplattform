@@ -1,5 +1,12 @@
 # Änderungen
 
+## A 1.19.1
+Das Spiel läuft auf schwächeren Tablets und Handys wieder flüssig, auch mit einem langen Spielstand.
+
+- Auf manchen Geräten, zum Beispiel einem Galaxy Tab A8, ruckelte die Stadt stark, und auch in Gebäuden. Der Grund: Das Programm hat zweimal in jeder Sekunde und nach jedem Schritt deinen ganzen bisherigen Spielverlauf neu durchgerechnet, um Uhrzeit, Ort und die Zahl der offenen Aufgaben oben anzuzeigen. Je länger du spielst, desto länger wird dieser Verlauf, und desto mehr Arbeit fiel dabei an.
+- Jetzt merkt sich das Programm das Ergebnis und rechnet nur neu, wenn im Spiel wirklich etwas passiert ist. Am PC braucht die Anzeige oben dadurch weniger als ein Zehntel der Zeit und des Speichers.
+- Was du im Spiel siehst und wie es sich verhält, bleibt genau gleich. Dein Spielstand und dein Lernstand bleiben erhalten.
+
 ## A 1.19.0
 Der Bereich „Prüfung“ ist jetzt einheitlich aufgebaut: Alles, was du dort öffnest, bleibt innerhalb derselben Seite.
 
