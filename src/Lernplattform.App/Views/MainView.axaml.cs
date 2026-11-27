@@ -131,7 +131,8 @@ public partial class MainView : UserControl
         _leisten = new Navigationsleisten(id => _ = ZeigeAsync(id));
 
         // Wie am Handy: Hilfe vor Suche, Symbole text_dim, rechts 6 Punkte Abstand
-        var hilfe = Symbolknopf("HELP_OUTLINE_ROUNDED", Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
+        // A 1.17.0 (Weisung P12-430, Entwurf P12-271): Hilfe mit dem Wegweiser aus Satz 3, die Lupe bleibt (Nico 4a)
+        var hilfe = Symbolknopf(Core.Texte.Navigation.KopfKnoepfeHandy[0].Symbol, Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
         var suche = Symbolknopf("SEARCH_ROUNDED", Seiten.Titel(Seiten.Suche), Seiten.Suche);
         var kopf = new DockPanel { Margin = new Thickness(0, 0, 6, 0) };
         // Patch A 0.37.0 (Weisung P11-35, Nico): am Handy (Kopfleiste ohne Seitenleiste) X rechts neben der Lupe,
@@ -609,7 +610,7 @@ public partial class MainView : UserControl
     {
         var knopf = new Button
         {
-            Content = Symbole.Block(symbol, 24, "Pinsel.text_dim"),
+            Content = Symbole.Satz3.ContainsKey(symbol) ? new SatzSymbol(symbol, "Pinsel.text_dim", "Pinsel.bg", 24) : Symbole.Block(symbol, 24, "Pinsel.text_dim"),
             Padding = new Thickness(12),
             Background = Brushes.Transparent,
             CornerRadius = new CornerRadius(999),
@@ -899,6 +900,9 @@ public partial class MainView : UserControl
     // -- Welle A 1.15.0: Wege der Pruefungsteile ---------------------------------------------------------
 
     private string? _reiterBeimZeigen;
+
+    /// <summary>A 1.17.0: zuletzt gezeigte Haelfte der Pruefung (AP1 oder AP2), dorthin fuehrt „Prüfung“ in den Leisten.</summary>
+    public string LetzteHaelfte { get; private set; } = Core.Texte.Pruefungsteile.Teil1;
     private string? _herkunft;
     private string? _herkunftSeite;
 
@@ -953,6 +957,15 @@ public partial class MainView : UserControl
 
     public async Task ZeigeAsync(string id)
     {
+        // A 1.17.0 (Weisung P12-430, Reiter B): „Prüfung“ zeigt die zuletzt gewaehlte Haelfte AP1 oder AP2 (zuerst AP1)
+        if (id == Core.Texte.Pruefungsteile.Pruefung)
+        {
+            id = LetzteHaelfte;
+        }
+        else if (id is Core.Texte.Pruefungsteile.Teil1 or Core.Texte.Pruefungsteile.Teil2)
+        {
+            LetzteHaelfte = id;
+        }
         var erstes = !_seiten.ContainsKey(id);
         var vorher = AktuelleSeite;
         var uhr = Stopwatch.StartNew();

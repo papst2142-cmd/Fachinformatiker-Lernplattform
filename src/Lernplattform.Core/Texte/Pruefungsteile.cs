@@ -25,6 +25,12 @@ public static class Pruefungsteile
     public const string Wiso = "wiso";
     public const string Mehr = "mehr";
 
+    /// <summary>
+    /// A 1.17.0 (Weisung P12-430, Reiter B aus Meldung P12-268): ein Eintrag „Prüfung“ unten am Handy und als Hauptpunkt am PC;
+    /// er oeffnet die zuletzt gewaehlte Haelfte AP1 oder AP2 (zuerst AP1), oben auf der Seite die Segment-Leiste „AP1 | AP2“.
+    /// </summary>
+    public const string Pruefung = "pruefung";
+
     /// <summary>Seiten eines Pruefungsteils mit den Reitern „Üben“ und „Prüfen“ (Teil 1 und die drei schriftlichen Bereiche).</summary>
     public static readonly IReadOnlyList<string> ReiterSeiten = [Teil1, B1, B2, Wiso];
 
@@ -33,12 +39,15 @@ public static class Pruefungsteile
 
     // -- Beschriftungen der Leisten --------------------------------------------------------------
     public const string GruppeAbschluss = "ABSCHLUSSPRÜFUNG %s";
-    public const string GruppeLernen = "LERNEN";
-    public const string GruppeSonstiges = "SONSTIGES";
-    public const string Teil1Titel = "Teil 1 · AP1";
-    public const string Teil2Titel = "Teil 2 · AP2";
-    public const string Teil1Kurz = "Teil 1";
-    public const string Teil2Kurz = "Teil 2";
+    public const string PruefungTitel = "Prüfung";
+    public const string LernenTitel = "Lernen";
+    /// <summary>A 1.17.0 (Reiter B, P12-420/P12-423): nirgends mehr „Teil 1/2“ in den Leisten, nur noch AP1 und AP2.</summary>
+    public const string Teil1Titel = "AP1";
+    public const string Teil2Titel = "AP2";
+    public const string Teil1Kurz = "AP1";
+    public const string Teil2Kurz = "AP2";
+    /// <summary>Zweite Zeile einer Haelfte der Segment-Leiste: Gewicht in der Pruefung („20 %“).</summary>
+    public const string SegmentGewicht = "%d %%";
     public const string MehrTitel = "Mehr";
     public const string Abschlussprojekt = "Abschlussprojekt";
 
@@ -64,24 +73,57 @@ public static class Pruefungsteile
     }
 
     /// <summary>Zeilen der Seitenleiste (oben, im Bildlauf) fuer eine Fachrichtung.</summary>
+    /// <remarks>
+    /// A 1.17.0 (Weisung P12-430, Entwurf P12-271 Satz 3): Hauptpunkte mit Symbol (<see cref="Symbole"/>), Unterpunkte ohne;
+    /// „Prüfung“ mit AP1, AP2 und den Bereichen darunter (P12-429), „Lernen“ mit Karteikarten, Notizblock, Rechner; die
+    /// Gruppenkoepfe LERNEN und SONSTIGES entfallen wie im Entwurf, die Fachrichtung bleibt als Kopf über „Prüfung“ (P12-425).
+    /// </remarks>
     public static IReadOnlyList<LeistenZeile> Seitenleiste(Fachrichtung fachrichtung) =>
     [
         new(LeistenArt.Eintrag, "dashboard", "Start"),
         new(LeistenArt.Gruppe, null, Beschriftungen.Einsetzen(GruppeAbschluss, FachrichtungTexte.KuerzelFuer(fachrichtung.Id))),
-        new(LeistenArt.Eintrag, Teil1, Teil1Titel),
-        new(LeistenArt.Eintrag, Teil2, Teil2Titel),
+        new(LeistenArt.Eintrag, Pruefung, PruefungTitel),
+        new(LeistenArt.Unter, Teil1, Teil1Titel),
+        new(LeistenArt.Unter, Teil2, Teil2Titel),
         new(LeistenArt.Unter, B1, Seitenleistenname(fachrichtung, B1)),
         new(LeistenArt.Unter, B2, Seitenleistenname(fachrichtung, B2)),
         new(LeistenArt.Unter, Wiso, Deckblattname(fachrichtung, Wiso)),
         new(LeistenArt.Unter, "abschluss", Abschlussprojekt),
-        new(LeistenArt.Gruppe, null, GruppeLernen),
+        new(LeistenArt.Eintrag, Navigation.LernenId, LernenTitel),
         new(LeistenArt.Unter, "cards", "Karteikarten"),
         new(LeistenArt.Unter, "notebook", "Notizblock"),
         new(LeistenArt.Unter, "calc", "Rechner"),
-        new(LeistenArt.Gruppe, null, GruppeSonstiges),
         new(LeistenArt.Eintrag, "game", "Spiel"),
         new(LeistenArt.Eintrag, "progress", "Fortschritt"),
     ];
+
+    /// <summary>Kennung des Symbols „Programm beenden“ in <see cref="Symbole"/>.</summary>
+    public const string Beenden = "beenden";
+
+    /// <summary>
+    /// A 1.17.0 (Weisung P12-430, Satz 3 mit Start = Sonnenaufgang): Symbol je Hauptpunkt der Seitenleiste, der unteren Leiste
+    /// und der Kopfleiste (Hilfe). Gleicher Satz an PC und Handy; der Bildschirmleser liest die Woerter, nie das Symbol.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> Symbole = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["dashboard"] = "START",
+        [Pruefung] = "PRUEFUNG",
+        [Navigation.LernenId] = "LERNEN",
+        ["game"] = "SPIEL",
+        ["progress"] = "FORTSCHRITT",
+        ["help"] = "HILFE",
+        ["settings"] = "OPTIONEN",
+        [Mehr] = "MEHR",
+        [Beenden] = "BEENDEN",
+    };
+
+    /// <summary>Hauptpunkt der Seitenleiste zu einem Unterpunkt (null = kein Unterpunkt).</summary>
+    public static string? Oberpunkt(string id) => id switch
+    {
+        Teil1 or Teil2 or B1 or B2 or Wiso or "abschluss" => Pruefung,
+        "cards" or "notebook" or "calc" => Navigation.LernenId,
+        _ => null,
+    };
 
     /// <summary>Unten angeheftet (ausserhalb des Bildlaufs): Hilfe und Optionen, darunter wie bisher „Programm beenden“ (der Kasten LERNSTATUS entfiel mit Weisung P12-409, Nico 2a).</summary>
     public static readonly IReadOnlyList<LeistenZeile> SeitenleisteUnten =
@@ -97,7 +139,7 @@ public static class Pruefungsteile
         new("settings", "SETTINGS_ROUNDED", "Optionen", "Aussehen, Fachrichtung, Sicherung und Updates", ["primary"]),
         new("help", "HELP_OUTLINE_ROUNDED", Navigation.Hilfe, "Erklärungen und Rundgang", ["success"]),
         // die ganze Liste der AP2-Szenarien (in den Bereichen gefiltert), damit sie am Handy in zwei Klicks erreichbar bleibt
-        new("scenarios", "DIAMOND_ROUNDED", "AP2-Szenarien", "%d Aufgaben aus allen Bereichen von Teil 2", ["#DB2777", "#FB923C"]),
+        new("scenarios", "DIAMOND_ROUNDED", "AP2-Szenarien", "%d Aufgaben aus allen Bereichen von AP2", ["#DB2777", "#FB923C"]),
     ];
 
     public static readonly Kopftitel MehrKopf = new(Mehr, "MEHR", "ÜBERSICHT");
@@ -105,9 +147,9 @@ public static class Pruefungsteile
     /// <summary>Welche Seite der Seitenleiste bzw. der unteren Leiste zu einer Seite gehoert, die sie selbst nicht zeigt.</summary>
     public static string? Eltern(string id, bool unten) => id switch
     {
-        B1 or B2 or Wiso or "abschluss" when unten => Teil2,
-        "ap1scenarios" => Teil1,
-        "scenarios" or "testproject" => Teil2,
+        Teil1 or Teil2 or B1 or B2 or Wiso or "abschluss" when unten => Pruefung,
+        "ap1scenarios" => unten ? Pruefung : Teil1,
+        "scenarios" or "testproject" => unten ? Pruefung : Teil2,
         "cards" or "notebook" or "calc" when unten => Navigation.LernenId,
         "progress" or "settings" or "help" when unten => Mehr,
         _ when Fachbereiche.Alle.Contains(id) => unten ? Navigation.LernenId : "cards",
@@ -122,8 +164,10 @@ public static class Pruefungsteile
     /// </summary>
     public static IReadOnlyList<string> Ziele(string seite, bool mitSzenarien = true) => seite switch
     {
-        Teil1 => mitSzenarien ? ["quiz", "ap1scenarios"] : ["quiz"],
-        Teil2 => [B1, B2, Wiso, "testproject", "abschluss"],
+        // A 1.17.0: „Prüfung“ zeigt AP1 (zuerst) mit der Segment-Leiste; die andere Haelfte ist ein Klick auf das Segment
+        Pruefung => [Teil1, Teil2],
+        Teil1 => mitSzenarien ? [Teil2, "quiz", "ap1scenarios"] : [Teil2, "quiz"],
+        Teil2 => [Teil1, B1, B2, Wiso, "testproject", "abschluss"],
         B1 or B2 or Wiso => mitSzenarien ? ["quiz", "scenarios"] : ["quiz"],
         Navigation.LernenId => [.. Navigation.Lernen.Select(e => e.Id)],
         Mehr => [.. MehrEintraege.Select(e => e.Id)],
@@ -132,14 +176,15 @@ public static class Pruefungsteile
     };
 
     // -- Brotkrumen der neuen Seiten (die bisherigen Seiten behalten ihre Kopfzeile, G9 kopfleiste_pc/_handy) ------------
-    public const string KopfAbschluss = "ABSCHLUSSPRÜFUNG";
-    public const string KopfTeil2 = "TEIL 2";
+    /// <summary>A 1.17.0 (Entwurf P12-271): Brotkrumen „PRÜFUNG / AP1“, unter AP2 „AP2 / BEREICH 1“.</summary>
+    public const string KopfAbschluss = "PRÜFUNG";
+    public const string KopfTeil2 = "AP2";
 
     /// <summary>Brotkrumen einer neuen Seite (null = keine neue Seite). PC mit vollem Namen, Handy kurz (der Name steht dort als Überschrift).</summary>
     public static Kopftitel? Kopf(string id, Fachrichtung fachrichtung, bool pc) => id switch
     {
-        Teil1 => new(id, KopfAbschluss, pc ? Beschriftungen.Gross(Teil1Titel) : Beschriftungen.Gross(Teil1Kurz)),
-        Teil2 => new(id, KopfAbschluss, pc ? Beschriftungen.Gross(Teil2Titel) : Beschriftungen.Gross(Teil2Kurz)),
+        Teil1 => new(id, KopfAbschluss, Teil1Titel),
+        Teil2 => new(id, KopfAbschluss, Teil2Titel),
         B1 or B2 or Wiso => new(id, KopfTeil2, pc ? Beschriftungen.Gross(Deckblattname(fachrichtung, id)) : Beschriftungen.Gross(BereichKurz(id))),
         Mehr => MehrKopf,
         _ => null,
@@ -157,8 +202,6 @@ public static class Pruefungsteile
     // -- Texte der Seiten -----------------------------------------------------------------------
     public const string Ueben = "Üben";
     public const string Pruefen = "Prüfen";
-    public const string Teil2Hinweis = "Teil 2 zählt 80 %: drei schriftliche Teile am selben Tag und das Projekt. Jeder Teil hat „Üben“ und „Prüfen“.";
-    public const string Teil2HinweisKurz = "%s · Teil 2 zählt 80 %%";
     public const string KarteBereich = "%s · %d %%";
     public const string Projekt = "PROJEKT";
     public const string ProjektName = "Betriebliche Projektarbeit";

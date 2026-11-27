@@ -57,17 +57,16 @@ public static class Navigation
     ];
 
     /// <summary>
-    /// Untere Leiste am Handy. Welle A 1.15.0 (Weisungen P12-406/P12-407, Variante B, Sollwert-Aenderung Nr. 26): Start, Teil 1,
-    /// Teil 2, Lernen, Spiel, Mehr (vorher wie Python NAV: Start, Lernen, Rechner, Spiel, Fortschritt, Optionen).
-    /// ZIFFER_n = Ziffer als Text, MEHR = drei Punkte (beide gezeichnet, nicht aus der Symbolschrift).
+    /// Untere Leiste am Handy. Welle A 1.15.0 (Sollwert-Aenderung Nr. 26): Start, Teil 1, Teil 2, Lernen, Spiel, Mehr.
+    /// A 1.17.0 (Weisung P12-430, Reiter B, Sollwert-Aenderung Nr. 27): Start, Prüfung, Lernen, Spiel, Mehr; Symbole aus Satz 3
+    /// (Views/Symbole.Satz3, selbst gezeichnet, zweifarbig), gewaehlt dasselbe Symbol in der Akzentfarbe.
     /// </summary>
     public static readonly IReadOnlyList<NavEintrag> Handy =
     [
-        new("dashboard", "DASHBOARD_OUTLINED", "Start", [], SymbolAktiv: "DASHBOARD_ROUNDED"),
-        new(Pruefungsteile.Teil1, "ZIFFER_1", Pruefungsteile.Teil1Kurz, [], SymbolAktiv: "ZIFFER_1"),
-        new(Pruefungsteile.Teil2, "ZIFFER_2", Pruefungsteile.Teil2Kurz, [], SymbolAktiv: "ZIFFER_2"),
-        new(LernenId, "EDIT_NOTE_ROUNDED", "Lernen", [], SymbolAktiv: "EDIT_NOTE_ROUNDED"),
-        new("game", "SPORTS_ESPORTS_OUTLINED", "Spiel", [], SymbolAktiv: "SPORTS_ESPORTS_ROUNDED"),
+        new("dashboard", "START", "Start", [], SymbolAktiv: "START"),
+        new(Pruefungsteile.Pruefung, "PRUEFUNG", Pruefungsteile.PruefungTitel, [], SymbolAktiv: "PRUEFUNG"),
+        new(LernenId, "LERNEN", Pruefungsteile.LernenTitel, [], SymbolAktiv: "LERNEN"),
+        new("game", "SPIEL", "Spiel", [], SymbolAktiv: "SPIEL"),
         new(Pruefungsteile.Mehr, "MEHR", Pruefungsteile.MehrTitel, [], SymbolAktiv: "MEHR"),
     ];
 
@@ -110,7 +109,7 @@ public static class Navigation
     /// <summary>Knoepfe rechts in der Kopfleiste am Handy: Hilfe, Suche.</summary>
     public static readonly IReadOnlyList<NavEintrag> KopfKnoepfeHandy =
     [
-        new("help", "HELP_OUTLINE_ROUNDED", Hilfe, []),
+        new("help", "HILFE", Hilfe, []),
         new("search", "SEARCH_ROUNDED", SucheHandy, []),
     ];
 
