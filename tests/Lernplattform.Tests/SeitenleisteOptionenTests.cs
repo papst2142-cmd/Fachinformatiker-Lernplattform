@@ -30,14 +30,25 @@ public class SeitenleisteOptionenTests
     [Fact]
     public void UntereLeisteWieNico()
     {
-        // Weisung P12-406 (Nico 1a, Variante B): Start, Teil 1, Teil 2, Lernen, Spiel, Mehr
-        Assert.Equal(["Start", "Teil 1", "Teil 2", "Lernen", "Spiel", "Mehr"], Navigation.Handy.Select(h => h.Titel));
-        Assert.Equal(["dashboard", "teil1", "teil2", Navigation.LernenId, "game", Pruefungsteile.Mehr], Navigation.Handy.Select(h => h.Id));
-        // Lernen am Handy = Gruppe LERNEN der Seitenleiste
+        // Weisung P12-430 (Nico, Reiter B aus P12-268): Start, Prüfung, Lernen, Spiel, Mehr; kein „Teil 1/2“ mehr
+        Assert.Equal(["Start", "Prüfung", "Lernen", "Spiel", "Mehr"], Navigation.Handy.Select(h => h.Titel));
+        Assert.Equal(["dashboard", Pruefungsteile.Pruefung, Navigation.LernenId, "game", Pruefungsteile.Mehr], Navigation.Handy.Select(h => h.Id));
+        Assert.DoesNotContain(Navigation.Handy, h => h.Titel.Contains("Teil", StringComparison.Ordinal));
+        // Lernen am Handy = Unterpunkte von „Lernen“ in der Seitenleiste, Prüfung am PC mit AP1, AP2 und den Bereichen darunter
         var fr = Core.Pruefung.Fachrichtung.Nach("si");
         var leiste = Pruefungsteile.Seitenleiste(fr).ToList();
-        var ab = leiste.FindIndex(z => z.Titel == Pruefungsteile.GruppeLernen);
-        Assert.Equal(leiste.Skip(ab + 1).TakeWhile(z => z.Art != LeistenArt.Gruppe).Select(z => z.Id), Navigation.Lernen.Select(l => l.Id));
+        List<string?> Unter(string haupt) =>
+            [.. leiste.SkipWhile(z => z.Id != haupt).Skip(1).TakeWhile(z => z.Art == LeistenArt.Unter).Select(z => z.Id)];
+        Assert.Equal(Navigation.Lernen.Select(l => (string?)l.Id), Unter(Navigation.LernenId));
+        Assert.Equal([Pruefungsteile.Teil1, Pruefungsteile.Teil2, Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso, "abschluss"],
+            Unter(Pruefungsteile.Pruefung));
+        Assert.Equal(["AP1", "AP2"], leiste.Where(z => z.Id is Pruefungsteile.Teil1 or Pruefungsteile.Teil2).Select(z => z.Titel));
+        // jeder Unterpunkt hat seinen Hauptpunkt, jeder Hauptpunkt ein Symbol
+        Assert.All(leiste.Where(z => z.Art == LeistenArt.Unter), z => Assert.Equal(
+            leiste.Take(leiste.IndexOf(z)).Last(y => y.Art == LeistenArt.Eintrag).Id, Pruefungsteile.Oberpunkt(z.Id!)));
+        Assert.All(leiste.Concat(Pruefungsteile.SeitenleisteUnten).Where(z => z.Art == LeistenArt.Eintrag),
+            z => Assert.True(Pruefungsteile.Symbole.ContainsKey(z.Id!), z.Id));
+        Assert.All(Navigation.Handy, h => Assert.Equal(Pruefungsteile.Symbole[h.Id], h.Symbol));
     }
 
     [Theory]

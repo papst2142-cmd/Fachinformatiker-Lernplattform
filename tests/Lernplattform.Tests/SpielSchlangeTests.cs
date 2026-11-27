@@ -61,22 +61,11 @@ public class SpielSchlangeTests
         {
             using var ordner = new TempOrdner();
             var sofortStand = Neu(ordner, "sofort.db");
-            // Sammelliste 457 (Weisung P12-380, W7): das sofortige Spiel (eigene Datenbank, eigener Ablauf) laeuft auf einem eigenen
-            // Faden neben dem Spiel mit Schlange; beide Ergebnisse werden danach genau wie vorher verglichen.
-            Spielablauf? sofort = null;
-            Exception? sofortFehler = null;
-            var sofortFaden = new Thread(() =>
-            {
-                try
-                {
-                    sofort = SpielFingerabdruckTests.Spielen(new SpielDatenbank(Schreiber(sofortStand), "PC", Lauf, Vorgaenge.Sperren));
-                }
-                catch (Exception e)
-                {
-                    sofortFehler = e;
-                }
-            }) { IsBackground = true };
-            sofortFaden.Start();
+            // Sammelliste 457 (Weisung P12-380, W7) lief das sofortige Spiel auf einem eigenen Faden neben dem Spiel mit Schlange;
+            // beide warteten dabei abwechselnd auf dieselbe Sperre Vorgaenge.Sperren (Meldung P12-265). Seit A 1.17.0 (Weisung
+            // P12-416, Frage 1 a): die Vergleichspartie laeuft vorher und fuer sich allein, die gepruefte Partie und alle
+            // Vergleiche danach bleiben genau gleich.
+            var sofort = SpielFingerabdruckTests.Spielen(new SpielDatenbank(Schreiber(sofortStand), "PC", Lauf, Vorgaenge.Sperren));
 
             var lernstand = Neu(ordner);
             var schlange = new Spielschlange();
@@ -93,12 +82,6 @@ public class SpielSchlangeTests
             };
             var spiel = SpielFingerabdruckTests.Spielen(new SpielDatenbank(Schreiber(lernstand), "PC", Lauf, Vorgaenge.Sperren, schlange));
             schlange.Leeren();
-            sofortFaden.Join();
-            if (sofortFehler is not null)
-            {
-                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(sofortFehler).Throw();
-            }
-            Assert.NotNull(sofort);
 
             Assert.Equal(SpielFingerabdruckTests.SollHash, SpielFingerabdruckTests.Hash(spiel.Stand));
             Assert.Equal(0, spiel.Abweichungen);
@@ -108,7 +91,7 @@ public class SpielSchlangeTests
             Assert.Equal(0, schlange.Anzahl);
             // der Stand aus der Datenbank ist derselbe
             Assert.Empty(spiel.Stand.Unterschiede(new Spielstand(spiel.Speicher.Ereignisse(), Inhalt)));
-            Assert.Equal(sofort!.Stand.Verlauf.Count, spiel.Stand.Verlauf.Count);
+            Assert.Equal(sofort.Stand.Verlauf.Count, spiel.Stand.Verlauf.Count);
         }
     }
 

@@ -74,10 +74,11 @@ lauf() {
 }
 
 # abwechselnd: jede Runde jede Fassung einmal (gleiche Lage des Rechners fuer alle Fassungen)
-for nr in $(seq 1 "$n_spiel"); do
+# A 1.17.0: Zaehlschleife statt seq (BSD-seq zaehlt bei "seq 1 0" rueckwaerts, Meldung P12-265)
+for ((nr = 1; nr <= n_spiel; nr++)); do
   for vorab in ja nein; do for pgo in vorgabe aus; do lauf spiel $vorab $pgo $nr; done; done
 done
-for nr in $(seq 1 "$n_werkzeug"); do
+for ((nr = 1; nr <= n_werkzeug; nr++)); do
   for vorab in ja nein; do for pgo in vorgabe aus; do lauf werkzeug $vorab $pgo $nr; done; done
 done
 "$py" -I werkzeuge/messreihe/auswerten.py "$ziel" "$rid" | tee "$ziel/ergebnis.md"

@@ -78,4 +78,8 @@ public static class Symbole
         "M12,1 A11,11 0 1 0 12,23 A11,11 0 1 0 12,1 Z M12,3 A9,9 0 1 1 12,21 A9,9 0 1 1 12,3 Z "
         + "M12,5.5 C9.8,5.5 8.2,7 8.2,9.2 L10.2,9.2 C10.2,8.1 11,7.4 12,7.4 C13,7.4 13.8,8.1 13.8,9 C13.8,10.9 11,10.7 11,13.8 L13,13.8 "
         + "C13,11.7 15.8,11.4 15.8,9 C15.8,7 14.2,5.5 12,5.5 Z M11,15.5 L13,15.5 L13,17.5 L11,17.5 Z");
+
+    // A 1.17.0 (Weisung P12-430): die zweifarbigen Symbole aus Satz 3 stehen als Daten in Core/Design/SymbolSatz.cs
+    // (selbst gezeichnet, Tests pruefen sie dort), gezeichnet von <see cref="SatzSymbol"/>; diese Liste bleibt gleich.
+    public static IReadOnlyDictionary<string, Core.Design.SymbolTeil[]> Satz3 => Core.Design.SymbolSatz.Satz3;
 }

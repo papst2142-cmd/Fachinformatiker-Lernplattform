@@ -36,13 +36,8 @@ public static partial class AutoMessung
         List<string> Leiste(string id)
         {
             var ist = leisten.MarkiertFuerTests();
-            var soll = new Dictionary<string, string[]>(StringComparer.Ordinal)
-            {
-                ["Knopf"] = [id],
-                ["Strich"] = [id],
-                ["Text"] = [id],
-                ["Pille"] = leisten.UntenZielFuerTests(id) is { } z ? [z] : [],
-            };
+            // A 1.17.0 (Entwurf P12-271): Hauptpunkt mit Flaeche, Rand und Symbol, Unterpunkt fett, unten Pille, Symbol und Wort
+            var soll = leisten.SollMarkiertFuerTests(id);
             return soll.Where(s => !s.Value.SequenceEqual(ist[s.Key]))
                 .Select(s => s.Key + " markiert: [" + string.Join(", ", ist[s.Key]) + "] statt [" + string.Join(", ", s.Value) + "]").ToList();
         }

@@ -96,6 +96,9 @@ public sealed class PruefungsteilSeite : UserControl
 
     private bool Breit => _breit ?? true;
 
+    /// <summary>A 1.17.0: Segment-Leiste AP1 | AP2 (nur auf den Seiten AP1 und AP2, sonst null).</summary>
+    public SegmentLeiste? Segment { get; private set; }
+
     private void Malen()
     {
         if (_daten is not { } d)
@@ -103,6 +106,15 @@ public sealed class PruefungsteilSeite : UserControl
             return;
         }
         _inhalt.Children.Clear();
+        Segment = null;
+        if (_seite is Pruefungsteile.Teil1 or Pruefungsteile.Teil2)
+        {
+            // A 1.17.0 (Weisung P12-430 B1, Reiter B): oben die Segment-Leiste AP1 | AP2 statt „Teil 2 zählt 80 %“
+            var fr = d.Fachrichtung;
+            var ap2 = Fachrichtung.Teil2.Sum(r => fr.Bereich(r).Gewicht);
+            Segment = new SegmentLeiste(_seite, (fr.Bereich("ap1").Gewicht, ap2), Breit, ziel => _wege.Oeffnen(ziel, null));
+            _inhalt.Children.Add(Segment);
+        }
         if (_seite == Pruefungsteile.Teil2)
         {
             Teil2(d);
@@ -119,9 +131,6 @@ public sealed class PruefungsteilSeite : UserControl
     private void Teil2(PruefungsteilDaten.Daten d)
     {
         var fr = d.Fachrichtung;
-        var hinweis = Breit ? Pruefungsteile.Teil2Hinweis
-            : Beschriftungen.Einsetzen(Pruefungsteile.Teil2HinweisKurz, FachrichtungTexte.KuerzelFuer(fr.Id));
-        _inhalt.Children.Add(new LernText(hinweis, "Klein", FontWeight.Normal, "Pinsel.text_soft"));
         foreach (var rolle in (string[])[Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso])
         {
             var bereich = fr.Bereich(rolle);

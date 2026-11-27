@@ -37,14 +37,18 @@ public static partial class AutoMessung
         foreach (var zeile in soll.Concat(Pruefungsteile.SeitenleisteUnten).Where(z => z.Id is not null))
         {
             await Klick(zeile.Id!);
-            if (ansicht.AktuelleSeite != zeile.Id)
+            // A 1.17.0: „Prüfung“ zeigt die zuletzt gewaehlte Haelfte (hier AP1 oder AP2), alles andere seine Seite
+            var seite = zeile.Id == Pruefungsteile.Pruefung ? ansicht.LetzteHaelfte : zeile.Id!;
+            if (ansicht.AktuelleSeite != seite)
             {
                 Fehler("Seitenleiste: Klick auf " + zeile.Titel + " zeigt " + ansicht.AktuelleSeite);
             }
-            var markiert = leisten.MarkiertFuerTests()["Knopf"];
-            if (!markiert.SequenceEqual([zeile.Id!]))
+            var markiert = leisten.MarkiertFuerTests();
+            var sollMarkiert = leisten.SollMarkiertFuerTests(seite);
+            var haupt = Pruefungsteile.Oberpunkt(seite) ?? zeile.Id!;
+            if (!markiert["Knopf"].SequenceEqual([haupt]) || sollMarkiert.Any(s => !s.Value.SequenceEqual(markiert[s.Key])))
             {
-                Fehler("Seitenleiste: nach Klick auf " + zeile.Titel + " markiert [" + string.Join(", ", markiert) + "]");
+                Fehler("Seitenleiste: nach Klick auf " + zeile.Titel + " markiert " + string.Join("; ", markiert.Select(m => m.Key + " [" + string.Join(", ", m.Value) + "]")));
             }
         }
         // Hinweis Chat (Weisung P11-37): jeder Eintrag rollt mit dem Fokus (Tab) ganz ins Bild

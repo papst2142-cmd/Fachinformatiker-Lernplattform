@@ -632,6 +632,16 @@ public static partial class AutoMessung
                     {
                         layoutFunde.Add($"{ist} {stufe} {id}: {fund}");
                     }
+                    // A 1.17.0 (Weisung P12-430 B6): die untere Leiste passt in jeder Schriftstufe (Wort und Pille im Knopf)
+                    foreach (var fund in ansicht.Leisten.LeistePasstFunde())
+                    {
+                        layoutFunde.Add($"{ist} {stufe} {id}: {fund}");
+                    }
+                }
+                // Gegenprobe (A 1.17.0): ein zu langes Wort im ersten Knopf muss die Pruefung der Leiste finden
+                if (ansicht.Leisten.UntereLeiste.IsEffectivelyVisible && ansicht.Leisten.LeistePasstFunde(new string('W', 80)).Count == 0)
+                {
+                    layoutFunde.Add($"{ist} {stufe}: Gegenprobe der unteren Leiste fand das zu lange Wort nicht");
                 }
                 // Phase 2: Ansichten nach dem Pruefen, Ergebnis und Fenster der Uebernahme
                 await foreach (var (ansichtName, _) in Gemessen364("W2Ansichten", MitLernen ? W2Ansichten(ansicht, inhalte) : Keine<(string, int)>()))

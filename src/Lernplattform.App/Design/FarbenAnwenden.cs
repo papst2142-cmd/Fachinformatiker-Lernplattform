@@ -25,6 +25,8 @@ public static class FarbenAnwenden
         {
             res["Pinsel." + name] = new SolidColorBrush(Color.Parse(hex));
         }
+        // Weisung P12-434: Pille der unteren Leiste, im Hellen so deutlich wie im Entwurf (aus der Farbwelt abgeleitet)
+        res["Pinsel.pille"] = new SolidColorBrush(Color.Parse(Leistenpille.Farbe(palette)));
         foreach (var (name, (von, bis)) in palette.Verlaeufe)
         {
             res["Verlauf." + name] = new LinearGradientBrush

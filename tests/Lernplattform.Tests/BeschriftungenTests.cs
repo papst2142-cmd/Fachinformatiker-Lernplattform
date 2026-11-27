@@ -78,7 +78,10 @@ public class BeschriftungenTests
         Gleich(S(kopf, "suche"), Navigation.SuchePc);
         Assert.Equal(Kopf(kopf), Navigation.KopfPc);
         // Sollwert-Aenderung Nr. 26 (A 1.15.0, Variante B): Zeilen der Seitenleiste je Fachrichtung wie das Deckblatt
-        Assert.Equal(Liste(seite, "gruppen"), [Pruefungsteile.GruppeAbschluss, Pruefungsteile.GruppeLernen, Pruefungsteile.GruppeSonstiges]);
+        // Sollwert-Aenderung Nr. 27 (A 1.17.0, Reiter B): nur noch der Gruppenkopf der Fachrichtung, Symbole je Hauptpunkt
+        Assert.Equal(Liste(seite, "gruppen"), [Pruefungsteile.GruppeAbschluss]);
+        Assert.Equal(seite.GetProperty("symbole").EnumerateObject().Select(o => (o.Name, o.Value.GetString()!)).Order(),
+            Pruefungsteile.Symbole.Select(e => (e.Key, e.Value)).Order());
         var zeilen = seite.GetProperty("zeilen");
         Assert.Equal(Core.Inhalte.Fachrichtungen.Werte.Order(StringComparer.Ordinal),
             zeilen.EnumerateObject().Select(z => z.Name).Order(StringComparer.Ordinal));
@@ -105,7 +108,7 @@ public class BeschriftungenTests
     public void NavigationHandyWiePython()
     {
         var soll = G9.GetProperty("navigation_handy").EnumerateArray().ToList();
-        Assert.Equal(6, soll.Count);
+        Assert.Equal(5, soll.Count);
         Assert.Equal(soll.Count, Navigation.Handy.Count);
         for (var i = 0; i < soll.Count; i++)
         {
