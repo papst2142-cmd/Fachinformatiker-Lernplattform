@@ -329,129 +329,140 @@ public class SpielHaltungenTests
         }
     }
 
-    [Fact]
-    public void DuckenUndKriechen_WoErlaubt_BeruehrtNichtsUndNieDurchDieWand_GegenprobeOhnePruefung()
+    /// <summary>
+    /// A 1.17.0 (REGELN „Ablauf einer Welle“ C, lokal im vollen Lauf 91-101 s, allein rund 53 s): der Test laeuft ohne
+    /// Nebenlaeufer in der Sammlung <c>Figur allein</c>, damit seine Arbeit nebeneinander alle Kerne hat; Stellen, Figuren und
+    /// Pruefungen sind unveraendert.
+    /// </summary>
+    [Collection("Figur allein")]
+    public class Allein
     {
-        var g = SpielGrafikTests.Bibliothek.Value;
-        var figuren = new Dictionary<(Koerperhaltung, int), List<List<SpielSitzenTests.Dreieck>>>();
-        List<List<SpielSitzenTests.Dreieck>> Bilder(Koerperhaltung h, int kleid)
+        [Fact]
+        public void DuckenUndKriechen_WoErlaubt_BeruehrtNichtsUndNieDurchDieWand_GegenprobeOhnePruefung()
         {
-            if (!figuren.TryGetValue((h, kleid), out var d))
+            var g = SpielGrafikTests.Bibliothek.Value;
+            var figuren = new Dictionary<(Koerperhaltung, int), List<List<SpielSitzenTests.Dreieck>>>();
+            List<List<SpielSitzenTests.Dreieck>> Bilder(Koerperhaltung h, int kleid)
             {
-                // Kriechen seit A 1.7.0: das stille Bild und jedes Bild der Bewegung Robben, JEDES FUER SICH (Innen zaehlt Strahl-Treffer
-                // gerade/ungerade; mehrere Bilder in einem Netz liessen einen Punkt in zwei Bildern als "draussen" gelten)
-                d = h == Koerperhaltung.Ducken
-                    ? [SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.Ducken, 0), Matrix4x4.Identity)]
-                    : [SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.RobbenStill, 0), Matrix4x4.Identity),
-                        .. Enumerable.Range(0, Figur.RobbenBilder).Select(b => SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.Robben, b), Matrix4x4.Identity))];
-                figuren[(h, kleid)] = d;
+                if (!figuren.TryGetValue((h, kleid), out var d))
+                {
+                    // Kriechen seit A 1.7.0: das stille Bild und jedes Bild der Bewegung Robben, JEDES FUER SICH (Innen zaehlt Strahl-Treffer
+                    // gerade/ungerade; mehrere Bilder in einem Netz liessen einen Punkt in zwei Bildern als "draussen" gelten)
+                    d = h == Koerperhaltung.Ducken
+                        ? [SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.Ducken, 0), Matrix4x4.Identity)]
+                        : [SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.RobbenStill, 0), Matrix4x4.Identity),
+                            .. Enumerable.Range(0, Figur.RobbenBilder).Select(b => SpielSitzenTests.Dreiecke(Figur.Netz(g, null, 1f, SpielHaltungTests.Kleider[kleid], Figur.Robben, b), Matrix4x4.Identity))];
+                    figuren[(h, kleid)] = d;
+                }
+                return d;
             }
-            return d;
-        }
-        var hindernisse = new Dictionary<Innenraum, List<(string Name, List<SpielSitzenTests.Dreieck> D, Vector3 Min, Vector3 Max)>>();
-        var wandListen = new Dictionary<Innenraum, List<SpielWandTests.WandTeil>>();
-        var funde = new List<string>();
-        int erlaubt = 0, verboten = 0, gegenFunde = 0;
-        var zaehler = 0;
-        // Sammelliste 453: zuerst nacheinander wie bisher entscheiden, welche Stellen geprueft werden (KoerperFrei, jede 7. verbotene),
-        // dann die teure Pruefung der Figur nebeneinander; gezaehlt und gesammelt wird danach in derselben Reihenfolge wie vorher
-        var arbeit = new List<(string Wo, Innenraum Innen, Vector2 Ort, float Blick, Koerperhaltung Haltung, bool Frei)>();
-        foreach (var (wo, innen, ort, blick) in Stellen())
-        {
+            var hindernisse = new Dictionary<Innenraum, List<(string Name, List<SpielSitzenTests.Dreieck> D, Vector3 Min, Vector3 Max)>>();
+            var wandListen = new Dictionary<Innenraum, List<SpielWandTests.WandTeil>>();
+            var funde = new List<string>();
+            int erlaubt = 0, verboten = 0, gegenFunde = 0;
+            var zaehler = 0;
+            // Sammelliste 453: zuerst nacheinander wie bisher entscheiden, welche Stellen geprueft werden (KoerperFrei, jede 7. verbotene),
+            // dann die teure Pruefung der Figur nebeneinander; gezaehlt und gesammelt wird danach in derselben Reihenfolge wie vorher
+            var arbeit = new List<(string Wo, Innenraum Innen, Vector2 Ort, float Blick, Koerperhaltung Haltung, bool Frei)>();
+            foreach (var (wo, innen, ort, blick) in Stellen())
+            {
+                foreach (var haltung in new[] { Koerperhaltung.Ducken, Koerperhaltung.Kriechen })
+                {
+                    var frei = innen.KoerperFrei(ort, blick, haltung);
+                    // jede 7. verbotene Stelle als Gegenprobe pruefen (die Figur dort zeigt Funde), alle erlaubten ganz
+                    if (!frei && ++zaehler % 7 != 0)
+                    {
+                        verboten++;
+                        continue;
+                    }
+                    if (!hindernisse.ContainsKey(innen))
+                    {
+                        // A 1.17.0: begehbare Teile schon hier heraus statt bei jedem Bild der Figur (gleiche Auswahl wie vorher)
+                        hindernisse[innen] = SpielHaltungTests.Hindernisse(innen)
+                            .Where(x => !ProbeWelt.BegehbareTypen.Any(b => x.Name.StartsWith(b + " ", StringComparison.Ordinal)))
+                            .Select(x => SpielSitzenTests.Huelle(x.D) is var (mi, ma) ? (x.Name, x.D, mi, ma) : default).ToList();
+                        wandListen[innen] = SpielWandTests.WandQuader(innen).ToList();
+                    }
+                    arbeit.Add((wo, innen, ort, blick, haltung, frei));
+                }
+            }
+            // ohne Kopfbedeckung und mit dem Spitzhut (breiteste Krempe; die Muetze liegt innerhalb, Test KoerperQuader)
+            int[] kleider = [0, 2];
             foreach (var haltung in new[] { Koerperhaltung.Ducken, Koerperhaltung.Kriechen })
             {
-                var frei = innen.KoerperFrei(ort, blick, haltung);
-                // jede 7. verbotene Stelle als Gegenprobe pruefen (die Figur dort zeigt Funde), alle erlaubten ganz
-                if (!frei && ++zaehler % 7 != 0)
+                foreach (var kleid in kleider)
                 {
-                    verboten++;
-                    continue;
+                    Bilder(haltung, kleid);
                 }
-                if (!hindernisse.ContainsKey(innen))
-                {
-                    hindernisse[innen] = SpielHaltungTests.Hindernisse(innen)
-                        .Select(x => SpielSitzenTests.Huelle(x.D) is var (mi, ma) ? (x.Name, x.D, mi, ma) : default).ToList();
-                    wandListen[innen] = SpielWandTests.WandQuader(innen).ToList();
-                }
-                arbeit.Add((wo, innen, ort, blick, haltung, frei));
             }
-        }
-        // ohne Kopfbedeckung und mit dem Spitzhut (breiteste Krempe; die Muetze liegt innerhalb, Test KoerperQuader)
-        int[] kleider = [0, 2];
-        foreach (var haltung in new[] { Koerperhaltung.Ducken, Koerperhaltung.Kriechen })
-        {
-            foreach (var kleid in kleider)
+            var ergebnisse = new List<string>[arbeit.Count];
+            Nebeneinander.Fuer(arbeit.Count, i =>
             {
-                Bilder(haltung, kleid);
-            }
-        }
-        var ergebnisse = new List<string>[arbeit.Count];
-        Nebeneinander.Fuer(arbeit.Count, i =>
-        {
-            var (_, innen, ort, blick, haltung, _) = arbeit[i];
-            var hin = hindernisse[innen];
-            var waende = wandListen[innen].Select(w => SpielWandTests.Halbe(w, ort)).ToList();
-            var gefunden = new List<string>();
-            foreach (var kleid in kleider)
-            {
-                if (gefunden.Count > 0)
+                var (_, innen, ort, blick, haltung, _) = arbeit[i];
+                var hin = hindernisse[innen];
+                var waende = wandListen[innen].Select(w => SpielWandTests.Halbe(w, ort)).ToList();
+                var gefunden = new List<string>();
+                foreach (var kleid in kleider)
                 {
-                    break;
-                }
-                var lage = SpielHaltungTests.Lage(new Vector3(ort.X, 0, ort.Y), blick, Innenraum.FigurHoehe, Vector2.Zero);
-                foreach (var (bild, nr) in figuren[(haltung, kleid)].Select((b, k) => (b, k)))
-                {
-                    var figur = bild.Select(d => new SpielSitzenTests.Dreieck(Vector3.Transform(d.A, lage), Vector3.Transform(d.B, lage), Vector3.Transform(d.C, lage))).ToList();
-                    var text = haltung == Koerperhaltung.Kriechen ? $"{haltung} (Bild {nr})" : $"{haltung}";
-                    // A 1.7.0: Huellen-Vorpruefung vor jeder teuren Pruefung (ergibt genau dasselbe: ohne Ueberschneidung der Huellen meldet
-                    // Durchdringung 0 und KanteDurch nichts, Muster wie in SpielWandTests); noetig, weil Kriechen jetzt neun Bilder prueft
-                    var (fmin, fmax) = SpielSitzenTests.Huelle(figur);
-                    foreach (var (name, d, dmin, dmax) in hin.Where(x => !ProbeWelt.BegehbareTypen.Any(b => x.Name.StartsWith(b + " ", StringComparison.Ordinal))))
-                    {
-                        if (fmin.X > dmax.X || fmin.Y > dmax.Y || fmin.Z > dmax.Z || dmin.X > fmax.X || dmin.Y > fmax.Y || dmin.Z > fmax.Z)
-                        {
-                            continue;
-                        }
-                        if (SpielHaltungTests.Durchdringung(figur, d) is > 0 and var n)
-                        {
-                            gefunden.Add($"{text} mit {name}: {n} Ecken");
-                        }
-                    }
-                    if (waende.Where(w => w is var (lo, hi) && fmin.X < hi.X && fmax.X > lo.X && fmin.Y < hi.Y && fmax.Y > lo.Y && fmin.Z < hi.Z && fmax.Z > lo.Z)
-                        .Any(w => figur.Any(d => SpielWandTests.KanteDurch(d.A, d.B, w.Lo, w.Hi) || SpielWandTests.KanteDurch(d.B, d.C, w.Lo, w.Hi) || SpielWandTests.KanteDurch(d.C, d.A, w.Lo, w.Hi))))
-                    {
-                        gefunden.Add($"{text} durch die Wand");
-                    }
-                    if (fmin.X < 0 || fmin.Z < 0 || fmax.X > innen.Breite || fmax.Z > innen.Tiefe)
-                    {
-                        gefunden.Add($"{text} aus dem Raum");
-                    }
                     if (gefunden.Count > 0)
                     {
                         break;
                     }
+                    var lage = SpielHaltungTests.Lage(new Vector3(ort.X, 0, ort.Y), blick, Innenraum.FigurHoehe, Vector2.Zero);
+                    foreach (var (bild, nr) in figuren[(haltung, kleid)].Select((b, k) => (b, k)))
+                    {
+                        var figur = bild.Select(d => new SpielSitzenTests.Dreieck(Vector3.Transform(d.A, lage), Vector3.Transform(d.B, lage), Vector3.Transform(d.C, lage))).ToList();
+                        var text = haltung == Koerperhaltung.Kriechen ? $"{haltung} (Bild {nr})" : $"{haltung}";
+                        // A 1.7.0: Huellen-Vorpruefung vor jeder teuren Pruefung (ergibt genau dasselbe: ohne Ueberschneidung der Huellen meldet
+                        // Durchdringung 0 und KanteDurch nichts, Muster wie in SpielWandTests); noetig, weil Kriechen jetzt neun Bilder prueft
+                        var (fmin, fmax) = SpielSitzenTests.Huelle(figur);
+                        foreach (var (name, d, dmin, dmax) in hin)
+                        {
+                            if (fmin.X > dmax.X || fmin.Y > dmax.Y || fmin.Z > dmax.Z || dmin.X > fmax.X || dmin.Y > fmax.Y || dmin.Z > fmax.Z)
+                            {
+                                continue;
+                            }
+                            if (SpielHaltungTests.Durchdringung(figur, d) is > 0 and var n)
+                            {
+                                gefunden.Add($"{text} mit {name}: {n} Ecken");
+                            }
+                        }
+                        if (waende.Where(w => w is var (lo, hi) && fmin.X < hi.X && fmax.X > lo.X && fmin.Y < hi.Y && fmax.Y > lo.Y && fmin.Z < hi.Z && fmax.Z > lo.Z)
+                            .Any(w => figur.Any(d => SpielWandTests.KanteDurch(d.A, d.B, w.Lo, w.Hi) || SpielWandTests.KanteDurch(d.B, d.C, w.Lo, w.Hi) || SpielWandTests.KanteDurch(d.C, d.A, w.Lo, w.Hi))))
+                        {
+                            gefunden.Add($"{text} durch die Wand");
+                        }
+                        if (fmin.X < 0 || fmin.Z < 0 || fmax.X > innen.Breite || fmax.Z > innen.Tiefe)
+                        {
+                            gefunden.Add($"{text} aus dem Raum");
+                        }
+                        if (gefunden.Count > 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+                ergebnisse[i] = gefunden;
+            });
+            for (var i = 0; i < arbeit.Count; i++)
+            {
+                if (arbeit[i].Frei)
+                {
+                    erlaubt++;
+                    funde.AddRange(ergebnisse[i].Select(f => $"{arbeit[i].Wo}: {f}"));
+                }
+                else
+                {
+                    verboten++;
+                    gegenFunde += ergebnisse[i].Count > 0 ? 1 : 0;
                 }
             }
-            ergebnisse[i] = gefunden;
-        });
-        for (var i = 0; i < arbeit.Count; i++)
-        {
-            if (arbeit[i].Frei)
-            {
-                erlaubt++;
-                funde.AddRange(ergebnisse[i].Select(f => $"{arbeit[i].Wo}: {f}"));
-            }
-            else
-            {
-                verboten++;
-                gegenFunde += ergebnisse[i].Count > 0 ? 1 : 0;
-            }
+            Assert.True(funde.Count == 0, funde.Count + " Funde:\n" + string.Join("\n", funde.Take(30)));
+            Assert.True(erlaubt > 1000, "erlaubt: " + erlaubt);
+            Assert.True(verboten > 300, "verboten: " + verboten);
+            // Gegenprobe: ohne Pruefung (jede Stelle erlaubt) gaebe es Beruehrungen
+            Assert.True(gegenFunde > 20, "Gegenprobe: " + gegenFunde);
         }
-        Assert.True(funde.Count == 0, funde.Count + " Funde:\n" + string.Join("\n", funde.Take(30)));
-        Assert.True(erlaubt > 1000, "erlaubt: " + erlaubt);
-        Assert.True(verboten > 300, "verboten: " + verboten);
-        // Gegenprobe: ohne Pruefung (jede Stelle erlaubt) gaebe es Beruehrungen
-        Assert.True(gegenFunde > 20, "Gegenprobe: " + gegenFunde);
     }
 
     [Fact]
@@ -728,3 +739,7 @@ public class SpielHaltungenTests
         }
     }
 }
+
+/// <summary>A 1.17.0: lange Kollisionspruefung der Figur ohne Nebenlaeufer (gleiche Pruefungen, nur mehr Kerne frei).</summary>
+[CollectionDefinition("Figur allein", DisableParallelization = true)]
+public class FigurAlleinSammlung;
