@@ -15,6 +15,8 @@ public sealed record LeistenZeile(LeistenArt Art, string? Id, string Titel);
 /// Teil 1 · AP1 und Teil 2 · AP2 und ihren Bereichen, LERNEN mit Karteikarten, Notizblock, Rechner, SONSTIGES mit Spiel und
 /// Fortschritt, unten Hilfe und Optionen), untere Leiste am Handy Start, Teil 1, Teil 2, Lernen, Spiel, Mehr. Die Namen der
 /// Teile folgen der gewaehlten Fachrichtung (Deckblatt, <see cref="Fachrichtung"/>). Sollwert-Aenderung Nr. 26.
+/// Seit A 1.17.0 (Weisung P12-430, Reiter B): unten Start, Prüfung, Lernen, Spiel, Mehr; am PC Hauptpunkte Prüfung (AP1, AP2,
+/// Bereiche, Abschlussprojekt) und Lernen (Karteikarten, Notizblock, Rechner), dann Spiel und Fortschritt. Sollwert-Aenderung Nr. 27.
 /// </summary>
 public static class Pruefungsteile
 {
@@ -164,8 +166,8 @@ public static class Pruefungsteile
     /// </summary>
     public static IReadOnlyList<string> Ziele(string seite, bool mitSzenarien = true) => seite switch
     {
-        // A 1.17.0: „Prüfung“ zeigt AP1 (zuerst) mit der Segment-Leiste; die andere Haelfte ist ein Klick auf das Segment
-        Pruefung => [Teil1, Teil2],
+        // A 1.17.0: „Prüfung“ zeigt zuerst AP1 mit der Segment-Leiste; die andere Haelfte ist ein Klick auf das Segment
+        Pruefung => Ziele(Teil1, mitSzenarien),
         Teil1 => mitSzenarien ? [Teil2, "quiz", "ap1scenarios"] : [Teil2, "quiz"],
         Teil2 => [Teil1, B1, B2, Wiso, "testproject", "abschluss"],
         B1 or B2 or Wiso => mitSzenarien ? ["quiz", "scenarios"] : ["quiz"],
@@ -183,8 +185,9 @@ public static class Pruefungsteile
     /// <summary>Brotkrumen einer neuen Seite (null = keine neue Seite). PC mit vollem Namen, Handy kurz (der Name steht dort als Überschrift).</summary>
     public static Kopftitel? Kopf(string id, Fachrichtung fachrichtung, bool pc) => id switch
     {
-        Teil1 => new(id, KopfAbschluss, Teil1Titel),
-        Teil2 => new(id, KopfAbschluss, Teil2Titel),
+        // am Handy wie im Entwurf mit der Fachrichtung (dort steht sonst nirgends, welche Pruefung es ist), am PC steht sie in der Seitenleiste
+        Teil1 or Teil2 => new(id, pc ? KopfAbschluss : Beschriftungen.Einsetzen(GruppeAbschluss, FachrichtungTexte.KuerzelFuer(fachrichtung.Id)),
+            id == Teil1 ? Teil1Titel : Teil2Titel),
         B1 or B2 or Wiso => new(id, KopfTeil2, pc ? Beschriftungen.Gross(Deckblattname(fachrichtung, id)) : Beschriftungen.Gross(BereichKurz(id))),
         Mehr => MehrKopf,
         _ => null,

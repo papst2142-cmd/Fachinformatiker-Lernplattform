@@ -103,7 +103,7 @@ public sealed class Navigationsleisten
             Content = inhalt,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Padding = new Thickness(0, 7),
+            Padding = new Thickness(0),
             CornerRadius = new CornerRadius(12),
             Background = Brushes.Transparent,
         };
@@ -205,12 +205,13 @@ public sealed class Navigationsleisten
     public const double SymbolPc = 20;
 
     /// <summary>
-    /// A 1.17.0 (Entwurf P12-271 Satz 3): Hauptzeile = Rand links (3, nur gewaehlt sichtbar), Symbol 20, 12 Abstand, Text 14
-    /// halbfett in text. Liefert Inhalt, Rand, Symbol und Text.
+    /// A 1.17.0 (Entwurf P12-271 Satz 3): Hauptzeile = Symbol 20, 12 Abstand, Text 14 halbfett in text, darueber der Rand
+    /// links (3, folgt der runden Ecke wie im Entwurf, nur gewaehlt sichtbar). Liefert Inhalt (mit 7 Abstand oben und unten),
+    /// Rand, Symbol und Text.
     /// </summary>
-    private static (Grid Inhalt, Border Strich, SatzSymbol Symbol, TextBlock Text) Hauptzeile(string titel, string id)
+    private static (Panel Inhalt, Border Strich, SatzSymbol Symbol, TextBlock Text) Hauptzeile(string titel, string id)
     {
-        var strich = new Border { Width = 3, CornerRadius = new CornerRadius(1.5), VerticalAlignment = VerticalAlignment.Stretch };
+        var strich = new Border { BorderThickness = new Thickness(3, 0, 0, 0), CornerRadius = new CornerRadius(12), IsHitTestVisible = false };
         var symbol = new SatzSymbol(Pruefungsteile.Symbole[id], "Pinsel.muted", "Pinsel.sidebar", SymbolPc) { VerticalAlignment = VerticalAlignment.Center };
         Mitwachsen(symbol, SymbolPc);
         var symbolRahmen = new Border { Padding = new Thickness(9, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Child = symbol };
@@ -219,13 +220,11 @@ public sealed class Navigationsleisten
         text.TextWrapping = TextWrapping.Wrap;
         // Abstand als Rand eines Rahmens, nicht des Textes (sonst gilt er in der Layoutpruefung als abgeschnitten)
         var textRahmen = new Border { Padding = new Thickness(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center, Child = text };
-        var inhalt = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*") };
-        Grid.SetColumn(symbolRahmen, 1);
-        Grid.SetColumn(textRahmen, 2);
-        inhalt.Children.Add(strich);
-        inhalt.Children.Add(symbolRahmen);
-        inhalt.Children.Add(textRahmen);
-        return (inhalt, strich, symbol, text);
+        var zeile = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(3, 7, 0, 7) };
+        Grid.SetColumn(textRahmen, 1);
+        zeile.Children.Add(symbolRahmen);
+        zeile.Children.Add(textRahmen);
+        return (new Panel { Children = { zeile, strich } }, strich, symbol, text);
     }
 
     /// <summary>
@@ -261,7 +260,7 @@ public sealed class Navigationsleisten
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
             VerticalContentAlignment = VerticalAlignment.Stretch,
-            Padding = new Thickness(0, unter ? 5 : 7),
+            Padding = new Thickness(0, unter ? 5 : 0),
             CornerRadius = new CornerRadius(12),
             Background = Brushes.Transparent,
         };
@@ -395,7 +394,7 @@ public sealed class Navigationsleisten
         return new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
         {
             ["Knopf"] = hi is null ? [] : Wo(_seitenKnoepfe, k => ReferenceEquals(k.Background, hi)),
-            ["Strich"] = akzent is null ? [] : Wo(_seitenTeile, t => !t.Unter && ReferenceEquals(t.Strich.Background, akzent)),
+            ["Strich"] = akzent is null ? [] : Wo(_seitenTeile, t => !t.Unter && ReferenceEquals(t.Strich.BorderBrush, akzent)),
             ["Symbol"] = akzent is null ? [] : Wo(_symbole, y => ReferenceEquals(y.Form, akzent)),
             ["Text"] = text is null ? [] : Wo(_seitenTeile, t => t.Unter && ReferenceEquals(t.Text.Foreground, text) && t.Text.FontWeight == FontWeight.Bold),
             ["Pille"] = hi is null ? [] : Wo(_untenTeile, t => ReferenceEquals(t.Pille.Background, hi)),
@@ -425,6 +424,49 @@ public sealed class Navigationsleisten
             ["SymbolUnten"] = Eins(unten),
             ["WortUnten"] = Eins(unten),
         };
+    }
+
+    /// <summary>
+    /// A 1.17.0 (Weisung P12-430 B6, Layoutpruefung „Leiste passt in jeder Schriftstufe“): ist die untere Leiste zu sehen, muss in
+    /// jeder Spalte das ganze Wort (ohne Umbruch und ohne Kuerzen gemessen) und die Pille mit dem Symbol innerhalb des Knopfs
+    /// liegen, und die Leiste muss ganz im Fenster liegen. Leer = passt. <paramref name="gegenprobeWort"/> misst fuer den ersten
+    /// Knopf statt seines Worts dieses Wort (nur fuer die Gegenprobe im Start-Test; die Oberflaeche bleibt unveraendert).
+    /// </summary>
+    public IReadOnlyList<string> LeistePasstFunde(string? gegenprobeWort = null)
+    {
+        var funde = new List<string>();
+        if (!UntereLeiste.IsEffectivelyVisible)
+        {
+            return funde;
+        }
+        var wurzel = TopLevel.GetTopLevel(UntereLeiste);
+        if (wurzel is not null && UntereLeiste.TranslatePoint(new Point(0, 0), wurzel) is { } oben
+            && (oben.X < -0.5 || oben.X + UntereLeiste.Bounds.Width > wurzel.Bounds.Width + 0.5 || oben.Y + UntereLeiste.Bounds.Height > wurzel.Bounds.Height + 0.5))
+        {
+            funde.Add($"untere Leiste ragt aus dem Fenster ({oben.X:0.#}/{oben.Y:0.#}, {UntereLeiste.Bounds.Width:0.#} x {UntereLeiste.Bounds.Height:0.#})");
+        }
+        foreach (var (id, knopf) in _untenKnoepfe)
+        {
+            var (pille, _, wort) = _untenTeile[id];
+            // Wortbreite ohne Grenze gemessen (wie es ungekuerzt braucht), nach Bildpunkt-Rundung verglichen
+            var probe = new TextBlock { Text = gegenprobeWort is not null && funde.Count == 0 && id == _untenKnoepfe.Keys.First() ? gegenprobeWort : wort.Text, FontSize = wort.FontSize, FontWeight = FontWeight.SemiBold, FontFamily = wort.FontFamily };
+            probe.Measure(Size.Infinity);
+            var breit = Math.Ceiling(probe.DesiredSize.Width);
+            var platz = Math.Floor(knopf.Bounds.Width);
+            if (breit > platz)
+            {
+                funde.Add($"untere Leiste „{probe.Text}“: Wort {breit:0} breiter als die Spalte {platz:0}");
+            }
+            foreach (var (name, teil) in new (string, Control)[] { ("Wort", wort), ("Pille", pille) })
+            {
+                if (teil.TranslatePoint(new Point(0, 0), knopf) is { } p
+                    && (p.X < -0.5 || p.Y < -0.5 || p.X + teil.Bounds.Width > knopf.Bounds.Width + 0.5 || p.Y + teil.Bounds.Height > knopf.Bounds.Height + 0.5))
+                {
+                    funde.Add($"untere Leiste „{wort.Text}“: {name} ragt aus dem Knopf ({p.X:0.#}/{p.Y:0.#}, {teil.Bounds.Width:0.#} x {teil.Bounds.Height:0.#} in {knopf.Bounds.Width:0.#} x {knopf.Bounds.Height:0.#})");
+                }
+            }
+        }
+        return funde;
     }
 
     /// <summary>Sammelliste 341: Kennung des Eintrags der unteren Leiste, der zu einer Seite gehoert (null = keiner).</summary>
@@ -517,14 +559,14 @@ public sealed class Navigationsleisten
         if (aktiv && !teile.Unter)
         {
             knopf.FarbeNeu(Button.BackgroundProperty, "Pinsel.card_hi");
-            teile.Strich.FarbeNeu(Border.BackgroundProperty, "Pinsel.accent");
+            teile.Strich.FarbeNeu(Border.BorderBrushProperty, "Pinsel.accent");
         }
         else
         {
             Markierung.Loesen(knopf, Button.BackgroundProperty);
             knopf.Background = Brushes.Transparent;
-            Markierung.Loesen(teile.Strich, Border.BackgroundProperty);
-            teile.Strich.Background = Brushes.Transparent;
+            Markierung.Loesen(teile.Strich, Border.BorderBrushProperty);
+            teile.Strich.BorderBrush = Brushes.Transparent;
         }
         if (_symbole.TryGetValue(id, out var symbol))
         {

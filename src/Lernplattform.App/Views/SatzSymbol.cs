@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Lernplattform.Core.Design;
 using Lernplattform.Design;
 
 namespace Lernplattform.Views;
@@ -23,6 +24,18 @@ public sealed class SatzSymbol : Control
     }
 
     private readonly SymbolTeil[] _teile;
+    // Umrisse einmal gelesen (Geometry braucht die Grafik von Avalonia, darum hier und nicht in Core)
+    private static readonly Dictionary<string, Geometry> Umrisse = new(StringComparer.Ordinal);
+
+    private static Geometry Umriss(SymbolTeil teil)
+    {
+        if (!Umrisse.TryGetValue(teil.Pfad, out var g))
+        {
+            g = Geometry.Parse(teil.Pfad);
+            Umrisse[teil.Pfad] = g;
+        }
+        return g;
+    }
     private string _formPinsel = "";
     private string _grundPinsel = "";
 
@@ -80,24 +93,24 @@ public sealed class SatzSymbol : Control
         var faktor = groesse / 24;
         using var _ = context.PushTransform(Matrix.CreateScale(faktor, faktor)
             * Matrix.CreateTranslation((Bounds.Width - groesse) / 2, (Bounds.Height - groesse) / 2));
-        var spalt = new Pen(Grund, Symbole.AkzentSpalt, lineJoin: PenLineJoin.Round);
+        var spalt = new Pen(Grund, Core.Design.SymbolSatz.AkzentSpalt, lineJoin: PenLineJoin.Round);
         foreach (var teil in _teile)
         {
             switch (teil.Art)
             {
                 case SymbolTeilArt.Form:
-                    context.DrawGeometry(Form, null, teil.Geometrie);
+                    context.DrawGeometry(Form, null, Umriss(teil));
                     break;
                 case SymbolTeilArt.Akzent:
                     // wie paint-order: stroke im Entwurf: erst der Spalt, dann die Flaeche darueber
-                    context.DrawGeometry(null, spalt, teil.Geometrie);
-                    context.DrawGeometry(Akzent, null, teil.Geometrie);
+                    context.DrawGeometry(null, spalt, Umriss(teil));
+                    context.DrawGeometry(Akzent, null, Umriss(teil));
                     break;
                 case SymbolTeilArt.Grund:
-                    context.DrawGeometry(Grund, null, teil.Geometrie);
+                    context.DrawGeometry(Grund, null, Umriss(teil));
                     break;
                 case SymbolTeilArt.Linie:
-                    context.DrawGeometry(null, new Pen(Grund, teil.Breite, lineCap: PenLineCap.Round), teil.Geometrie);
+                    context.DrawGeometry(null, new Pen(Grund, teil.Breite, lineCap: PenLineCap.Round), Umriss(teil));
                     break;
             }
         }

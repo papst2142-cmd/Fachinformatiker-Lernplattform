@@ -10,7 +10,8 @@ namespace Lernplattform.Messung;
 /// <summary>
 /// Welle A 1.15.0 (Weisungen P12-406/P12-407, Variante B): die neuen Seiten der Pruefungsteile.
 /// <list type="bullet">
-/// <item>Klickwege wie mit Maus oder Finger: jede bisherige Seite in hoechstens zwei Klicks, am Handy ueber die untere Leiste,
+/// <item>Klickwege wie mit Maus oder Finger: jede bisherige Seite in hoechstens zwei Klicks (A 1.17.0: am Handy die Seiten unter
+/// AP2 in drei, Prüfung → AP2 → Seite), am Handy ueber die untere Leiste,
 /// am PC ueber die Seitenleiste (Knoepfe nach ihrem Namen fuer den Bildschirmleser gesucht, dadurch prueft der Weg auch die Namen).</item>
 /// <item>Ansichten fuer die Layoutpruefung: Reiter Ueben und Pruefen je Teil, Satz waehlen, Aufgabe waehlen, Einzelaufgabe mit
 /// und ohne Musterloesung, Teil 2 und die Seite „Mehr“.</item>
@@ -22,40 +23,52 @@ public static partial class AutoMessung
     private static Button? KnopfNamens(Control wurzel, string name) =>
         wurzel.GetVisualDescendants().OfType<Button>().FirstOrDefault(b => AutomationProperties.GetName(b) == name && b.IsEffectivelyVisible);
 
-    /// <summary>Zwei Klicks je bisheriger Seite (Start in der Leiste, dann ein Knopf der gezeigten Seite).</summary>
-    private static IEnumerable<(string Leiste, string? Knopf, string Ziel, string? Reiter)> Klickwege(bool handy)
+    /// <summary>
+    /// Klickweg je bisheriger Seite: Eintrag der Leiste, dann Knoepfe der gezeigten Seiten (nach Namen). A 1.17.0 (Weisung
+    /// P12-430, Reiter B): am Handy fuehrt „Prüfung“ zu AP1 (zuerst), AP2 ist ein Klick auf die Segment-Leiste; darum brauchen
+    /// die Seiten unter AP2 am Handy drei Klicks (feste Liste <c>PruefungsteileTests.HandyDreiKlicks</c> und die Bereiche).
+    /// </summary>
+    private static IEnumerable<(string Leiste, string[] Knoepfe, string Ziel, string? Reiter)> Klickwege(bool handy)
     {
         var ueben = Pruefungsteile.Ueben + " ";
-        var leiste1 = handy ? "Teil 1" : Pruefungsteile.Teil1Titel;
-        var leiste2 = handy ? "Teil 2" : Pruefungsteile.Teil2Titel;
-        yield return (leiste1, ueben + Pruefungsteile.Pruefungsfragen, Seiten.Trainer, null);
-        yield return (leiste1, ueben + Pruefungsteile.Ap1Szenarien, Seiten.Ap1Szenarien, null);
-        yield return (leiste1, Pruefungsteile.Pruefen, Pruefungsteile.Teil1, Pruefungsteile.Pruefen);
-        yield return (leiste2, Pruefungsteile.Testprojekte, Seiten.Testprojekt, null);
-        yield return (leiste2, Pruefungsteile.MeinProjekt, Seiten.Abschluss, null);
+        var fr = Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht);
+        var ap2 = Pruefungsteile.Teil2Titel + " " + Beschriftungen.Einsetzen(Pruefungsteile.SegmentGewicht,
+            Core.Pruefung.Fachrichtung.Teil2.Sum(r => fr.Bereich(r).Gewicht));
+        var leiste1 = handy ? Pruefungsteile.PruefungTitel : Pruefungsteile.Teil1Titel;
+        var leiste2 = handy ? Pruefungsteile.PruefungTitel : Pruefungsteile.Teil2Titel;
+        string[] Zu2(string knopf) => handy ? [ap2, knopf] : [knopf];
+        yield return (leiste1, [ueben + Pruefungsteile.Pruefungsfragen], Seiten.Trainer, null);
+        yield return (leiste1, [ueben + Pruefungsteile.Ap1Szenarien], Seiten.Ap1Szenarien, null);
+        yield return (leiste1, [Pruefungsteile.Pruefen], Pruefungsteile.Teil1, Pruefungsteile.Pruefen);
+        yield return (leiste2, Zu2(Pruefungsteile.Testprojekte), Seiten.Testprojekt, null);
+        yield return (leiste2, Zu2(Pruefungsteile.MeinProjekt), Seiten.Abschluss, null);
         foreach (var rolle in (string[])[Pruefungsteile.B1, Pruefungsteile.B2, Pruefungsteile.Wiso])
         {
-            yield return (leiste2, ueben + Pruefungsteile.BereichKurz(rolle), rolle, Pruefungsteile.Ueben);
-            yield return (leiste2, Pruefungsteile.Pruefen + " " + Pruefungsteile.BereichKurz(rolle), rolle, Pruefungsteile.Pruefen);
+            yield return (leiste2, Zu2(ueben + Pruefungsteile.BereichKurz(rolle)), rolle, Pruefungsteile.Ueben);
+            yield return (leiste2, Zu2(Pruefungsteile.Pruefen + " " + Pruefungsteile.BereichKurz(rolle)), rolle, Pruefungsteile.Pruefen);
         }
         if (handy)
         {
+            yield return (leiste1, [ap2], Pruefungsteile.Teil2, null);
             foreach (var e in Navigation.Lernen)
             {
-                yield return ("Lernen", e.Titel, e.Id, null);
+                yield return (Pruefungsteile.LernenTitel, [e.Titel], e.Id, null);
             }
             foreach (var e in Pruefungsteile.MehrEintraege)
             {
-                yield return ("Mehr", e.Titel, e.Id, null);
+                yield return (Pruefungsteile.MehrTitel, [e.Titel], e.Id, null);
             }
-            yield return ("Start", Pruefungsteile.StartOeffnen + " " + Pruefungsteile.Teil1Titel, Pruefungsteile.Teil1, null);
-            yield return ("Start", Pruefungsteile.StartOeffnen + " " + Pruefungsteile.Teil2Titel, Pruefungsteile.Teil2, null);
+            yield return ("Start", [Pruefungsteile.StartOeffnen + " " + Pruefungsteile.Teil1Titel], Pruefungsteile.Teil1, null);
+            yield return ("Start", [Pruefungsteile.StartOeffnen + " " + Pruefungsteile.Teil2Titel], Pruefungsteile.Teil2, null);
         }
         else
         {
             // am PC steht jeder Bereich in der Seitenleiste: dort die AP2-Szenarien des Bereichs
-            yield return (Pruefungsteile.Seitenleiste(Core.Pruefung.Fachrichtung.Nach(Programm.Zustand.Sicht)).Single(z => z.Id == Pruefungsteile.B1).Titel,
-                ueben + Pruefungsteile.Ap2Szenarien, Seiten.Ap2Szenarien, null);
+            yield return (Pruefungsteile.Seitenleiste(fr).Single(z => z.Id == Pruefungsteile.B1).Titel,
+                [ueben + Pruefungsteile.Ap2Szenarien], Seiten.Ap2Szenarien, null);
+            // „Prüfung“ und „Lernen“ als Hauptpunkte: Prüfung zeigt AP1 (zuerst), Lernen die Sammelseite
+            yield return (Pruefungsteile.PruefungTitel, [], Pruefungsteile.Teil1, null);
+            yield return (Pruefungsteile.LernenTitel, [], Seiten.Lernen, null);
         }
     }
 
@@ -79,8 +92,11 @@ public static partial class AutoMessung
             }
             var geraet = handy ? "Handy" : "PC";
             var wege = 0;
-            foreach (var (leiste, knopf, ziel, reiter) in Klickwege(handy))
+            var hoechstens = 0;
+            foreach (var (leiste, knoepfe, ziel, reiter) in Klickwege(handy))
             {
+                // wie nach dem Start: zuletzt gezeigte Haelfte AP1
+                await ansicht.ZeigeAsync(Pruefungsteile.Teil1);
                 await ansicht.ZeigeAsync(Seiten.Dashboard);
                 if (ansicht.GebauteSeiten[Seiten.Dashboard] is DashboardSeite start)
                 {
@@ -97,33 +113,54 @@ public static partial class AutoMessung
                 }
                 eins?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await ansicht.BildFertigAsync();
-                if (ansicht.GebauteSeiten.GetValueOrDefault(ansicht.AktuelleSeite) is PruefungsteilSeite teil)
+                var weg = true;
+                foreach (var knopf in knoepfe)
                 {
-                    await teil.Geladen;
-                    await ansicht.BildFertigAsync();
-                }
-                if (knopf is not null)
-                {
+                    if (ansicht.GebauteSeiten.GetValueOrDefault(ansicht.AktuelleSeite) is PruefungsteilSeite teil)
+                    {
+                        await teil.Geladen;
+                        await ansicht.BildFertigAsync();
+                    }
                     var seite = ansicht.GebauteSeiten.GetValueOrDefault(ansicht.AktuelleSeite);
                     if (seite is null || KnopfNamens(seite, knopf) is not { } zwei)
                     {
                         Messwerte.Notiere($"  FEHLER: Klickweg {geraet}: {leiste} → kein Knopf „{knopf}“ auf {ansicht.AktuelleSeite}");
                         funde++;
-                        continue;
+                        weg = false;
+                        break;
                     }
                     zwei.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     await ansicht.BildFertigAsync();
+                }
+                if (!weg)
+                {
+                    continue;
                 }
                 var ist = ansicht.AktuelleSeite;
                 var istReiter = ansicht.GebauteSeiten.GetValueOrDefault(ist) is PruefungsteilSeite p ? p.Reiter : null;
                 if (ist != ziel || (reiter is not null && istReiter != reiter))
                 {
-                    Messwerte.Notiere($"  FEHLER: Klickweg {geraet}: {leiste} → {knopf} zeigt {ist}/{istReiter} statt {ziel}/{reiter}");
+                    Messwerte.Notiere($"  FEHLER: Klickweg {geraet}: {leiste} → {string.Join(" → ", knoepfe)} zeigt {ist}/{istReiter} statt {ziel}/{reiter}");
                     funde++;
                 }
                 wege++;
+                hoechstens = Math.Max(hoechstens, knoepfe.Length + (leiste == "Start" ? 0 : 1));
             }
-            Messwerte.Notiere($"Klickwege {geraet} ({Programm.Zustand.Sicht}): {wege} Wege mit hoechstens zwei Klicks geprueft");
+            Messwerte.Notiere($"Klickwege {geraet} ({Programm.Zustand.Sicht}): {wege} Wege geprueft, hoechstens {hoechstens} Klicks");
+            if (handy)
+            {
+                // „Prüfung“ zeigt die zuletzt gewaehlte Haelfte: nach AP2 wieder AP2
+                await ansicht.ZeigeAsync(Pruefungsteile.Teil2);
+                await ansicht.ZeigeAsync(Seiten.Dashboard);
+                KnopfNamens(ansicht.Leisten.UntereLeiste, Pruefungsteile.PruefungTitel)?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await ansicht.BildFertigAsync();
+                if (ansicht.AktuelleSeite != Pruefungsteile.Teil2)
+                {
+                    Messwerte.Notiere($"  FEHLER: Prüfung nach AP2 zeigt {ansicht.AktuelleSeite} statt der zuletzt gewaehlten Haelfte AP2");
+                    funde++;
+                }
+                await ansicht.ZeigeAsync(Pruefungsteile.Teil1);
+            }
         }
         if (fenster is not null)
         {

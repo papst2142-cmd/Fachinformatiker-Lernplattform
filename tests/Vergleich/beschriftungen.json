@@ -179,13 +179,18 @@
     ],
     [
      "eintrag",
-     "teil1",
-     "Teil 1 · AP1"
+     "pruefung",
+     "Prüfung"
     ],
     [
-     "eintrag",
+     "unter",
+     "teil1",
+     "AP1"
+    ],
+    [
+     "unter",
      "teil2",
-     "Teil 2 · AP2"
+     "AP2"
     ],
     [
      "unter",
@@ -208,9 +213,9 @@
      "Abschlussprojekt"
     ],
     [
-     "gruppe",
-     null,
-     "LERNEN"
+     "eintrag",
+     "learn",
+     "Lernen"
     ],
     [
      "unter",
@@ -226,11 +231,6 @@
      "unter",
      "calc",
      "Rechner"
-    ],
-    [
-     "gruppe",
-     null,
-     "SONSTIGES"
     ],
     [
      "eintrag",
@@ -256,13 +256,18 @@
     ],
     [
      "eintrag",
-     "teil1",
-     "Teil 1 · AP1"
+     "pruefung",
+     "Prüfung"
     ],
     [
-     "eintrag",
+     "unter",
+     "teil1",
+     "AP1"
+    ],
+    [
+     "unter",
      "teil2",
-     "Teil 2 · AP2"
+     "AP2"
     ],
     [
      "unter",
@@ -285,9 +290,9 @@
      "Abschlussprojekt"
     ],
     [
-     "gruppe",
-     null,
-     "LERNEN"
+     "eintrag",
+     "learn",
+     "Lernen"
     ],
     [
      "unter",
@@ -303,11 +308,6 @@
      "unter",
      "calc",
      "Rechner"
-    ],
-    [
-     "gruppe",
-     null,
-     "SONSTIGES"
     ],
     [
      "eintrag",
@@ -333,13 +333,18 @@
     ],
     [
      "eintrag",
-     "teil1",
-     "Teil 1 · AP1"
+     "pruefung",
+     "Prüfung"
     ],
     [
-     "eintrag",
+     "unter",
+     "teil1",
+     "AP1"
+    ],
+    [
+     "unter",
      "teil2",
-     "Teil 2 · AP2"
+     "AP2"
     ],
     [
      "unter",
@@ -362,9 +367,9 @@
      "Abschlussprojekt"
     ],
     [
-     "gruppe",
-     null,
-     "LERNEN"
+     "eintrag",
+     "learn",
+     "Lernen"
     ],
     [
      "unter",
@@ -380,11 +385,6 @@
      "unter",
      "calc",
      "Rechner"
-    ],
-    [
-     "gruppe",
-     null,
-     "SONSTIGES"
     ],
     [
      "eintrag",
@@ -410,13 +410,18 @@
     ],
     [
      "eintrag",
-     "teil1",
-     "Teil 1 · AP1"
+     "pruefung",
+     "Prüfung"
     ],
     [
-     "eintrag",
+     "unter",
+     "teil1",
+     "AP1"
+    ],
+    [
+     "unter",
      "teil2",
-     "Teil 2 · AP2"
+     "AP2"
     ],
     [
      "unter",
@@ -439,9 +444,9 @@
      "Abschlussprojekt"
     ],
     [
-     "gruppe",
-     null,
-     "LERNEN"
+     "eintrag",
+     "learn",
+     "Lernen"
     ],
     [
      "unter",
@@ -457,11 +462,6 @@
      "unter",
      "calc",
      "Rechner"
-    ],
-    [
-     "gruppe",
-     null,
-     "SONSTIGES"
     ],
     [
      "eintrag",
@@ -488,10 +488,19 @@
    ]
   ],
   "gruppen": [
-   "ABSCHLUSSPRÜFUNG %s",
-   "LERNEN",
-   "SONSTIGES"
-  ]
+   "ABSCHLUSSPRÜFUNG %s"
+  ],
+  "symbole": {
+   "dashboard": "START",
+   "pruefung": "PRUEFUNG",
+   "learn": "LERNEN",
+   "game": "SPIEL",
+   "progress": "FORTSCHRITT",
+   "help": "HILFE",
+   "settings": "OPTIONEN",
+   "mehr": "MEHR",
+   "beenden": "BEENDEN"
+  }
  },
  "kopfleiste_pc": {
   "titel": [
@@ -606,32 +615,26 @@
  "navigation_handy": [
   {
    "id": "dashboard",
-   "symbol": "DASHBOARD_OUTLINED",
-   "symbol_aktiv": "DASHBOARD_ROUNDED",
+   "symbol": "START",
+   "symbol_aktiv": "START",
    "titel": "Start"
   },
   {
-   "id": "teil1",
-   "symbol": "ZIFFER_1",
-   "symbol_aktiv": "ZIFFER_1",
-   "titel": "Teil 1"
-  },
-  {
-   "id": "teil2",
-   "symbol": "ZIFFER_2",
-   "symbol_aktiv": "ZIFFER_2",
-   "titel": "Teil 2"
+   "id": "pruefung",
+   "symbol": "PRUEFUNG",
+   "symbol_aktiv": "PRUEFUNG",
+   "titel": "Prüfung"
   },
   {
    "id": "learn",
-   "symbol": "EDIT_NOTE_ROUNDED",
-   "symbol_aktiv": "EDIT_NOTE_ROUNDED",
+   "symbol": "LERNEN",
+   "symbol_aktiv": "LERNEN",
    "titel": "Lernen"
   },
   {
    "id": "game",
-   "symbol": "SPORTS_ESPORTS_OUTLINED",
-   "symbol_aktiv": "SPORTS_ESPORTS_ROUNDED",
+   "symbol": "SPIEL",
+   "symbol_aktiv": "SPIEL",
    "titel": "Spiel"
   },
   {
@@ -716,7 +719,7 @@
   ],
   "knoepfe": [
    {
-    "symbol": "HELP_OUTLINE_ROUNDED",
+    "symbol": "HILFE",
     "titel": "Hilfe"
    },
    {
@@ -812,7 +815,7 @@
      "id": "scenarios",
      "symbol": "DIAMOND_ROUNDED",
      "titel": "AP2-Szenarien",
-     "muster": "%d Aufgaben aus allen Bereichen von Teil 2",
+     "muster": "%d Aufgaben aus allen Bereichen von AP2",
      "farben": [
       "#DB2777",
       "#FB923C"

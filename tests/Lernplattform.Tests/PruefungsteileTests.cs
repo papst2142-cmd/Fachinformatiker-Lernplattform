@@ -48,6 +48,28 @@ public class PruefungsteileTests
     public static readonly IReadOnlyList<string> BisherigeSeiten =
         ["dashboard", "cards", "quiz", "ap1scenarios", "scenarios", "testproject", "abschluss", "notebook", "calc", "game", "progress", "help", "settings", "learn"];
 
+    /// <summary>
+    /// A 1.17.0 (Weisung P12-430, Reiter B): am Handy fuehrt ein Knopf „Prüfung“ zu AP1, AP2 ist ein Klick auf die Segment-Leiste.
+    /// Darum brauchen genau diese Seiten unter AP2 am Handy drei Klicks (Prüfung, AP2, Seite); feste Liste, sonst rot.
+    /// </summary>
+    public static readonly IReadOnlyList<string> HandyDreiKlicks = ["testproject", "abschluss"];
+
+    /// <summary>Wie viele Klicks bis zu einer Seite (Klick 1 = Eintrag der Leiste, danach Knoepfe der Seite, <see cref="Pruefungsteile.Ziele"/>).</summary>
+    private static int Klicks(IReadOnlyList<string> leiste, string seite, Func<string, bool> mitSzenarien)
+    {
+        var stufe = leiste.Distinct().ToList();
+        var gesehen = new HashSet<string>(stufe, StringComparer.Ordinal);
+        for (var klicks = 1; klicks <= 4; klicks++)
+        {
+            if (stufe.Contains(seite))
+            {
+                return klicks;
+            }
+            stufe = [.. stufe.SelectMany(s => Pruefungsteile.Ziele(s, mitSzenarien(s))).Where(gesehen.Add)];
+        }
+        return int.MaxValue;
+    }
+
     [Theory]
     [InlineData("si")]
     [InlineData("ae")]
@@ -59,8 +81,8 @@ public class PruefungsteileTests
         var sicht = Alle.Value.Fuer(fr);
         var klausur = new KlausurInhalte(sicht, []);
         var gewicht = new RahmenplanGewicht(sicht);
-        bool MitSzenarien(string seite) => Pruefungsteile.ReiterSeiten.Contains(seite)
-            && TeilUeben.Inhalte(sicht, gewicht, klausur, f, Pruefungsteile.Rolle(seite)).Szenarien.Count > 0;
+        bool MitSzenarien(string seite) => Pruefungsteile.ReiterSeiten.Contains(seite == Pruefungsteile.Pruefung ? Pruefungsteile.Teil1 : seite)
+            && TeilUeben.Inhalte(sicht, gewicht, klausur, f, Pruefungsteile.Rolle(seite == Pruefungsteile.Pruefung ? Pruefungsteile.Teil1 : seite)).Szenarien.Count > 0;
         var pc = Pruefungsteile.Seitenleiste(f).Concat(Pruefungsteile.SeitenleisteUnten).Where(z => z.Id is not null).Select(z => z.Id!).ToList();
         var handy = Navigation.Handy.Select(h => h.Id).ToList();
         var funde = new List<string>();
@@ -68,15 +90,27 @@ public class PruefungsteileTests
         {
             foreach (var seite in BisherigeSeiten.Where(s => geraet == "Handy" || s != "learn"))
             {
-                var eins = leiste.Contains(seite);
-                var zwei = leiste.Any(l => Pruefungsteile.Ziele(l, MitSzenarien(l)).Contains(seite));
-                if (!eins && !zwei)
+                var soll = geraet == "Handy" && HandyDreiKlicks.Contains(seite) ? 3 : 2;
+                var ist = Klicks(leiste, seite, MitSzenarien);
+                if (ist != soll && !(soll == 2 && ist <= 2))
                 {
-                    funde.Add(geraet + ": " + seite);
+                    funde.Add(geraet + ": " + seite + " in " + ist + " statt " + soll + " Klicks");
                 }
             }
         }
         Assert.Empty(funde);
+    }
+
+    [Fact]
+    public void PruefungZeigtAp1UndAp2PerSegment()
+    {
+        // Gegenprobe: ohne Segment (AP2 nicht von AP1 aus erreichbar) waeren Testprojekte und Abschlussprojekt am Handy nicht
+        // erreichbar; mit Segment genau drei Klicks
+        Assert.Contains(Pruefungsteile.Teil2, Pruefungsteile.Ziele(Pruefungsteile.Pruefung));
+        Assert.Contains(Pruefungsteile.Teil1, Pruefungsteile.Ziele(Pruefungsteile.Teil2));
+        Assert.Equal(3, Klicks([Pruefungsteile.Pruefung], "abschluss", _ => true));
+        Assert.Equal(2, Klicks([Pruefungsteile.Pruefung], "quiz", _ => true));
+        Assert.Equal(int.MaxValue, Klicks([Pruefungsteile.Pruefung], "settings", _ => true));
     }
 
     [Fact]

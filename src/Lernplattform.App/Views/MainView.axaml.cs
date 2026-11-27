@@ -132,7 +132,7 @@ public partial class MainView : UserControl
 
         // Wie am Handy: Hilfe vor Suche, Symbole text_dim, rechts 6 Punkte Abstand
         // A 1.17.0 (Weisung P12-430, Entwurf P12-271): Hilfe mit dem Wegweiser aus Satz 3, die Lupe bleibt (Nico 4a)
-        var hilfe = Symbolknopf(Core.Texte.Navigation.KopfKnoepfeHandy[0].Symbol, Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
+        var hilfe = Symbolknopf(Core.Texte.Pruefungsteile.Symbole[Seiten.Hilfe], Seiten.Titel(Seiten.Hilfe), Seiten.Hilfe);
         var suche = Symbolknopf("SEARCH_ROUNDED", Seiten.Titel(Seiten.Suche), Seiten.Suche);
         var kopf = new DockPanel { Margin = new Thickness(0, 0, 6, 0) };
         // Patch A 0.37.0 (Weisung P11-35, Nico): am Handy (Kopfleiste ohne Seitenleiste) X rechts neben der Lupe,
