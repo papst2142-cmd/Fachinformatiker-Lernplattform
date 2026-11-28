@@ -22,16 +22,20 @@ namespace Lernplattform.Tests;
 /// </summary>
 public sealed class FachrichtungsPaketTests : IDisposable
 {
-    /// <summary>A 1.18.0 (L0, Weisung P12-424): Version der App in den Tests (vorher A 1.12.0; die Pakete nach dem Loeschen brauchen A 1.18.0).</summary>
-    private const string App = "A 1.18.0";
+    /// <summary>
+    /// A 1.18.0 (L0, Weisung P12-424): Version der App in den Tests (vorher A 1.12.0; die Pakete nach dem Loeschen brauchen A 1.18.0);
+    /// seit A 1.20.0 (Weisung P12-446) A 1.20.0 (FIAE Stand 5 mit dem Schreibtischtest braucht sie).
+    /// </summary>
+    private const string App = "A 1.20.0";
 
     /// <summary>
     /// A 1.8.0: Stand und braucht_app des echten Pakets je Fachrichtung, gleich paket_bauen.LERNEN_TESTDATEIEN (FIAE Stand 2 mit
     /// den neuen Fassungen der Pruefungssaetze, FIDP und FIDV Stand 1); seit A 1.12.0 FIAE Stand 3 (Struktogramm, Format 5).
     /// Seit A 1.18.0 (L0) FIAE Stand 4, FIDP und FIDV Stand 2 (Stellen nach dem Loeschen, braucht A 1.18.0).
-    /// Die Dateien lernen_ae_1 bis lernen_ae_3, lernen_dpa_1 und lernen_dv_1 bleiben als echte Testdateien liegen.
+    /// Seit A 1.20.0 FIAE Stand 5 (Schreibtischtest-Fassung ae_b2_09, Saetze Format 6, braucht A 1.20.0).
+    /// Die Dateien lernen_ae_1 bis lernen_ae_4, lernen_dpa_1 und lernen_dv_1 bleiben als echte Testdateien liegen.
     /// </summary>
-    private static (long Stand, string Braucht) Echtes(string fr) => fr == "ae" ? (4, "A 1.18.0") : (2, "A 1.18.0");
+    private static (long Stand, string Braucht) Echtes(string fr) => fr == "ae" ? (5, "A 1.20.0") : (2, "A 1.18.0");
 
     private static string EchtDatei(string fr) => Path.Combine(Echt, Paket.Dateiname("lernen_" + fr, Echtes(fr).Stand));
     private static readonly string Lernen = Path.Combine(Pfade.Wurzel, "inhalte_csharp", "lernen");
@@ -197,8 +201,9 @@ public sealed class FachrichtungsPaketTests : IDisposable
         // A 0.94.0 (P12-304): 10 alte und 10 neue FIAE-Saetze; die 10 alten stehen mit Stelle und Kennung im Ausschluss;
         // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen (gleiche Kennung, hinten angehaengt); A 1.12.0 (P12-390): dazu 1 (P12-393)
         // A 1.12.0: 25 + 1 Struktogramm-Fassung (ae_b2_08, P12-393) = 26; A 1.18.0 (L0, Nico 1b): die 10 alten Saetze und die
-        // 6 aelteren Fassungen sind geloescht, es bleiben 10, und das Paket traegt keinen Ausschluss mehr
-        Assert.Equal(10, e.Lernen.Saetze.Count);
+        // 6 aelteren Fassungen sind geloescht, es bleiben 10, und das Paket traegt keinen Ausschluss mehr; A 1.20.0 (P12-446):
+        // dazu die Schreibtischtest-Fassung ae_b2_09 (hinten angehaengt, die alte bleibt) = 11
+        Assert.Equal(11, e.Lernen.Saetze.Count);
         Assert.Empty(e.Lernen.Ausschluss);
         Assert.Equal(1500, e.Lernen.Listen["karteikarten"].Count);
         Assert.Equal(330, e.Lernen.Listen["szenarien_ap2"].Count);
@@ -676,7 +681,8 @@ public sealed class FachrichtungsPaketTests : IDisposable
         // Kurzplan P12-225: 4 500 Karteikarten, 6 361 Quizfragen, 990 AP2-Szenarien, 150 Testprojekte, 54 Fachfragen, 40 Saetze;
         // A 1.8.0 (P12-372): dazu die 5 neuen Fassungen der FIAE-Saetze; A 1.12.0 (P12-390, P12-393): dazu die 1 Struktogramm-Fassung (ae_b2_08)
         // A 1.18.0 (L0, Nico 1b): geloescht 1 FIAE-Quizfrage, 10 alte FIAE-Saetze und 6 aeltere Fassungen
-        Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40 + 5 + 1 - 1 - 10 - 6, platzhalter);
+        // A 1.20.0 (P12-446): dazu die Schreibtischtest-Fassung ae_b2_09 (die zwei AP1-Fassungen gelten fuer alle, bleiben in der App)
+        Assert.Equal(4500 + 6361 + 990 + 150 + 54 + 40 + 5 + 1 - 1 - 10 - 6 + 1, platzhalter);
         Assert.DoesNotContain(bau.Keys, k => Geschnitten.Any(fr => k.Contains("." + fr + ".", StringComparison.Ordinal)));
         var ordner = AppOrdner();
         Assert.All(Geschnitten, fr => Assert.True(ordner.Fehlt(fr), fr));

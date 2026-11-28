@@ -47,7 +47,9 @@ LERNEN_ORDNER = os.path.join("inhalte_csharp", "lernen")
 # A 1.12.0 (Weisung P12-390): FIAE Stand 3 mit den Struktogramm-Fassungen (Saetze Format 5) braucht A 1.12.0.
 # A 1.18.0 (L0, Weisung P12-424): geloeschte Eintraege verschieben die Stellen aller drei Fachrichtungen; neuer Stand je Paket,
 # braucht A 1.18.0 (aeltere Apps tragen die geloeschten Eintraege noch und lehnten das Paket nach „nur angehaengt“ ab).
-LERNEN_TESTDATEIEN = {"ae": (4, "A 1.18.0"), "dpa": (2, "A 1.18.0"), "dv": (2, "A 1.18.0")}
+# A 1.20.0 (Weisung P12-446): FIAE Stand 5 mit der Schreibtischtest-Fassung ae_b2_09 (Saetze Format 6) braucht A 1.20.0;
+# FIDP und FIDV bleiben (keine Aenderung).
+LERNEN_TESTDATEIEN = {"ae": (5, "A 1.20.0"), "dpa": (2, "A 1.18.0"), "dv": (2, "A 1.18.0")}
 
 
 def lernen_testdatei(fr):
@@ -59,6 +61,10 @@ def _satz_format(quelle_format, eigene):
     """Format der Saetze im Paket: 4 nur mit neuer Fassung oder Klassen-/Use-Case-Diagramm, 3 nur mit Satzpaar, sonst 2
     (aeltere Apps lesen ein Paket ohne diese Felder weiter)."""
     roh = [json.dumps(e["satz"], ensure_ascii=False) for e in eigene]
+    # A 1.20.0: Schreibtischtest, Ausgabe oder Datenauszug (Format 6) nur, wenn ein Satz eins hat; sonst hoechstens 5
+    if any('"form": "schreibtischtest"' in r or '"art": "ausgabe"' in r or '"art": "daten"' in r for r in roh):
+        return quelle_format
+    quelle_format = min(quelle_format, 5)
     # A 1.12.0: Struktogramm (Format 5) nur, wenn ein Satz eins hat; sonst hoechstens 4 (Apps ab A 1.8.0 lesen es weiter)
     if any('"diagramm": "struktogramm"' in r for r in roh):
         return quelle_format
@@ -272,6 +278,12 @@ def lernen_selbsttest(repo):
         # A 1.12.0: Struktogramm -> 5, Fassung ohne Struktogramm bleibt 4
         if _satz_format(5, [{"satz": {"a": {"diagramm": "struktogramm"}}}]) != 5 or _satz_format(5, [{"satz": {"fassung": 2}}]) != 4:
             funde.append("Satz-Format Struktogramm/Fassung bei Quelle 5 falsch")
+        # A 1.20.0: Schreibtischtest/Ausgabe/Datenauszug -> 6, Struktogramm bei Quelle 6 bleibt 5, Fassung 4
+        for eigene, soll in (([{"satz": {"a": {"form": "schreibtischtest"}}}], 6), ([{"satz": {"a": [{"art": "ausgabe"}]}}], 6),
+                             ([{"satz": {"a": [{"art": "daten"}]}}], 6), ([{"satz": {"a": {"diagramm": "struktogramm"}}}], 5),
+                             ([{"satz": {"fassung": 2}}], 4), ([{"satz": {"kennung": "x"}}], 2)):
+            if _satz_format(6, eigene) != soll:
+                funde.append("Satz-Format bei Quelle 6: %s statt %d" % (_satz_format(6, eigene), soll))
         for eigene, soll in (([{"satz": {"fassung": 2}}], 4), ([{"satz": {"a": {"diagramm": "klasse"}}}], 4),
                              ([{"satz": {"aufbau": "paar"}}], 3), ([{"satz": {"kennung": "x"}}], 2)):
             if _satz_format(4, eigene) != soll:

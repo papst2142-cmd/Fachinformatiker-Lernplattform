@@ -174,6 +174,9 @@ public partial class MainView : UserControl
         // Ebene fuer Hinweis- und Rueckfragefenster ueber allen Seiten (Phase 2)
         var ebene = new Panel { IsVisible = false };
         Dialog.Ebene(ebene);
+        // A 1.20.0 (W2, Nico 3a): Ebene fuer "Groß öffnen" einer Ausgabe oder eines Datenauszugs, unter allen anderen Ebenen
+        var grossesBlatt = new Panel { IsVisible = false };
+        AnlageGross.Ebene(grossesBlatt);
         // W3: Ebene fuer Kurzhinweise (show_badge_toast) unter den Fenstern, laesst Klicks daneben durch
         var hinweise = new Panel { IsVisible = false };
         Kurzhinweis.Ebene(hinweise);
@@ -197,7 +200,7 @@ public partial class MainView : UserControl
         _nachladeAnzeige.IsVisible = false;
         _nachladeTakt = new DispatcherTimer(TimeSpan.FromMilliseconds(50), DispatcherPriority.Background, (_, _) => NachladeanzeigeSetzen());
         // Phase 11 W2 (Weisung P11-20): unsichtbarer Ansagetext fuer den Screenreader (Kurzhinweise, Fenster)
-        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), _nachladeAnzeige, hinweise, rundgang, ebene, Ansage.Ziel() } };
+        Content = new Panel { Children = { new Border { Child = raster }.Farbe(Border.BackgroundProperty, "Pinsel.bg"), grossesBlatt, _nachladeAnzeige, hinweise, rundgang, ebene, Ansage.Ziel() } };
         Programm.Zustand.Fehlermeldung = text => Dispatcher.UIThread.Post(() => _ = Dialog.Zeigen(Core.Texte.KartenTexte.Datenbankfehler, text, Dialog.Ok));
         _inhalt.Farbe(ContentControl.ForegroundProperty, "Pinsel.text");
         Zeige(Seiten.Dashboard);

@@ -290,7 +290,30 @@ public static class Layoutpruefung
     private static void PruefeFeld(TextBox feld, List<string> funde)
     {
         var karte = feld.GetVisualAncestors().OfType<Border>().FirstOrDefault(b => b.Classes.Contains("karte"));
-        if (karte is null || feld.TranslatePoint(default, karte) is not { } links)
+        if (karte is null)
+        {
+            return;
+        }
+        // A 1.20.0 (Raster des Schreibtischtests): liegt das Feld in einem seitlich wischbaren Bereich innerhalb der Karte, muss
+        // es ganz im wischbaren Inhalt liegen und der Bereich selbst ganz in der Karte (gleich streng, nur am richtigen Rahmen)
+        var wisch = feld.GetVisualAncestors().TakeWhile(x => x != karte).OfType<ScrollViewer>()
+            .FirstOrDefault(x => x.HorizontalScrollBarVisibility != Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled);
+        if (wisch?.Content is Control inhalt && feld.TranslatePoint(default, inhalt) is { } imInhalt)
+        {
+            var bis = Math.Max(wisch.Extent.Width, inhalt.Bounds.Width);
+            if (imInhalt.X < -Toleranz || imInhalt.X + feld.Bounds.Width > bis + Toleranz)
+            {
+                funde.Add($"Feld ragt aus dem wischbaren Bereich: {Name(feld)} {Kurz(Avalonia.Automation.AutomationProperties.GetName(feld) ?? "")} "
+                    + $"({imInhalt.X:F0}..{imInhalt.X + feld.Bounds.Width:F0} von 0..{bis:F0})");
+            }
+            if (wisch.TranslatePoint(default, karte) is { } bereich
+                && (bereich.X < karte.BorderThickness.Left - Toleranz || bereich.X + wisch.Bounds.Width > karte.Bounds.Width - karte.BorderThickness.Right + Toleranz))
+            {
+                funde.Add($"Wischbarer Bereich ragt aus der Karte: {Name(feld)} ({bereich.X:F0}..{bereich.X + wisch.Bounds.Width:F0} von 0..{karte.Bounds.Width:F0})");
+            }
+            return;
+        }
+        if (feld.TranslatePoint(default, karte) is not { } links)
         {
             return;
         }

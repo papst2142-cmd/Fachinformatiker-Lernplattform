@@ -14,6 +14,23 @@ public sealed record EchtAnlage(string Nr, string Titel, string Art, IReadOnlyLi
 {
     public EchtNetzplan? Netzplan { get; init; }
     public EchtMonitor? Monitor { get; init; }
+
+    /// <summary>
+    /// A 1.20.0 (W2, Weisung P12-446): Zeilen einer Ausgabe-Anlage (Art "ausgabe"), die eingegeben wurden (ab 1; gruen und fett).
+    /// </summary>
+    public IReadOnlyList<int> Eingaben { get; init; } = [];
+
+    /// <summary>A 1.20.0: Format einer Datenauszug-Anlage (Art "daten"): "csv" oder "json", sonst null.</summary>
+    public string? DatenFormat { get; init; }
+
+    /// <summary>A 1.20.0: Trennzeichen einer CSV-Anlage.</summary>
+    public string Trennzeichen { get; init; } = "";
+
+    /// <summary>A 1.20.0: JSON-Anlage, die absichtlich fehlerhaft ist (Aufgabe: Fehler finden).</summary>
+    public bool Fehlerhaft { get; init; }
+
+    /// <summary>A 1.20.0: Felder einer CSV-Anlage je Zeile (Zeile 0 = Kopf), sonst leer.</summary>
+    public IReadOnlyList<IReadOnlyList<string>> Felder { get; init; } = [];
 }
 
 /// <summary>Bewertungshinweis zum Selbstbewerten (ein Haekchen mit Punkten).</summary>
@@ -54,6 +71,15 @@ public sealed record EchtAntwort(string Form)
     /// Ein Struktogramm hat keine Vorgabe und kein <see cref="Muster"/> im Raster.
     /// </summary>
     public IReadOnlyList<EchtBlock>? Struktogramm { get; init; }
+
+    /// <summary>A 1.20.0 (W2, Weisung P12-446): Code-Anlage eines Schreibtischtests (Nummer), sonst leer.</summary>
+    public string Code { get; init; } = "";
+
+    /// <summary>A 1.20.0: Schritte eines Schreibtischtests (Spalten in <see cref="Spalten"/>).</summary>
+    public IReadOnlyList<EchtSchreibSchritt> Schritte { get; init; } = [];
+
+    /// <summary>A 1.20.0 (Nico 2a): "leer = unveraendert" gilt (leere Zellen ohne Kaestchen erlaubt).</summary>
+    public bool LeerUnveraendert { get; init; }
 }
 
 /// <summary>Eine Teilaufgabe (a, b, ba, bb ...).</summary>
@@ -174,9 +200,10 @@ public static class EchtSaetze
     /// Hoechstes bekanntes Format: 1 = Welle 1 (A 0.76.0), 2 = gezeichnete Anlagen und Zeichenaufgaben (A 0.77.0),
     /// 3 = FIAE-Satzpaare mit Feld "aufbau" und Feld "gebiet" je Teil (A 0.94.0, Weisung P12-304), 4 = Klassen- und
     /// Use-Case-Diagramm im Baukasten und neue Fassung eines Satzes mit Feld "fassung" (A 1.8.0, Weisungen P12-371/372),
-    /// 5 = Struktogramm im Baukasten (Diagramm "struktogramm" mit Baum "bloecke", A 1.12.0, Weisung P12-390).
+    /// 5 = Struktogramm im Baukasten (Diagramm "struktogramm" mit Baum "bloecke", A 1.12.0, Weisung P12-390),
+    /// 6 = Schreibtischtest, Ausgabe- und Datenauszug-Anlage (A 1.20.0, W2, Weisung P12-446).
     /// </summary>
-    public const int Format = 5;
+    public const int Format = 6;
 
     /// <summary>Aufbau eines Satzes im FIAE-Satzpaar (Strukturblatt Abschnitt 7).</summary>
     public const string AufbauPaar = "paar";
@@ -195,12 +222,16 @@ public static class EchtSaetze
     public const string FormLuecke = "luecke";
     public const string FormAuswahl = "auswahl";
     public const string FormZeichnen = "zeichnen";
+    public const string FormSchreibtischtest = "schreibtischtest";
 
     /// <summary>Antwortformen der Welle 1 (Format 1).</summary>
     public static readonly IReadOnlyList<string> Formen = [FormZeilen, FormAngaben, FormRechnen, FormTabelle, FormLuecke, FormAuswahl];
 
     /// <summary>Antwortformen ab Format 2.</summary>
     public static readonly IReadOnlyList<string> Formen2 = [.. Formen, FormZeichnen];
+
+    /// <summary>Antwortformen ab Format 6 (A 1.20.0): dazu der Schreibtischtest.</summary>
+    public static readonly IReadOnlyList<string> Formen6 = [.. Formen2, FormSchreibtischtest];
 
     /// <summary>Arten der Lueckenfelder.</summary>
     public static readonly IReadOnlyList<string> FeldArten = ["ip", "maske", "zahl", "text"];
@@ -210,6 +241,9 @@ public static class EchtSaetze
 
     /// <summary>Arten der Anlagen ab Format 2: dazu Netzplan und Monitor-Bild, gezeichnet aus Daten.</summary>
     public static readonly IReadOnlyList<string> AnlagenArten2 = [.. AnlagenArten, "netzplan", "monitor"];
+
+    /// <summary>Arten der Anlagen ab Format 6 (A 1.20.0): dazu Ausgabe und Datenauszug (CSV oder JSON).</summary>
+    public static readonly IReadOnlyList<string> AnlagenArten6 = [.. AnlagenArten2, EchtDaten.Ausgabe, EchtDaten.Daten];
 
     /// <summary>
     /// Operatoren mit erlaubten Punkten (Strukturblatt Abschnitt 3): Nennen 1 je Angabe (2 bis 3 Angaben),
@@ -557,12 +591,17 @@ public static class EchtSaetze
     {
         var nr = Pflicht(a, "nr");
         var art = Pflicht(a, "art");
-        if (!(format >= 2 ? AnlagenArten2 : AnlagenArten).Contains(art))
+        if (!(format >= 6 ? AnlagenArten6 : format >= 2 ? AnlagenArten2 : AnlagenArten).Contains(art))
         {
             throw new EchtLadefehler("Anlage " + nr + ": unbekannte Art \"" + art + "\""
-                + (AnlagenArten2.Contains(art) ? " (erst ab Format 2)" : ""));
+                + (AnlagenArten2.Contains(art) ? " (erst ab Format 2)" : AnlagenArten6.Contains(art) ? " (erst ab Format 6)" : ""));
         }
         var titel = Pflicht(a, "titel");
+        if (art is EchtDaten.Ausgabe or EchtDaten.Daten)
+        {
+            // A 1.20.0 (W2): Ausgabe mit Eingabezeilen, Datenauszug CSV oder JSON (strenge Ladepruefung in EchtDaten)
+            return EchtDaten.Anlage(a, nr, titel, art, Zeilen(a["zeilen"], "Anlage " + nr + " zeilen"));
+        }
         if (art is "netzplan" or "monitor")
         {
             // gezeichnet; "zeilen" ist hier ein freiwilliger Text unter dem Bild (z. B. eine Legende)
@@ -709,6 +748,11 @@ public static class EchtSaetze
         }
         var teil = new EchtTeil(nr, op, text, punkte, angaben, antwort, verweise, bezug, ersatzText, loesung, hinweise, englisch) { Gebiet = gebiet };
         FormPruefen(wo, teil);
+        if (antwort.Form == FormSchreibtischtest)
+        {
+            EchtSchreibtisch.Pruefen(wo, teil, anlagen);
+        }
+        EchtDaten.ZeilenPruefen(wo, teil, anlagen);
         return teil;
     }
 
@@ -764,9 +808,10 @@ public static class EchtSaetze
     private static EchtAntwort Antwort(JsonObject a, string wo, int format)
     {
         var form = Pflicht(a, "form");
-        if (!(format >= 2 ? Formen2 : Formen).Contains(form))
+        if (!(format >= 6 ? Formen6 : format >= 2 ? Formen2 : Formen).Contains(form))
         {
-            throw new EchtLadefehler(wo + ": unbekannte Antwortform \"" + form + "\"" + (Formen2.Contains(form) ? " (erst ab Format 2)" : ""));
+            throw new EchtLadefehler(wo + ": unbekannte Antwortform \"" + form + "\"" + (Formen2.Contains(form) ? " (erst ab Format 2)"
+                : Formen6.Contains(form) ? " (erst ab Format 6)" : ""));
         }
         switch (form)
         {
@@ -876,12 +921,14 @@ public static class EchtSaetze
                     throw new EchtLadefehler(wo + ": ein Use-Case-Diagramm braucht eine Vorgabe mit derselben Systemgrenze wie das Musterbild");
                 }
                 return new EchtAntwort(form) { Diagramm = art, Vorgabe = vorgabe, Muster = muster };
+            case FormSchreibtischtest:
+                return EchtSchreibtisch.Antwort(a, wo);
             default:
                 return new EchtAntwort(form);
         }
     }
 
-    private static EchtZelle Zelle(JsonNode? c, string wo) => c switch
+    internal static EchtZelle Zelle(JsonNode? c, string wo) => c switch
     {
         JsonValue v when v.TryGetValue<string>(out var fest) => new EchtZelle(fest, [], 0),
         JsonObject o => new EchtZelle(null, Zeilen(o["loesung"], wo + " Zelle"), Ganz(o["punkte"]) ?? 1) is { } z
@@ -905,6 +952,8 @@ public static class EchtSaetze
                 ? null : "Tabelle: die offenen Zellen ergeben nicht die Punkte",
             FormLuecke => a.Felder.Sum(f => f.Punkte) == t.Punkte && t.Hinweise.Count == 0 ? null : "Lücken: die Felder ergeben nicht die Punkte",
             FormAuswahl => t.Hinweise.Count == 0 ? null : "Auswahl hat keine Hinweise",
+            FormSchreibtischtest => t.Hinweise.Count == 0 && EchtSchreibtisch.Punkte(a) == t.Punkte ? null
+                : "Schreibtischtest: die offenen Zellen (oder Schritte mit Punkten) ergeben nicht die Punkte",
             FormZeichnen => t.Operator is not ("zeichnen" or "erstellen") ? "eine Zeichenaufgabe hat den Operator Zeichnen oder Erstellen"
                 : hinweise == t.Punkte ? null : "die Hinweise zum Musterbild ergeben nicht die Punkte der Teilaufgabe",
             _ => "unbekannte Antwortform",
@@ -923,18 +972,18 @@ public static class EchtSaetze
 
     // -- kleine Lesehilfen --------------------------------------------------------------------
 
-    private static string Pflicht(JsonObject o, string name) =>
+    internal static string Pflicht(JsonObject o, string name) =>
         Text(o[name]) is { Length: > 0 } wert ? wert : throw new EchtLadefehler("\"" + name + "\" fehlt oder ist leer");
 
-    private static string? Text(JsonNode? knoten) => knoten is JsonValue v && v.TryGetValue<string>(out var s) ? s : null;
+    internal static string? Text(JsonNode? knoten) => knoten is JsonValue v && v.TryGetValue<string>(out var s) ? s : null;
 
-    private static int? Ganz(JsonNode? knoten) => knoten is JsonValue v && v.GetValueKind() == JsonValueKind.Number
+    internal static int? Ganz(JsonNode? knoten) => knoten is JsonValue v && v.GetValueKind() == JsonValueKind.Number
         && v.TryGetValue<int>(out var i) ? i : null;
 
     private static double? Zahl(JsonNode? knoten) => knoten is JsonValue v && v.GetValueKind() == JsonValueKind.Number
         && v.TryGetValue<double>(out var d) ? d : null;
 
-    private static List<string> Zeilen(JsonNode? knoten, string wo)
+    internal static List<string> Zeilen(JsonNode? knoten, string wo)
     {
         if (knoten is not JsonArray liste)
         {
@@ -943,9 +992,9 @@ public static class EchtSaetze
         return liste.Select(z => Text(z) ?? throw new EchtLadefehler("\"" + wo + "\" enthält etwas anderes als Text")).ToList();
     }
 
-    private static List<JsonObject> Liste(JsonNode? knoten, string wo) => Liste(knoten, wo, false).Cast<JsonObject>().ToList();
+    internal static List<JsonObject> Liste(JsonNode? knoten, string wo) => Liste(knoten, wo, false).Cast<JsonObject>().ToList();
 
-    private static List<JsonNode?> Liste(JsonNode? knoten, string wo, bool ohneObjekt)
+    internal static List<JsonNode?> Liste(JsonNode? knoten, string wo, bool ohneObjekt)
     {
         if (knoten is not JsonArray liste || liste.Count == 0)
         {

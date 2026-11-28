@@ -260,7 +260,7 @@
   }
  },
  "pruefungssaetze": {
-  "format": 5,
+  "format": 6,
   "fehler": [],
   "saetze": {
    "alle_ap1_01": {
@@ -431,7 +431,8 @@
      "auswahl": 3,
      "luecke": 1,
      "rechnen": 6,
-     "tabelle": 3,
+     "schreibtischtest": 1,
+     "tabelle": 2,
      "zeilen": 9
     },
     "operatoren": {
@@ -445,7 +446,8 @@
      "vergleichen": 3
     },
     "punkte_selbst": 60,
-    "punkte_programm": 40
+    "punkte_programm": 40,
+    "fassung": 2
    },
    "alle_ap1_04": {
     "fachrichtung": "alle",
@@ -525,7 +527,8 @@
      "auswahl": 4,
      "luecke": 2,
      "rechnen": 6,
-     "tabelle": 3,
+     "schreibtischtest": 1,
+     "tabelle": 2,
      "zeilen": 7
     },
     "operatoren": {
@@ -539,7 +542,8 @@
      "vergleichen": 2
     },
     "punkte_selbst": 57,
-    "punkte_programm": 43
+    "punkte_programm": 43,
+    "fassung": 2
    },
    "alle_ap1_06": {
     "fachrichtung": "alle",
@@ -2102,7 +2106,7 @@
     "formen": {
      "angaben": 5,
      "luecke": 3,
-     "tabelle": 1,
+     "schreibtischtest": 1,
      "zeichnen": 2,
      "zeilen": 9
     },
@@ -2117,6 +2121,7 @@
     },
     "punkte_selbst": 82,
     "punkte_programm": 18,
+    "fassung": 2,
     "aufbau": "paar",
     "gebiete": {
      "diagramm": 20,

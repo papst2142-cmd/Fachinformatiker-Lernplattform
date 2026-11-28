@@ -47,6 +47,16 @@ public sealed class EchtFormatTeil
     // A 1.12.0 (Weisung P12-390): Struktogramm-Baukaesten im Lauf (gleiche Antwort <aufgabe>.<nr>/bau)
     private readonly Dictionary<string, EchtStruktogrammTeil> _struktogramme = new(StringComparer.Ordinal);
     private readonly HashSet<string> _bauOffen = new(StringComparer.Ordinal);
+    // A 1.20.0 (W2, Weisung P12-446): Schreibtischtests im Lauf, ihre Code-Anlagen (Markierung) und der CSV-Umschalter je Anlage
+    private readonly Dictionary<string, EchtSchreibtischTeil> _schreibtische = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, CodeBlatt> _codeBlaetter = new(StringComparer.Ordinal);
+
+    /// <summary>A 1.20.0: zuletzt gewaehlte Code-Zeile je Code-Anlage (Zeile, Schritt ab 0); bleibt beim Wechsel zu "Anlagen" erhalten.</summary>
+    private readonly Dictionary<string, (int Zeile, int Schritt)> _codeMarke = new(StringComparer.Ordinal);
+
+    /// <summary>Lauf, zu dem <see cref="_codeMarke"/> gehoert (ein anderer Lauf beginnt ohne Markierung).</summary>
+    private JsonObject? _codeMarkeLauf;
+    private readonly Dictionary<string, bool> _alsTabelle = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string?> _bauGewaehlt = new(StringComparer.Ordinal);
     private JsonObject? _bauZustand;
     private EchtBestand? _probeBestand;
@@ -104,6 +114,9 @@ public sealed class EchtFormatTeil
         _felder.Clear();
         _baukaesten.Clear();
         _struktogramme.Clear();
+        _schreibtische.Clear();
+        _codeBlaetter.Clear();
+        AnlageGross.Schliessen();
         _uhr = _fortschritt = _summe = null;
         _inhalt = null;
         _reiterPillen = _umschalter = null;
@@ -123,6 +136,7 @@ public sealed class EchtFormatTeil
 
     public void Verbergen()
     {
+        AnlageGross.Schliessen();
         Festhalten();
         _takt.Stop();
     }
@@ -354,6 +368,8 @@ public sealed class EchtFormatTeil
         _felder.Clear();
         _baukaesten.Clear();
         _struktogramme.Clear();
+        _schreibtische.Clear();
+        _codeBlaetter.Clear();
         _zweiSpalten = ZweiSpalten;
         var aufgabeReiter = _reiter is not (Ausgang or Zeit);
         var mitAnlagen = aufgabeReiter && satz.Aufgaben[int.Parse(_reiter, CultureInfo.InvariantCulture) - 1].Teile.Any(t => t.Anlagen.Count > 0);
@@ -413,7 +429,7 @@ public sealed class EchtFormatTeil
                 _inhalt.Children.Add(AufgabeKarte());
                 foreach (var anlage in AnlagenVon(satz, aufgabe))
                 {
-                    _inhalt.Children.Add(AnlageKarte(anlage, _alsText));
+                    _inhalt.Children.Add(LaufAnlage(anlage, aufgabe, n));
                 }
             }
             else if (_zweiSpalten && mitAnlagen)
@@ -422,7 +438,7 @@ public sealed class EchtFormatTeil
                 var rechts = new StackPanel { Spacing = 14 };
                 foreach (var anlage in AnlagenVon(satz, aufgabe))
                 {
-                    rechts.Children.Add(AnlageKarte(anlage, _alsText));
+                    rechts.Children.Add(LaufAnlage(anlage, aufgabe, n));
                 }
                 var spalten = new Grid { ColumnDefinitions = new ColumnDefinitions("11*,14,9*") };
                 var links = AufgabeKarte();
@@ -435,7 +451,7 @@ public sealed class EchtFormatTeil
             {
                 foreach (var anlage in AnlagenVon(satz, aufgabe))
                 {
-                    _inhalt.Children.Add(AnlageKarte(anlage, _alsText));
+                    _inhalt.Children.Add(LaufAnlage(anlage, aufgabe, n));
                 }
             }
             else
@@ -502,7 +518,43 @@ public sealed class EchtFormatTeil
     internal static string UmschalterText(EchtSatz satz, EchtAufgabe aufgabe) =>
         Beschriftungen.Einsetzen(EchtTexte.Anlagen, EchtAnlagenAnzeige.UmschalterZahl(satz, aufgabe));
 
-    private static Border AnlageKarte(EchtAnlage anlage, bool alsText)
+    /// <summary>
+    /// A 1.20.0: Anlage im Lauf. Code eines Schreibtischtests dieser Aufgabe mit Zeilennummern am Rand und Markierung, Ausgabe
+    /// und Datenauszug mit "Groß öffnen" (Nico 3a: nur diese beiden), der CSV-Umschalter bleibt je Anlage gemerkt.
+    /// </summary>
+    private Border LaufAnlage(EchtAnlage anlage, EchtAufgabe aufgabe, int n)
+    {
+        var titel = Beschriftungen.Einsetzen(EchtTexte.Anlage, anlage.Nr, anlage.Titel);
+        if (anlage.Art == "code" && aufgabe.Teile.Any(t => t.Antwort.Form == EchtSaetze.FormSchreibtischtest && t.Antwort.Code == anlage.Nr))
+        {
+            var blatt = EchtAnlagenBlatt.Code(anlage);
+            _codeBlaetter[anlage.Nr] = blatt;
+            if (ReferenceEquals(_codeMarkeLauf, _a.Zustand) && _codeMarke.TryGetValue(anlage.Nr, out var marke))
+            {
+                blatt.Markieren(marke.Zeile, marke.Schritt);
+            }
+            return Schrift.KopfKarte(titel, null, blatt);
+        }
+        return AnlageKarte(anlage, _alsText, a => GrossOeffnen(a, n), _alsTabelle);
+    }
+
+    /// <summary>Grosses Blatt einer Ausgabe oder eines Datenauszugs (eigener Inhalt, die Karte bleibt stehen).</summary>
+    private void GrossOeffnen(EchtAnlage anlage, int aufgabe)
+    {
+        var titel = Beschriftungen.Einsetzen(EchtTexte.Anlage, anlage.Nr, anlage.Titel);
+        if (anlage.Art == EchtDaten.Ausgabe)
+        {
+            AnlageGross.Oeffnen(titel, EchtAnlagenBlatt.AusgabeKasten(anlage), null, aufgabe);
+            return;
+        }
+        var inhalt = new ContentControl { Content = EchtAnlagenBlatt.DatenInhalt(anlage, _alsTabelle.GetValueOrDefault(anlage.Nr)) };
+        var umschalter = anlage.DatenFormat == EchtDaten.Csv
+            ? EchtAnlagenBlatt.Umschalter(_alsTabelle.GetValueOrDefault(anlage.Nr), an => inhalt.Content = EchtAnlagenBlatt.DatenInhalt(anlage, an))
+            : null;
+        AnlageGross.Oeffnen(titel, inhalt, umschalter, aufgabe);
+    }
+
+    private static Border AnlageKarte(EchtAnlage anlage, bool alsText, Action<EchtAnlage>? gross = null, Dictionary<string, bool>? alsTabelle = null)
     {
         var inhalt = new StackPanel { Spacing = 6 };
         if (EchtBilder.Anlage(anlage, alsText) is { } bild)
@@ -511,6 +563,18 @@ public sealed class EchtFormatTeil
         }
         switch (anlage.Art)
         {
+            case EchtDaten.Ausgabe:
+                inhalt.Children.Add(EchtAnlagenBlatt.Ausgabe(anlage, gross));
+                break;
+            case EchtDaten.Daten:
+                inhalt.Children.Add(EchtAnlagenBlatt.Daten(anlage, alsTabelle?.GetValueOrDefault(anlage.Nr) ?? false, an =>
+                {
+                    if (alsTabelle is not null)
+                    {
+                        alsTabelle[anlage.Nr] = an;
+                    }
+                }, gross));
+                break;
             case "code":
                 inhalt.Children.Add(new Tabellenkasten(string.Join("\n", anlage.Zeilen), "Klein", FontWeight.Normal, "Pinsel.text"));
                 break;
@@ -653,8 +717,39 @@ public sealed class EchtFormatTeil
                     feld.Children.Add(Baukasten(n, teil, zustand));
                 }
                 break;
+            case EchtSaetze.FormSchreibtischtest:
+                feld.Children.Add(Schreibtisch(n, teil, zustand));
+                break;
         }
         return feld;
+    }
+
+    /// <summary>
+    /// A 1.20.0 (W2, Entwurf P12-267 Bilder 01/02): Raster des Schreibtischtests im Lauf mit Hinweis; jede offene Zelle ist ein
+    /// Feld <c>&lt;aufgabe&gt;.&lt;nr&gt;/z{schritt}s{spalte}</c>, der gewaehlte Schritt markiert seine Zeile in der Code-Anlage.
+    /// </summary>
+    private StackPanel Schreibtisch(int n, EchtTeil teil, JsonObject zustand)
+    {
+        var a = teil.Antwort;
+        var raster = new EchtSchreibtischTeil(a, (z, s) => EchtBewertung.Antwort(zustand, EchtBewertung.Feld(n, teil.Nr, EchtBewertung.Zelle(z, s))),
+            (box, z, s) => Merken(box, EchtBewertung.Feld(n, teil.Nr, EchtBewertung.Zelle(z, s)), Avalonia.Automation.AutomationProperties.GetName(box) ?? ""));
+        raster.ZeileGewaehlt += (schritt, zeile) =>
+        {
+            if (!ReferenceEquals(_codeMarkeLauf, _a.Zustand))
+            {
+                _codeMarke.Clear();
+                _codeMarkeLauf = _a.Zustand;
+            }
+            _codeMarke[a.Code] = (zeile, schritt);
+            if (_codeBlaetter.TryGetValue(a.Code, out var blatt))
+            {
+                blatt.Markieren(zeile, schritt);
+            }
+        };
+        _schreibtische[EchtBewertung.Feld(n, teil.Nr, "")] = raster;
+        var hinweis = !a.LeerUnveraendert ? EchtTexte.SchreibtischHinweisVoll
+            : _zweiSpalten && !_anlagen ? EchtTexte.SchreibtischHinweisDaneben : EchtTexte.SchreibtischHinweisUnter;
+        return new StackPanel { Spacing = 6, Children = { raster, new LernText(hinweis, "Klein", FontWeight.Normal, "Pinsel.muted") } };
     }
 
     /// <summary>
@@ -901,13 +996,37 @@ public sealed class EchtFormatTeil
             var wertung = EchtBewertung.Teil(zustand, n, teil);
             inhalt.Children.Add(Abstand(Teilkopf(teil), 16));
             inhalt.Children.Add(Abstand(LernTeile.Label(PruefungTexte.DeineAntwort), 6));
-            inhalt.Children.Add(EigeneAntwort(n, teil, zustand, wertung));
-            if (teil.Punkte - teil.SelbstPunkte > 0)
+            var punkteZeile = teil.Punkte - teil.SelbstPunkte > 0
+                ? Schrift.Text(Beschriftungen.Einsetzen(EchtTexte.ProgrammPunkte, wertung.Programm, teil.Punkte - teil.SelbstPunkte),
+                    "Klein", FontWeight.Bold, wertung.Programm == teil.Punkte - teil.SelbstPunkte ? "Pinsel.green" : "Pinsel.red")
+                : null;
+            if (teil.Antwort.Form == EchtSaetze.FormSchreibtischtest && ZweiSpalten)
             {
-                inhalt.Children.Add(Schrift.Text(Beschriftungen.Einsetzen(EchtTexte.ProgrammPunkte, wertung.Programm, teil.Punkte - teil.SelbstPunkte),
-                    "Klein", FontWeight.Bold, wertung.Programm == teil.Punkte - teil.SelbstPunkte ? "Pinsel.green" : "Pinsel.red"));
+                // A 1.20.0 (Entwurf P12-267 Bild 04): breit Raster links, Musterloesung rechts
+                var links = new StackPanel { Spacing = 4, Children = { EigeneAntwort(n, teil, zustand, wertung) } };
+                if (punkteZeile is not null)
+                {
+                    links.Children.Add(punkteZeile);
+                }
+                var rechts = new StackPanel { Spacing = 4 };
+                rechts.Children.Add(LernTeile.Label(EchtTexte.Musterloesung));
+                foreach (var zeile in teil.Loesung)
+                {
+                    rechts.Children.Add(new TabellenText(zeile, "Klein", FontWeight.Normal, "Pinsel.text_soft"));
+                }
+                var spalten = new Grid { ColumnDefinitions = new ColumnDefinitions("3*,14,2*") };
+                spalten.Children.Add(links);
+                Grid.SetColumn(rechts, 2);
+                spalten.Children.Add(rechts);
+                inhalt.Children.Add(spalten);
+                continue;
             }
-            inhalt.Children.Add(Abstand(LernTeile.Label(EchtTexte.Loesung), 8));
+            inhalt.Children.Add(EigeneAntwort(n, teil, zustand, wertung));
+            if (punkteZeile is not null)
+            {
+                inhalt.Children.Add(punkteZeile);
+            }
+            inhalt.Children.Add(Abstand(LernTeile.Label(teil.Antwort.Form == EchtSaetze.FormSchreibtischtest ? EchtTexte.Musterloesung : EchtTexte.Loesung), 8));
             foreach (var zeile in teil.Loesung)
             {
                 inhalt.Children.Add(new TabellenText(zeile, "Klein", FontWeight.Normal, "Pinsel.text_soft"));
@@ -1013,6 +1132,18 @@ public sealed class EchtFormatTeil
             liste.Children.Add(zeile);
         }
         string Wert(string feld) => EchtBewertung.Antwort(zustand, EchtBewertung.Feld(n, teil.Nr, feld));
+        if (a.Form == EchtSaetze.FormSchreibtischtest)
+        {
+            // A 1.20.0 (Entwurf P12-267 Bild 04): das Raster selbst, jedes Kaestchen gruen oder rot, darunter die Legende
+            var raster = new StackPanel { Spacing = 6 };
+            raster.Children.Add(new EchtSchreibtischTeil(a, (z, s) => Wert(EchtBewertung.Zelle(z, s)), null, wertung.Felder, "Pinsel.card_alt"));
+            var art = a.Schritte.Any(s => s.Punkte is not null)
+                ? EchtTexte.SchreibtischJeSchritt
+                : Beschriftungen.Einsetzen(EchtTexte.SchreibtischJeZelle,
+                    EchtTexte.PunkteText(a.Schritte.SelectMany(s => s.Werte).FirstOrDefault(c => c.Offen)?.Punkte ?? 1));
+            raster.Children.Add(new LernText(Beschriftungen.Einsetzen(EchtTexte.SchreibtischLegende, art), "Klein", FontWeight.Normal, "Pinsel.muted"));
+            return raster;
+        }
         switch (a.Form)
         {
             case EchtSaetze.FormZeilen:
@@ -1168,6 +1299,10 @@ public sealed class EchtFormatTeil
         "pruefung/echt-ae-bewertung-usecase",
         // A 1.12.0 (Weisung P12-390): Struktogramm im Baukasten (Lauf mit gewaehlter Verzweigung, alle sieben Bausteine, Bewertung)
         "pruefung/echt-ae-struktogramm-lauf", "pruefung/echt-ae-struktogramm-alle", "pruefung/echt-ae-struktogramm-bewertung",
+        // A 1.20.0 (Weisung P12-446): Schreibtischtest alle_ap1_03 4 b (Lauf, Code markiert, Bewertung), Probesatz mit Ausgabe,
+        // CSV wie im Beleg und als Tabelle, JSON, dazu "Groß öffnen" des CSV
+        "pruefung/echt-schreibtisch-lauf", "pruefung/echt-schreibtisch-anlagen", "pruefung/echt-schreibtisch-bewertung",
+        "pruefung/echt-ausgabe", "pruefung/echt-csv-beleg", "pruefung/echt-csv-tabelle", "pruefung/echt-json", "pruefung/echt-gross",
     ];
 
     /// <summary>Erste Nummer der Ansichten der Welle 2 in <see cref="ProbeNamen"/>.</summary>
@@ -1197,16 +1332,22 @@ public sealed class EchtFormatTeil
     /// </summary>
     internal const int W2Ab = 42;
 
+    /// <summary>Erste Nummer der Ansichten von A 1.20.0 (Schreibtischtest, Ausgabe, Datenauszug, Groß öffnen) in <see cref="ProbeNamen"/>.</summary>
+    internal const int SchreibtischAb = 45;
+
     /// <summary>
     /// Probezustand: Probesatz des Bereichs (AP1 oder ab A 0.77.0 AP2 Konzeption der Fachrichtung FISI), 754 s gelaufen,
     /// Antworten teils richtig, teils falsch, teils leer.
     /// </summary>
-    internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1, string? fachrichtung = null, string? kennung = null)
+    internal JsonObject ProbeZustand(bool bewertet, string bereich = EchtSaetze.Ap1, string? fachrichtung = null, string? kennung = null,
+        EchtBestand? bestand = null)
     {
-        _probeBestand = null;
-        // A 0.94.0: ersetzte Saetze (ausschluss.json) zeigt die Probe nicht mehr; A 1.8.0: fester Satz ueber die Kennung
-        var satz = Zustand.EchtBestand.Saetze.First(s => s.Bereich == bereich && (fachrichtung is null || s.Fachrichtung == fachrichtung)
-            && !Zustand.EchtBestand.IstAusgeschlossen(s.Kennung) && (kennung is null || s.Kennung == kennung));
+        _probeBestand = bestand;
+        var quelle = bestand ?? Zustand.EchtBestand;
+        // A 0.94.0: ersetzte Saetze (ausschluss.json) zeigt die Probe nicht mehr; A 1.8.0: fester Satz ueber die Kennung;
+        // A 1.20.0: Probesatz aus <paramref name="bestand"/>
+        var satz = quelle.Saetze.First(s => s.Bereich == bereich && (fachrichtung is null || s.Fachrichtung == fachrichtung)
+            && !quelle.IstAusgeschlossen(s.Kennung) && (kennung is null || s.Kennung == kennung));
         var art = bereich == EchtSaetze.Ap1 ? EchtArten.Praefix + EchtSaetze.Ap1 : EchtArten.Art(Fachrichtung.Nach(satz.Fachrichtung), bereich);
         var zustand = EchtAblauf.Neu(satz, art, DateTimeOffset.Now.AddSeconds(-754), TimeZoneInfo.Local);
         var antworten = (JsonObject)zustand["antworten"]!;
@@ -1259,6 +1400,21 @@ public sealed class EchtFormatTeil
                         break;
                     case EchtSaetze.FormZeichnen:
                         antworten[F(Papier)] = richtig ? TrainerTexte.Ja : "";
+                        break;
+                    case EchtSaetze.FormSchreibtischtest:
+                        // A 1.20.0: Zellen der ersten Haelfte richtig, dann eine falsch, eine leer, der Rest richtig
+                        var k = 0;
+                        for (var z = 0; z < a.Schritte.Count; z++)
+                        {
+                            for (var sp = 0; sp < a.Schritte[z].Werte.Count; sp++)
+                            {
+                                if (a.Schritte[z].Werte[sp] is { Offen: true } zelle)
+                                {
+                                    antworten[F(EchtBewertung.Zelle(z, sp))] = k == ProbeLeer - 1 ? zelle.Loesung[0] + "0" : k == ProbeLeer ? "" : zelle.Loesung[0];
+                                    k++;
+                                }
+                            }
+                        }
                         break;
                 }
                 if (bewertet && EchtBewertung.HakenAnzahl(teil) > 0)
@@ -1338,6 +1494,9 @@ public sealed class EchtFormatTeil
                 break;
             case BaukastenAb + 1:
                 UmlBaukastenZeigen();
+                break;
+            case >= SchreibtischAb:
+                SchreibtischZeigen(art - SchreibtischAb);
                 break;
             case >= W2Ab:
                 W2Zeigen(art - W2Ab);
@@ -1483,6 +1642,88 @@ public sealed class EchtFormatTeil
         b?.ProbeWaehlen(wahl);
         b?.ProbeZiel(alle ? 0 : 3);
     }
+
+    /// <summary>
+    /// Nur Start ohne Bedienung (A 1.20.0): 0 = Schreibtischtest alle_ap1_03 Aufgabe 4 im Lauf (zweiter offener Schritt gewaehlt),
+    /// 1 = dieselbe Aufgabe unter "Anlagen" mit markierter Code-Zeile, 2 = bewertet; ab 3 der Probesatz (<see cref="EchtProbesatz"/>):
+    /// 3 Ausgabe (Aufgabe 1), 4 CSV wie im Beleg, 5 CSV als Tabelle (Aufgabe 3), 6 JSON (Aufgabe 2), 7 CSV gross geoeffnet.
+    /// </summary>
+    private void SchreibtischZeigen(int nr)
+    {
+        AnlageGross.Schliessen();
+        _alsTabelle.Clear();
+        if (nr <= 2)
+        {
+            _codeMarke.Clear();
+            _a.ProbeSetzen(ProbeZustand(bewertet: nr == 2, EchtSaetze.Ap1, "alle", EchtProbesatz.Kennung));
+            (_reiter, _anlagen) = ("4", nr == 1);
+            if (nr == 2)
+            {
+                BewertungZeigen();
+                return;
+            }
+            if (nr == 1)
+            {
+                // Code unter "Anlagen": erst im Raster den Schritt waehlen, dann zu "Anlagen" wechseln (die Markierung bleibt)
+                _anlagen = false;
+                LaufZeigen();
+                ProbeSchreibtisch?.Waehlen(ProbeSchritt.Index);
+                _anlagen = true;
+                LaufZeigen();
+                return;
+            }
+            LaufZeigen();
+            if (ProbeSchreibtisch is { } raster)
+            {
+                // wie im Entwurf: der Schritt mit der leeren Zelle hat den Fokus
+                raster.Waehlen(ProbeSchritt.Index);
+                raster.Felder[ProbeLeer].Focus();
+                raster.Felder[ProbeLeer].BringIntoView();
+            }
+            return;
+        }
+        var bestand = EchtSaetze.Laden(EchtProbesatz.Datei(Zustand.Aktuell.Saetze()!));
+        _a.ProbeSetzen(ProbeZustand(bewertet: false, EchtSaetze.Ap1, "alle", EchtProbesatz.Kennung, bestand));
+        var (aufgabe, _, anlage) = EchtProbesatz.Verweise[nr == 3 ? 0 : nr == 6 ? 2 : 1];
+        if (nr == 5)
+        {
+            _alsTabelle[anlage] = true;
+        }
+        (_reiter, _anlagen) = (aufgabe.ToString(CultureInfo.InvariantCulture), !ZweiSpalten);
+        LaufZeigen();
+        if (nr == 7)
+        {
+            GrossOeffnen(_a.Satz!.Anlagen.First(x => x.Nr == anlage), aufgabe);
+        }
+    }
+
+    /// <summary>Probe: Nummer der offenen Zelle, die <see cref="ProbeZustand"/> leer laesst.</summary>
+    internal const int ProbeLeer = 3;
+
+    /// <summary>Probe: Schritt des Schreibtischtests alle_ap1_03 4 b mit der leeren Zelle (Index ab 0 und Schritt).</summary>
+    private (int Index, EchtSchreibSchritt Schritt) ProbeSchritt
+    {
+        get
+        {
+            var a = _a.Satz!.Aufgaben[3].Teile.First(t => t.Antwort.Form == EchtSaetze.FormSchreibtischtest).Antwort;
+            var k = 0;
+            for (var z = 0; z < a.Schritte.Count; z++)
+            {
+                k += a.Schritte[z].Werte.Count(c => c.Offen);
+                if (k > ProbeLeer)
+                {
+                    return (z, a.Schritte[z]);
+                }
+            }
+            return (0, a.Schritte[0]);
+        }
+    }
+
+    /// <summary>Probe: das Raster des Schreibtischtests im Lauf (erster des Reiters).</summary>
+    internal EchtSchreibtischTeil? ProbeSchreibtisch => _schreibtische.Values.FirstOrDefault();
+
+    /// <summary>Probe: Code-Anlage eines Schreibtischtests im Lauf.</summary>
+    internal CodeBlatt? ProbeCodeBlatt => _codeBlaetter.Values.FirstOrDefault();
 
     /// <summary>Probe: der Struktogramm-Baukasten im Lauf (erste Struktogramm-Aufgabe des Reiters).</summary>
     internal EchtStruktogrammTeil? ProbeStruktogrammTeil => _struktogramme.Values.FirstOrDefault();
@@ -1674,6 +1915,8 @@ public sealed class EchtFormatTeil
 
     /// <summary>Probe: der gezeigte Satz (null ohne Lauf).</summary>
     internal EchtSatz? ProbeSatz => _a.Satz;
+    internal void ProbeFesthalten() => Festhalten();
+    internal System.Text.Json.Nodes.JsonObject? ProbeZustandJetzt => _a.Zustand;
 
     internal StackPanel? ProbeInhalt => _inhalt;
 
