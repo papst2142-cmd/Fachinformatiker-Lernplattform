@@ -26,7 +26,18 @@ public sealed class EchtSchreibtischTeil : StackPanel
     private readonly List<Control> _festLinks = [];
     private readonly List<(Border Flaeche, Border Links, TextBlock Nummer)> _zeilen = [];
     private readonly List<TextBox> _felder = [];
+    private readonly Dictionary<TextBox, int> _spalte = [];
+    private readonly Avalonia.Threading.DispatcherTimer _einrasten = new() { Interval = TimeSpan.FromMilliseconds(200) };
     private int _gewaehlt = -1;
+    private bool _selbstGerollt;
+    // beim Bau gemerkt: Ereignisse des Layouts laufen ohne den AsyncLocal-Zusammenhang des Start-Tests
+    private readonly bool _wieBisher = WieBisherFuerTests.Value;
+
+    /// <summary>
+    /// Nur Gegenprobe (Start-Test, Weisung P12-448 Funde A und B): wie bis Lauf 1289 ohne Rollen zum Kaestchen mit Fokus und
+    /// ohne Einpassen ganzer Spalten. AsyncLocal (Sammelliste 307).
+    /// </summary>
+    public static readonly AsyncLocal<bool> WieBisherFuerTests = new();
 
     /// <summary>
     /// <paramref name="wert"/>: Eingabe einer Zelle (Schritt, Spalte); <paramref name="feld"/>: meldet jedes Eingabefeld mit
@@ -118,7 +129,30 @@ public sealed class EchtSchreibtischTeil : StackPanel
                             Benennen();
                         }
                     };
-                    box.GotFocus += (_, _) => Waehlen(zz);
+                    // Weisung P12-448 Fund A: Kaestchen mit Fokus ganz sichtbar (nicht unter der festen Spalte), tuerkiser Rahmen
+                    var ring = new Border
+                    {
+                        BorderThickness = new Thickness(2),
+                        CornerRadius = new CornerRadius(10),
+                        Margin = new Thickness(-3),
+                        IsHitTestVisible = false,
+                        IsVisible = false,
+                    }.Farbe(Border.BorderBrushProperty, "Pinsel.cyan");
+                    box.GotFocus += (_, _) =>
+                    {
+                        ring.IsVisible = true;
+                        Waehlen(zz);
+                        Zeigen(box);
+                        // vor dem ersten Layout (Fokus beim Oeffnen) noch einmal, sobald die Groessen feststehen
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            if (box.IsFocused)
+                            {
+                                Zeigen(box);
+                            }
+                        }, Avalonia.Threading.DispatcherPriority.Background);
+                    };
+                    box.LostFocus += (_, _) => ring.IsVisible = false;
                     box.KeyDown += (_, e) =>
                     {
                         if (e.Key == Key.Enter)
@@ -128,8 +162,9 @@ public sealed class EchtSchreibtischTeil : StackPanel
                         }
                     };
                     _felder.Add(box);
+                    _spalte[box] = s + 1;
                     feld!(box, z, s);
-                    inhalt = box;
+                    inhalt = new Panel { Children = { box, ring } };
                 }
                 Setzen(inhalt, reihe, s + 1);
             }
@@ -144,8 +179,154 @@ public sealed class EchtSchreibtischTeil : StackPanel
             .Groesse("Klein").Farbe(TextBlock.ForegroundProperty, "Pinsel.muted");
         Children.Add(_rollen);
         Children.Add(_wischen);
-        _rollen.ScrollChanged += (_, _) => Anpassen();
+        _rollen.ScrollChanged += (_, _) =>
+        {
+            Anpassen();
+            // nach dem Wischen auf den Anfang einer Spalte einrasten (nie ein Wert mitten im Wort abgeschnitten, Fund B)
+            if (!_selbstGerollt)
+            {
+                _einrasten.Stop();
+                _einrasten.Start();
+            }
+        };
         _rollen.LayoutUpdated += (_, _) => Anpassen();
+        LayoutUpdated += (_, _) => Einpassen();
+        _einrasten.Tick += (_, _) =>
+        {
+            _einrasten.Stop();
+            Einrasten();
+        };
+        DetachedFromVisualTree += (_, _) => _einrasten.Stop();
+    }
+
+    /// <summary>Linke Kante je Spalte im Raster und ihre Breite (nach dem Layout).</summary>
+    private (double[] X, double[] B) Spalten()
+    {
+        var n = _raster.ColumnDefinitions.Count;
+        var (x, b) = (new double[n], new double[n]);
+        for (var c = 0; c < n; c++)
+        {
+            b[c] = _raster.ColumnDefinitions[c].ActualWidth;
+            x[c] = c == 0 ? 0 : x[c - 1] + b[c - 1];
+        }
+        return (x, b);
+    }
+
+    private void RollenAuf(double versatz)
+    {
+        var hoechst = Math.Max(0, _rollen.Extent.Width - _rollen.Viewport.Width);
+        versatz = Math.Clamp(versatz, 0, hoechst);
+        if (Math.Abs(versatz - _rollen.Offset.X) < 0.5)
+        {
+            return;
+        }
+        _selbstGerollt = true;
+        _rollen.Offset = new Vector(versatz, _rollen.Offset.Y);
+        _selbstGerollt = false;
+    }
+
+    /// <summary>Versatz auf den Anfang einer Spalte direkt rechts der festen Spalte „Zeile“ setzen (naechstgelegener).</summary>
+    private void Einrasten()
+    {
+        if (_wieBisher || _raster.ColumnDefinitions.Count < 2)
+        {
+            return;
+        }
+        var (x, _) = Spalten();
+        var fest = x[1];
+        var o = _rollen.Offset.X;
+        var bester = 0.0;
+        for (var c = 1; c < x.Length; c++)
+        {
+            var kandidat = x[c] - fest;
+            if (Math.Abs(kandidat - o) < Math.Abs(bester - o))
+            {
+                bester = kandidat;
+            }
+        }
+        RollenAuf(bester);
+        Einpassen();
+    }
+
+    /// <summary>
+    /// Fund A (Weisung P12-448): seitlich so weit rollen, dass das Kaestchen ganz sichtbar ist und nicht unter der festen Spalte
+    /// liegt; der Versatz bleibt am Anfang einer Spalte.
+    /// </summary>
+    private void Zeigen(TextBox box)
+    {
+        if (_wieBisher || !_spalte.TryGetValue(box, out var c) || _rollen.Viewport.Width <= 0)
+        {
+            return;
+        }
+        var (x, b) = Spalten();
+        var fest = x[1];
+        var o = _rollen.Offset.X;
+        // sichtbar wird hoechstens die ganze Breite des Teils (Einpassen kuerzt danach auf ganze Spalten)
+        var sicht = Math.Max(_rollen.Viewport.Width, Bounds.Width);
+        if (x[c] < o + fest - 0.5)
+        {
+            o = x[c] - fest;
+        }
+        else if (x[c] + b[c] > o + sicht + 0.5 || x[c] + b[c] > o + _rollen.Viewport.Width + 0.5)
+        {
+            // so wenig wie noetig, aber auf einen Spaltenanfang
+            var k = 1;
+            while (k < c && x[k] - fest < o - 0.5)
+            {
+                k++;
+            }
+            while (k < c && x[c] + b[c] - x[k] > sicht - fest + 0.5)
+            {
+                k++;
+            }
+            o = x[k] - fest;
+        }
+        RollenAuf(o);
+        Einpassen();
+    }
+
+    /// <summary>
+    /// Fund B (Weisung P12-448): wischt das Raster, zeigt es nur ganze Spalten (rechts endet die Flaeche an einer Spaltenkante),
+    /// so steht kein Wert und kein „richtig: …“ halb am Rand.
+    /// </summary>
+    private void Einpassen()
+    {
+        if (_wieBisher || _raster.ColumnDefinitions.Count < 2)
+        {
+            return;
+        }
+        var platz = Bounds.Width;
+        var (x, b) = Spalten();
+        var gesamt = x[^1] + b[^1];
+        if (platz <= 0 || gesamt <= platz + 0.5)
+        {
+            if (!double.IsNaN(_rollen.Width))
+            {
+                _rollen.Width = double.NaN;
+            }
+            return;
+        }
+        var fest = x[1];
+        var o = _rollen.Offset.X;
+        var breite = fest;
+        for (var c = 1; c < x.Length; c++)
+        {
+            if (x[c] - fest < o - 0.5)
+            {
+                continue;
+            }
+            if (breite + b[c] > platz + 0.5)
+            {
+                break;
+            }
+            breite += b[c];
+        }
+        breite = Math.Max(breite, Math.Min(platz, fest + b[1]));
+        if (Math.Abs(_rollen.Width - breite) > 0.5 || double.IsNaN(_rollen.Width))
+        {
+            _rollen.Width = breite;
+            _rollen.HorizontalAlignment = HorizontalAlignment.Left;
+        }
     }
 
     /// <summary>Gewaehlter Schritt (Fokus in einer seiner Zellen): Schritt ab 0 und Zeile im Code.</summary>

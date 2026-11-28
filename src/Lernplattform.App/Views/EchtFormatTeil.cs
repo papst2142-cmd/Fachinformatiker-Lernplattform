@@ -1678,7 +1678,14 @@ public sealed class EchtFormatTeil
                 // wie im Entwurf: der Schritt mit der leeren Zelle hat den Fokus
                 raster.Waehlen(ProbeSchritt.Index);
                 raster.Felder[ProbeLeer].Focus();
-                raster.Felder[ProbeLeer].BringIntoView();
+                // vor dem ersten Layout greift der Fokus nicht immer: sobald das Raster steht, noch einmal (Weisung P12-448 Fund A)
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (ReferenceEquals(ProbeSchreibtisch, raster) && TopLevel.GetTopLevel(raster.Felder[ProbeLeer]) is not null && !raster.Felder[ProbeLeer].IsFocused)
+                    {
+                        raster.Felder[ProbeLeer].Focus();
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Loaded);
             }
             return;
         }

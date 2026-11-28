@@ -262,6 +262,203 @@ public static partial class AutoMessung
             Fund("Bewertung: " + richtig + " rote Kaestchen mit richtigem Wert (erwartet 2), Legende oder Musterlösung fehlt");
         }
         Messwerte.Notiere("Pruefung im echten Format Bewertung Schreibtischtest: " + richtig + " rot mit richtigem Wert");
+
+        // Weisung P12-448 Funde A und B (PC 1280 wie in der Weisung, nicht PcBreite): PC 1280 und Handy 384 x 832 bei Schrift 100 und 200 %, dazu die Gegenprobe wie bis
+        // Lauf 1289 (ohne Rollen zum Kaestchen, ohne ganze Spalten) = rot
+        var faktorVorher = Schrift.Faktor;
+        var gegen = (A: 0, B: 0);
+        try
+        {
+            foreach (var (geraet, gb, gh) in new[] { ("PC", 1280d, (double)PcHoehe), ("Handy", 384d, 832d) })
+            {
+                foreach (var f in new[] { 1.0, 2.0 })
+                {
+                    Schrift.Anwenden(f);
+                    await GroesseAsync(gb, gh);
+                    var wo = geraet + " " + (f * 100).ToString("F0", CultureInfo.InvariantCulture) + " % ("
+                        + ansicht.Bounds.Width.ToString("F0", CultureInfo.InvariantCulture) + " breit)";
+                    var (a, b) = await SchreibtischSichtbarAsync(ansicht, k, e, ab, wo, Fund);
+                    Messwerte.Notiere("Pruefung im echten Format Schreibtischtest sichtbar " + wo + ": " + a + " Kaestchen geprueft, " + b
+                        + " Texte der Bewertung geprueft");
+                }
+            }
+            // Gegenprobe: dieselbe Pruefung wie bis Lauf 1289 muss Funde liefern
+            EchtSchreibtischTeil.WieBisherFuerTests.Value = true;
+            foreach (var (gb, gh) in new[] { (1280d, (double)PcHoehe), (384d, 832d) })
+            {
+                foreach (var f in new[] { 1.0, 2.0 })
+                {
+                    Schrift.Anwenden(f);
+                    await GroesseAsync(gb, gh);
+                    var zaehlA = 0;
+                    var zaehlB = 0;
+                    await SchreibtischSichtbarAsync(ansicht, k, e, ab, "Gegenprobe", t =>
+                    {
+                        if (t.StartsWith("Fund A", StringComparison.Ordinal))
+                        {
+                            zaehlA++;
+                        }
+                        else if (t.StartsWith("Fund B", StringComparison.Ordinal))
+                        {
+                            zaehlB++;
+                        }
+                    });
+                    gegen = (gegen.A + zaehlA, gegen.B + zaehlB);
+                }
+            }
+        }
+        finally
+        {
+            EchtSchreibtischTeil.WieBisherFuerTests.Value = false;
+            Schrift.Anwenden(faktorVorher);
+            await GroesseAsync(breite, hoehe);
+        }
+        Messwerte.Notiere("Pruefung im echten Format Schreibtischtest Gegenprobe wie bis Lauf 1289: Fund A " + gegen.A + ", Fund B " + gegen.B);
+        if (gegen.A == 0 || gegen.B == 0)
+        {
+            Fund("Gegenprobe ohne Rollen und ohne ganze Spalten findet nichts (Fund A " + gegen.A + ", Fund B " + gegen.B + "): Pruefung zu schwach");
+        }
         return funde;
+    }
+
+    /// <summary>
+    /// Weisung P12-448. Fund A: jedes Kaestchen mit Fokus (Oeffnen mit gewaehltem Schritt, Eingabetaste, Tab, Antippen) liegt ganz
+    /// im sichtbaren Bereich des Rasters und nicht unter der festen Spalte „Zeile“, mit tuerkisem Rahmen. Fund B: in der Bewertung
+    /// steht kein Text halb am Rand oder halb unter der festen Spalte (am Anfang, an jedem Spaltenanfang und nach freiem Wischen),
+    /// jedes „richtig: …“ ist an einer Stelle ganz zu sehen. Meldet Funde mit „Fund A“/„Fund B“ vorn.
+    /// </summary>
+    private static async Task<(int A, int B)> SchreibtischSichtbarAsync(MainView ansicht, KlausurTeil k, EchtFormatTeil e, int ab, string wo,
+        Action<string> fund)
+    {
+        static (double Fest, double Sicht) Rand(EchtSchreibtischTeil r) =>
+            (r.Rollen.Content is Grid g && g.ColumnDefinitions.Count > 0 ? g.ColumnDefinitions[0].ActualWidth : 0, r.Rollen.Viewport.Width);
+        var geprueftA = 0;
+        k.Probe(ab);
+        await ansicht.BildFertigAsync();
+        await ansicht.BildFertigAsync();
+        if (e.ProbeSchreibtisch is not { } raster)
+        {
+            fund("Fund A " + wo + ": kein Raster im Lauf");
+            return (0, 0);
+        }
+        var felder = raster.Felder;
+        async Task PruefeA(TextBox box, string wie)
+        {
+            await ansicht.BildFertigAsync();
+            await ansicht.BildFertigAsync();
+            geprueftA++;
+            var fokus = TopLevel.GetTopLevel(ansicht)?.FocusManager?.GetFocusedElement();
+            var ring = (box.Parent as Panel)?.Children.OfType<Border>().FirstOrDefault();
+            var ziel = ring is { IsVisible: true } ? (Control)ring : box;
+            var (fest, sicht) = Rand(raster);
+            var p = ziel.TranslatePoint(default, raster.Rollen) ?? new Point(-1, -1);
+            var (l, r) = (p.X, p.X + ziel.Bounds.Width);
+            var nr = felder.ToList().IndexOf(box) + 1;
+            if (!ReferenceEquals(fokus, box))
+            {
+                fund("Fund A " + wo + ": " + wie + " gibt Kaestchen " + nr + " keinen Fokus");
+            }
+            else if (l < fest - 0.5 || r > sicht + 0.5)
+            {
+                fund("Fund A " + wo + ": " + wie + ", Kaestchen " + nr + " nicht ganz sichtbar (links " + l.ToString("F1", CultureInfo.InvariantCulture)
+                    + ", rechts " + r.ToString("F1", CultureInfo.InvariantCulture) + ", feste Spalte bis " + fest.ToString("F1", CultureInfo.InvariantCulture)
+                    + ", sichtbar bis " + sicht.ToString("F1", CultureInfo.InvariantCulture) + ")");
+            }
+            else if (ring is not { IsVisible: true } || ring.BorderBrush is not ISolidColorBrush rahmen
+                || Application.Current?.TryGetResource("Pinsel.cyan", null, out var tuerkis) != true || tuerkis is not ISolidColorBrush soll
+                || rahmen.Color != soll.Color)
+            {
+                fund("Fund A " + wo + ": Kaestchen " + nr + " mit Fokus ohne tuerkisen Rahmen");
+            }
+        }
+        // Oeffnen: der Schritt mit der leeren Zelle ist gewaehlt und hat den Fokus (Bild 01 des Entwurfs)
+        await PruefeA(felder[EchtFormatTeil.ProbeLeer], "Oeffnen mit gewaehltem Schritt");
+        // Eingabetaste vom ersten bis zum letzten Kaestchen
+        felder[0].Focus(NavigationMethod.Pointer);
+        await PruefeA(felder[0], "Antippen");
+        for (var i = 1; i < felder.Count; i++)
+        {
+            felder[i - 1].RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, Source = felder[i - 1] });
+            await PruefeA(felder[i], "Eingabetaste");
+        }
+        // Tab (wie an der Tastatur) und Antippen rueckwaerts
+        for (var i = felder.Count - 1; i >= 0; i--)
+        {
+            felder[i].Focus(i % 2 == 0 ? NavigationMethod.Tab : NavigationMethod.Pointer);
+            await PruefeA(felder[i], i % 2 == 0 ? "Tab" : "Antippen");
+        }
+
+        // Fund B: Bewertung
+        k.Probe(ab + 2);
+        await ansicht.BildFertigAsync();
+        await ansicht.BildFertigAsync();
+        var bewertet = e.ProbeInhalt?.GetVisualDescendants().OfType<EchtSchreibtischTeil>().FirstOrDefault(x => x.IsEffectivelyVisible);
+        if (bewertet is null)
+        {
+            fund("Fund B " + wo + ": kein Raster in der Bewertung");
+            return (geprueftA, 0);
+        }
+        var texte = bewertet.Rollen.GetVisualDescendants().OfType<TextBlock>()
+            .Where(t => t.IsEffectivelyVisible && !t.GetVisualAncestors().OfType<Border>().Any(b => b.ZIndex == 2)).ToList();
+        var richtigAlle = texte.Where(t => (t.Text ?? "").StartsWith("richtig: ", StringComparison.Ordinal)).ToList();
+        var ganzGesehen = new HashSet<TextBlock>();
+        var geprueftB = 0;
+        void PruefeB(string stelle)
+        {
+            var (fest, sicht) = Rand(bewertet);
+            foreach (var t in texte)
+            {
+                geprueftB++;
+                var p = t.TranslatePoint(default, bewertet.Rollen) ?? new Point(-1, -1);
+                var (l, r) = (p.X, p.X + t.Bounds.Width);
+                var halb = (l < sicht - 0.5 && r > sicht + 0.5) || (l < fest - 0.5 && r > fest + 0.5) || t.DesiredSize.Width > t.Bounds.Width + 0.5;
+                if (halb)
+                {
+                    fund("Fund B " + wo + ": \"" + t.Text + "\" " + stelle + " abgeschnitten (links " + l.ToString("F1", CultureInfo.InvariantCulture)
+                        + ", rechts " + r.ToString("F1", CultureInfo.InvariantCulture) + ", feste Spalte bis " + fest.ToString("F1", CultureInfo.InvariantCulture)
+                        + ", sichtbar bis " + sicht.ToString("F1", CultureInfo.InvariantCulture) + ")");
+                }
+                else if (l >= fest - 0.5 && r <= sicht + 0.5)
+                {
+                    ganzGesehen.Add(t);
+                }
+            }
+        }
+        PruefeB("am Anfang");
+        // an jedem Spaltenanfang (wie nach dem Einrasten) und nach freiem Wischen auf die Mitte einer Spalte
+        var g = (Grid)bewertet.Rollen.Content!;
+        var x = 0.0;
+        for (var c = 0; c < g.ColumnDefinitions.Count; c++)
+        {
+            var spaltenBreite = g.ColumnDefinitions[c].ActualWidth;
+            if (c >= 1)
+            {
+                var festB = g.ColumnDefinitions[0].ActualWidth;
+                foreach (var (versatz, stelle) in new[] { (x - festB, "an Spalte " + c), (x - festB + spaltenBreite / 2, "nach Wischen in Spalte " + c) })
+                {
+                    if (versatz < 0 || versatz > bewertet.Rollen.Extent.Width - bewertet.Rollen.Viewport.Width + 0.5)
+                    {
+                        continue;
+                    }
+                    bewertet.Rollen.Offset = new Vector(versatz, 0);
+                    // Einrasten nach dem Wischen abwarten (200 ms Ruhe)
+                    await Task.Delay(400);
+                    await ansicht.BildFertigAsync();
+                    await ansicht.BildFertigAsync();
+                    PruefeB(stelle);
+                }
+            }
+            x += spaltenBreite;
+        }
+        var nie = richtigAlle.Where(t => !ganzGesehen.Contains(t)).Select(t => t.Text).ToList();
+        if (nie.Count > 0)
+        {
+            fund("Fund B " + wo + ": nie ganz zu sehen: " + string.Join(", ", nie));
+        }
+        if (richtigAlle.Count < 2)
+        {
+            fund("Fund B " + wo + ": nur " + richtigAlle.Count + " \"richtig: …\" in der Bewertung (erwartet 2)");
+        }
+        return (geprueftA, geprueftB);
     }
 }
