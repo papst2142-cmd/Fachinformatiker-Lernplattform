@@ -335,6 +335,21 @@ public sealed class Kamera
         Matrix4x4.CreatePerspectiveFieldOfView(SichtfeldJetzt(Math.Max(breite, 1) / Math.Max(hoehe, 1)) * MathF.PI / 180f, Math.Max(breite, 1) / Math.Max(hoehe, 1), Nah, 200f)
         * Matrix4x4.CreateTranslation(0, Versatz * (1f - _ichAnteil), 0);
 
+    /// <summary>Wie schnell die Kamera der gehenden Figur weich folgt (Anteil des Abstands je Sekunde).</summary>
+    public const float FolgenTempo = 2.5f;
+
+    /// <summary>
+    /// Der Figur bei (<paramref name="x"/>, <paramref name="z"/>) weich folgen: je Bild ein Teil des Abstands (<see cref="FolgenTempo"/>
+    /// mal <paramref name="dt"/> Sekunden, hoechstens alles). Rechnung wie bis A 1.20.0 in der Stadtflaeche (Patch A 1.20.1 nur hierher
+    /// geholt, damit ein Test sie pruefen kann); gibt den Anteil zurueck.
+    /// </summary>
+    public float Folgen(float x, float z, double dt)
+    {
+        var k = (float)Math.Min(1, dt * FolgenTempo);
+        Setzen(ZielX + ((x - ZielX) * k), ZielZ + ((z - ZielZ) * k));
+        return k;
+    }
+
     public void Setzen(float zielX, float zielZ)
     {
         ZielX = Math.Clamp(zielX, Grenzen.X1, Grenzen.X2);

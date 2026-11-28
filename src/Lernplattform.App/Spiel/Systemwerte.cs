@@ -3,7 +3,7 @@ namespace Lernplattform.Spiel;
 /// <summary>
 /// Weisung P7-16 (Haenger "ausserhalb"): Werte des Betriebssystems fuer langsame Bilder in spiel_bilder.log.
 /// Die Plattform setzt sie (Android: MainActivity mit Speicherbereinigung von Java, Waermezustand,
-/// ausgelassenen Bildern und Beruehrungen); am PC bleiben sie leer. Nur messen, nichts aendern.
+/// ausgelassenen Bildern und Beruehrungen); am PC bleiben sie leer. Nur messen, nichts aendern (ausser der Bildwiederholrate, Patch A 1.20.1).
 /// </summary>
 public static class Systemwerte
 {
@@ -21,4 +21,10 @@ public static class Systemwerte
     /// auf oder ab, gesetzt von der Plattform (Android: MainActivity), 0 = keiner.
     /// </summary>
     public static long Finger { get; set; }
+
+    /// <summary>
+    /// Patch A 1.20.1 (Weisung P12-449 Punkt 1): Takt des Bildschirms in Hz, von der Plattform gesetzt (Android: Bildwiederholrate
+    /// der Anzeige), 0 = unbekannt (PC). Damit warten Bildbremse und Zeitschritt im Takt (<see cref="Core.Spiel.Probe.Bildtakt"/>).
+    /// </summary>
+    public static double Bildwiederholrate { get; set; }
 }

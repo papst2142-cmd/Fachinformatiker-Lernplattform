@@ -66,6 +66,11 @@ public sealed partial class StadtSpiel
     /// <summary>Nur Gegenprobe: freies Gehen ohne jede Sperre (Figur geht durch Waende, ueber die Fahrbahn, in Personen).</summary>
     public static bool FreiGehenAltFuerTests { get => FreiAlt.Value; set => FreiAlt.Value = value; }
 
+    private static readonly AsyncLocal<bool> HaltTuerAlt = new();
+
+    /// <summary>Nur Gegenprobe (Patch A 1.20.1): beim Halt vor einer Tuer geht die Figur wie bis A 1.20.0 auf den Stehplatz.</summary>
+    public static bool HaltVorTuerAltFuerTests { get => HaltTuerAlt.Value; set => HaltTuerAlt.Value = value; }
+
     private static readonly AsyncLocal<bool> HaltAlt = new();
 
     /// <summary>Nur Gegenprobe: jedes Bild mit Weg schreibt sofort sein eigenes Ereignis (statt eines je Halt).</summary>
@@ -295,6 +300,15 @@ public sealed partial class StadtSpiel
             // vor einer Tuer stehen geblieben: der Weg zu diesem Ort mit allen Schritten (ein Ereignis), dann wie nach dem Antippen
             if (GeheZuOrt(tuer.Id, strecke) == StadtGrund.Ok)
             {
+                if (!HaltTuerAlt.Value && Geht && _zielOrt == tuer.Id)
+                {
+                    // Patch A 1.20.1 (Sammelliste 477, Weisung P12-449 Punkt 3): die Figur bleibt, wo sie stehen geblieben ist (sie
+                    // steht schon hoechstens VorDerTuer vor der Tuer). Bis A 1.20.0 ging sie das kurze Stueck bis auf den Stehplatz,
+                    // oft zurueck gegen die Laufrichtung, und die Kamera ging mit („springt nach hinten“). Das Ereignis (der Weg zu
+                    // diesem Ort mit denselben Schritten) bleibt gleich; „Hineingehen“ geht wie nach dem Antippen.
+                    WegLeeren();
+                    Ankommen();
+                }
                 GehAnsage?.Invoke(string.Format(CultureInfo.InvariantCulture, SpielProbeTexte.VorDir, tuer.Name));
                 return;
             }

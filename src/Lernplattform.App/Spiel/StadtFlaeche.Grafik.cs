@@ -328,6 +328,11 @@ public sealed partial class StadtFlaeche
     /// Jede Anforderung eines Bilds bei Bildbremse (auch aus <see cref="Anfordern"/>): vor Ablauf von 1 / Bilder Sekunden
     /// seit dem Beginn des letzten Bilds wird gewartet, eine wartende Anforderung genuegt. Ohne Bremse sofort.
     /// </summary>
+    private static readonly AsyncLocal<bool> BildtaktAlt = new();
+
+    /// <summary>Nur Gegenprobe (Patch A 1.20.1): Bildbremse und Zeitschritt wie bis A 1.20.0 (ohne den Takt des Bildschirms).</summary>
+    public static bool BildtaktAltFuerTests { get => BildtaktAlt.Value; set => BildtaktAlt.Value = value; }
+
     private void GebremstAnfordern()
     {
         var bilder = _gw.BilderHoechstens;
@@ -336,7 +341,10 @@ public sealed partial class StadtFlaeche
             RequestNextFrameRendering();
             return;
         }
-        var warten = _bremseBildBeginn + (1.0 / bilder) - _uhr.Elapsed.TotalSeconds;
+        // Patch A 1.20.1 (Weisung P12-449 Punkt 1): im Takt des Bildschirms (am PC unbekannt: wie bisher)
+        var warten = BildtaktAlt.Value
+            ? _bremseBildBeginn + (1.0 / bilder) - _uhr.Elapsed.TotalSeconds
+            : Bildtakt.Warten(_uhr.Elapsed.TotalSeconds - _bremseBildBeginn, bilder, Systemwerte.Bildwiederholrate);
         if (warten <= 0)
         {
             RequestNextFrameRendering();

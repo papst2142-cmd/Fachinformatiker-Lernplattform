@@ -77,7 +77,12 @@ public sealed partial class SpielSeite
         _questKnopf.IsVisible = !spiel.Einrichten;
     }
 
-    private (Spielstand Stand, List<SpielEreignis> Verlauf, int Anzahl, SpielEreignis? Letzte, long Tag, Stadt Stadt, int Zahl)? _offenMerker;
+    private (Spielstand Stand, List<SpielEreignis> Verlauf, int Anzahl, SpielEreignis? Letzte, long Tag, Stadt Stadt, int Zahl, SpielEreignis? Erste)? _offenMerker;
+
+    /// <summary>Nur Gegenprobe (Patch A 1.20.1): nach neuen Wegen die Zahl neu rechnen (wie bis A 1.20.0).</summary>
+    internal static bool OffenWegeAltFuerTests { get => OffenWegeAlt.Value; set => OffenWegeAlt.Value = value; }
+
+    private static readonly AsyncLocal<bool> OffenWegeAlt = new();
 
     /// <summary>Nur Gegenprobe (Patch A 1.19.1): die Zahl der offenen Auftraege bei jedem Beschriften neu rechnen (wie bis A 1.19.0).</summary>
     internal static bool OffenOhneMerkerFuerTests { get => OffenOhneMerker.Value; set => OffenOhneMerker.Value = value; }
@@ -103,9 +108,18 @@ public sealed partial class SpielSeite
         {
             return m.Zahl;
         }
+        var erste = verlauf.Count > 0 ? verlauf[0] : null;
+        if (!OffenOhneMerkerFuerTests && !OffenWegeAlt.Value && _offenMerker is { } w && w.Tag == stand.Tag && ReferenceEquals(w.Stadt, spiel.Stadt)
+            && Questlog.NurWegeSeit(verlauf, w.Anzahl, w.Erste, w.Letzte))
+        {
+            // Patch A 1.20.1 (Weisung P12-449 Punkt 2): nach einem Halt beim freien Gehen kam nur ein Weg dazu; die Zahl bleibt gleich
+            // (spart je Halt das Rechnen ueber alle 442 Auftraege, am PC rund 1 ms von 3,6 ms)
+            _offenMerker = (stand, verlauf, verlauf.Count, letzte, stand.Tag, spiel.Stadt, w.Zahl, erste);
+            return w.Zahl;
+        }
         var zahl = Questlog.ZahlOffen(spiel);
         OffenGerechnet++;
-        _offenMerker = (stand, verlauf, verlauf.Count, letzte, stand.Tag, spiel.Stadt, zahl);
+        _offenMerker = (stand, verlauf, verlauf.Count, letzte, stand.Tag, spiel.Stadt, zahl, erste);
         return zahl;
     }
 

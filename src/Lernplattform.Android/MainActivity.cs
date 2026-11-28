@@ -233,6 +233,8 @@ public class MainActivity : AvaloniaMainActivity
             return -1;
         }
         _messung = new Systemmessung(Waerme, hertz);
+        // Patch A 1.20.1 (Weisung P12-449): Bildbremse und Zeitschritt im Takt der Anzeige
+        Lernplattform.Spiel.Systemwerte.Bildwiederholrate = hertz;
         var messung = _messung;
         // global:: nicht in der Interpolation: der Doppelpunkt waere dort der Beginn einer Formatangabe
         var version = global::Android.OS.Build.VERSION.Release;
