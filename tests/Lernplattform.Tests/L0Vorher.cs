@@ -25,7 +25,9 @@ internal static class L0Vorher
     /// <summary>Datei (ohne .json) wie vor L0, bytegleich (SHA-256 geprueft); andere Dateien wie heute.</summary>
     public static byte[] Datei(string name)
     {
-        var heute = File.ReadAllBytes(Path.Combine(Lernen, name + ".json"));
+        // A 1.20.0: pruefungssaetze.json traegt seit Format 6 neue Fassungen; der Stand nach L0 liegt bytegleich eingefroren
+        // in tests/Lerninhalte/echt/pruefungssaetze_format5.json (EchtTestDatei.NachL0, Test EchtSchreibtischTests)
+        var heute = name == "pruefungssaetze" ? EchtTestDatei.NachL0 : File.ReadAllBytes(Path.Combine(Lernen, name + ".json"));
         if (Daten.Value["dateien"]![name] is not JsonObject teil)
         {
             return heute;

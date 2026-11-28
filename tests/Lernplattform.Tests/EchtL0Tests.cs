@@ -56,7 +56,7 @@ public sealed class EchtL0Tests
     public void L1_HeutigeDatei_GenauVorherOhneLoeschliste()
     {
         var vorher = JsonNode.Parse(EchtTestDatei.Vorher)!["saetze"]!.AsArray();
-        var heute = JsonNode.Parse(File.ReadAllBytes(EchtTestDatei.Datei))!.AsObject();
+        var heute = JsonNode.Parse(EchtTestDatei.NachL0)!.AsObject();
         var weg = Saetze();
         Assert.Equal(16, weg.Count);
         foreach (var g in weg)
@@ -85,7 +85,8 @@ public sealed class EchtL0Tests
     public void L2_AppBietetGenauDieselbenSaetzeAn()
     {
         var vorher = EchtTestDatei.App();
-        var heute = EchtTestDatei.AppHeute();
+        // Stand nach L0 bis A 1.19.1 (seit A 1.20.0 kommen neue Fassungen dazu, EchtSchreibtischTests)
+        var heute = EchtSaetze.Laden(EchtTestDatei.NachL0, [], EchtTestDatei.Geloescht());
         Assert.Empty(heute.Fehler);
         Assert.Empty(heute.Ausgeschlossen);
         foreach (var f in Fachrichtung.Alle)

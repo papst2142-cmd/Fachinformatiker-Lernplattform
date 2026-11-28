@@ -151,3 +151,10 @@ Regeln:
   - Neue Namen unter „Üben“ (Weisung P12-442): die Zeile heißt „Übungsaufgaben“ statt „Szenarien“ (Entwurf P12-278) bzw. statt „AP1-Szenarien“/„AP2-Szenarien“ (A 1.18.0), auch in Zurück- und Stand-Zeile (`Pruefungsteile.Szenarien`, `StandSzenarien`). Diese Texte stehen in keiner Sollwert-Datei, darum ändert sich dafür keine Prüfsumme.
 - Grund: Weisung P12-440 (Nico 27.11.2026 19:08 MEZ, Antworten 1a 2a 3a 4a 5a zum Entwurf P12-278: Prüfungsbereich einheitlich, PC-Hauptpunkt „Mehr“ mit Testprojekte und Mein Projekt, Bereich-Unterpunkte bleiben, AP2-Szenarien nur noch je Bereich).
 - Freigabe: Weisung P12-440 (Nico 5a, Sollwert-Änderung Nr. 29 für `beschriftungen.json`) mit P12-442 (Name „Übungsaufgaben“); gemergt erst nach Nicos Bild-OK (Meldung P12-280). Test: `SollwerteTests`, `BeschriftungenTests` (Leiste und Mehr gleich dem Programm), `SeitenleisteOptionenTests.UntereLeisteWieNico`, `PruefungsteileTests` (Klickwege, Mehr).
+
+## Nr. 30
+- Was: G52 `tests/Vergleich/lerninhalte_pruefung.json` (Schreibtischtest im Raster, A 1.20.0), nur der Abschnitt `pruefungssaetze`; alle anderen Abschnitte bleiben gleich.
+  - `format`: vorher 5, nachher 6 (neue Antwortform „schreibtischtest“, neue Anlagen-Arten „ausgabe“ und „daten“).
+  - `saetze.alle_ap1_03`, `saetze.alle_ap1_05`, `saetze.ae_b2_09`: je eine neue Fassung 2 (hinten angehängt, die alte bleibt bytegleich in der Datei). In `formen` wird je eine Teilaufgabe von „tabelle“ zu „schreibtischtest“ (alle_ap1_03 4 b, alle_ap1_05 4 a, ae_b2_09 2 a), dazu `"fassung": 2`. Punkte, Teile, Anlagen, Operatoren und die Aufteilung selbst/Programm bleiben gleich.
+- Grund: Weisung P12-446 mit P12-445 (W2 Schreibtischtest als A 1.20.0) und Nicos Bild-OK P12-419 (Antworten 1a bis 5a; 4a: die drei vorhandenen Schreibtischtests werden eine neue Fassung im Raster). G52 nach jeder Inhalte-Änderung neu (gehört zur Inhalte-Freigabe).
+- Freigabe: Weisung P12-446 (Nico P12-419 4a). Test: `SollwerteTests`, `EchtInhalteW3Tests.G52_Pruefungssaetze_GleichDerUnabhaengigenPruefung`, `EchtSchreibtischTests` (nur angehängt, genau diese Teile, Format 5 bleibt ladbar).

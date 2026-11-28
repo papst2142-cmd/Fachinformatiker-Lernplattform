@@ -62,10 +62,11 @@ public class EchtStruktogrammTests
         Assert.Equal(2, neu.Satz("ae_b2_08")!.Fassung);
         Assert.Equal(bestand.Saetze.Select(s => s.Kennung), neu.Saetze.Select(s => s.Kennung));
         // neuere Formatnummer: klarer Fehler der ganzen Datei
-        var sechs = EchtSaetze.Laden(Datei(6, Roh("alle_ap1_01", 1)));
-        Assert.Empty(sechs.Saetze);
-        Assert.Equal("Format 6 ist neuer als dieses Programm (kennt Format 5); bitte das Programm aktualisieren", Assert.Single(sechs.Fehler).Meldung);
-        Assert.Equal(5, EchtSaetze.Format);
+        // (seit A 1.20.0 kennt das Programm Format 6, Weisung P12-446)
+        var sieben = EchtSaetze.Laden(Datei(7, Roh("alle_ap1_01", 1)));
+        Assert.Empty(sieben.Saetze);
+        Assert.Equal("Format 7 ist neuer als dieses Programm (kennt Format 6); bitte das Programm aktualisieren", Assert.Single(sieben.Fehler).Meldung);
+        Assert.Equal(6, EchtSaetze.Format);
     }
 
     [Fact]

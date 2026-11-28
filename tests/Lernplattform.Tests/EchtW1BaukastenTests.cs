@@ -104,11 +104,12 @@ public class EchtW1BaukastenTests
         klasse.Remove("fassung");
         Assert.Empty(EchtSaetze.Laden(Datei(4, klasse, Roh("ae_b2_07", 1))).Fehler);
         // neuere Formatnummer: klarer Fehler der ganzen Datei, nichts geladen
-        // (seit A 1.12.0 kennt das Programm Format 5, Weisung P12-390; die naechste Nummer bleibt ein klarer Fehler)
-        var sechs = EchtSaetze.Laden(Datei(6, Roh("alle_ap1_01", 1)));
-        Assert.Empty(sechs.Saetze);
-        Assert.Equal("Format 6 ist neuer als dieses Programm (kennt Format 5); bitte das Programm aktualisieren", Assert.Single(sechs.Fehler).Meldung);
-        Assert.Equal(5, EchtSaetze.Format);
+        // (seit A 1.12.0 kennt das Programm Format 5, Weisung P12-390, seit A 1.20.0 Format 6, Weisung P12-446; die naechste
+        // Nummer bleibt ein klarer Fehler)
+        var sieben = EchtSaetze.Laden(Datei(7, Roh("alle_ap1_01", 1)));
+        Assert.Empty(sieben.Saetze);
+        Assert.Equal("Format 7 ist neuer als dieses Programm (kennt Format 6); bitte das Programm aktualisieren", Assert.Single(sieben.Fehler).Meldung);
+        Assert.Equal(6, EchtSaetze.Format);
     }
 
     [Fact]
@@ -157,7 +158,7 @@ public class EchtW1BaukastenTests
     public void FuenfFassungen_NurAngehaengt_AlteBytegleich_Format4()
     {
         var echt = EchtTestDatei.Vorher;
-        Assert.Equal(EchtSaetze.Format, (int)JsonNode.Parse(echt)!["format"]!);
+        Assert.Equal(5, (int)JsonNode.Parse(echt)!["format"]!); // Stand vor L0 (seit A 1.20.0 traegt die heutige Datei Format 6)
         var roh = EchtTestDatei.AlsFormat(echt, 3);
         Assert.True(roh.Length > VorherLaenge);
         Assert.Equal(VorherSha, Convert.ToHexStringLower(SHA256.HashData(roh.AsSpan(0, VorherLaenge))));

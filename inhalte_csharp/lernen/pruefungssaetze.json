@@ -1,5 +1,5 @@
 {
- "format": 5,
+ "format": 6,
  "saetze": [
   {
    "kennung": "alle_ap1_01",
@@ -67782,6 +67782,4736 @@
          "text": "SELECT zeigt vorher die betroffenen Zeilen, Fehler in der Bedingung fallen auf",
          "punkte": 2
         }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "alle_ap1_03",
+   "fassung": 2,
+   "fachrichtung": "alle",
+   "bereich": "ap1",
+   "firma": "Bootswerft Elbkrümmung GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Bootswerft Elbkrümmung GmbH baut und repariert Segel- und Motorboote. Sie hat 55 Beschäftigte.",
+    "Zur Werft in Schilfwerder gehören zwei Bauhallen, eine Tischlerei und das Werftbüro; im Nachbarort Reetmoor liegt ein Winterlager für Kundenboote.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker in der IT-Abteilung der Werft, die aus zwei Personen besteht."
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "titel": "Datenblätter der angebotenen Notebooks für die Bauhallen",
+     "art": "tabelle",
+     "spalten": [
+      "Merkmal",
+      "Notebook A (Kielwasser IT)",
+      "Notebook B (Hafenstein Systemhaus)"
+     ],
+     "zeilen": [
+      [
+       "Schutzart",
+       "IP65",
+       "IP53"
+      ],
+      [
+       "geprüfte Fallhöhe",
+       "1,8 m",
+       "1,2 m"
+      ],
+      [
+       "Bildschirm",
+       "14 Zoll, 1 000 cd/m², Touch auch mit Handschuhen",
+       "15,6 Zoll, 400 cd/m², ohne Touch"
+      ],
+      [
+       "Akku",
+       "2 × 49 Wh, im Betrieb einzeln tauschbar",
+       "1 × 72 Wh, fest eingebaut"
+      ],
+      [
+       "mittlere Leistungsaufnahme im Betrieb",
+       "14 W",
+       "9 W"
+      ],
+      [
+       "Gewicht",
+       "2,4 kg",
+       "1,9 kg"
+      ],
+      [
+       "Preis je Gerät (netto)",
+       "2 190,00 €",
+       "1 480,00 €"
+      ]
+     ]
+    },
+    {
+     "nr": "2",
+     "titel": "Excerpt from the data sheet of notebook A",
+     "art": "englisch",
+     "zeilen": [
+      "The internal bridge battery keeps the notebook running for 60 seconds while one battery is removed.",
+      "Only remove one battery at a time.",
+      "All ports are protected by rubber covers that must be closed before the device is cleaned with water.",
+      "The touch screen can be used with work gloves when glove mode is switched on.",
+      "Do not charge the batteries at temperatures below 0 °C."
+     ]
+    },
+    {
+     "nr": "3",
+     "titel": "Geräte im Serverschrank des Werftbüros",
+     "art": "tabelle",
+     "spalten": [
+      "Gerät",
+      "Anzahl",
+      "Leistungsaufnahme je Gerät"
+     ],
+     "zeilen": [
+      [
+       "Server",
+       "2",
+       "310 W"
+      ],
+      [
+       "NAS",
+       "2",
+       "95 W"
+      ],
+      [
+       "Switch",
+       "3",
+       "45 W"
+      ],
+      [
+       "Firewall",
+       "1",
+       "35 W"
+      ],
+      [
+       "Router",
+       "1",
+       "25 W"
+      ]
+     ]
+    },
+    {
+     "nr": "4",
+     "titel": "Auszug aus dem Auftrag der Segelschule Wellenkamm",
+     "art": "text",
+     "zeilen": [
+      "Die Segelschule Wellenkamm bestellt vier neue Schulungsboote. Die Werft stattet jedes Boot mit einem fest eingebauten Tablet aus.",
+      "Das Tablet zeigt die Seekarte mit der eigenen Position an.",
+      "Das Büro der Segelschule sieht die Positionen aller Boote auf einer Karte.",
+      "Das Tablet ist wasserdicht nach Schutzart IP67.",
+      "Die Anzeige ist auch in praller Sonne lesbar.",
+      "Die Trainerinnen und Trainer werden vor der Übergabe eingewiesen.",
+      "Die Übergabe ist für den 24. Arbeitstag nach Projektbeginn vereinbart."
+     ]
+    },
+    {
+     "nr": "5",
+     "titel": "Vorgänge im Projekt „Tablets für die Schulungsboote“",
+     "art": "tabelle",
+     "spalten": [
+      "Vorgang",
+      "Beschreibung",
+      "Dauer in Arbeitstagen",
+      "Vorgänger"
+     ],
+     "zeilen": [
+      [
+       "A",
+       "Anforderungen klären, Tablets bestellen",
+       "4",
+       "–"
+      ],
+      [
+       "B",
+       "Lieferung der Tablets",
+       "10",
+       "A"
+      ],
+      [
+       "C",
+       "Einbaukonsolen in der Tischlerei fertigen",
+       "6",
+       "A"
+      ],
+      [
+       "D",
+       "Tablets einrichten (Seekarte, Ortung)",
+       "3",
+       "B"
+      ],
+      [
+       "E",
+       "Tablets in die vier Boote einbauen",
+       "4",
+       "C, D"
+      ],
+      [
+       "F",
+       "Probefahrt mit allen Booten",
+       "1",
+       "E"
+      ],
+      [
+       "G",
+       "Einweisung der Trainerinnen und Trainer",
+       "2",
+       "F"
+      ]
+     ]
+    },
+    {
+     "nr": "6",
+     "titel": "Pseudocode zur Berechnung der Leisten (alle Längen in cm)",
+     "art": "code",
+     "zeilen": [
+      " 1  EINGABE bedarf",
+      " 2  EINGABE stueckLaenge",
+      " 3  leistenLaenge ← 600",
+      " 4  jeLeiste ← leistenLaenge DIV stueckLaenge",
+      " 5  rest ← leistenLaenge MOD stueckLaenge",
+      " 6  leisten ← bedarf DIV jeLeiste",
+      " 7  WENN bedarf MOD jeLeiste > 0 DANN",
+      " 8      leisten ← leisten + 1",
+      " 9  ENDE WENN",
+      "10  verschnitt ← leisten * rest",
+      "11  AUSGABE leisten, verschnitt"
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Robuste Notebooks für die Bauhallen",
+     "punkte": 24,
+     "einleitung": [
+      "Die Bootsbauerinnen und Bootsbauer sollen Baupläne und Stücklisten künftig direkt in den Hallen am Notebook sehen. Zwei Angebote liegen vor (Anlage 1)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erlaeutern",
+       "text": [
+        "Notebook A hat die Schutzart IP65. Erläutern Sie die zwei Kennziffern dieser Schutzart."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "6 (erste Ziffer, Fremdkörper): staubdicht, vollständiger Schutz gegen Berührung; Schleifstaub dringt nicht ein.",
+        "5 (zweite Ziffer, Wasser): Schutz gegen Strahlwasser aus beliebiger Richtung; das Gerät darf mit einem Wasserstrahl abgespült werden."
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie mit den Datenblättern in Anlage 1, welche Aussagen über die beiden Notebooks stimmen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Nur Notebook A ist gegen Strahlwasser geschützt.",
+         "Notebook B hat rechnerisch die längere Akkulaufzeit.",
+         "Notebook B ist leichter und hat den helleren Bildschirm.",
+         "Bei Notebook A kann ein Akku nur beim Hersteller getauscht werden."
+        ],
+        "richtig": [
+         0,
+         1
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Zutreffend: nur A ist gegen Strahlwasser geschützt (IP65, B nur IP53).",
+        "Zutreffend: B läuft rechnerisch 72 Wh ÷ 9 W = 8 h, A nur 98 Wh ÷ 14 W = 7 h.",
+        "Falsch: B ist leichter, hat aber den dunkleren Bildschirm (400 cd/m²); bei A sind die Akkus im Betrieb tauschbar."
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "berechnen",
+       "text": [
+        "Nach zwei Jahren haben die Akkus von Notebook A nur noch 85 % ihrer Nennkapazität. Berechnen Sie die Laufzeit von Notebook A mit beiden Akkus in Stunden. Runden Sie auf zwei Nachkommastellen."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "h",
+        "ergebnis": 5.95,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Nennkapazität: 2 × 49 Wh = 98 Wh",
+        "85 %: 98 Wh × 0,85 = 83,3 Wh",
+        "Laufzeit: 83,3 Wh ÷ 14 W = 5,95 h"
+       ],
+       "hinweise": [
+        {
+         "text": "verbleibende Kapazität 83,3 Wh berechnet",
+         "punkte": 1
+        },
+        {
+         "text": "Kapazität durch die Leistungsaufnahme geteilt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "berechnen",
+       "text": [
+        "Eine Schicht in der Halle dauert 8,5 Stunden. Berechnen Sie, wie viele Minuten der Schicht Notebook A mit den gealterten Akkus aus c) ohne Ersatzakku fehlen."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Minuten",
+        "ergebnis": 153,
+        "toleranz": 0.5,
+        "ersatz_ergebnis": 138,
+        "punkte_ergebnis": 2
+       },
+       "ersatzwert": {
+        "bezug": "1c",
+        "text": "Falls Sie c) nicht lösen konnten, rechnen Sie mit 6,2 Stunden."
+       },
+       "loesung": [
+        "8,5 h − 5,95 h = 2,55 h",
+        "2,55 h × 60 min/h = 153 min",
+        "Mit dem Ersatzwert 6,2 h: 8,5 h − 6,2 h = 2,3 h = 138 min"
+       ],
+       "hinweise": [
+        {
+         "text": "Differenz zur Schichtdauer gebildet",
+         "punkte": 1
+        },
+        {
+         "text": "Stunden in Minuten umgerechnet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "begruenden",
+       "text": [
+        "Die Notebooks liegen in der Halle neben Schleif- und Lackierplätzen und werden nach der Schicht mit Wasser abgespült. Entscheiden Sie sich für eines der Notebooks und begründen Sie Ihre Wahl mit zwei Merkmalen aus Anlage 1."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Notebook A: nur IP65 ist staubdicht und verträgt das Abspülen mit Wasser (IP53 nur Sprühwasser, nicht staubdicht).",
+        "Weitere Gründe: größere Fallhöhe 1,8 m, Bildschirm hell genug und mit Handschuhen bedienbar, Akkus im Betrieb tauschbar.",
+        "Der höhere Preis ist durch die Umgebung gerechtfertigt."
+       ],
+       "hinweise": [
+        {
+         "text": "Entscheidung für Notebook A",
+         "punkte": 1
+        },
+        {
+         "text": "erstes passendes Merkmal (z. B. Schutzart) begründet",
+         "punkte": 1
+        },
+        {
+         "text": "zweites passendes Merkmal begründet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Zubehörteile oder Maßnahmen, die den Einsatz der Notebooks in der Halle erleichtern."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Wandhalterung oder Tragegriff mit Schultergurt",
+        "Ladeschrank oder Ladestation mit Ersatzakkus",
+        "Displayschutzfolie",
+        "Bildschirmsperre mit kurzer Zeit wegen offener Halle",
+        "WLAN-Zugangspunkte mit guter Abdeckung in der Halle"
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Regeln für Akkus, Reinigung und Bedienung der englische Auszug in Anlage 2 enthält."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Beide Akkus dürfen gleichzeitig entnommen werden.",
+         "Vor dem Abspülen mit Wasser müssen die Abdeckungen der Anschlüsse geschlossen sein.",
+         "Für die Bedienung mit Arbeitshandschuhen muss ein eigener Modus eingeschaltet werden.",
+         "Die Akkus dürfen auch bei Frost geladen werden."
+        ],
+        "richtig": [
+         1,
+         2
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Zutreffend: Abdeckungen vor dem Abspülen schließen; Handschuh-Modus einschalten.",
+        "Falsch: nur ein Akku auf einmal; kein Laden unter 0 °C."
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Strom und unterbrechungsfreie Stromversorgung",
+     "punkte": 26,
+     "einleitung": [
+      "Der Serverschrank im Werftbüro läuft rund um die Uhr. Er soll eine neue unterbrechungsfreie Stromversorgung (USV) bekommen. Die Geräte stehen in Anlage 3."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie mit den Werten aus Anlage 3 die Leistung je Gerätegruppe und die Summe für den ganzen Serverschrank. Die Zeile der Server ist ausgefüllt."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Gerät",
+         "Rechnung",
+         "Leistung zusammen"
+        ],
+        "zeilen": [
+         [
+          "Server",
+          "2 × 310 W",
+          "620 W"
+         ],
+         [
+          "NAS",
+          "2 × 95 W",
+          {
+           "loesung": [
+            "190",
+            "190 W",
+            "190W",
+            "190 Watt"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Switch",
+          "3 × 45 W",
+          {
+           "loesung": [
+            "135",
+            "135 W",
+            "135W",
+            "135 Watt"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Firewall und Router",
+          "35 W + 25 W",
+          {
+           "loesung": [
+            "60",
+            "60 W",
+            "60W",
+            "60 Watt"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Summe",
+          "–",
+          {
+           "loesung": [
+            "1005",
+            "1005 W",
+            "1005W",
+            "1005 Watt",
+            "1 005",
+            "1 005 W",
+            "1 005W",
+            "1 005 Watt",
+            "1.005",
+            "1.005 W",
+            "1.005W",
+            "1.005 Watt",
+            "1,005 kW",
+            "1,005kW",
+            "1.005 kW",
+            "1.005kW"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "3"
+       ],
+       "loesung": [
+        "NAS: 190 W",
+        "Switch: 135 W",
+        "Firewall und Router: 60 W",
+        "Summe: 1 005 W"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Der Serverschrank läuft an 365 Tagen je 24 Stunden, 1 kWh kostet 0,29 €. Berechnen Sie die Stromkosten im Jahr. Runden Sie auf ganze Cent. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 2553.1,
+        "toleranz": 0.005,
+        "ersatz_ergebnis": 3048.48,
+        "punkte_ergebnis": 2
+       },
+       "ersatzwert": {
+        "bezug": "2a",
+        "text": "Falls Sie a) nicht lösen konnten, rechnen Sie mit 1 200 W."
+       },
+       "loesung": [
+        "365 × 24 h = 8 760 h",
+        "1 005 W × 8 760 h = 8 803 800 Wh = 8 803,8 kWh",
+        "8 803,8 kWh × 0,29 €/kWh = 2 553,10 €",
+        "Mit dem Ersatzwert 1 200 W: 10 512 kWh × 0,29 €/kWh = 3 048,48 €"
+       ],
+       "hinweise": [
+        {
+         "text": "Betriebsstunden im Jahr (8 760 h)",
+         "punkte": 1
+        },
+        {
+         "text": "Energie in kWh richtig umgerechnet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "berechnen",
+       "text": [
+        "Die Netzteile haben einen Leistungsfaktor von 0,9. Die USV soll 20 % Reserve haben. Berechnen Sie die nötige Scheinleistung der USV in VA. Runden Sie auf ganze VA. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "VA",
+        "ergebnis": 1340,
+        "toleranz": 0.5,
+        "ersatz_ergebnis": 1600,
+        "punkte_ergebnis": 2
+       },
+       "ersatzwert": {
+        "bezug": "2a",
+        "text": "Falls Sie a) nicht lösen konnten, rechnen Sie mit 1 200 W."
+       },
+       "loesung": [
+        "Scheinleistung: 1 005 W ÷ 0,9 ≈ 1 116,67 VA",
+        "mit Reserve: 1 116,67 VA × 1,2 = 1 340 VA",
+        "Mit dem Ersatzwert 1 200 W: 1 200 W ÷ 0,9 × 1,2 = 1 600 VA"
+       ],
+       "hinweise": [
+        {
+         "text": "Wirkleistung durch den Leistungsfaktor geteilt",
+         "punkte": 1
+        },
+        {
+         "text": "Reserve von 20 % aufgeschlagen",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Größe einer USV in VA und nicht nur in W angegeben wird."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "W gibt die Wirkleistung an, die die Geräte tatsächlich umsetzen.",
+        "Netzteile ziehen zusätzlich Blindleistung; die USV muss die ganze Scheinleistung (VA) liefern.",
+        "Darum ist die Angabe in VA größer als in W und begrenzt die USV."
+       ],
+       "hinweise": [
+        {
+         "text": "Wirkleistung (W) erklärt",
+         "punkte": 1
+        },
+        {
+         "text": "Blind- bzw. Scheinleistung erklärt",
+         "punkte": 1
+        },
+        {
+         "text": "Folge für die Auslegung der USV",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie eine Offline-USV (VFD) mit einer Online-USV (VFI) anhand der Umschaltzeit und des Schutzes vor Netzstörungen."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "loesung": [
+        "Umschaltzeit: die Offline-USV schaltet erst bei Ausfall auf Batterie um (wenige Millisekunden); die Online-USV versorgt dauernd über den Wechselrichter, es gibt keine Umschaltzeit.",
+        "Schutz: die Offline-USV gibt Spannungsschwankungen und Störungen weitgehend durch; die Online-USV erzeugt die Spannung immer neu und filtert alle Störungen."
+       ],
+       "hinweise": [
+        {
+         "text": "Umschaltzeit beider Bauarten verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Schutz vor Netzstörungen beider Bauarten verglichen",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "berechnen",
+       "text": [
+        "Die USV hat vier Batterien mit je 12 V und 12 Ah. Der Wechselrichter hat einen Wirkungsgrad von 90 %. Berechnen Sie vereinfacht, wie viele Minuten die USV den Serverschrank versorgen kann. Runden Sie auf ganze Minuten."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Minuten",
+        "ergebnis": 31,
+        "toleranz": 0.5,
+        "ersatz_ergebnis": 26,
+        "punkte_ergebnis": 2
+       },
+       "ersatzwert": {
+        "bezug": "2a",
+        "text": "Falls Sie a) nicht lösen konnten, rechnen Sie mit 1 200 W."
+       },
+       "loesung": [
+        "Energie: 4 × 12 V × 12 Ah = 576 Wh",
+        "nutzbar: 576 Wh × 0,9 = 518,4 Wh",
+        "Zeit: 518,4 Wh ÷ 1 005 W ≈ 0,516 h ≈ 30,95 min ≈ 31 min",
+        "Mit dem Ersatzwert 1 200 W: 518,4 Wh ÷ 1 200 W = 0,432 h ≈ 26 min"
+       ],
+       "hinweise": [
+        {
+         "text": "Energie der Batterien 576 Wh berechnet",
+         "punkte": 1
+        },
+        {
+         "text": "Wirkungsgrad berücksichtigt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Aufgaben der Software einer USV bei einem langen Stromausfall."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Server und NAS geordnet herunterfahren, bevor die Batterie leer ist",
+        "Benachrichtigung per E-Mail oder Kurznachricht senden",
+        "Ereignisse protokollieren",
+        "Reihenfolge des Herunterfahrens steuern",
+        "nach Rückkehr des Stroms Geräte wieder einschalten"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Tablets für die Schulungsboote",
+     "punkte": 25,
+     "einleitung": [
+      "Die Segelschule Wellenkamm hat vier Schulungsboote bestellt. Die IT-Abteilung plant die Ausstattung mit Tablets als eigenes Projekt (Anlagen 4 und 5)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie Lastenheft und Pflichtenheft anhand von Verfasser und Inhalt."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "loesung": [
+        "Verfasser: das Lastenheft schreibt der Auftraggeber (die Segelschule), das Pflichtenheft der Auftragnehmer (die Werft).",
+        "Inhalt: das Lastenheft beschreibt, WAS gefordert ist; das Pflichtenheft beschreibt, WIE und WOMIT die Werft die Anforderungen umsetzt."
+       ],
+       "hinweise": [
+        {
+         "text": "Verfasser beider Dokumente verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Inhalt beider Dokumente verglichen",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Anforderungen aus Anlage 4 nicht-funktionale Anforderungen sind."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Das Tablet zeigt die Seekarte mit der eigenen Position an.",
+         "Das Tablet ist wasserdicht nach Schutzart IP67.",
+         "Das Büro sieht die Positionen aller Boote auf einer Karte.",
+         "Die Anzeige ist auch in praller Sonne lesbar."
+        ],
+        "richtig": [
+         1,
+         3
+        ]
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Nicht-funktional (Eigenschaft, Qualität): wasserdicht nach IP67; in praller Sonne lesbar.",
+        "Funktional (was das System tut): Seekarte mit Position; Positionen aller Boote im Büro."
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Stakeholder des Projekts."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Geschäftsführung der Segelschule (Auftraggeber)",
+        "Trainerinnen und Trainer",
+        "Schülerinnen und Schüler der Segelschule",
+        "Bootsbauer und Tischlerei der Werft",
+        "IT-Abteilung der Werft",
+        "Lieferant der Tablets"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie in der Tabelle das früheste Ende jedes Vorgangs aus Anlage 5 (gezählt in Arbeitstagen ab Projektbeginn). Die ersten Werte sind vorgegeben."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Vorgang",
+         "Vorgänger",
+         "Frühestes Ende (Arbeitstag)"
+        ],
+        "zeilen": [
+         [
+          "A",
+          "–",
+          "4"
+         ],
+         [
+          "B",
+          "A",
+          {
+           "loesung": [
+            "14",
+            "14.",
+            "Tag 14",
+            "14. Tag",
+            "14. Arbeitstag",
+            "Arbeitstag 14",
+            "14 Tage",
+            "14 AT"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "C",
+          "A",
+          "10"
+         ],
+         [
+          "D",
+          "B",
+          {
+           "loesung": [
+            "17",
+            "17.",
+            "Tag 17",
+            "17. Tag",
+            "17. Arbeitstag",
+            "Arbeitstag 17",
+            "17 Tage",
+            "17 AT"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "E",
+          "C, D",
+          {
+           "loesung": [
+            "21",
+            "21.",
+            "Tag 21",
+            "21. Tag",
+            "21. Arbeitstag",
+            "Arbeitstag 21",
+            "21 Tage",
+            "21 AT"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "F",
+          "E",
+          {
+           "loesung": [
+            "22",
+            "22.",
+            "Tag 22",
+            "22. Tag",
+            "22. Arbeitstag",
+            "Arbeitstag 22",
+            "22 Tage",
+            "22 AT"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "G",
+          "F",
+          {
+           "loesung": [
+            "24",
+            "24.",
+            "Tag 24",
+            "24. Tag",
+            "24. Arbeitstag",
+            "Arbeitstag 24",
+            "24 Tage",
+            "24 AT"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "B: 4 + 10 = 14",
+        "D: 14 + 3 = 17",
+        "E: beginnt nach C (10) und D (17), also 17 + 4 = 21",
+        "F: 21 + 1 = 22",
+        "G: 22 + 2 = 24 (Übergabe am 24. Arbeitstag möglich)"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, wie sich der Übergabetermin ändert, wenn sich die Lieferung (B) um drei Arbeitstage verzögert, und wie, wenn sich stattdessen die Einbaukonsolen (C) um drei Arbeitstage verzögern."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "loesung": [
+        "B liegt auf dem kritischen Weg (A, B, D, E, F, G): das Projekt endet drei Tage später, am 27. Arbeitstag.",
+        "C hat einen Puffer von 7 Arbeitstagen (Ende 10, E beginnt erst nach 17): die Verzögerung ändert den Termin nicht."
+       ],
+       "hinweise": [
+        {
+         "text": "Verzögerung von B verschiebt das Ende auf den 27. Arbeitstag",
+         "punkte": 1
+        },
+        {
+         "text": "Verzögerung von C ändert den Termin nicht",
+         "punkte": 1
+        },
+        {
+         "text": "Begründung mit kritischem Weg oder Puffer",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Vorteile, wenn im Projekt Meilensteine festgelegt werden."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Fortschritt wird an festen Punkten prüfbar; Verzögerungen fallen früh auf.",
+        "Abstimmung mit dem Kunden: an jedem Meilenstein wird ein Zwischenergebnis abgenommen.",
+        "Entscheidungen (weiter, ändern, stoppen) werden an klaren Stellen getroffen."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "begruenden",
+       "text": [
+        "Die Segelschule möchte nach Projektbeginn zusätzlich eine Wetteranzeige auf den Tablets. Begründen Sie, warum diese Änderung schriftlich vereinbart werden muss."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Die Änderung gehört nicht zum vereinbarten Umfang aus Lasten- und Pflichtenheft.",
+        "Sie kann Kosten und Termin verändern; das muss vorher geklärt sein.",
+        "Schriftlich ist später nachweisbar, was vereinbart wurde (Abnahme, Rechnung)."
+       ],
+       "hinweise": [
+        {
+         "text": "Änderung des vereinbarten Umfangs erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Auswirkung auf Kosten oder Termin",
+         "punkte": 1
+        },
+        {
+         "text": "Nachweis bei Abnahme oder Streit",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Programm für den Materialbedarf",
+     "punkte": 25,
+     "einleitung": [
+      "Für den Innenausbau werden Holzleisten mit 600 cm Länge in gleich lange Stücke geschnitten. Ein kleines Programm soll berechnen, wie viele Leisten zu bestellen sind (Anlage 6)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "DIV ist die ganzzahlige Division, MOD der Rest dieser Division. Ermitteln Sie die Ergebnisse."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "600 DIV 160",
+          "art": "zahl",
+          "loesung": [
+           "3"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "600 MOD 160",
+          "art": "zahl",
+          "loesung": [
+           "120"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "600 DIV 75",
+          "art": "zahl",
+          "loesung": [
+           "8"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "600 MOD 75",
+          "art": "zahl",
+          "loesung": [
+           "0"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "loesung": [
+        "600 DIV 160 = 3",
+        "600 MOD 160 = 120 (600 − 3 × 160)",
+        "600 DIV 75 = 8",
+        "600 MOD 75 = 0"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ergaenzen",
+       "text": [
+        "Führen Sie mit der Eingabe bedarf = 23 und stueckLaenge = 140 einen Schreibtischtest des Pseudocodes in Anlage 6 durch. Tragen Sie je Schritt nur die Werte ein, die in dieser Zeile zugewiesen oder ausgegeben werden. Die ersten drei Schritte sind vorgegeben."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "schreibtischtest",
+        "code": "6",
+        "spalten": [
+         "bedarf",
+         "stueckLaenge",
+         "leistenLaenge",
+         "jeLeiste",
+         "rest",
+         "leisten",
+         "verschnitt",
+         "Ausgabe"
+        ],
+        "leer_unveraendert": true,
+        "schritte": [
+         {
+          "zeile": 1,
+          "werte": [
+           "23",
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 2,
+          "werte": [
+           "",
+           "140",
+           "",
+           "",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 3,
+          "werte": [
+           "",
+           "",
+           "600",
+           "",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 4,
+          "werte": [
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "4"
+            ],
+            "punkte": 1
+           },
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 5,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "40"
+            ],
+            "punkte": 1
+           },
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "5"
+            ],
+            "punkte": 1
+           },
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 8,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "6"
+            ],
+            "punkte": 1
+           },
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 10,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "240"
+            ],
+            "punkte": 1
+           },
+           ""
+          ]
+         },
+         {
+          "zeile": 11,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "6, 240",
+             "6,240",
+             "6 240",
+             "6; 240",
+             "6;240",
+             "6 und 240",
+             "6 / 240",
+             "6/240",
+             "leisten 6, verschnitt 240"
+            ],
+            "punkte": 1
+           }
+          ]
+         }
+        ]
+       },
+       "anlagen": [
+        "6"
+       ],
+       "loesung": [
+        "Schritt 4 (Zeile 4): jeLeiste = 600 DIV 140 = 4",
+        "Schritt 5 (Zeile 5): rest = 600 MOD 140 = 40",
+        "Schritt 6 (Zeile 6): leisten = 23 DIV 4 = 5",
+        "Zeile 7: 23 MOD 4 = 3 > 0, also weiter mit Zeile 8",
+        "Schritt 7 (Zeile 8): leisten = 5 + 1 = 6",
+        "Schritt 8 (Zeile 10): verschnitt = 6 × 40 = 240",
+        "Schritt 9 (Zeile 11): Ausgabe 6, 240"
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie die Aufgabe der Zeilen 7 bis 9 in Anlage 6."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "6"
+       ],
+       "loesung": [
+        "Zeile 6 rechnet nur volle Leisten (ganzzahlige Division).",
+        "Bleiben Stücke übrig (bedarf MOD jeLeiste größer als 0), wird eine Leiste mehr gebraucht.",
+        "Die Zeilen runden die Zahl der Leisten also auf."
+       ],
+       "hinweise": [
+        {
+         "text": "Rest der Division geprüft",
+         "punkte": 1
+        },
+        {
+         "text": "eine Leiste mehr bei übrigen Stücken",
+         "punkte": 1
+        },
+        {
+         "text": "Aufrunden erkannt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "berechnen",
+       "text": [
+        "Bei 23 Stücken mit 140 cm wird die letzte Leiste nicht ganz genutzt. Berechnen Sie den tatsächlichen Verschnitt in cm, wenn jedes Reststück als Verschnitt zählt."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "cm",
+        "ergebnis": 380,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "6"
+       ],
+       "loesung": [
+        "Aus 5 vollen Leisten je 4 Stücke = 20 Stücke, je Leiste 40 cm Rest: 5 × 40 cm = 200 cm",
+        "Letzte Leiste: 3 Stücke, Rest 600 cm − 3 × 140 cm = 180 cm",
+        "Zusammen: 200 cm + 180 cm = 380 cm"
+       ],
+       "hinweise": [
+        {
+         "text": "Rest der vollen Leisten (200 cm)",
+         "punkte": 1
+        },
+        {
+         "text": "Rest der letzten Leiste (180 cm)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, was geschieht, wenn jemand für stueckLaenge den Wert 650 eingibt."
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "anlagen": [
+        "6"
+       ],
+       "loesung": [
+        "jeLeiste wird 600 DIV 650 = 0; in Zeile 6 wird durch 0 geteilt und das Programm bricht ab.",
+        "Abhilfe: Eingabe prüfen (stueckLaenge größer als 0 und höchstens 600)."
+       ],
+       "hinweise": [
+        {
+         "text": "jeLeiste wird 0",
+         "punkte": 1
+        },
+        {
+         "text": "Division durch 0 in Zeile 6 mit Abbruch",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei weitere Testfälle (Werte für bedarf und stueckLaenge), die Grenzen des Programms prüfen."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "stueckLaenge 600 (genau ein Stück je Leiste)",
+        "stueckLaenge 601 oder 0 (ungültig)",
+        "bedarf 0",
+        "bedarf genau ein Vielfaches von jeLeiste, z. B. 8 bei 75 cm"
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie den White-Box-Test mit dem Black-Box-Test anhand der Grundlage der Testfälle und der Person, die testet."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "loesung": [
+        "Grundlage: beim White-Box-Test kennt man den Quelltext und wählt Testfälle so, dass alle Zweige durchlaufen werden; beim Black-Box-Test nur die Anforderungen (Eingabe und erwartete Ausgabe).",
+        "Person: White-Box testet meist die Entwicklerin oder der Entwickler; Black-Box oft eine andere Person oder der Fachbereich."
+       ],
+       "hinweise": [
+        {
+         "text": "Grundlage der Testfälle verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "testende Person verglichen",
+         "punkte": 2
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "alle_ap1_05",
+   "fassung": 2,
+   "fachrichtung": "alle",
+   "bereich": "ap1",
+   "firma": "Backstube Mehlschwalbe GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Backstube Mehlschwalbe GmbH ist eine Bäckerei mit 85 Beschäftigten. In der Zentrale in Hafergrund liegen die Backstube und die Verwaltung; dazu kommen sieben Filialen in Hafergrund und den umliegenden Orten.",
+    "Die Filialen bekommen neue Kassen, werden über das Internet an die Zentrale angebunden, und die Warenwirtschaft wird erneuert.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker in der kleinen IT-Abteilung der Zentrale und begleiten diese Vorhaben."
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "tabelle",
+     "titel": "Angebote für die Kassensysteme (Preise netto)",
+     "spalten": [
+      "Merkmal",
+      "Anbieter A",
+      "Anbieter B"
+     ],
+     "zeilen": [
+      [
+       "Kassenterminal mit Bondrucker und Kassenlade, Listenpreis je Stück",
+       "1 290,00 €",
+       "1 090,00 €"
+      ],
+      [
+       "Rabattstaffel auf den Listenpreis",
+       "ab 5 Stück 4 %, ab 10 Stück 8 %",
+       "ab 8 Stück 3 %"
+      ],
+      [
+       "Wartung und Software-Updates je Kasse und Monat",
+       "18,00 €",
+       "29,00 €"
+      ],
+      [
+       "Technische Sicherheitseinrichtung (TSE) für das Kassengesetz",
+       "eingebaut",
+       "eingebaut"
+      ],
+      [
+       "Gehäuse und Tastatur",
+       "staub- und spritzwassergeschützt (IP54)",
+       "ohne besonderen Schutz"
+      ],
+      [
+       "Vor-Ort-Service bei Ausfall",
+       "am nächsten Werktag",
+       "innerhalb von 3 Werktagen"
+      ],
+      [
+       "Zahlungsziel",
+       "30 Tage netto",
+       "14 Tage netto"
+      ]
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "netzplan",
+     "titel": "Netzplan der Zentrale und zweier Filialen",
+     "knoten": [
+      {
+       "id": "inet",
+       "typ": "internet",
+       "name": "Internet",
+       "x": 3,
+       "y": 0
+      },
+      {
+       "id": "rtf1",
+       "typ": "router",
+       "name": "Router Filiale 1",
+       "x": 0,
+       "y": 1,
+       "info": [
+        "WAN: DSL",
+        "LAN: 10.61.0.1/27"
+       ]
+      },
+      {
+       "id": "rtf7",
+       "typ": "router",
+       "name": "Router Filiale 7",
+       "x": 6,
+       "y": 1,
+       "info": [
+        "WAN: DSL",
+        "LAN: 10.61.0.193/27"
+       ]
+      },
+      {
+       "id": "fw",
+       "typ": "firewall",
+       "name": "Firewall FW-Z",
+       "x": 3,
+       "y": 2,
+       "info": [
+        "WAN: 203.0.113.14/29",
+        "LAN: 10.60.0.1/24"
+       ]
+      },
+      {
+       "id": "kf1",
+       "typ": "pc",
+       "name": "Kasse und Bestell-Tablet Filiale 1",
+       "x": 0,
+       "y": 3
+      },
+      {
+       "id": "apf1",
+       "typ": "wlan",
+       "name": "Kunden-WLAN Filiale 1",
+       "x": 1,
+       "y": 3,
+       "info": [
+        "eigenes Netz 192.168.77.0/24"
+       ]
+      },
+      {
+       "id": "sw",
+       "typ": "switch",
+       "name": "Switch SW-Z",
+       "x": 3,
+       "y": 3
+      },
+      {
+       "id": "kf7",
+       "typ": "pc",
+       "name": "Kasse und Bestell-Tablet Filiale 7",
+       "x": 6,
+       "y": 3
+      },
+      {
+       "id": "srv",
+       "typ": "server",
+       "name": "Server Warenwirtschaft",
+       "x": 2,
+       "y": 4,
+       "info": [
+        "10.60.0.20"
+       ]
+      },
+      {
+       "id": "pcv",
+       "typ": "pc",
+       "name": "PCs Verwaltung und Backstube",
+       "x": 4,
+       "y": 4,
+       "info": [
+        "DHCP"
+       ]
+      }
+     ],
+     "kanten": [
+      {
+       "von": "inet",
+       "nach": "fw",
+       "text": "Glasfaser"
+      },
+      {
+       "von": "inet",
+       "nach": "rtf1",
+       "text": "VPN-Tunnel zur Zentrale"
+      },
+      {
+       "von": "inet",
+       "nach": "rtf7",
+       "text": "VPN-Tunnel zur Zentrale"
+      },
+      {
+       "von": "fw",
+       "nach": "sw"
+      },
+      {
+       "von": "sw",
+       "nach": "srv"
+      },
+      {
+       "von": "sw",
+       "nach": "pcv"
+      },
+      {
+       "von": "rtf1",
+       "nach": "kf1"
+      },
+      {
+       "von": "rtf1",
+       "nach": "apf1"
+      },
+      {
+       "von": "rtf7",
+       "nach": "kf7"
+      }
+     ],
+     "zeilen": [
+      "Jede Filiale bekommt ein Netz /27 aus dem Bereich 10.61.0.0/24, der Reihe nach: Filiale 1 das erste, Filiale 2 das zweite und so weiter.",
+      "Der Router einer Filiale hat immer die erste nutzbare Adresse ihres Netzes.",
+      "Die Filialen 2 bis 6 sind genauso aufgebaut wie Filiale 1."
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "tabelle",
+     "titel": "Kosten der Warenwirtschaft: Kauf oder Miete (netto)",
+     "spalten": [
+      "Posten",
+      "Kauf (eigener Server)",
+      "Miete (Software als Dienst)"
+     ],
+     "zeilen": [
+      [
+       "Lizenz, einmalig",
+       "9 800,00 €",
+       "–"
+      ],
+      [
+       "Einrichtung, einmalig",
+       "im Lizenzpreis enthalten",
+       "450,00 €"
+      ],
+      [
+       "Wartungsvertrag (Updates, Hotline) je Jahr",
+       "18 % des Lizenzpreises",
+       "in der Gebühr enthalten"
+      ],
+      [
+       "Betrieb des eigenen Servers (Strom, Sicherung, Anteil Hardware) je Jahr",
+       "1 200,00 €",
+       "entfällt"
+      ],
+      [
+       "Gebühr je Filiale und Monat",
+       "–",
+       "39,00 €"
+      ],
+      [
+       "Gebühr je Benutzerin oder Benutzer der Zentrale und Monat",
+       "–",
+       "12,00 €"
+      ]
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "code",
+     "titel": "Pseudocode zur Zahl der Backbleche",
+     "zeilen": [
+      " 1  bestellung ← [75, 42, 120, 58]",
+      " 2  bleche ← 0",
+      " 3  rest ← 0",
+      " 4  FÜR i ← 1 BIS 4",
+      " 5      menge ← bestellung[i]",
+      " 6      bleche ← bleche + menge DIV 30",
+      " 7      rest ← rest + menge MOD 30",
+      " 8  ENDE FÜR",
+      " 9  WENN rest > 0 DANN",
+      "10      bleche ← bleche + (rest + 29) DIV 30",
+      "11  ENDE WENN",
+      "12  AUSGABE bleche",
+      "Auf ein Backblech passen 30 Brötchen. bestellung[i] ist die Bestellung der Filiale i für eine Brötchensorte.",
+      "Im Beispiel haben nur die Filialen 1 bis 4 diese Brötchensorte bestellt.",
+      "DIV ist die Ganzzahldivision, MOD der Rest der Ganzzahldivision."
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "englisch",
+     "titel": "Excerpt from the till manual",
+     "zeilen": [
+      "If the internet connection fails, the till keeps working in offline mode.",
+      "In offline mode, card payments are stored on the till and sent to the payment service when the connection is back.",
+      "A single card payment in offline mode is limited to 50 euros.",
+      "The daily closing report can only be printed after all stored payments have been sent.",
+      "Price changes from the head office are loaded every morning at 05:30."
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Neue Kassensysteme für die Filialen",
+     "punkte": 25,
+     "einleitung": [
+      "Die alten Kassen der sieben Filialen sollen ersetzt werden. Drei große Filialen brauchen je zwei Kassen, die übrigen je eine, zusammen also zehn Kassen. Zwei Angebote liegen vor (Anlage 1)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie den Nettopreis für zehn Kassen beim Anbieter A unter Beachtung der Rabattstaffel. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 11868.0,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Listenpreis: 10 × 1 290,00 € = 12 900,00 €",
+        "Bei zehn Stück gilt die Stufe 8 %: 12 900,00 € × 0,92 = 11 868,00 €"
+       ],
+       "hinweise": [
+        {
+         "text": "richtige Rabattstufe (8 % ab 10 Stück) gewählt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie die Kosten der zehn Kassen beim Anbieter A für eine Nutzungsdauer von vier Jahren einschließlich Wartung (netto). Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 20508.0,
+        "toleranz": 0.005,
+        "ersatz_ergebnis": 20640.0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "1"
+       ],
+       "ersatzwert": {
+        "bezug": "1a",
+        "text": "Falls Sie a) nicht lösen konnten, rechnen Sie mit 12 000,00 €."
+       },
+       "loesung": [
+        "Wartung: 10 Kassen × 18,00 € × 48 Monate = 8 640,00 €",
+        "Kosten: 11 868,00 € + 8 640,00 € = 20 508,00 €",
+        "Mit dem Ersatzwert: 12 000,00 € + 8 640,00 € = 20 640,00 €"
+       ],
+       "hinweise": [
+        {
+         "text": "Wartung über 48 Monate für zehn Kassen berechnet",
+         "punkte": 1
+        },
+        {
+         "text": "Anschaffung und Wartung addiert",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Kostenaufstellung für zehn Kassen beim Anbieter B (Beträge in Euro, netto). Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Posten",
+         "Betrag in €"
+        ],
+        "zeilen": [
+         [
+          "Listenpreis für zehn Kassen",
+          "10 900,00"
+         ],
+         [
+          "Rabatt laut Staffel",
+          {
+           "loesung": [
+            "327,00",
+            "327,00 €",
+            "327,00€",
+            "327,00 EUR",
+            "327,00EUR",
+            "327",
+            "327 €",
+            "327€",
+            "327 EUR",
+            "327EUR",
+            "327.00",
+            "327.00 €",
+            "327.00€",
+            "327.00 EUR",
+            "327.00EUR",
+            "327.0",
+            "327.0 €",
+            "327.0€",
+            "327.0 EUR",
+            "327.0EUR",
+            "-327,00",
+            "- 327,00",
+            "−327,00",
+            "-327,00 €",
+            "- 327,00 €",
+            "−327,00 €",
+            "-327,00€",
+            "- 327,00€",
+            "−327,00€",
+            "-327,00 EUR",
+            "- 327,00 EUR",
+            "−327,00 EUR",
+            "-327,00EUR",
+            "- 327,00EUR",
+            "−327,00EUR",
+            "-327",
+            "- 327",
+            "−327",
+            "-327 €",
+            "- 327 €",
+            "−327 €",
+            "-327€",
+            "- 327€",
+            "−327€",
+            "-327 EUR",
+            "- 327 EUR",
+            "−327 EUR",
+            "-327EUR",
+            "- 327EUR",
+            "−327EUR",
+            "-327.00",
+            "- 327.00",
+            "−327.00",
+            "-327.00 €",
+            "- 327.00 €",
+            "−327.00 €",
+            "-327.00€",
+            "- 327.00€",
+            "−327.00€",
+            "-327.00 EUR",
+            "- 327.00 EUR",
+            "−327.00 EUR",
+            "-327.00EUR",
+            "- 327.00EUR",
+            "−327.00EUR",
+            "-327.0",
+            "- 327.0",
+            "−327.0",
+            "-327.0 €",
+            "- 327.0 €",
+            "−327.0 €",
+            "-327.0€",
+            "- 327.0€",
+            "−327.0€",
+            "-327.0 EUR",
+            "- 327.0 EUR",
+            "−327.0 EUR",
+            "-327.0EUR",
+            "- 327.0EUR",
+            "−327.0EUR"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Nettopreis nach Rabatt",
+          {
+           "loesung": [
+            "10573,00",
+            "10573,00 €",
+            "10573,00€",
+            "10573,00 EUR",
+            "10573,00EUR",
+            "10573",
+            "10573 €",
+            "10573€",
+            "10573 EUR",
+            "10573EUR",
+            "10 573,00",
+            "10 573,00 €",
+            "10 573,00€",
+            "10 573,00 EUR",
+            "10 573,00EUR",
+            "10 573",
+            "10 573 €",
+            "10 573€",
+            "10 573 EUR",
+            "10 573EUR",
+            "10.573,00",
+            "10.573,00 €",
+            "10.573,00€",
+            "10.573,00 EUR",
+            "10.573,00EUR",
+            "10.573",
+            "10.573 €",
+            "10.573€",
+            "10.573 EUR",
+            "10.573EUR",
+            "10573.00",
+            "10573.00 €",
+            "10573.00€",
+            "10573.00 EUR",
+            "10573.00EUR",
+            "10573.0",
+            "10573.0 €",
+            "10573.0€",
+            "10573.0 EUR",
+            "10573.0EUR"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Wartung für 48 Monate",
+          {
+           "loesung": [
+            "13920,00",
+            "13920,00 €",
+            "13920,00€",
+            "13920,00 EUR",
+            "13920,00EUR",
+            "13920",
+            "13920 €",
+            "13920€",
+            "13920 EUR",
+            "13920EUR",
+            "13 920,00",
+            "13 920,00 €",
+            "13 920,00€",
+            "13 920,00 EUR",
+            "13 920,00EUR",
+            "13 920",
+            "13 920 €",
+            "13 920€",
+            "13 920 EUR",
+            "13 920EUR",
+            "13.920,00",
+            "13.920,00 €",
+            "13.920,00€",
+            "13.920,00 EUR",
+            "13.920,00EUR",
+            "13.920",
+            "13.920 €",
+            "13.920€",
+            "13.920 EUR",
+            "13.920EUR",
+            "13920.00",
+            "13920.00 €",
+            "13920.00€",
+            "13920.00 EUR",
+            "13920.00EUR",
+            "13920.0",
+            "13920.0 €",
+            "13920.0€",
+            "13920.0 EUR",
+            "13920.0EUR"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Kosten für vier Jahre",
+          {
+           "loesung": [
+            "24493,00",
+            "24493,00 €",
+            "24493,00€",
+            "24493,00 EUR",
+            "24493,00EUR",
+            "24493",
+            "24493 €",
+            "24493€",
+            "24493 EUR",
+            "24493EUR",
+            "24 493,00",
+            "24 493,00 €",
+            "24 493,00€",
+            "24 493,00 EUR",
+            "24 493,00EUR",
+            "24 493",
+            "24 493 €",
+            "24 493€",
+            "24 493 EUR",
+            "24 493EUR",
+            "24.493,00",
+            "24.493,00 €",
+            "24.493,00€",
+            "24.493,00 EUR",
+            "24.493,00EUR",
+            "24.493",
+            "24.493 €",
+            "24.493€",
+            "24.493 EUR",
+            "24.493EUR",
+            "24493.00",
+            "24493.00 €",
+            "24493.00€",
+            "24493.00 EUR",
+            "24493.00EUR",
+            "24493.0",
+            "24493.0 €",
+            "24493.0€",
+            "24493.0 EUR",
+            "24493.0EUR"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Rabatt: 3 % von 10 900,00 € = 327,00 €",
+        "Nettopreis: 10 900,00 € − 327,00 € = 10 573,00 €",
+        "Wartung: 10 × 29,00 € × 48 = 13 920,00 €",
+        "Kosten vier Jahre: 10 573,00 € + 13 920,00 € = 24 493,00 €"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, welches Angebot Sie der Geschäftsführung empfehlen. Beziehen Sie sich auf die Kosten und ein weiteres Merkmal aus Anlage 1."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "1"
+       ],
+       "loesung": [
+        "Empfehlung: Anbieter A.",
+        "Über vier Jahre ist A trotz des höheren Listenpreises rund 4 000 € günstiger (20 508 € gegenüber 24 493 €), weil die Wartung billiger ist.",
+        "Dazu ist das Gehäuse gegen Staub und Spritzwasser geschützt (Mehl, feuchte Hände) und der Service kommt schon am nächsten Werktag."
+       ],
+       "hinweise": [
+        {
+         "text": "Empfehlung genannt",
+         "punkte": 1
+        },
+        {
+         "text": "mit den Kosten über vier Jahre begründet",
+         "punkte": 1
+        },
+        {
+         "text": "weiteres passendes Merkmal aus Anlage 1",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Anforderungen an eine Kasse, die in einer Bäckereifiliale über den Preis hinaus wichtig sind."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Schutz gegen Mehlstaub und Feuchtigkeit",
+        "Technische Sicherheitseinrichtung für das Kassengesetz",
+        "schnelle Bedienung über Touchscreen mit Warentasten",
+        "Kartenzahlung und kontaktloses Bezahlen",
+        "Weiterarbeiten ohne Internetverbindung",
+        "Anbindung an die zentrale Warenwirtschaft"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Vorteile, wenn alle Kassen zentral von der Verwaltung aus mit Artikeln und Preisen versorgt werden."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Preise und Artikel werden nur einmal gepflegt und gelten sofort in allen Filialen, Tippfehler in einzelnen Filialen entfallen.",
+        "Die Umsätze aller Filialen kommen tagesaktuell in der Zentrale an und helfen bei der Planung der Backmengen.",
+        "Aktionen (z. B. Brötchen am Abend günstiger) lassen sich zentral für alle Kassen gleichzeitig einstellen."
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Aussagen zu Rabatt und Skonto zutreffen."
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Ein Rabatt ist ein Preisnachlass, der schon beim Kauf gewährt wird, zum Beispiel für eine große Stückzahl.",
+         "Skonto ist ein Nachlass für die Zahlung innerhalb einer kurzen Frist.",
+         "Skonto wird immer vom Listenpreis abgezogen, bevor ein Rabatt berechnet wird.",
+         "Ein Rabatt darf nur bei Barzahlung gewährt werden."
+        ],
+        "richtig": [
+         0,
+         1
+        ]
+       },
+       "loesung": [
+        "Zutreffend: Rabatt als Nachlass beim Kauf (z. B. Mengenrabatt) und Skonto als Nachlass für schnelle Zahlung."
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Angaben, die auf jedem Kassenbon stehen müssen."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Datum und Uhrzeit des Verkaufs",
+        "Name und Anschrift des Unternehmens",
+        "Menge und Art der Waren",
+        "Betrag und Steuersatz",
+        "Transaktionsnummer und Seriennummer der Sicherheitseinrichtung"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Filialen an die Zentrale anbinden",
+     "punkte": 26,
+     "einleitung": [
+      "Die Kassen sollen ihre Umsätze über das Internet an den Server der Warenwirtschaft in der Zentrale senden. Jede Filiale bekommt dazu einen Router mit VPN-Tunnel (Anlage 2)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für das Netz der Filiale 4 die Netzadresse, die Broadcastadresse, die Subnetzmaske und die Adresse des Routers."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Netzadresse Filiale 4",
+          "art": "ip",
+          "loesung": [
+           "10.61.0.96"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Broadcastadresse Filiale 4",
+          "art": "ip",
+          "loesung": [
+           "10.61.0.127"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Subnetzmaske",
+          "art": "maske",
+          "loesung": [
+           "255.255.255.224",
+           "/27"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Adresse des Routers Filiale 4",
+          "art": "ip",
+          "loesung": [
+           "10.61.0.97"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Ein /27 umfasst 32 Adressen; Filiale 4 hat das vierte Netz: 3 × 32 = 96.",
+        "Netzadresse 10.61.0.96, Broadcastadresse 10.61.0.127",
+        "Subnetzmaske 255.255.255.224",
+        "Router (erste nutzbare Adresse) 10.61.0.97"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Die Geschäftsführung plant langfristig zwölf Filialen. Berechnen Sie, welche Präfixlänge ein zusammenhängender Adressbereich höchstens haben darf, damit jede der zwölf Filialen ein eigenes /27-Netz bekommt. Geben Sie die Präfixlänge als Zahl ohne Schrägstrich an."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Bit (Netzanteil)",
+        "ergebnis": 23,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Zwölf Netze brauchen 4 Bit, denn 2⁴ = 16 ≥ 12 (3 Bit reichen nur für 8).",
+        "27 − 4 = 23, also höchstens /23 (ein kürzeres Präfix wie /22 wäre größer und ginge auch)."
+       ],
+       "hinweise": [
+        {
+         "text": "nötige Zahl der Bits über die Zweierpotenz bestimmt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Aufgaben, die der VPN-Tunnel zwischen einer Filiale und der Zentrale erfüllt."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Vertraulichkeit: die Daten werden auf dem Weg durch das Internet verschlüsselt, Dritte können Umsätze nicht mitlesen.",
+        "Echtheit: beide Router weisen sich gegenseitig aus (Schlüssel oder Zertifikat), so kann sich kein fremdes Gerät als Filiale ausgeben.",
+        "Unversehrtheit: veränderte Pakete werden erkannt und verworfen.",
+        "Die Filiale verhält sich wie ein Teil des internen Netzes, private Adressen sind über den Tunnel erreichbar."
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie einen DSL-Anschluss mit einem Mobilfunk-Router (LTE/5G) als Internetzugang einer Filiale anhand der Zuverlässigkeit und der Zeit bis zur Bereitstellung."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "loesung": [
+        "Zuverlässigkeit: DSL liefert eine gleichmäßige Bandbreite; beim Mobilfunk schwankt sie mit Empfang und Auslastung der Funkzelle.",
+        "Bereitstellung: DSL braucht oft Wochen bis zur Schaltung; ein Mobilfunk-Router ist mit einer SIM-Karte sofort einsatzbereit."
+       ],
+       "hinweise": [
+        {
+         "text": "Zuverlässigkeit beider Zugänge verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Bereitstellung beider Zugänge verglichen",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Maßnahmen, damit eine Filiale bei einem Ausfall der Internetleitung weiter verkaufen kann."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Kassen mit Offline-Betrieb, die Umsätze später nachsenden",
+        "Mobilfunk-Router als Ersatzleitung",
+        "Artikel und Preise lokal auf der Kasse speichern",
+        "Barzahlung immer möglich halten",
+        "Notfallplan mit Ansprechpartner in der Zentrale"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie die Aufgabe der Firewall FW-Z in der Zentrale."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Die Firewall prüft jedes Paket zwischen Internet und internem Netz nach festen Regeln.",
+        "Sie lässt nur erlaubte Verbindungen durch, z. B. die VPN-Tunnel der Filialen, und verwirft alles andere.",
+        "Sie ist Endpunkt der Tunnel und schützt so den Server der Warenwirtschaft vor Zugriffen aus dem Internet."
+       ],
+       "hinweise": [
+        {
+         "text": "Prüfen des Verkehrs nach Regeln",
+         "punkte": 1
+        },
+        {
+         "text": "nur Erlaubtes durchlassen, Rest verwerfen",
+         "punkte": 1
+        },
+        {
+         "text": "Bezug zur Zentrale (Tunnel-Endpunkt, Schutz des Servers)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Adresse ein Bestell-Tablet in der Filiale 2 bekommen kann."
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "10.61.0.32",
+         "10.61.0.45",
+         "10.61.0.63",
+         "10.61.0.70"
+        ],
+        "richtig": [
+         1
+        ]
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Filiale 2 hat das Netz 10.61.0.32/27 (nutzbar .33 bis .62).",
+        "Passend ist nur 10.61.0.45; .32 ist die Netzadresse, .63 die Broadcastadresse, .70 liegt im Netz der Filiale 3."
+       ]
+      },
+      {
+       "nr": "h",
+       "operator": "begruenden",
+       "text": [
+        "Begründen Sie, warum das Kunden-WLAN einer Filiale ein eigenes Netz ohne Zugang zum VPN-Tunnel bekommt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "2"
+       ],
+       "loesung": [
+        "Kundengeräte sind fremd und können Schadsoftware enthalten.",
+        "Ohne Trennung könnten sie die Kassen oder über den Tunnel den Server der Zentrale angreifen.",
+        "Im eigenen Netz erreichen sie nur das Internet, Kassendaten bleiben geschützt."
+       ],
+       "hinweise": [
+        {
+         "text": "fremde, nicht vertrauenswürdige Geräte genannt",
+         "punkte": 1
+        },
+        {
+         "text": "mögliche Angriffe auf Kasse oder Zentrale erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Trennung schützt die Kassendaten",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Warenwirtschaft kaufen oder mieten",
+     "punkte": 24,
+     "einleitung": [
+      "Die alte Warenwirtschaft wird nicht mehr gepflegt. Die Geschäftsführung überlegt, ob sie die neue Software kauft und auf einem eigenen Server betreibt oder als Dienst im Internet mietet (Anlage 3). In der Zentrale arbeiten acht Personen mit der Software."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie die Kosten der Miete für vier Jahre bei sieben Filialen und acht Benutzerinnen und Benutzern in der Zentrale. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 18162.0,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "3"
+       ],
+       "loesung": [
+        "Monatlich: 7 × 39,00 € + 8 × 12,00 € = 273,00 € + 96,00 € = 369,00 €",
+        "48 Monate: 369,00 € × 48 = 17 712,00 €",
+        "mit Einrichtung: 17 712,00 € + 450,00 € = 18 162,00 €"
+       ],
+       "hinweise": [
+        {
+         "text": "monatliche Gebühr für Filialen und Zentrale richtig",
+         "punkte": 1
+        },
+        {
+         "text": "einmalige Einrichtung berücksichtigt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "berechnen",
+       "text": [
+        "Berechnen Sie die Kosten des Kaufs für vier Jahre. Geben Sie die Zahl ohne Tausenderpunkt an."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "€",
+        "ergebnis": 21656.0,
+        "toleranz": 0.005,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "3"
+       ],
+       "loesung": [
+        "Wartung je Jahr: 18 % von 9 800,00 € = 1 764,00 €",
+        "Kosten: 9 800,00 € + 4 × 1 764,00 € + 4 × 1 200,00 € = 21 656,00 €"
+       ],
+       "hinweise": [
+        {
+         "text": "Wartung als 18 % je Jahr über vier Jahre berechnet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "vergleichen",
+       "text": [
+        "Vergleichen Sie Kauf und Miete anhand der Kontrolle über die Daten und des Aufwands für Updates. Geben Sie eine Empfehlung."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 6
+       },
+       "loesung": [
+        "Daten: beim Kauf liegen die Daten auf dem eigenen Server, bei der Miete im Rechenzentrum des Anbieters (Vertrag zur Verarbeitung nötig).",
+        "Updates: beim Kauf spielt die eigene IT Updates ein und testet sie, bei der Miete erledigt das der Anbieter.",
+        "Empfehlung: Miete, weil sie günstiger ist und die kleine IT entlastet; Voraussetzung ist ein Vertrag mit klaren Regeln zu Verfügbarkeit und Datenschutz."
+       ],
+       "hinweise": [
+        {
+         "text": "Kontrolle über die Daten für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "Aufwand für Updates für beide verglichen",
+         "punkte": 2
+        },
+        {
+         "text": "passende Empfehlung",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie in der Tabelle die Lizenzart, die zur Beschreibung passt. Die erste Zeile ist ein Beispiel."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "tabelle",
+        "spalten": [
+         "Beschreibung",
+         "Lizenzart"
+        ],
+        "zeilen": [
+         [
+          "Die Software wird für einen festen Zeitraum gegen eine laufende Gebühr genutzt.",
+          "Abonnement"
+         ],
+         [
+          "Die Lizenz gehört zu einer bestimmten Person, die sie an jedem Gerät nutzen darf.",
+          {
+           "loesung": [
+            "Benutzerlizenz",
+            "Benutzer-Lizenz",
+            "Named-User-Lizenz",
+            "Named User Lizenz",
+            "Named User",
+            "Named-User",
+            "Named-User-License",
+            "Named User License",
+            "Personenlizenz",
+            "Nutzerlizenz",
+            "Nutzer-Lizenz",
+            "benutzerbezogene Lizenz",
+            "User-Lizenz"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Die Lizenz ist an ein bestimmtes Gerät gebunden; jede Person an diesem Gerät darf die Software nutzen.",
+          {
+           "loesung": [
+            "Gerätelizenz",
+            "Geräte-Lizenz",
+            "Geraetelizenz",
+            "Geraete-Lizenz",
+            "Device-Lizenz",
+            "Device Lizenz",
+            "Device",
+            "Device-License",
+            "Gerätelizenz (Device)",
+            "Arbeitsplatzlizenz",
+            "Einzelplatzlizenz",
+            "gerätebezogene Lizenz"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Die Software darf überall installiert sein, aber nur eine feste Zahl von Personen darf sie gleichzeitig nutzen.",
+          {
+           "loesung": [
+            "Concurrent-Lizenz",
+            "Concurrent Lizenz",
+            "Concurrent User",
+            "Concurrent-User-Lizenz",
+            "Concurrent User Lizenz",
+            "Concurrent-Use-Lizenz",
+            "Floating-Lizenz",
+            "Floating Lizenz",
+            "Floating-License",
+            "Floating",
+            "Netzwerklizenz",
+            "gleichzeitige Nutzung",
+            "Concurrent"
+           ],
+           "punkte": 1
+          }
+         ],
+         [
+          "Der Quelltext ist frei zugänglich und darf verändert und weitergegeben werden.",
+          {
+           "loesung": [
+            "Open Source",
+            "Open-Source-Lizenz",
+            "Open-Source",
+            "Open Source Lizenz",
+            "Open-Source-Software",
+            "Open Source Software",
+            "OSS",
+            "freie Lizenz",
+            "freie Software",
+            "GPL"
+           ],
+           "punkte": 1
+          }
+         ]
+        ]
+       },
+       "loesung": [
+        "Benutzerlizenz (Named User)",
+        "Gerätelizenz",
+        "gleichzeitige Nutzung (Concurrent oder Floating)",
+        "Open-Source-Lizenz"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Punkte, die ein Vertrag über die gemietete Software regeln muss."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "zugesicherte Verfügbarkeit",
+        "Reaktionszeit bei Störungen",
+        "Ort der Datenhaltung (z. B. nur in der EU)",
+        "Datensicherung durch den Anbieter",
+        "Herausgabe der Daten bei Vertragsende",
+        "Kündigungsfristen und Preisänderungen"
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "erlaeutern",
+       "text": [
+        "In der Warenwirtschaft stehen auch die Namen und Arbeitszeiten der Verkäuferinnen und Verkäufer. Erläutern Sie, warum vor der Miete ein Vertrag zur Auftragsverarbeitung abgeschlossen werden muss."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Der Anbieter verarbeitet personenbezogene Daten der Beschäftigten im Auftrag der Bäckerei.",
+        "Nach der DSGVO bleibt die Bäckerei verantwortlich und muss den Anbieter vertraglich an ihre Weisungen und an Schutzmaßnahmen binden.",
+        "Der Vertrag regelt z. B. Zweck, technische und organisatorische Maßnahmen und das Löschen der Daten."
+       ],
+       "hinweise": [
+        {
+         "text": "personenbezogene Daten, Verarbeitung im Auftrag erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Verantwortung bleibt bei der Bäckerei (DSGVO)",
+         "punkte": 1
+        },
+        {
+         "text": "Inhalt des Vertrags genannt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie, welche Aussage zu einer Software als Dienst (SaaS) zutrifft."
+       ],
+       "punkte": 2,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Die Bäckerei muss einen eigenen Server für die Software kaufen.",
+         "Die Software läuft beim Anbieter und wird über das Internet genutzt.",
+         "Updates muss die Bäckerei selbst auf jedem Arbeitsplatz einspielen.",
+         "Ohne Internetverbindung ist die volle Nutzung in der Zentrale weiter möglich."
+        ],
+        "richtig": [
+         1
+        ]
+       },
+       "loesung": [
+        "Zutreffend: die Software läuft beim Anbieter und wird über das Internet genutzt."
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Ein kleines Programm für die Backstube",
+     "punkte": 25,
+     "einleitung": [
+      "Die Backstube plant jeden Abend, wie viele Bleche je Brötchensorte gebacken werden. Ein kleines Programm soll die Bestellungen der Filialen zusammenrechnen (Anlage 4). Außerdem ist zu klären, wie die Kassen bei einem Ausfall des Internets arbeiten (Anlage 5)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie den Schreibtischtest für das Programm in Anlage 4 bis zum Ende der Schleife (Zeile 8). Tragen Sie je Schritt nur die Werte ein, die in dieser Zeile zugewiesen werden. Der erste Durchlauf der Schleife ist vorgegeben."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "schreibtischtest",
+        "code": "4",
+        "spalten": [
+         "i",
+         "menge",
+         "bleche",
+         "rest"
+        ],
+        "leer_unveraendert": true,
+        "schritte": [
+         {
+          "zeile": 2,
+          "werte": [
+           "",
+           "",
+           "0",
+           ""
+          ]
+         },
+         {
+          "zeile": 3,
+          "werte": [
+           "",
+           "",
+           "",
+           "0"
+          ]
+         },
+         {
+          "zeile": 4,
+          "werte": [
+           "1",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 5,
+          "werte": [
+           "",
+           "75",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "",
+           "",
+           "2",
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "",
+           "",
+           "15"
+          ]
+         },
+         {
+          "zeile": 4,
+          "werte": [
+           "2",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 5,
+          "werte": [
+           "",
+           "42",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "",
+           "",
+           {
+            "loesung": [
+             "3"
+            ],
+            "punkte": 1
+           },
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "27"
+            ],
+            "punkte": 1
+           }
+          ]
+         },
+         {
+          "zeile": 4,
+          "werte": [
+           "3",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 5,
+          "werte": [
+           "",
+           "120",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "",
+           "",
+           {
+            "loesung": [
+             "7"
+            ],
+            "punkte": 1
+           },
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "27"
+            ],
+            "punkte": 1
+           }
+          ]
+         },
+         {
+          "zeile": 4,
+          "werte": [
+           "4",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 5,
+          "werte": [
+           "",
+           "58",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "",
+           "",
+           {
+            "loesung": [
+             "8"
+            ],
+            "punkte": 1
+           },
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "55"
+            ],
+            "punkte": 1
+           }
+          ]
+         }
+        ]
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "i = 2: bleche = 2 + 42 DIV 30 = 3, rest = 15 + 42 MOD 30 = 27",
+        "i = 3: bleche = 3 + 120 DIV 30 = 7, rest = 27 + 120 MOD 30 = 27",
+        "i = 4: bleche = 7 + 58 DIV 30 = 8, rest = 27 + 58 MOD 30 = 55"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie den Wert, den das Programm in Zeile 12 ausgibt."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "rechnen",
+        "einheit": "Bleche",
+        "ergebnis": 10,
+        "toleranz": 0,
+        "punkte_ergebnis": 2
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "Nach der Schleife: bleche = 8, rest = 55",
+        "Zeile 10: (55 + 29) DIV 30 = 84 DIV 30 = 2",
+        "Ausgabe: 8 + 2 = 10"
+       ],
+       "hinweise": [
+        {
+         "text": "Zeilen 9 und 10 richtig ausgewertet",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie die zwei Ausdrücke menge DIV 30 (Zeile 6) und menge MOD 30 (Zeile 7) am Beispiel menge = 75."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "menge DIV 30 gibt an, wie viele Bleche ganz voll werden: 75 DIV 30 = 2.",
+        "menge MOD 30 gibt an, wie viele Brötchen danach übrig bleiben: 75 MOD 30 = 15."
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ergaenzen",
+       "text": [
+        "Eine Bestellung soll nur gezählt werden, wenn die Menge größer als 0 und höchstens 300 ist. Dazu wird um die Zeilen 6 und 7 eine Bedingung gelegt:",
+        "WENN ____ DANN",
+        "Ergänzen Sie die Bedingung. Tragen Sie den Vergleich für die Untergrenze und den für die Obergrenze in die gleichnamigen Felder ein."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Vergleich für die Untergrenze",
+          "art": "text",
+          "loesung": [
+           "menge > 0",
+           "menge>0",
+           "menge >= 1",
+           "menge>=1",
+           "menge ≥ 1",
+           "menge≥1",
+           "0 < menge",
+           "0<menge",
+           "1 <= menge",
+           "1<=menge",
+           "1 ≤ menge",
+           "1≤menge"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Verknüpfung",
+          "art": "text",
+          "loesung": [
+           "UND",
+           "AND",
+           "&&"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Vergleich für die Obergrenze",
+          "art": "text",
+          "loesung": [
+           "menge <= 300",
+           "menge<=300",
+           "menge ≤ 300",
+           "menge≤300",
+           "menge < 301",
+           "menge<301",
+           "300 >= menge",
+           "300>=menge",
+           "300 ≥ menge",
+           "300≥menge",
+           "301 > menge",
+           "301>menge"
+          ],
+          "punkte": 2
+         }
+        ]
+       },
+       "anlagen": [
+        "4"
+       ],
+       "loesung": [
+        "WENN menge > 0 UND menge <= 300 DANN",
+        "Beide Vergleiche müssen zugleich gelten, darum UND; die Obergrenze 300 gehört noch dazu (<=)."
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie anhand des Kassen-Handbuchs in Anlage 5, welche Aussagen zum Betrieb ohne Internet stimmen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "auswahl",
+        "optionen": [
+         "Fällt die Internetverbindung aus, kann an der Kasse nicht mehr verkauft werden.",
+         "Kartenzahlungen ohne Verbindung werden gespeichert und später übertragen.",
+         "Der Tagesabschluss lässt sich erst drucken, wenn alle gespeicherten Zahlungen gesendet sind.",
+         "Preisänderungen werden zu jeder vollen Stunde geladen."
+        ],
+        "richtig": [
+         1,
+         2
+        ]
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Zutreffend: Kartenzahlungen werden offline gespeichert und später gesendet; der Tagesabschluss erst nach dem Senden."
+       ]
+      },
+      {
+       "nr": "f",
+       "operator": "beschreiben",
+       "text": [
+        "Während eines Ausfalls der Internetleitung möchte eine Kundin eine Torte für 62,40 € mit Karte bezahlen. Beschreiben Sie nach Anlage 5, was passiert und wie die Verkäuferin reagieren kann."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Ohne Verbindung arbeitet die Kasse offline; eine einzelne Kartenzahlung ist dann auf 50 € begrenzt.",
+        "Die Zahlung über 62,40 € wird deshalb nicht angenommen.",
+        "Die Verkäuferin bittet um Barzahlung oder wartet, bis die Verbindung wieder steht."
+       ],
+       "hinweise": [
+        {
+         "text": "Offline-Betrieb erkannt",
+         "punkte": 1
+        },
+        {
+         "text": "Grenze 50 € je Kartenzahlung angewendet",
+         "punkte": 1
+        },
+        {
+         "text": "sinnvolle Reaktion (bar zahlen, später zahlen)",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "g",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Werte für menge, mit denen Sie die Grenzen der Bedingung aus d) testen."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "0 (darf nicht gezählt werden)",
+        "1 (wird gezählt)",
+        "300 (wird gezählt)",
+        "301 (darf nicht gezählt werden)"
+       ]
+      }
+     ]
+    }
+   ],
+   "zeitfrage": {
+    "text": "Wie sind Sie mit der Zeit ausgekommen?",
+    "optionen": [
+     "Die Zeit hat gut gereicht.",
+     "Die Zeit war knapp.",
+     "Die Zeit hat nicht gereicht."
+    ]
+   }
+  },
+  {
+   "kennung": "ae_b2_09",
+   "fassung": 2,
+   "fachrichtung": "ae",
+   "bereich": "b2",
+   "aufbau": "paar",
+   "firma": "Bergbahnen Hohenfirst GmbH",
+   "minuten": 90,
+   "ausgangssituation": [
+    "Die Bergbahnen Hohenfirst GmbH betreibt im Skigebiet Hohenfirst 14 Liftanlagen mit 52 Drehkreuzen. Sie hat 180 Beschäftigte und im Winter rund 120 Saisonkräfte; die Verwaltung sitzt in Firstau, Kassen gibt es an drei Talstationen.",
+    "Das in Bereich 1 geplante Ticketsystem mit Online-Ticketshop, Ticket-App und Anbindung der Drehkreuze wird jetzt umgesetzt.",
+    "Sie sind Auszubildende oder Auszubildender zur Fachinformatikerin oder zum Fachinformatiker für Anwendungsentwicklung in der IT-Abteilung der Bergbahnen und entwickeln Teile des Ticketsystems.",
+    "Sie sollen die folgenden Aufgaben bearbeiten:",
+    "1. Sortierte Liftübersicht",
+    "2. Prüfung am Drehkreuz",
+    "3. Sicherer Rechnungsversand",
+    "4. Archiv der Wartezeiten"
+   ],
+   "anlagen": [
+    {
+     "nr": "1",
+     "art": "text",
+     "titel": "Liftübersicht in der Ticket-App",
+     "zeilen": [
+      "Die App zeigt alle Liftanlagen in dieser Reihenfolge: zuerst die geöffneten, dann die geschlossenen. Innerhalb dieser Gruppen nach Wartezeit aufsteigend, bei gleicher Wartezeit nach dem Namen alphabetisch.",
+      "Jede Liftanlage ist ein Objekt mit den Methoden getName(): String, istGeoeffnet(): boolean und getWartezeit(): int (Minuten; bei geschlossenen Liftanlagen 0).",
+      "Eine Vergleichsfunktion vor(a, b) liefert wahr, wenn a in der Liste vor b stehen muss, sonst falsch. Funktionen können wie Werte als Parameter übergeben und dann aufgerufen werden.",
+      "Pseudocode-Stil: funktion … ende funktion, wenn … dann … sonst … ende wenn, für i von … bis … ende für, solange … ende solange, rückgabe. Felder beginnen mit Index 0, laenge(feld) liefert die Zahl der Elemente. Texte werden mit < alphabetisch verglichen. Bei „x und y“ wird y nur ausgewertet, wenn x wahr ist."
+     ]
+    },
+    {
+     "nr": "2",
+     "art": "tabelle",
+     "titel": "Liftanlagen am Samstag um 10:30 Uhr",
+     "spalten": [
+      "Name",
+      "geöffnet",
+      "Wartezeit in Minuten"
+     ],
+     "zeilen": [
+      [
+       "Firstbahn",
+       "ja",
+       "12"
+      ],
+      [
+       "Gamsjoch-Sessel",
+       "ja",
+       "4"
+      ],
+      [
+       "Kälberhang-Schlepp",
+       "nein",
+       "0"
+      ],
+      [
+       "Lärchwald-Express",
+       "ja",
+       "4"
+      ],
+      [
+       "Brunnalm-Lift",
+       "ja",
+       "0"
+      ],
+      [
+       "Adlerkopf-Sessel",
+       "nein",
+       "0"
+      ],
+      [
+       "Grubenegg-Bahn",
+       "ja",
+       "12"
+      ]
+     ]
+    },
+    {
+     "nr": "3",
+     "art": "code",
+     "titel": "Pseudocode der Prüfung auf weitergegebene Tickets",
+     "zeilen": [
+      " 1  funktion zaehleWeitergaben(minuten, sperrzeit)",
+      " 2    // minuten: Zeitpunkte der Durchgänge eines Tickets an einer Liftanlage,",
+      " 3    // in Minuten seit 8:00 Uhr, aufsteigend; Index ab 0",
+      " 4    verdacht ← 0",
+      " 5    letzter ← minuten[0]",
+      " 6    für i von 1 bis laenge(minuten) − 1",
+      " 7      abstand ← minuten[i] − letzter",
+      " 8      wenn abstand < sperrzeit dann",
+      " 9        verdacht ← verdacht + 1",
+      "10      sonst",
+      "11        letzter ← minuten[i]",
+      "12      ende wenn",
+      "13    ende für",
+      "14    rückgabe verdacht",
+      "15  ende funktion"
+     ]
+    },
+    {
+     "nr": "4",
+     "art": "tabelle",
+     "titel": "Durchgänge des Tickets T-884201 an der Firstbahn am 16.01.2027",
+     "spalten": [
+      "Uhrzeit",
+      "Minuten seit 8:00 Uhr"
+     ],
+     "zeilen": [
+      [
+       "8:05",
+       "5"
+      ],
+      [
+       "8:09",
+       "9"
+      ],
+      [
+       "8:31",
+       "31"
+      ],
+      [
+       "8:34",
+       "34"
+      ],
+      [
+       "8:40",
+       "40"
+      ],
+      [
+       "9:02",
+       "62"
+      ]
+     ]
+    },
+    {
+     "nr": "5",
+     "art": "text",
+     "titel": "Ablauf am Drehkreuz und Regeln der Offline-Prüfung",
+     "zeilen": [
+      "Das Drehkreuz liest das Ticket. Ist die Verbindung zum Ticketsystem da, prüft das Ticketsystem das Ticket online; sonst prüft das Drehkreuz das Ticket offline.",
+      "Wird das Ticket freigegeben, öffnet das Drehkreuz die Sperre und zeigt Grün; sonst zeigt es Rot mit dem Grund.",
+      "Offline wird ein Ticket nur freigegeben, wenn seine Nummer nicht in der lokal gespeicherten Sperrliste steht (die vorhandene Funktion istGesperrt(sperrliste, nummer) liefert dann wahr) und heute zwischen ticket.getErsterTag() und ticket.getLetzterTag() liegt (jeweils einschließlich).",
+      "Jeder offline freigegebene Durchgang wird mit merkeDurchgang(nummer, zeitpunkt) gespeichert und später an das Ticketsystem gesendet. Die Ticketnummer liefert ticket.getNummer()."
+     ]
+    },
+    {
+     "nr": "6",
+     "art": "englisch",
+     "titel": "Data sheet of the gate controller interface (excerpt)",
+     "zeilen": [
+      "The gate controller reads contactless key cards at a distance of up to 12 centimetres and QR codes from a smartphone screen.",
+      "For each reading, it sends a JSON message with the fields cardId, gateId and timestamp to the ticket system over HTTPS.",
+      "The ticket system must answer with the field decision set to OPEN or DENY and may add a text of up to 32 characters for the display.",
+      "All timestamps are given in UTC in the format YYYY-MM-DDThh:mm:ssZ, so the ticket system has to convert them to local time.",
+      "The controller works at temperatures from minus 30 to plus 50 degrees Celsius and needs a power supply of 24 volts."
+     ]
+    },
+    {
+     "nr": "7",
+     "art": "text",
+     "titel": "Bisher geplanter Versand der Rechnung",
+     "zeilen": [
+      "Nach dem Bezahlen erzeugt der Shop die Rechnung als PDF-Datei. Sie enthält Name und Anschrift des Kunden sowie Namen und Geburtsdaten aller Gäste der Bestellung.",
+      "Der Shop sendet die Rechnung als Anhang an die E-Mail-Adresse aus der Bestellung, unverschlüsselt.",
+      "Im selben Anhang steht der QR-Code jedes Tickets, damit die Gäste ihn ausdrucken können.",
+      "Die Mails tragen als Absender rechnung@hohenfirst.example; im Text steht „Bitte öffnen Sie die angehängte Rechnung“."
+     ]
+    },
+    {
+     "nr": "8",
+     "art": "text",
+     "titel": "Neuer Ablauf für Rechnungen",
+     "zeilen": [
+      "1. Nach dem Bezahlen erstellt der Shop die Rechnung als PDF und legt sie im Kundenkonto ab.",
+      "2. Der Shop sendet eine Mail ohne Anhang und ohne Link; sie nennt nur die Bestellnummer und sagt, dass die Rechnung im Kundenkonto bereitliegt.",
+      "3. Der Gast meldet sich im Kundenkonto an (Adresse selbst eingeben oder über die App).",
+      "4. Der Shop prüft die Zugangsdaten. Sind sie falsch, zeigt er eine Fehlermeldung, und der Gast meldet sich erneut an (weiter bei 3).",
+      "5. Sind sie richtig und hat der Gast den zweiten Faktor eingeschaltet, fragt der Shop zusätzlich einen Einmalcode aus der App ab.",
+      "6. Danach zeigt der Shop die Rechnung an, und der Gast kann sie herunterladen. Damit endet der Ablauf."
+     ]
+    },
+    {
+     "nr": "9",
+     "art": "code",
+     "titel": "Tabellenmodell der Wartezeiten (PK = Primärschlüssel, FK = Fremdschlüssel)",
+     "zeilen": [
+      "Liftanlage (liftnr PK, name, art)",
+      "Wartezeitmessung (messnr PK, liftnr FK → Liftanlage, zeitpunkt, wartezeit_min)",
+      "Wartezeitmessung_Archiv (messnr PK, liftnr FK → Liftanlage, zeitpunkt, wartezeit_min)",
+      "zeitpunkt hat das Format 'JJJJ-MM-TT hh:mm'. Die Archivtabelle ist gleich aufgebaut und noch leer."
+     ]
+    },
+    {
+     "nr": "10",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle Liftanlage",
+     "spalten": [
+      "liftnr",
+      "name",
+      "art"
+     ],
+     "zeilen": [
+      [
+       "1",
+       "Firstbahn",
+       "Seilbahn"
+      ],
+      [
+       "2",
+       "Gamsjoch-Sessel",
+       "Sessellift"
+      ],
+      [
+       "3",
+       "Lärchwald-Express",
+       "Sessellift"
+      ],
+      [
+       "4",
+       "Kälberhang-Schlepp",
+       "Schlepplift"
+      ]
+     ]
+    },
+    {
+     "nr": "11",
+     "art": "tabelle",
+     "titel": "Beispieldaten der Tabelle Wartezeitmessung",
+     "spalten": [
+      "messnr",
+      "liftnr",
+      "zeitpunkt",
+      "wartezeit_min"
+     ],
+     "zeilen": [
+      [
+       "101",
+       "1",
+       "2025-12-20 10:00",
+       "6"
+      ],
+      [
+       "102",
+       "2",
+       "2025-12-20 10:00",
+       "3"
+      ],
+      [
+       "103",
+       "1",
+       "2026-01-03 11:30",
+       "14"
+      ],
+      [
+       "104",
+       "3",
+       "2026-01-03 11:30",
+       "9"
+      ],
+      [
+       "105",
+       "2",
+       "2026-02-14 10:15",
+       "8"
+      ],
+      [
+       "106",
+       "1",
+       "2026-02-14 10:15",
+       "11"
+      ],
+      [
+       "107",
+       "3",
+       "2026-03-28 14:00",
+       "2"
+      ],
+      [
+       "108",
+       "4",
+       "2026-04-11 09:45",
+       "0"
+      ],
+      [
+       "109",
+       "1",
+       "2026-12-19 10:00",
+       "4"
+      ],
+      [
+       "110",
+       "2",
+       "2026-12-19 10:00",
+       "5"
+      ],
+      [
+       "111",
+       "3",
+       "2027-01-02 11:00",
+       "12"
+      ],
+      [
+       "112",
+       "1",
+       "2027-01-02 11:00",
+       "9"
+      ]
+     ]
+    }
+   ],
+   "aufgaben": [
+    {
+     "titel": "Sortierte Liftübersicht",
+     "punkte": 24,
+     "einleitung": [
+      "Die Ticket-App zeigt den Gästen eine Liftübersicht mit Wartezeiten. Die Reihenfolge und die Methoden der Objekte beschreibt Anlage 1."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie in Pseudocode eine Funktion sortiere(lifte, vor), die das Feld lifte mit einem Sortierverfahren Ihrer Wahl in die Reihenfolge bringt, die die übergebene Vergleichsfunktion vor(a, b) vorgibt.",
+        "Das Feld wird an Ort und Stelle sortiert; die Funktion darf die Methoden der Liftanlagen nicht selbst aufrufen."
+       ],
+       "punkte": 10,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 14
+       },
+       "anlagen": [
+        "1"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "funktion sortiere(lifte, vor)",
+        "  für i von 1 bis laenge(lifte) − 1",
+        "    aktuell ← lifte[i]",
+        "    j ← i − 1",
+        "    solange j >= 0 und vor(aktuell, lifte[j])",
+        "      lifte[j + 1] ← lifte[j]",
+        "      j ← j − 1",
+        "    ende solange",
+        "    lifte[j + 1] ← aktuell",
+        "  ende für",
+        "ende funktion",
+        "(Sortieren durch Einfügen; ein anderes Verfahren, z. B. Bubblesort mit vor(lifte[j + 1], lifte[j]) als Tauschbedingung, ist ebenso richtig.)"
+       ],
+       "hinweise": [
+        {
+         "text": "äußere Schleife über alle Elemente",
+         "punkte": 2
+        },
+        {
+         "text": "Element merken und an die richtige Stelle einfügen bzw. tauschen",
+         "punkte": 2
+        },
+        {
+         "text": "Vergleich ausschließlich über die übergebene Funktion vor",
+         "punkte": 2
+        },
+        {
+         "text": "Verschieben bzw. Tauschen ohne Datenverlust",
+         "punkte": 2
+        },
+        {
+         "text": "Feldgrenzen eingehalten (kein Index −1 oder laenge(lifte))",
+         "punkte": 1
+        },
+        {
+         "text": "auch für leere Felder und Felder mit einem Element richtig",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie in Pseudocode die Vergleichsfunktion vorInUebersicht(a, b) für die Reihenfolge der Liftübersicht aus Anlage 1."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 10
+       },
+       "anlagen": [
+        "1"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "funktion vorInUebersicht(a, b)",
+        "  wenn a.istGeoeffnet() ≠ b.istGeoeffnet() dann",
+        "    rückgabe a.istGeoeffnet()",
+        "  ende wenn",
+        "  wenn a.getWartezeit() ≠ b.getWartezeit() dann",
+        "    rückgabe a.getWartezeit() < b.getWartezeit()",
+        "  ende wenn",
+        "  rückgabe a.getName() < b.getName()",
+        "ende funktion"
+       ],
+       "hinweise": [
+        {
+         "text": "geöffnete vor geschlossenen Liftanlagen",
+         "punkte": 2
+        },
+        {
+         "text": "Wartezeit aufsteigend nur bei gleichem Zustand",
+         "punkte": 2
+        },
+        {
+         "text": "Name als letzte Stufe, alphabetisch",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für die Liftanlagen aus Anlage 2, welche Liftanlage nach der Reihenfolge aus Anlage 1 auf den genannten Plätzen steht."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Platz 2",
+          "art": "text",
+          "loesung": [
+           "Gamsjoch-Sessel",
+           "Gamsjoch Sessel",
+           "GamsjochSessel"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Platz 3",
+          "art": "text",
+          "loesung": [
+           "Lärchwald-Express",
+           "Lärchwald Express",
+           "LärchwaldExpress"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Platz 5",
+          "art": "text",
+          "loesung": [
+           "Grubenegg-Bahn",
+           "Grubenegg Bahn",
+           "GrubeneggBahn"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Platz 6",
+          "art": "text",
+          "loesung": [
+           "Adlerkopf-Sessel",
+           "Adlerkopf Sessel",
+           "AdlerkopfSessel"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "1",
+        "2"
+       ],
+       "loesung": [
+        "Reihenfolge: 1 Brunnalm-Lift (0 min), 2 Gamsjoch-Sessel (4), 3 Lärchwald-Express (4), 4 Firstbahn (12), 5 Grubenegg-Bahn (12), 6 Adlerkopf-Sessel (geschlossen), 7 Kälberhang-Schlepp (geschlossen)"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie den Vorteil, die Vergleichsfunktion an sortiere zu übergeben, statt die Reihenfolge fest in sortiere einzubauen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Dieselbe Funktion sortiere lässt sich für jede andere Reihenfolge wiederverwenden, z. B. nur nach Namen oder nach Höhe der Bergstation.",
+        "Eine geänderte Reihenfolge erfordert nur eine neue Vergleichsfunktion; das geprüfte Sortierverfahren bleibt unverändert.",
+        "Sortierverfahren und Vergleich lassen sich getrennt testen."
+       ],
+       "hinweise": [
+        {
+         "text": "Wiederverwendung für andere Reihenfolgen mit Beispiel",
+         "punkte": 1
+        },
+        {
+         "text": "Änderung nur an der Vergleichsfunktion",
+         "punkte": 1
+        },
+        {
+         "text": "getrennt testbar",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Eingabefelder, mit denen Sie die Funktion sortiere besonders prüfen sollten."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "leeres Feld",
+        "Feld mit genau einem Element",
+        "bereits sortiertes Feld",
+        "umgekehrt sortiertes Feld",
+        "Feld mit gleichen Wartezeiten bzw. gleichen Schlüsseln",
+        "Feld nur mit geschlossenen Liftanlagen"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Prüfung am Drehkreuz",
+     "punkte": 25,
+     "einleitung": [
+      "Die Drehkreuze sollen weitergegebene Tickets erkennen und bei einer Störung die Tickets selbst prüfen (Anlagen 3 bis 5). Für die Anbindung liegt außerdem ein Datenblatt der Drehkreuz-Steuerung vor (Anlage 6)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie den Schreibtischtest für den Aufruf zaehleWeitergaben(minuten, 8) mit den Durchgängen aus Anlage 4 (minuten[0] = 5) bis zum Ende der Schleife. Tragen Sie je Schritt nur die Werte ein, die in dieser Zeile zugewiesen werden; die Spalte minuten[i] zeigt den Wert, mit dem Zeile 7 rechnet. Der erste Durchlauf der Schleife ist vorgegeben."
+       ],
+       "punkte": 6,
+       "antwort": {
+        "form": "schreibtischtest",
+        "code": "3",
+        "spalten": [
+         "i",
+         "minuten[i]",
+         "abstand",
+         "verdacht",
+         "letzter"
+        ],
+        "leer_unveraendert": true,
+        "schritte": [
+         {
+          "zeile": 4,
+          "werte": [
+           "",
+           "",
+           "",
+           "0",
+           ""
+          ]
+         },
+         {
+          "zeile": 5,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           "5"
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "1",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "9",
+           "4",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 9,
+          "werte": [
+           "",
+           "",
+           "",
+           "1",
+           ""
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "2",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "31",
+           {
+            "loesung": [
+             "26"
+            ],
+            "punkte": 1
+           },
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 11,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "31"
+            ],
+            "punkte": 1
+           }
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "3",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "34",
+           {
+            "loesung": [
+             "3"
+            ],
+            "punkte": 1
+           },
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 9,
+          "werte": [
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "2"
+            ],
+            "punkte": 1
+           },
+           ""
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "4",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "40",
+           "9",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 11,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           {
+            "loesung": [
+             "40"
+            ],
+            "punkte": 1
+           }
+          ]
+         },
+         {
+          "zeile": 6,
+          "werte": [
+           "5",
+           "",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 7,
+          "werte": [
+           "",
+           "62",
+           {
+            "loesung": [
+             "22"
+            ],
+            "punkte": 1
+           },
+           "",
+           ""
+          ]
+         },
+         {
+          "zeile": 11,
+          "werte": [
+           "",
+           "",
+           "",
+           "",
+           "62"
+          ]
+         }
+        ]
+       },
+       "anlagen": [
+        "3",
+        "4"
+       ],
+       "loesung": [
+        "i = 1: abstand = 9 − 5 = 4 < 8, also Zeile 9: verdacht = 1",
+        "i = 2: abstand = 31 − 5 = 26, nicht kleiner als 8, also Zeile 11: letzter = 31",
+        "i = 3: abstand = 34 − 31 = 3 < 8, also Zeile 9: verdacht = 2",
+        "i = 4: abstand = 40 − 31 = 9, nicht kleiner als 8, also Zeile 11: letzter = 40",
+        "i = 5: abstand = 62 − 40 = 22, nicht kleiner als 8, also Zeile 11: letzter = 62",
+        "Nach der Schleife: Rückgabe 2 (zwei verdächtige Durchgänge: 8:09 und 8:34 Uhr)"
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "ergaenzen",
+       "text": [
+        "Ergänzen Sie die Lücken (1) bis (3) der Funktion pruefeOffline nach den Regeln in Anlage 5. Nutzen Sie die Funktion istGesperrt aus Anlage 5.",
+        "funktion pruefeOffline(ticket, sperrliste, heute, jetzt)",
+        "  wenn …(1)… dann",
+        "    rückgabe \"abgewiesen: gesperrt\"",
+        "  ende wenn",
+        "  wenn …(2)… dann",
+        "    rückgabe \"abgewiesen: nicht gültig\"",
+        "  ende wenn",
+        "  …(3)…",
+        "  rückgabe \"frei\"",
+        "ende funktion"
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "5"
+       ],
+       "gebiet": "pseudocode",
+       "loesung": [
+        "(1) istGesperrt(sperrliste, ticket.getNummer())",
+        "(2) heute < ticket.getErsterTag() oder heute > ticket.getLetzterTag()",
+        "(3) merkeDurchgang(ticket.getNummer(), jetzt)"
+       ],
+       "hinweise": [
+        {
+         "text": "(1) Aufruf von istGesperrt mit der Ticketnummer",
+         "punkte": 2
+        },
+        {
+         "text": "(2) beide Grenzen mit oder verknüpft, Grenztage gültig",
+         "punkte": 2
+        },
+        {
+         "text": "(3) Durchgang mit Nummer und Zeitpunkt gemerkt",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "zeichnen",
+       "text": [
+        "Zeichnen Sie ein UML-Aktivitätsdiagramm für den Ablauf am Drehkreuz nach Anlage 5.",
+        "Der Start und die erste Aktion sind vorgegeben."
+       ],
+       "punkte": 7,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "uml",
+        "vorgabe": {
+         "art": "uml",
+         "elemente": [
+          {
+           "id": "s",
+           "typ": "start",
+           "x": 3,
+           "y": 0
+          },
+          {
+           "id": "lesen",
+           "typ": "aktion",
+           "text": "Ticket lesen",
+           "x": 3,
+           "y": 1
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "s",
+           "nach": "lesen"
+          }
+         ]
+        },
+        "muster": {
+         "art": "uml",
+         "elemente": [
+          {
+           "id": "s",
+           "typ": "start",
+           "x": 3,
+           "y": 0
+          },
+          {
+           "id": "lesen",
+           "typ": "aktion",
+           "text": "Ticket lesen",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "v1",
+           "typ": "verzweigung",
+           "x": 3,
+           "y": 2
+          },
+          {
+           "id": "online",
+           "typ": "aktion",
+           "text": "Ticket online im Ticketsystem prüfen",
+           "x": 1,
+           "y": 3
+          },
+          {
+           "id": "offline",
+           "typ": "aktion",
+           "text": "Ticket offline prüfen",
+           "x": 5,
+           "y": 3
+          },
+          {
+           "id": "m1",
+           "typ": "zusammenfuehrung",
+           "x": 3,
+           "y": 4
+          },
+          {
+           "id": "v2",
+           "typ": "verzweigung",
+           "x": 3,
+           "y": 5
+          },
+          {
+           "id": "gruen",
+           "typ": "aktion",
+           "text": "Sperre öffnen und Grün zeigen",
+           "x": 1,
+           "y": 6
+          },
+          {
+           "id": "rot",
+           "typ": "aktion",
+           "text": "Rot mit Grund zeigen",
+           "x": 5,
+           "y": 6
+          },
+          {
+           "id": "e1",
+           "typ": "ende",
+           "x": 1,
+           "y": 7
+          },
+          {
+           "id": "e2",
+           "typ": "ende",
+           "x": 5,
+           "y": 7
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "s",
+           "nach": "lesen"
+          },
+          {
+           "von": "lesen",
+           "nach": "v1"
+          },
+          {
+           "von": "v1",
+           "nach": "online",
+           "text": "[Verbindung da]"
+          },
+          {
+           "von": "v1",
+           "nach": "offline",
+           "text": "[keine Verbindung]"
+          },
+          {
+           "von": "online",
+           "nach": "m1"
+          },
+          {
+           "von": "offline",
+           "nach": "m1"
+          },
+          {
+           "von": "m1",
+           "nach": "v2"
+          },
+          {
+           "von": "v2",
+           "nach": "gruen",
+           "text": "[freigegeben]"
+          },
+          {
+           "von": "v2",
+           "nach": "rot",
+           "text": "[abgewiesen]"
+          },
+          {
+           "von": "gruen",
+           "nach": "e1"
+          },
+          {
+           "von": "rot",
+           "nach": "e2"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "5"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Start → Ticket lesen → Verzweigung",
+        "[Verbindung da] → Ticket online im Ticketsystem prüfen; [keine Verbindung] → Ticket offline prüfen",
+        "beide Wege → Zusammenführung → Verzweigung",
+        "[freigegeben] → Sperre öffnen und Grün zeigen → Ende; [abgewiesen] → Rot mit Grund zeigen → Ende"
+       ],
+       "hinweise": [
+        {
+         "text": "Verzweigung nach der Verbindung mit beiden Bedingungen",
+         "punkte": 2
+        },
+        {
+         "text": "Aktionen online und offline prüfen",
+         "punkte": 1
+        },
+        {
+         "text": "Zusammenführung beider Wege",
+         "punkte": 1
+        },
+        {
+         "text": "Verzweigung freigegeben/abgewiesen mit Bedingungen",
+         "punkte": 2
+        },
+        {
+         "text": "Aktionen Grün bzw. Rot und Ende",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie aus Anlage 6, wie die Antwort des Ticketsystems an die Drehkreuz-Steuerung aufgebaut sein muss, in welcher Zeitzone die Steuerung Zeitstempel sendet und bis zu welcher Kälte sie arbeitet."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Name des Feldes mit der Entscheidung in der Antwort",
+          "art": "text",
+          "loesung": [
+           "decision"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "höchste Zahl der Zeichen des Anzeigetexts",
+          "art": "zahl",
+          "loesung": [
+           "32"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zeitzone der Zeitstempel",
+          "art": "text",
+          "loesung": [
+           "UTC",
+           "koordinierte Weltzeit",
+           "Weltzeit",
+           "UTC (koordinierte Weltzeit)",
+           "koordinierte Weltzeit (UTC)",
+           "Weltzeit (UTC)",
+           "UTC (Weltzeit)",
+           "Coordinated Universal Time"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "niedrigste Betriebstemperatur in °C",
+          "art": "zahl",
+          "loesung": [
+           "-30"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "6"
+       ],
+       "englisch": true,
+       "loesung": [
+        "decision (Werte OPEN oder DENY)",
+        "bis zu 32 Zeichen",
+        "UTC",
+        "minus 30 °C"
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie, was der vierte Satz in Anlage 6 für die Speicherung der Durchgänge bedeutet, und geben Sie ein Beispiel für einen Fehler, der ohne Umrechnung entsteht."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "anlagen": [
+        "6"
+       ],
+       "englisch": true,
+       "loesung": [
+        "Die Zeitstempel kommen in UTC; das Ticketsystem muss sie vor dem Speichern oder Auswerten in die Ortszeit umrechnen (im Winter MEZ = UTC + 1 Stunde, im Sommer MESZ = UTC + 2 Stunden).",
+        "Beispiel: ein Durchgang um 9:00 Uhr Ortszeit stünde mit 8:00 Uhr in der Auswertung; ein Durchgang kurz nach Mitternacht (00:30 Uhr MEZ = 23:30 Uhr UTC) fiele auf den Vortag."
+       ],
+       "hinweise": [
+        {
+         "text": "Zeitstempel in UTC, Umrechnung in Ortszeit nötig",
+         "punkte": 1
+        },
+        {
+         "text": "Unterschied eine bzw. zwei Stunden (Winter/Sommer)",
+         "punkte": 1
+        },
+        {
+         "text": "passendes Fehlerbeispiel (falsche Stunde oder falscher Tag)",
+         "punkte": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Sicherer Rechnungsversand",
+     "punkte": 26,
+     "einleitung": [
+      "Bei der Umsetzung des Shops fällt auf, dass der geplante Rechnungsversand (Anlage 7) Sicherheitsrisiken hat. Die Teamleiterin hat deshalb einen neuen Ablauf festgelegt (Anlage 8)."
+     ],
+     "teile": [
+      {
+       "nr": "a",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie zwei Sicherheitsrisiken des bisher geplanten Rechnungsversands aus Anlage 7."
+       ],
+       "punkte": 6,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "7"
+       ],
+       "loesung": [
+        "Gäste gewöhnen sich daran, Anhänge der Bergbahnen zu öffnen; Angreifer können gefälschte Mails mit gleichem Absender und Text und einer Schadsoftware im Anhang schicken (Phishing).",
+        "Personenbezogene Daten (Anschrift, Geburtsdaten) gehen unverschlüsselt durchs Netz und liegen dauerhaft in Postfächern; bei einer falsch eingegebenen Adresse erhält eine fremde Person sie (Datenschutzverstoß).",
+        "Die QR-Codes im Anhang lassen sich weiterleiten oder kopieren; wer die Mail mitliest, kann mit dem Ticket fahren."
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "beschreiben",
+       "text": [
+        "Beschreiben Sie zwei Gründe, warum der neue Ablauf aus Anlage 8 sicherer ist."
+       ],
+       "punkte": 4,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "anlagen": [
+        "8"
+       ],
+       "loesung": [
+        "Die Mail hat weder Anhang noch Link; Gäste lernen, Rechnungen nur im Kundenkonto zu öffnen, und erkennen gefälschte Mails mit Anhang oder Link leichter.",
+        "Die Rechnung mit den personenbezogenen Daten liegt nur im Kundenkonto und wird erst nach Anmeldung verschlüsselt geladen.",
+        "Mit dem zweiten Faktor reicht ein gestohlenes Passwort allein nicht aus.",
+        "Eine falsche Mail-Adresse führt nur zu einer Mail ohne Daten."
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "zeichnen",
+       "text": [
+        "Zeichnen Sie ein UML-Aktivitätsdiagramm für den neuen Ablauf aus Anlage 8.",
+        "Der Start und die erste Aktion sind vorgegeben. Tragen Sie an jedem Pfeil aus einer Verzweigung die Bedingung ein."
+       ],
+       "punkte": 13,
+       "antwort": {
+        "form": "zeichnen",
+        "diagramm": "uml",
+        "vorgabe": {
+         "art": "uml",
+         "elemente": [
+          {
+           "id": "s",
+           "typ": "start",
+           "x": 3,
+           "y": 0
+          },
+          {
+           "id": "ablegen",
+           "typ": "aktion",
+           "text": "Rechnung als PDF im Kundenkonto ablegen",
+           "x": 3,
+           "y": 1
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "s",
+           "nach": "ablegen"
+          }
+         ]
+        },
+        "muster": {
+         "art": "uml",
+         "elemente": [
+          {
+           "id": "s",
+           "typ": "start",
+           "x": 3,
+           "y": 0
+          },
+          {
+           "id": "ablegen",
+           "typ": "aktion",
+           "text": "Rechnung als PDF im Kundenkonto ablegen",
+           "x": 3,
+           "y": 1
+          },
+          {
+           "id": "mail",
+           "typ": "aktion",
+           "text": "Mail ohne Anhang und ohne Link senden",
+           "x": 3,
+           "y": 2
+          },
+          {
+           "id": "m1",
+           "typ": "zusammenfuehrung",
+           "x": 3,
+           "y": 3
+          },
+          {
+           "id": "anmelden",
+           "typ": "aktion",
+           "text": "Gast meldet sich im Kundenkonto an",
+           "x": 3,
+           "y": 4
+          },
+          {
+           "id": "v1",
+           "typ": "verzweigung",
+           "x": 3,
+           "y": 5
+          },
+          {
+           "id": "fehler",
+           "typ": "aktion",
+           "text": "Fehlermeldung anzeigen",
+           "x": 5,
+           "y": 5
+          },
+          {
+           "id": "v2",
+           "typ": "verzweigung",
+           "x": 3,
+           "y": 6
+          },
+          {
+           "id": "code",
+           "typ": "aktion",
+           "text": "Einmalcode aus der App abfragen",
+           "x": 5,
+           "y": 7
+          },
+          {
+           "id": "m2",
+           "typ": "zusammenfuehrung",
+           "x": 3,
+           "y": 8
+          },
+          {
+           "id": "laden",
+           "typ": "aktion",
+           "text": "Rechnung anzeigen und herunterladen",
+           "x": 3,
+           "y": 9
+          },
+          {
+           "id": "e",
+           "typ": "ende",
+           "x": 3,
+           "y": 10
+          }
+         ],
+         "verbindungen": [
+          {
+           "von": "s",
+           "nach": "ablegen"
+          },
+          {
+           "von": "ablegen",
+           "nach": "mail"
+          },
+          {
+           "von": "mail",
+           "nach": "m1"
+          },
+          {
+           "von": "m1",
+           "nach": "anmelden"
+          },
+          {
+           "von": "anmelden",
+           "nach": "v1"
+          },
+          {
+           "von": "v1",
+           "nach": "fehler",
+           "text": "[Zugangsdaten falsch]"
+          },
+          {
+           "von": "fehler",
+           "nach": "m1"
+          },
+          {
+           "von": "v1",
+           "nach": "v2",
+           "text": "[Zugangsdaten richtig]"
+          },
+          {
+           "von": "v2",
+           "nach": "code",
+           "text": "[zweiter Faktor eingeschaltet]"
+          },
+          {
+           "von": "v2",
+           "nach": "m2",
+           "text": "[kein zweiter Faktor]"
+          },
+          {
+           "von": "code",
+           "nach": "m2"
+          },
+          {
+           "von": "m2",
+           "nach": "laden"
+          },
+          {
+           "von": "laden",
+           "nach": "e"
+          }
+         ]
+        }
+       },
+       "anlagen": [
+        "8"
+       ],
+       "gebiet": "diagramm",
+       "loesung": [
+        "Start → Rechnung als PDF im Kundenkonto ablegen → Mail ohne Anhang und ohne Link senden → Zusammenführung",
+        "→ Gast meldet sich im Kundenkonto an → Verzweigung",
+        "[Zugangsdaten falsch] → Fehlermeldung anzeigen → zurück zur Zusammenführung vor der Anmeldung",
+        "[Zugangsdaten richtig] → Verzweigung: [zweiter Faktor eingeschaltet] → Einmalcode aus der App abfragen → Zusammenführung; [kein zweiter Faktor] → Zusammenführung",
+        "→ Rechnung anzeigen und herunterladen → Ende"
+       ],
+       "hinweise": [
+        {
+         "text": "Mail ohne Anhang und ohne Link als zweite Aktion",
+         "punkte": 1
+        },
+        {
+         "text": "Zusammenführung vor der Anmeldung für die Wiederholung",
+         "punkte": 2
+        },
+        {
+         "text": "Aktion Anmeldung im Kundenkonto",
+         "punkte": 1
+        },
+        {
+         "text": "Verzweigung Zugangsdaten mit beiden Bedingungen",
+         "punkte": 2
+        },
+        {
+         "text": "Fehlermeldung mit Rückweg zur Zusammenführung",
+         "punkte": 2
+        },
+        {
+         "text": "Verzweigung zweiter Faktor mit beiden Bedingungen",
+         "punkte": 2
+        },
+        {
+         "text": "Aktion Einmalcode abfragen",
+         "punkte": 1
+        },
+        {
+         "text": "Zusammenführung nach dem zweiten Faktor",
+         "punkte": 1
+        },
+        {
+         "text": "Rechnung anzeigen und herunterladen, dann Ende",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie drei Merkmale, an denen Gäste eine gefälschte Mail im Namen der Bergbahnen erkennen können."
+       ],
+       "punkte": 3,
+       "angaben": 3,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Absenderadresse weicht ab (z. B. andere Domain)",
+        "Anhang oder Link, obwohl die Bergbahnen keine senden",
+        "Druck oder Drohung („Ticket wird sonst gesperrt“)",
+        "Aufforderung, Passwort oder Bankdaten einzugeben",
+        "allgemeine Anrede statt Name",
+        "Rechtschreibfehler, ungewohnte Gestaltung",
+        "Bestellnummer fehlt oder ist unbekannt"
+       ]
+      }
+     ]
+    },
+    {
+     "titel": "Archiv der Wartezeiten",
+     "punkte": 25,
+     "einleitung": [
+      "Die Ticket-App misst die Wartezeiten an den Liftanlagen. Zu Beginn der neuen Saison sollen die Messungen früherer Saisons in eine Archivtabelle verschoben werden (Tabellenmodell in Anlage 9, Beispieldaten in Anlage 10 und 11)."
+     ],
+     "teile": [
+      {
+       "nr": "aa",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Anweisung, die alle Messungen vor dem 01.05.2026 aus der Tabelle Wartezeitmessung in die Tabelle Wartezeitmessung_Archiv kopiert."
+       ],
+       "punkte": 5,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 5
+       },
+       "anlagen": [
+        "9"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "INSERT INTO Wartezeitmessung_Archiv (messnr, liftnr, zeitpunkt, wartezeit_min)",
+        "SELECT messnr, liftnr, zeitpunkt, wartezeit_min",
+        "FROM Wartezeitmessung",
+        "WHERE zeitpunkt < '2026-05-01';"
+       ],
+       "hinweise": [
+        {
+         "text": "INSERT INTO Wartezeitmessung_Archiv mit Spaltenliste",
+         "punkte": 1
+        },
+        {
+         "text": "SELECT der Spalten aus Wartezeitmessung statt VALUES",
+         "punkte": 2
+        },
+        {
+         "text": "Bedingung zeitpunkt < '2026-05-01'",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "ab",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Anweisung, die danach die kopierten Messungen aus der Tabelle Wartezeitmessung löscht."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 3
+       },
+       "anlagen": [
+        "9"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "DELETE FROM Wartezeitmessung",
+        "WHERE zeitpunkt < '2026-05-01';",
+        "(ebenso richtig: WHERE messnr IN (SELECT messnr FROM Wartezeitmessung_Archiv))"
+       ],
+       "hinweise": [
+        {
+         "text": "DELETE FROM Wartezeitmessung",
+         "punkte": 2
+        },
+        {
+         "text": "dieselbe Bedingung wie beim Kopieren bzw. Abgleich mit dem Archiv",
+         "punkte": 2
+        }
+       ]
+      },
+      {
+       "nr": "b",
+       "operator": "erstellen",
+       "text": [
+        "Erstellen Sie eine SQL-Abfrage, die aus dem Archiv für jede Liftanlage den Namen sowie die kürzeste, die längste und die durchschnittliche Wartezeit der Wintersaison 2025/26 (01.12.2025 bis 30.04.2026) ausgibt, absteigend nach der durchschnittlichen Wartezeit sortiert."
+       ],
+       "punkte": 7,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 8
+       },
+       "anlagen": [
+        "9"
+       ],
+       "gebiet": "sql",
+       "loesung": [
+        "SELECT l.name, MIN(a.wartezeit_min) AS kuerzeste, MAX(a.wartezeit_min) AS laengste,",
+        "       AVG(a.wartezeit_min) AS durchschnitt",
+        "FROM Liftanlage l",
+        "  JOIN Wartezeitmessung_Archiv a ON a.liftnr = l.liftnr",
+        "WHERE a.zeitpunkt >= '2025-12-01' AND a.zeitpunkt < '2026-05-01'",
+        "GROUP BY l.liftnr, l.name",
+        "ORDER BY durchschnitt DESC;"
+       ],
+       "hinweise": [
+        {
+         "text": "Verbund Liftanlage – Archiv über liftnr",
+         "punkte": 2
+        },
+        {
+         "text": "MIN, MAX und AVG der Wartezeit",
+         "punkte": 2
+        },
+        {
+         "text": "Zeitraum der Saison",
+         "punkte": 1
+        },
+        {
+         "text": "GROUP BY je Liftanlage",
+         "punkte": 1
+        },
+        {
+         "text": "ORDER BY … DESC",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "c",
+       "operator": "ermitteln",
+       "text": [
+        "Ermitteln Sie für die Messungen in Anlage 10 und 11, wie viele Zeilen das Verschieben betrifft und welche Extremwerte die Abfrage aus b) für zwei Liftanlagen liefert."
+       ],
+       "punkte": 4,
+       "antwort": {
+        "form": "luecke",
+        "felder": [
+         {
+          "name": "Zahl der Zeilen, die ins Archiv kopiert werden",
+          "art": "zahl",
+          "loesung": [
+           "8"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "Zahl der Zeilen, die in Wartezeitmessung bleiben",
+          "art": "zahl",
+          "loesung": [
+           "4"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "längste Wartezeit der Firstbahn in der Wintersaison 2025/26 in Minuten",
+          "art": "zahl",
+          "loesung": [
+           "14"
+          ],
+          "punkte": 1
+         },
+         {
+          "name": "kürzeste Wartezeit des Gamsjoch-Sessels in der Wintersaison 2025/26 in Minuten",
+          "art": "zahl",
+          "loesung": [
+           "3"
+          ],
+          "punkte": 1
+         }
+        ]
+       },
+       "anlagen": [
+        "10",
+        "11"
+       ],
+       "loesung": [
+        "Messungen 101 bis 108 liegen vor dem 01.05.2026: 8 Zeilen ins Archiv",
+        "109 bis 112 bleiben: 4 Zeilen",
+        "Firstbahn (liftnr 1): 6, 14, 11 → längste 14",
+        "Gamsjoch-Sessel (liftnr 2): 3, 8 → kürzeste 3"
+       ]
+      },
+      {
+       "nr": "d",
+       "operator": "erlaeutern",
+       "text": [
+        "Erläutern Sie, warum die Anweisungen aus aa) und ab) in dieser Reihenfolge und in einer Transaktion ausgeführt werden sollen."
+       ],
+       "punkte": 3,
+       "antwort": {
+        "form": "zeilen",
+        "zeilen": 4
+       },
+       "loesung": [
+        "Erst kopieren, dann löschen: andersherum wären die Messungen verloren, bevor sie im Archiv stehen.",
+        "In einer Transaktion werden beide Anweisungen ganz oder gar nicht ausgeführt; scheitert das Löschen oder das Kopieren, macht ROLLBACK alles rückgängig.",
+        "So gibt es weder verlorene noch doppelt vorhandene Messungen, auch wenn zwischendurch neue Messungen eintreffen."
+       ],
+       "hinweise": [
+        {
+         "text": "Reihenfolge: erst kopieren, dann löschen",
+         "punkte": 1
+        },
+        {
+         "text": "Transaktion: alles oder nichts, ROLLBACK bei Fehler",
+         "punkte": 1
+        },
+        {
+         "text": "keine verlorenen oder doppelten Daten",
+         "punkte": 1
+        }
+       ]
+      },
+      {
+       "nr": "e",
+       "operator": "nennen",
+       "text": [
+        "Nennen Sie zwei Gründe, alte Messungen in eine Archivtabelle zu verschieben, statt sie in der Tabelle Wartezeitmessung zu lassen."
+       ],
+       "punkte": 2,
+       "angaben": 2,
+       "antwort": {
+        "form": "angaben"
+       },
+       "loesung": [
+        "Abfragen der App auf die kleinere Tabelle werden schneller",
+        "Indizes der aktuellen Tabelle bleiben klein",
+        "Sicherung der aktuellen Daten geht schneller",
+        "alte Saisons bleiben für Auswertungen erhalten, ohne den Betrieb zu stören",
+        "Archiv kann schreibgeschützt oder auf günstigerem Speicher liegen"
        ]
       }
      ]

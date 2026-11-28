@@ -222,6 +222,11 @@ public static class EchtBewertung
                     }
                 }
                 break;
+            case EchtSaetze.FormSchreibtischtest:
+                // A 1.20.0 (W2): je Zelle oder je Schritt (EchtSchreibtisch.Bewerten)
+                (var schreib, programm) = EchtSchreibtisch.Bewerten(a, (z, s) => Antwort(zustand, Feld(aufgabe, teil.Nr, Zelle(z, s))));
+                felder.AddRange(schreib);
+                break;
             case EchtSaetze.FormLuecke:
                 for (var f = 0; f < a.Felder.Count; f++)
                 {

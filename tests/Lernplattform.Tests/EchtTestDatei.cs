@@ -15,6 +15,14 @@ internal static class EchtTestDatei
 
     public static readonly string Datei = Path.Combine(Ordner, EchtSaetze.Datei);
 
+    /// <summary>
+    /// A 1.20.0 (Format 6, Weisung P12-446): die Datei nach L0 bis A 1.19.1, bytegleich (Format 5). Die heutige Datei ist sie mit
+    /// Format 6 im Kopf und den angehaengten neuen Fassungen (<see cref="EchtSchreibtischTests"/>).
+    /// </summary>
+    public static readonly string Format5Pfad = Path.Combine(Pfade.Wurzel, "tests", "Lerninhalte", "echt", "pruefungssaetze_format5.json");
+
+    public static byte[] NachL0 => File.ReadAllBytes(Format5Pfad);
+
     private static readonly byte[] Kopf5 = "{\n \"format\": 5,"u8.ToArray();
 
     /// <summary>

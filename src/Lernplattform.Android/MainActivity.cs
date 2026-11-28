@@ -132,7 +132,7 @@ public class MainActivity : AvaloniaMainActivity
             System.IO.Directory.CreateDirectory(ordner);
             // A 1.5.0 (Weisung P12-358, Nico 4b): dazu die drei echten Fachrichtungs-Pakete (Laden ohne Netz aus der Probe-APK)
             var gefunden = false;
-            foreach (var name in new[] { "probe_testkarte_1.fipaket", "lernen_ae_4.fipaket", "lernen_dpa_2.fipaket", "lernen_dv_2.fipaket" })
+            foreach (var name in new[] { "probe_testkarte_1.fipaket", "lernen_ae_5.fipaket", "lernen_dpa_2.fipaket", "lernen_dv_2.fipaket" })
             {
                 using var strom = typeof(MainActivity).Assembly.GetManifestResourceStream(name);
                 if (strom is null)

@@ -262,6 +262,51 @@ public static class EchtTexte
     public const string ZaehlOrt = "%s %s: %d, im Musterbild %d";
     public const string StruktogrammKopf = "Struktogramm (von oben nach unten):";
 
+    // -- A 1.20.0: Schreibtischtest, Ausgabe- und Datenauszug-Anlage (W2, Weisung P12-446, Entwurf P12-267) -------------
+    public const string SchreibtischZeile = "Zeile";
+    public const string SchreibtischLeer = ", leer";
+    public const string SchreibtischLeerZelle = "–";
+    public const string SchreibtischRichtigWert = "richtig: %s";
+    public const string SchreibtischWischen = "→ wischen (Spalten %s)";
+    public const string SchreibtischHinweisDaneben = "Leere Zelle = Wert unverändert. Eingabetaste oder Tab springt zur nächsten offenen Zelle. "
+        + "Die gewählte Zeile ist rechts im Code markiert.";
+    public const string SchreibtischHinweisUnter = "Leere Zelle = Wert unverändert. Eingabetaste oder Tab springt zur nächsten offenen Zelle. "
+        + "Die gewählte Zeile ist in der Code-Anlage markiert.";
+    public const string SchreibtischHinweisVoll = "Eingabetaste oder Tab springt zur nächsten offenen Zelle. Die gewählte Zeile ist in der "
+        + "Code-Anlage markiert.";
+    public const string SchreibtischLegende = "grün = richtig, rot = falsch mit richtigem Wert darunter. %s; so steht es im Satz.";
+    public const string SchreibtischJeZelle = "Punkte je Zelle (%s)";
+    public const string SchreibtischJeSchritt = "Punkte je Schritt, nur wenn alle Zellen des Schritts stimmen";
+    public const string Musterloesung = "Musterlösung";
+    public const string CodeMarkiert = "Markiert: Zeile %d (gehört zu deinem Schritt %d)";
+    public const string AusgabeHinweis = "Grün und fett: was eingegeben wurde. Zahlen links = Zeilen der Ausgabe.";
+    public const string AusgabeHinweisOhne = "Zahlen links = Zeilen der Ausgabe.";
+    public const string Vorlesen = "Als Text vorlesen";
+    public const string VorlesenAus = "Text ausblenden";
+    public const string VorlesenZeile = "Zeile %d: %s";
+    public const string VorlesenEingabe = "Zeile %d, Eingabe: %s";
+    public const string VorlesenLeer = "(leer)";
+    public const string WieImBeleg = "Wie im Beleg";
+    public const string AlsTabelle = "Als Tabelle";
+    public const string DatenLeer = "(leer)";
+    public const string CsvAngabe = "%d Zeilen · %d Spalten · Zeile 1 = Kopf";
+    public const string JsonHinweis = "JSON, eingerückt wie geliefert · Zahlen links = Zeilen";
+    public const string JsonFehlerhaft = "JSON, so wie geliefert (enthält absichtlich Fehler) · Zahlen links = Zeilen";
+    public const string WischenWeitere = "→ wischen (%d weitere Spalten)";
+    public const string WischenEine = "→ wischen (1 weitere Spalte)";
+    public const string GrossOeffnen = "↗ Groß öffnen";
+    public const string GrossOeffnenName = "Groß öffnen";
+    public const string GrossFenster = "(eigenes Fenster)";
+    public const string GrossSchliessen = "Schließen";
+    public const string Kleiner = "A−";
+    public const string Groesser = "A+";
+    public const string KleinerName = "Schrift kleiner";
+    public const string GroesserName = "Schrift größer";
+    // Hinweis unter dem grossen Blatt: Fenster (breit) oder ganzer Bildschirm (schmal); haengt an der Breite, nicht am Geraet
+    public const string GrossHinweisFenster = "Das Fenster lässt sich verschieben und größer ziehen, die Aufgabe bleibt daneben bedienbar.";
+    public const string GrossHinweisGanz = "Wie ein herausgetrenntes Blatt: die Uhr läuft weiter, „Schließen“ führt zurück zu Aufgabe %d.";
+    public const string GrossZiehen = "Fenster größer ziehen";
+
     public const string ErgebnisAufgaben = "Nach Aufgaben";
     public const string ErgebnisAufgabenUntertitel = "Unter 50 Prozent rot";
     public const string AufgabePunkte = "%d von %d";
