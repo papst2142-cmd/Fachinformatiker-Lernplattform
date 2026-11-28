@@ -32,7 +32,8 @@ public sealed partial class StadtFlaeche
         _ruht = false;
         var bytesBeginn = GC.GetAllocatedBytesForCurrentThread();
         var abstandMs = _letztesBild < 0 ? 0 : (jetzt - _letztesBild) * 1000;
-        var dt = _letztesBild < 0 ? 0 : Math.Min(jetzt - _letztesBild, 0.1);
+        // Patch A 1.20.1 (Weisung P12-449 Punkt 1): Zeitschritt auf ganze Takte des Bildschirms (am PC unbekannt: wie bisher)
+        var dt = _letztesBild < 0 ? 0 : Math.Min(BildtaktAlt.Value ? jetzt - _letztesBild : Bildtakt.Schritt(jetzt - _letztesBild, Systemwerte.Bildwiederholrate), 0.1);
         _aufrufe = 0;
         _dreiecke = 0;
         _festAufrufe = 0;
@@ -183,8 +184,7 @@ public sealed partial class StadtFlaeche
         {
             // Kamera folgt der Figur weich (nach der Ankunft noch kurz, bis sie mittig steht), solange
             // niemand selbst verschiebt
-            var k = (float)Math.Min(1, dt * 2.5);
-            kamera.Setzen(kamera.ZielX + ((_spiel!.FigurX - kamera.ZielX) * k), kamera.ZielZ + ((_spiel.FigurZ - kamera.ZielZ) * k));
+            var k = kamera.Folgen(_spiel!.FigurX, _spiel.FigurZ, dt);
             // Welle A 0.66.0 (Gelaende): die Hoehe folgt genauso weich (kein Ruckeln am Hang); ohne Gelaende bleibt sie 0
             if (!_spiel.ImInnenraum && _spiel.Szene.Gelaende is not null)
             {

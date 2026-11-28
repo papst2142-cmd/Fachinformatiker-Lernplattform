@@ -56,6 +56,28 @@ public static class Questlog
         return liste;
     }
 
+    /// <summary>
+    /// Patch A 1.20.1 (Weisung P12-449 Punkt 2): sind seit einem gemerkten Stand (Zahl der Zeilen, erste und letzte Zeile als
+    /// dasselbe Objekt) nur Wege dazugekommen (<see cref="Stadt.Gelaufen"/>, <see cref="Stadt.Gegangen"/>)? Diese Zeilen aendert der
+    /// Spielstand nur im Verlauf (kein Feld, das die offenen Auftraege liest: Tag, geloest, bearbeitet, Firma, Lieferungen); die Zahl
+    /// der offenen Auftraege bleibt dann gleich (Test mit Gegenprobe). Ein Neuaufbau (neue Zeilen-Objekte) gilt nie als „nur Wege“.
+    /// </summary>
+    public static bool NurWegeSeit(IReadOnlyList<SpielEreignis> verlauf, int anzahl, SpielEreignis? erste, SpielEreignis? letzte)
+    {
+        if (anzahl <= 0 || verlauf.Count < anzahl || !ReferenceEquals(verlauf[0], erste) || !ReferenceEquals(verlauf[anzahl - 1], letzte))
+        {
+            return false;
+        }
+        for (var i = anzahl; i < verlauf.Count; i++)
+        {
+            if (verlauf[i].Art is not (Stadt.Gelaufen or Stadt.Gegangen))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /// <summary>Zahl der offenen Auftraege (gruene Zahl am Handy-Knopf).</summary>
     public static int ZahlOffen(StadtSpiel spiel) => spiel.Ablauf.Stand.OffeneTickets().Count
         + (spiel.Stadt.Vorsatz is null ? 0 : PaketQuests.Offen(spiel.Stadt, spiel.Ablauf.Stand).Count);

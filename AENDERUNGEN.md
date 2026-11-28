@@ -1,5 +1,14 @@
 # Änderungen
 
+## A 1.20.1
+Gehen im Spiel ist auf schwächeren Tablets gleichmäßiger, und die Kamera springt beim Gehen nicht mehr zurück.
+
+- Bei 30 oder 60 Bildern je Sekunde kamen die Bilder bisher ungleichmäßig: Das Programm wartete genau eine dreißigstel (bzw. sechzigstel) Sekunde und bat erst dann um das nächste Bild. Weil der Bildschirm nur in festen Takten ein neues Bild zeigt, kam die Bitte oft knapp zu spät, und das Bild erschien einen Takt später. Jetzt bittet das Programm etwas früher um das Bild, so dass es genau im richtigen Takt erscheint. Es werden dabei nie mehr Bilder als eingestellt.
+- Die Figur und die Kamera bewegen sich jetzt je gezeigtem Bild um genau gleich viel weiter. Vorher wirkte die Bewegung dadurch auch bei 60 Bildern je Sekunde unruhig.
+- Jedes Mal, wenn du beim freien Gehen stehen bleibst, schreibt das Spiel die gegangene Zeit in den Spielstand. Dabei wurde bisher der ganze Spielverlauf kopiert; mit einem langen Spielstand dauerte das am Tablet bis zu einer Zehntelsekunde, und das Bild stand kurz still. Jetzt wird nur noch kopiert, was sich ändern kann. Am PC braucht ein Halt dadurch nur noch rund ein Drittel des Speichers, und das wächst nicht mehr mit der Länge des Spielstands. Auch die Zahl der offenen Aufträge am Handy-Knopf wird nach einem bloßen Weg nicht mehr ganz neu gerechnet, weil ein Weg sie nie ändert. Ein Halt dauert am PC damit nur noch rund ein Drittel der Zeit.
+- Bliebst du kurz vor einer Tür stehen, lief die Figur bisher von selbst das letzte Stück bis genau vor die Tür, oft ein kleines Stück zurück, und die Kamera ging mit. Jetzt bleibt die Figur dort stehen, wo du sie angehalten hast. „Hineingehen“ geht von dort wie bisher.
+- Was im Spiel gezählt wird (Spielzeit, Wege, Aufgaben), bleibt genau gleich. Dein Spielstand und dein Lernstand bleiben erhalten.
+
 ## A 1.20.0
 In der Prüfung im echten Format gibt es jetzt den Schreibtischtest als Tabelle zum Ausfüllen.
 

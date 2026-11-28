@@ -77,6 +77,71 @@ public static partial class AutoMessung
         return 0;
     }
 
+    /// <summary>Patch A 1.20.1: Grenze fuer den Speicher eines Halts beim freien Gehen mit langem Spielstand (samt Spielseite).</summary>
+    public const double HaltKbGrenze = 250;
+
+    /// <summary>
+    /// Patch A 1.20.1 (Weisung P12-449 Punkt 2): ein Halt beim freien Gehen (das Spiel schreibt die gegangene Zeit, die Spielseite
+    /// beschriftet neu) mit langem Spielstand: Speicher hoechstens <see cref="HaltKbGrenze"/>. Gegenprobe wie bis A 1.20.0 (tiefe Kopie des
+    /// Verlaufs, offene Auftraege nach jedem Weg neu gerechnet): mindestens doppelt so viel.
+    /// </summary>
+    private static int HaltPruefen(SpielSeite seite, StadtSpiel spiel)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        (double Kb, double Ms) Einmal()
+        {
+            spiel.SofortAnkommen();
+            var gegangen = 0.0;
+            foreach (var (rx, rz) in new[] { (1.0, 0.0), (-1.0, 0.0), (0.0, 1.0), (0.0, -1.0) })
+            {
+                for (var i = 0; i < 45 && gegangen < 1.5; i++)
+                {
+                    var (x0, z0) = (spiel.FigurX, spiel.FigurZ);
+                    spiel.FreiGehen(rx, rz, 1.0 / 30);
+                    gegangen += Math.Abs(spiel.FigurX - x0) + Math.Abs(spiel.FigurZ - z0);
+                }
+            }
+            var b0 = GC.GetAllocatedBytesForCurrentThread();
+            var t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            spiel.FreiHalt();
+            return ((GC.GetAllocatedBytesForCurrentThread() - b0) / 1024.0, System.Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds);
+        }
+        (double Kb, double Ms) Mittel(int n)
+        {
+            Einmal();
+            var w = Enumerable.Range(0, n).Select(_ => Einmal()).ToList();
+            return (w.Average(x => x.Kb), w.Average(x => x.Ms));
+        }
+        seite.BeschriftenTeile = [];
+        var jetzt = Mittel(3);
+        var tafel = seite.BeschriftenTeile;
+        seite.BeschriftenTeile = null;
+        // nur Bericht: wie viel davon die Tafel braucht (Summe ueber 4 Halte, die 4 groessten Teile)
+        Messwerte.Notiere("Spiel: Halt beim freien Gehen, Tafel je Teil (4 Halte): " + string.Join(", ", tafel.OrderByDescending(t => t.Value).Take(4)
+            .Select(t => string.Create(inv, $"{t.Key} {t.Value:F2} ms"))));
+        (double Kb, double Ms) alt;
+        try
+        {
+            // Gegenprobe wie bis A 1.20.0: tiefe Kopie des Verlaufs und die Zahl der offenen Auftraege nach jedem Weg neu
+            Spielstand.KopieVerlaufAltFuerTests = true;
+            SpielSeite.OffenWegeAltFuerTests = true;
+            alt = Mittel(3);
+        }
+        finally
+        {
+            Spielstand.KopieVerlaufAltFuerTests = false;
+            SpielSeite.OffenWegeAltFuerTests = false;
+        }
+        var wert = string.Create(inv, $"{spiel.Ablauf.Stand.Verlauf.Count} Spielereignisse, {jetzt.Kb:F0} KB und {jetzt.Ms:F2} ms je Halt; Gegenprobe wie A 1.20.0 {alt.Kb:F0} KB und {alt.Ms:F2} ms");
+        Messwerte.Notiere("Spiel: Speicher je Halt beim freien Gehen: " + wert);
+        if (jetzt.Kb > HaltKbGrenze || alt.Kb < jetzt.Kb * 2)
+        {
+            Messwerte.Notiere(string.Create(inv, $"  FEHLER: Spiel Speicher je Halt: {wert} (Grenze {HaltKbGrenze:F0} KB, Gegenprobe mindestens doppelt so viel)"));
+            return 1;
+        }
+        return 0;
+    }
+
     private static async Task<int> Speicher473Async(MainView ansicht)
     {
         var inv = CultureInfo.InvariantCulture;
@@ -103,6 +168,7 @@ public static partial class AutoMessung
             }
             await fl.NaechstesBildAsync();
             funde += BeschriftenPruefen(seite, spiel);
+            funde += HaltPruefen(seite, spiel);
             async Task<List<Core.Spiel.Probe.BildZeiten.Bild>> GehenMessen(double sekunden, Func<bool> neuerWeg)
             {
                 var bilder = new List<Core.Spiel.Probe.BildZeiten.Bild>();

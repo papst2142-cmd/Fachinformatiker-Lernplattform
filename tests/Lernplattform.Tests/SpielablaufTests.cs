@@ -107,7 +107,50 @@ public class SpielablaufTests
                 geteilt.Add(o);
             }
         }
-        Assert.Empty(geteilt);
+        // Patch A 1.20.1 (Weisung P12-449): geteilt sein duerfen genau die Zeilen des Verlaufs und was NUR an ihnen haengt;
+        // die Liste des Verlaufs selbst und alles, was auch an einem anderen Feld haengt, ist neu.
+        Assert.NotSame(stand.Verlauf, kopie.Verlauf);
+        var anderen = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        foreach (var feld in typeof(Spielstand).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        {
+            if (feld.Name != "<Inhalt>k__BackingField" && feld.Name != nameof(Spielstand.Verlauf))
+            {
+                Sammeln(feld.GetValue(stand), anderen);
+            }
+        }
+        var nurVerlauf = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        foreach (var e in stand.Verlauf)
+        {
+            Sammeln(e, nurVerlauf);
+        }
+        nurVerlauf.ExceptWith(anderen);
+        Assert.NotEmpty(geteilt);
+        Assert.All(geteilt, o => Assert.Contains(o, nurVerlauf));
+        Assert.DoesNotContain(geteilt, o => anderen.Contains(o));
+    }
+
+    /// <summary>Gegenprobe zu Patch A 1.20.1: mit der alten Kopie (jede Zeile tief) teilt die Kopie gar nichts.</summary>
+    [Fact]
+    public void KopieTeiltNurDieInhalte_GegenprobeAlt()
+    {
+        var stand = new Spielstand(SpielFingerabdruckTests.Gespielt.Value.Speicher.Ereignisse(), Inhalt);
+        stand.PersonalThemen(stand.Personal.Keys.First());
+        Spielstand.KopieVerlaufAltFuerTests = true;
+        Spielstand kopie;
+        try
+        {
+            kopie = stand.Kopie();
+        }
+        finally
+        {
+            Spielstand.KopieVerlaufAltFuerTests = false;
+        }
+        Assert.Empty(stand.Unterschiede(kopie));
+        var original = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        Sammeln(stand, original);
+        var neu = new HashSet<object>(ReferenceEqualityComparer.Instance);
+        Sammeln(kopie, neu);
+        Assert.DoesNotContain(neu, o => original.Contains(o));
     }
 
     /// <summary>Alle veraenderbaren Objekte eines Stands (ohne die Inhalte), rekursiv.</summary>

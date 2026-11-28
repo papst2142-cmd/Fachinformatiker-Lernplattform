@@ -22,15 +22,111 @@ public sealed partial class Spielstand
     {
         var neu = (Spielstand)MemberwiseClone();
         var memo = new Dictionary<object, object>(ReferenceEqualityComparer.Instance) { [Inhalt] = Inhalt };
+        var alt = VerlaufAlt.Value;
         foreach (var feld in AlleFelder)
         {
-            if (feld.FieldType.IsValueType || feld.Name == "<Inhalt>k__BackingField")
+            if (feld.FieldType.IsValueType || feld.Name == "<Inhalt>k__BackingField" || (!alt && feld == VerlaufFeld))
             {
                 continue;
             }
             feld.SetValue(neu, KopieWert(feld.GetValue(this), memo));
         }
+        if (!alt)
+        {
+            neu.Verlauf = VerlaufKopie(Verlauf, memo);
+        }
         return neu;
+    }
+
+    private static readonly FieldInfo VerlaufFeld = typeof(Spielstand).GetField(nameof(Verlauf))!;
+
+    private static readonly AsyncLocal<bool> VerlaufAlt = new();
+
+    /// <summary>Nur Gegenprobe (Patch A 1.20.1): jede Zeile des Verlaufs wird wie bis A 1.20.0 tief kopiert.</summary>
+    public static bool KopieVerlaufAltFuerTests { get => VerlaufAlt.Value; set => VerlaufAlt.Value = value; }
+
+    /// <summary>
+    /// Patch A 1.20.1 (Sammelliste 473, Weisung P12-449): jede Spielaktion (auch jeder Halt beim freien Gehen) kopiert den Stand
+    /// vor dem Anwenden. Bis A 1.20.0 wurde dabei jede Zeile des Verlaufs tief kopiert (bei 600 Spielereignissen rund 450 KB je
+    /// Aktion, am Tablet ein Haenger von 60 bis 100 ms). Die Zeilen des Verlaufs sind fertig gelesene Ereignisse: kein Teil des
+    /// Spiels aendert sie nach dem Anwenden (die Aktionen bauen neue Staende sogar mit denselben Zeilen, <c>SpielAktionen</c>).
+    /// Darum teilen sich die Kopie und das Original jetzt jede Zeile, von der kein Teil an einem anderen Feld des Stands haengt
+    /// (das Feld haette sie sonst in der Kopie als eigenes Objekt, wie deepcopy mit memo). Hat eine Zeile einen solchen Teil,
+    /// wird sie wie bisher tief kopiert. Die Kopie ist danach Feld fuer Feld gleich der tiefen Kopie (Test mit Gegenprobe).
+    /// </summary>
+    private static List<SpielEreignis> VerlaufKopie(List<SpielEreignis> verlauf, Dictionary<object, object> memo)
+    {
+        var neu = new List<SpielEreignis>(verlauf.Count);
+        memo[verlauf] = neu;
+        foreach (var e in verlauf)
+        {
+            neu.Add(memo.ContainsKey(e) || !NurHier(e.Daten, memo) || !NurHier(e.Zeit, memo) ? (SpielEreignis)KopieWert(e, memo)! : e);
+        }
+        return neu;
+    }
+
+    /// <summary>Haengt kein Teil von <paramref name="wert"/> an einem schon kopierten Feld (memo)?</summary>
+    private static bool NurHier(object? wert, Dictionary<object, object> memo)
+    {
+        if (wert is null or bool or int or long or double or string)
+        {
+            return true;
+        }
+        if (memo.ContainsKey(wert))
+        {
+            return false;
+        }
+        switch (wert)
+        {
+            case PyObjekt o:
+                foreach (var (_, v) in o)
+                {
+                    if (!NurHier(v, memo))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            case PyDict d:
+                foreach (var (k, v) in d)
+                {
+                    if (!NurHier(k, memo) || !NurHier(v, memo))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            case PySet m:
+                foreach (var w in m)
+                {
+                    if (!NurHier(w, memo))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            case PyTupel t:
+                foreach (var w in t.Werte)
+                {
+                    if (!NurHier(w, memo))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            case List<object?> l:
+                foreach (var w in l)
+                {
+                    if (!NurHier(w, memo))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            default:
+                // unbekannte Art: lieber tief kopieren
+                return false;
+        }
     }
 
     private static object? KopieWert(object? wert, Dictionary<object, object> memo)
